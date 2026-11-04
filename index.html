@@ -109,6 +109,73 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .inbox-chip{font-size:12.5px;font-weight:600;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 10px;text-decoration:none}
 @media (max-width:640px){ .sug{flex-direction:column;align-items:stretch} .sug-acts{justify-content:flex-end} }
 
+/* ----- Calendar ----- */
+:root{--c-shoot:#1f5d9e;--c-shoot-soft:#e8f1fb;--c-event:#0f766e;--c-event-soft:#e3f4f1;--c-block:#7b4fb0;--c-block-soft:#f1eafa}
+@media (prefers-color-scheme: dark){ :root{--c-shoot:#8cbcf0;--c-shoot-soft:#1b2a3d;--c-event:#5ec4b3;--c-event-soft:#173330;--c-block:#c5a3ec;--c-block-soft:#2a1f38} }
+#myDay h2 .md-meta{font-weight:500;font-size:12.5px;color:var(--muted)}
+#myDay h2 .md-meta a{color:inherit}
+.cal-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between}
+.cal-cta p{margin:4px 0 0;font-size:13px}
+.day-list{display:flex;flex-direction:column;gap:2px}
+.di{display:grid;grid-template-columns:62px 4px 1fr;gap:12px;padding:9px 8px;border-radius:8px;cursor:pointer;align-items:stretch}
+.di:hover{background:var(--panel-2)}
+.di-time{text-align:right;font-size:13px;line-height:1.3}
+.di-time span{display:block;color:var(--muted);font-size:12px}
+.di-bar{border-radius:4px;background:var(--c-event)}
+.di.shoot .di-bar{background:var(--c-shoot)} .di.block .di-bar{background:var(--c-block)}
+.di.past{opacity:.5}
+.di.now{background:var(--accent-soft)}
+.di-title{font-weight:600}
+.di-loc{font-size:13px;margin-top:2px}
+.di-loc a{color:var(--muted);text-decoration:none}
+.di-loc a:hover{color:var(--accent-2);text-decoration:underline}
+.di-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.di-chips span{font-size:11.5px;background:var(--panel-2);border-radius:6px;padding:2px 7px;color:var(--muted)}
+.pill{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-radius:5px;padding:2px 6px;margin-right:6px;vertical-align:1px}
+.pill.now{background:var(--danger);color:#fff} .pill.next{background:var(--accent-soft);color:var(--accent)}
+.md-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;font-size:13px}
+.md-foot a.muted{text-decoration:none}
+.cal-actions{display:flex;gap:8px}
+.cal-nav{align-items:center}
+.cal-label{font-size:15px;margin-left:4px}
+.cal-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:6px;background:var(--c-event)}
+.lg.shoot{background:var(--c-shoot)} .lg.block{background:var(--c-block)} .modal h2 .lg{margin:0}
+.wk{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.wk-head{display:grid;grid-template-columns:56px repeat(7,1fr);border-bottom:1px solid var(--border);position:sticky;top:57px;background:var(--panel);z-index:3}
+.wk-h{padding:8px 6px;border-left:1px solid var(--border);min-width:0}
+.wk-h.today .wk-dn b{background:var(--accent);color:#fff;border-radius:999px;padding:1px 7px}
+.wk-dn{font-size:12.5px;color:var(--muted);font-weight:600}
+.wk-dn b{font-size:15px;color:var(--text);margin-left:2px}
+.wk-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.wk-allday{font-size:11.5px;border-radius:5px;padding:2px 6px;margin-top:4px;background:var(--c-event-soft);color:var(--c-event);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.wk-task{font-size:11.5px;border:1px dashed var(--border);border-radius:5px;padding:2px 6px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--muted)}
+.wk-task:hover{border-color:var(--accent-2);color:var(--text)}
+.wk-more{font-size:11px;display:block;margin-top:3px}
+.wk-grid{display:grid;grid-template-columns:56px repeat(7,1fr);max-height:calc(100vh - 260px);overflow-y:auto}
+.wk-gutter div{font-size:11px;color:var(--muted);text-align:right;padding:0 6px 0 0;transform:translateY(-6px)}
+.wk-col{position:relative;border-left:1px solid var(--border);cursor:copy}
+.wk-col.today{background:color-mix(in srgb,var(--accent-soft) 35%,transparent)}
+.wk-slot{position:absolute;left:0;right:0;border-top:1px solid var(--border)}
+.wk-slot:first-child{border-top:none}
+.wk-ev{position:absolute;border-radius:6px;padding:3px 6px;font-size:11.5px;line-height:1.25;overflow:hidden;cursor:pointer;background:var(--c-event-soft);border-left:3px solid var(--c-event);display:flex;flex-direction:column;z-index:1}
+.wk-ev b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-ev span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-ev.shoot{background:var(--c-shoot-soft);border-left-color:var(--c-shoot)}
+.wk-ev.block{background:repeating-linear-gradient(135deg,var(--c-block-soft) 0 8px,color-mix(in srgb,var(--c-block-soft) 70%,var(--panel)) 8px 16px);border-left-color:var(--c-block)}
+.wk-ev.past{opacity:.55}
+.wk-ev:hover{z-index:2;box-shadow:var(--shadow)}
+.now-line{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:2}
+.now-line::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+.ag-day{margin-bottom:16px}
+.ag-day h3{font-size:13px;margin:0 0 6px;color:var(--muted)}
+.ag-day.today h3{color:var(--accent)}
+.sp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:13.5px}
+.sp-grid label{margin-bottom:2px}
+.ev-desc{white-space:pre-wrap;font-size:13.5px;background:var(--panel-2);border-radius:8px;padding:10px;max-height:240px;overflow:auto}
+.cf-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+@media (max-width:760px){ .sp-grid{grid-template-columns:1fr 1fr} .cal-legend{display:none} .page-head .cal-actions{width:100%} .cal-actions .btn{flex:1} }
+
 /* ----- Chat ----- */
 nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 main.chat-mode{max-width:none;padding:0}
@@ -429,6 +496,7 @@ label.extra{margin:0}
     <nav class="tabs" id="tabs">
       <a href="#/home" data-view="home">Home</a>
       <a href="#/tasks" data-view="tasks">Tasks<span class="badge hidden" id="taskBadge"></span></a>
+      <a href="#/calendar" data-view="calendar">Calendar</a>
       <a href="#/projects" data-view="projects">Projects</a>
       <a href="#/agents" data-view="agents">Agents</a>
       <a href="#/chat" data-view="chat">Chat<span class="badge hidden" id="chatBadge"></span></a>
@@ -483,6 +551,9 @@ label.extra{margin:0}
     <!-- Tasks -->
     <div id="tasksView" class="hidden"></div>
 
+    <!-- Calendar -->
+    <div id="calendarView" class="hidden"></div>
+
     <!-- Chat -->
     <div id="chatView" class="hidden"></div>
 
@@ -524,6 +595,7 @@ const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
 const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
 const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
+  cal:{ status:null, cache:{}, week:null, weekItems:[] },
   tasks:[], suggestions:[], scans:[], taskScope:'mine', taskCat:'', showDoneTasks:false,
   chat:{ channels:[], members:[], unread:{}, lastAt:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
@@ -605,10 +677,11 @@ async function boot(session){
   loadPrefs();
   $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
   show('app');
-  await Promise.all([loadAll(), loadTasks()]);
+  await Promise.all([loadAll(), loadTasks(), loadCalStatus()]);
   await loadInbox();
   route();
   initChat(); subscribeTasks(); subscribeInbox();
+  setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } }, 5 * 60 * 1000);
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -649,7 +722,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const view = ['home','tasks','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  const view = ['home','tasks','calendar','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (view === 'projects') {
     if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
@@ -682,6 +755,8 @@ function render(){
   $('#teamView').classList.toggle('hidden', S.view !== 'team');
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
   $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
+  $('#calendarView').classList.toggle('hidden', S.view !== 'calendar');
+  if (S.view === 'calendar') renderCalendar();
   if (S.view === 'tasks') renderTasks();
   document.querySelector('main').classList.toggle('chat-mode', S.view === 'chat');
   if (S.view === 'chat') renderChat();
@@ -728,6 +803,9 @@ async function renderHome(){
       <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
       <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
     <div class="home-grid">
+      <div class="panel span-12" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
+        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}<a href="#/calendar" style="font-size:13px;font-weight:500">Calendar</a></h2>
+        <div class="md-body"><div class="none">Loading your day…</div></div></div>
       <div class="panel span-12" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">Open Tasks</a></h2>
         <div class="tlist"></div><div class="more"></div></div>
       ${pipelineHTML('photo')}
@@ -742,7 +820,8 @@ async function renderHome(){
       <div class="panel span-12"><h2>Recent activity</h2><ul class="feed" id="homeFeed"><li class="muted">Loading…</li></ul></div>
     </div>`;
   bindOpeners($('#homeView'));
-  $('#homeNewTask').onclick = openQuickTask; paintHomeTasks();
+  $('#homeNewTask').onclick = openQuickTask; paintHomeTasks(); paintMyDay();
+  const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
   $('#homeView').querySelectorAll('[data-new]').forEach(b => b.onclick = () => openNewProject(b.dataset.new));
   const { data, error } = await sb.from('activity_log').select('*').order('created_at', { ascending:false }).limit(15);
   const feed = $('#homeFeed'); if (!feed || S.view !== 'home') return;
@@ -1741,6 +1820,352 @@ function openTask(id){
     if (error) return fail(error);
     Object.assign(t, data); closeLayer(); paintTaskBadge(); render(); toast('Task saved');
   };
+}
+
+/* ===================== CALENDAR (Google Calendar via the gcal edge function) ===================== */
+const CAL_TZ = 'America/New_York';
+const CAL_BLOCK_COLOR = '3';      // Google "Grape" for time blocks
+const BLOCK_PRESETS = ['Editing', 'Admin work', 'Focus time', 'Drive time', 'Lunch', 'Personal'];
+const fmtT = d => new Date(d).toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' }).replace(':00', '').replace(' AM', 'am').replace(' PM', 'pm');
+const startOfDay = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+const weekStartOf = d => { const x = startOfDay(d); x.setDate(x.getDate() - x.getDay()); return x; }; // Sunday, like Google Calendar
+const mapsUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
+const dirUrl = list => 'https://www.google.com/maps/dir/' + list.map(a => encodeURIComponent(a)).join('/');
+
+async function gcal(action, payload = {}){
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/gcal`, { method:'POST',
+    headers: { Authorization: 'Bearer ' + session?.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.error || 'Calendar error'); Object.assign(e, d); throw e; }
+  return d;
+}
+async function loadCalStatus(){
+  try { S.cal.status = await gcal('status'); } catch (e) { S.cal.status = { configured:false, connected:false, error: e.message }; }
+}
+async function fetchRange(start, end, force){
+  const key = start.toISOString() + '|' + end.toISOString();
+  const c = S.cal.cache[key];
+  if (!force && c && Date.now() - c.at < 3 * 60 * 1000) return c.items;
+  const d = await gcal('list', { timeMin: start.toISOString(), timeMax: end.toISOString() });
+  const items = (d.items || []).filter(e => e.status !== 'cancelled').map(normEvent);
+  S.cal.cache[key] = { at: Date.now(), items };
+  return items;
+}
+const clearCalCache = () => { S.cal.cache = {}; };
+
+/* Spiro appointments carry the order details in the description: pull them out */
+function parseSpiro(desc){
+  if (!desc || !/spiro\.media|Your appointment at/i.test(desc)) return null;
+  const get = re => (desc.match(re) || [])[1]?.trim() || '';
+  const services = []; const sm = desc.match(/•\s*Services:\s*\n([\s\S]*?)\n\s*\n/);
+  if (sm) sm[1].split('\n').map(x => x.trim()).filter(Boolean).forEach(x => services.push(x.replace(/\s*\|\s*/g, ' · ')));
+  const lot = /lot lines[^\n]*\n\s*A:\s*Yes/i.test(desc);
+  return { client: get(/Name:\s*(.+)/), email: get(/Email:\s*(\S+)/), phone: get(/Phone Number:\s*(\+?\d+)/),
+    bundle: get(/•\s*Bundle:\s*(.+)/), services, lot,
+    entry: get(/Entry Method:\s*(.+)/), vacancy: get(/Vacancy:\s*(.+)/), size: get(/Size:\s*(.+)/),
+    unit: get(/Unit Number:\s*(.+)/), extra: get(/Extra Order Information:\s*(.+)/),
+    admin: get(/Admin Portal:\s*(https?:\/\/\S+)/), portal: get(/Photographer Portal:\s*(https?:\/\/\S+)/) };
+}
+function normEvent(e){
+  const allDay = !!e.start?.date;
+  const s = allDay ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime);
+  const en = allDay ? new Date(e.end.date + 'T00:00:00') : new Date(e.end.dateTime);
+  const spiro = parseSpiro(e.description);
+  const kv = e.extendedProperties?.private?.kvhq;
+  const kind = spiro ? 'shoot' : (kv === 'block' || e.eventType === 'focusTime') ? 'block' : allDay && /^booked$/i.test(e.summary || '') ? 'booked' : 'event';
+  return { id: e.id, raw: e, allDay, s, e: en, kind, spiro, title: kind === 'shoot' ? (spiro.client || e.summary) : (e.summary || '(No title)'), location: e.location || '', link: e.htmlLink, mine: !spiro };
+}
+function agentForEvent(ev){
+  const n = (ev.spiro?.client || '').toLowerCase().trim(); if (!n) return null;
+  const exact = S.agents.find(a => a.full_name.toLowerCase() === n); if (exact) return exact;
+  const [f, ...rest] = n.split(/\s+/), l = rest.pop() || '';
+  return S.agents.find(a => { const p = a.full_name.toLowerCase().split(/\s+/); return p[p.length - 1] === l && p[0][0] === f[0]; }) || null;
+}
+function projectForEvent(ev){
+  const m = (ev.location || '').toLowerCase().match(/^(\d{2,6})\s+([a-z]+)/); if (!m) return null;
+  return S.projects.filter(p => (p.name || '').toLowerCase().startsWith(m[1] + ' ' + m[2])).sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null;
+}
+const shortAddr = a => (a || '').replace(/,\s*(TN|Tennessee)\b.*$/i, '').replace(/,\s*Tennessee,?/i, ',');
+
+/* ----- Connect ----- */
+let gsiLoading = null;
+function loadGsi(){
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return gsiLoading ||= new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.onload = res; s.onerror = () => rej(new Error('Could not load Google sign-in')); document.head.appendChild(s); });
+}
+async function connectCalendar(){
+  const st = S.cal.status;
+  if (!st?.configured) return toast('Google Calendar setup isn’t finished yet');
+  try { await loadGsi(); } catch (e) { return fail(e); }
+  const client = google.accounts.oauth2.initCodeClient({
+    client_id: st.clientId, scope: st.scopes, ux_mode: 'popup', select_account: true, login_hint: S.me?.email || undefined,
+    callback: async resp => {
+      if (resp.error || !resp.code) return toast('Google Calendar was not connected');
+      try { await gcal('connect', { code: resp.code }); await loadCalStatus(); clearCalCache(); toast(`Connected ${S.cal.status.email || 'Google Calendar'}`); render(); }
+      catch (e) { fail(e); }
+    },
+  });
+  client.requestCode();
+}
+function calConnectHTML(compact){
+  const st = S.cal.status;
+  if (!st) return `<div class="none">Loading your calendar…</div>`;
+  if (!st.configured) return `<div class="cal-cta"><div><b>Calendar coming soon</b><p class="muted">Google Calendar setup is almost finished. Once it’s done, your day will show up here.</p></div></div>`;
+  return `<div class="cal-cta"><div><b>Connect your Google Calendar</b>${compact ? '' : `<p class="muted">See your shoots and appointments here, and add appointments or time blocks that sync to Google Calendar.</p>`}</div>
+    <button class="btn primary" data-cal-connect>Connect Google Calendar</button></div>`;
+}
+
+/* ----- Home: My Day at a Glance ----- */
+async function paintMyDay(){
+  const box = $('#myDay'); if (!box) return;
+  const body = box.querySelector('.md-body'), meta = box.querySelector('.md-meta');
+  const st = S.cal.status;
+  if (!st?.connected) { body.innerHTML = calConnectHTML(true); meta.textContent = ''; box.querySelectorAll('[data-cal-connect]').forEach(b => b.onclick = connectCalendar); return; }
+  const t0 = startOfDay(new Date()), t2 = addDays(t0, 2);
+  let items;
+  try { items = await fetchRange(t0, t2); } catch (e) { body.innerHTML = `<div class="none">Couldn’t load your calendar (${esc(e.message)}). <a href="#" data-cal-retry>Try again</a></div>`; body.querySelector('[data-cal-retry]').onclick = ev => { ev.preventDefault(); clearCalCache(); paintMyDay(); }; return; }
+  const now = new Date();
+  const todays = items.filter(e => !e.allDay && sameDay(e.s, t0));
+  const allDay = items.filter(e => e.allDay && e.s <= t0 && e.e > t0);
+  const tomorrow = items.filter(e => !e.allDay && sameDay(e.s, addDays(t0, 1)));
+  const shoots = todays.filter(e => e.kind === 'shoot');
+  const dueToday = myOpen().filter(t => t.due_date && t.due_date <= today()).length;
+  const next = todays.find(e => e.e > now);
+  meta.innerHTML = [todays.length ? `${shoots.length} shoot${shoots.length === 1 ? '' : 's'}${todays.length > shoots.length ? ` · ${todays.length - shoots.length} other` : ''} · ${fmtT(todays[0].s)}–${fmtT(todays[todays.length - 1].e)}` : 'Nothing scheduled today',
+    dueToday ? `<a href="#/tasks">${dueToday} task${dueToday === 1 ? '' : 's'} due</a>` : ''].filter(Boolean).join(' · ');
+  const route = shoots.filter(e => e.location).map(e => e.location);
+  body.innerHTML = `
+    ${allDay.filter(e => e.kind !== 'booked').map(e => `<span class="chip">All day: ${esc(e.title)}</span>`).join(' ')}
+    ${todays.length ? `<div class="day-list">${todays.map(e => dayItemHTML(e, now, next)).join('')}</div>`
+      : `<div class="none">No appointments today. ${tomorrow.length ? '' : 'Enjoy the open calendar.'}</div>`}
+    <div class="md-foot">
+      ${route.length > 1 ? `<a class="btn small" href="${esc(dirUrl(route))}" target="_blank" rel="noopener">🗺 Today’s route (${route.length} stops)</a>` : route.length === 1 ? `<a class="btn small" href="${esc(mapsUrl(route[0]))}" target="_blank" rel="noopener">🗺 Directions</a>` : ''}
+      <span class="muted">${tomorrow.length ? `Tomorrow: ${tomorrow.length} appointment${tomorrow.length === 1 ? '' : 's'}, first at ${fmtT(tomorrow[0].s)}` : 'Tomorrow is open'}</span>
+      <span class="spacer"></span><a href="#/calendar" class="muted">Week view →</a></div>`;
+  body.querySelectorAll('[data-ev]').forEach(el => el.onclick = e => { if (!e.target.closest('a')) openCalEvent(items.find(x => x.id === el.dataset.ev)); });
+}
+function dayItemHTML(e, now, next){
+  const state = e.e <= now ? 'past' : e.s <= now ? 'now' : e === next ? 'next' : '';
+  const sp = e.spiro;
+  const chips = sp ? [sp.bundle, sp.entry && sp.entry.replace(/\s*Entry$/i, ' entry'), sp.vacancy].filter(Boolean) : [];
+  return `<div class="di ${e.kind} ${state}" data-ev="${esc(e.id)}">
+    <div class="di-time"><b>${fmtT(e.s)}</b><span>${fmtT(e.e)}</span></div>
+    <div class="di-bar"></div>
+    <div class="di-main">
+      <div class="di-title">${state === 'now' ? '<span class="pill now">Now</span>' : state === 'next' ? '<span class="pill next">Next</span>' : ''}${esc(e.title)}${e.kind === 'block' ? ' <span class="muted">· time block</span>' : ''}</div>
+      ${e.location ? `<div class="di-loc"><a href="${esc(mapsUrl(e.location))}" target="_blank" rel="noopener">📍 ${esc(shortAddr(e.location))}</a>${sp?.unit ? ` · ${esc(sp.unit)}` : ''}</div>` : ''}
+      ${chips.length ? `<div class="di-chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ----- Calendar tab: My Week at a Glance ----- */
+async function renderCalendar(){
+  const box = $('#calendarView');
+  const st = S.cal.status;
+  if (!S.cal.week) S.cal.week = weekStartOf(new Date());
+  const ws = S.cal.week, we = addDays(ws, 7);
+  const label = `${ws.toLocaleDateString(undefined, { month:'short', day:'numeric' })} – ${addDays(ws, 6).toLocaleDateString(undefined, { month: ws.getMonth() === addDays(ws, 6).getMonth() ? undefined : 'short', day:'numeric', year:'numeric' })}`;
+  box.innerHTML = `
+    <div class="page-head"><div><h1>My Week at a Glance</h1><p>${st?.connected ? `Google Calendar · ${esc(st.email || '')}` : 'Google Calendar'}</p></div>
+      <div class="spacer"></div>
+      ${st?.connected ? `<div class="cal-actions"><button class="btn" id="calAddBlock">+ Time block</button><button class="btn primary" id="calAddAppt">+ Appointment</button></div>` : ''}</div>
+    ${st?.connected ? `<div class="toolbar cal-nav">
+      <button class="btn small" id="calToday">Today</button><button class="btn small" id="calPrev" aria-label="Previous week">‹</button><button class="btn small" id="calNext" aria-label="Next week">›</button>
+      <b class="cal-label">${esc(label)}</b><span class="spacer"></span>
+      <span class="cal-legend"><i class="lg shoot"></i>Shoots <i class="lg event"></i>Appointments <i class="lg block"></i>Time blocks</span>
+      <button class="btn small ghost" id="calRefresh" title="Refresh">↻</button>
+      <button class="btn small ghost" id="calDisconnect" title="Disconnect Google Calendar">Disconnect</button></div>
+      <div id="calBody"><div class="none">Loading your week…</div></div>`
+    : `<div class="panel">${calConnectHTML(false)}</div>`}`;
+  box.querySelectorAll('[data-cal-connect]').forEach(b => b.onclick = connectCalendar);
+  if (!st?.connected) return;
+  $('#calToday').onclick = () => { S.cal.week = weekStartOf(new Date()); renderCalendar(); };
+  $('#calPrev').onclick = () => { S.cal.week = addDays(S.cal.week, -7); renderCalendar(); };
+  $('#calNext').onclick = () => { S.cal.week = addDays(S.cal.week, 7); renderCalendar(); };
+  $('#calRefresh').onclick = () => { clearCalCache(); renderCalendar(); };
+  $('#calAddAppt').onclick = () => openCalForm({ kind:'event' });
+  $('#calAddBlock').onclick = () => openCalForm({ kind:'block' });
+  $('#calDisconnect').onclick = async () => {
+    if (!confirm('Disconnect Google Calendar from HQ? Your calendar itself is not changed.')) return;
+    try { await gcal('disconnect'); await loadCalStatus(); clearCalCache(); render(); toast('Google Calendar disconnected'); } catch (e) { fail(e); }
+  };
+  let items;
+  try { items = await fetchRange(ws, we); } catch (e) { $('#calBody').innerHTML = `<div class="none">Couldn’t load your calendar: ${esc(e.message)}</div>`; return; }
+  if (S.view !== 'calendar' || S.cal.week !== ws) return;
+  S.cal.weekItems = items;
+  $('#calBody').innerHTML = matchMedia('(max-width:760px)').matches ? agendaHTML(ws, items) : weekGridHTML(ws, items);
+  wireCalBody(items);
+}
+function tasksDueOn(iso){ return myOpen().filter(t => t.due_date === iso); }
+function weekGridHTML(ws, items){
+  const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const timed = items.filter(e => !e.allDay);
+  let h0 = 7, h1 = 20;
+  for (const e of timed) { h0 = Math.min(h0, e.s.getHours()); h1 = Math.max(h1, e.e.getHours() + (e.e.getMinutes() ? 1 : 0)); }
+  h0 = Math.max(0, h0); h1 = Math.min(24, Math.max(h1, h0 + 8));
+  const PX = 46, hours = [...Array(h1 - h0)].map((_, i) => h0 + i);
+  const now = new Date();
+  const head = days.map(d => {
+    const iso = isoDay(d), tk = tasksDueOn(iso), n = timed.filter(e => sameDay(e.s, d) && e.kind === 'shoot').length;
+    const allDay = items.filter(e => e.allDay && e.s <= d && e.e > d);
+    return `<div class="wk-h ${sameDay(d, now) ? 'today' : ''}">
+      <div class="wk-dn">${d.toLocaleDateString(undefined, { weekday:'short' })} <b>${d.getDate()}</b></div>
+      <div class="wk-sub">${n ? `${n} shoot${n === 1 ? '' : 's'}` : '&nbsp;'}${allDay.some(e => e.kind === 'booked') ? ' · <span title="Marked BOOKED in Spiro">booked</span>' : ''}</div>
+      ${allDay.filter(e => e.kind !== 'booked').map(e => `<div class="wk-allday ${e.kind}" data-ev="${esc(e.id)}">${esc(e.title)}</div>`).join('')}
+      ${tk.slice(0, 2).map(t => `<div class="wk-task" data-task="${t.id}" title="Task due">✓ ${esc(t.title)}</div>`).join('')}${tk.length > 2 ? `<a class="wk-more" href="#/tasks">+${tk.length - 2} more tasks</a>` : ''}
+    </div>`;
+  }).join('');
+  const cols = days.map(d => {
+    const evs = layoutDay(timed.filter(e => sameDay(e.s, d)));
+    const nowLine = sameDay(d, now) && now.getHours() >= h0 && now.getHours() < h1 ? `<div class="now-line" style="top:${((now.getHours() - h0) * 60 + now.getMinutes()) * PX / 60}px"></div>` : '';
+    return `<div class="wk-col ${sameDay(d, now) ? 'today' : ''}" data-day="${isoDay(d)}" style="height:${hours.length * PX}px">
+      ${hours.map(h => `<div class="wk-slot" data-h="${h}" style="top:${(h - h0) * PX}px;height:${PX}px"></div>`).join('')}
+      ${evs.map(({ ev, col, cols }) => { const top = ((ev.s.getHours() - h0) * 60 + ev.s.getMinutes()) * PX / 60;
+        const ht = Math.max(22, (Math.min(ev.e, addDays(startOfDay(ev.s), 1)) - ev.s) / 60000 * PX / 60);
+        return `<div class="wk-ev ${ev.kind} ${ev.e < now ? 'past' : ''}" data-ev="${esc(ev.id)}" style="top:${top}px;height:${ht - 2}px;left:calc(${col / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px)">
+          <b>${esc(ev.title)}</b><span>${fmtT(ev.s)}${ht > 40 ? ` – ${fmtT(ev.e)}` : ''}</span>${ht > 58 && ev.location ? `<span>${esc(shortAddr(ev.location))}</span>` : ''}</div>`; }).join('')}
+      ${nowLine}</div>`;
+  }).join('');
+  return `<div class="wk"><div class="wk-head"><div class="wk-gutter"></div>${head}</div>
+    <div class="wk-grid"><div class="wk-gutter">${hours.map(h => `<div style="height:${PX}px">${fmtT(new Date(2000, 0, 1, h))}</div>`).join('')}</div>${cols}</div></div>`;
+}
+function layoutDay(evs){
+  evs = [...evs].sort((a, b) => a.s - b.s || b.e - a.e);
+  const out = []; let group = [], groupEnd = 0;
+  const flush = () => { const colsEnd = []; const placed = group.map(ev => { let c = colsEnd.findIndex(end => end <= ev.s); if (c < 0) { c = colsEnd.length; colsEnd.push(0); } colsEnd[c] = ev.e; return { ev, col: c }; }); placed.forEach(p => out.push({ ...p, cols: colsEnd.length })); group = []; groupEnd = 0; };
+  for (const ev of evs) { if (group.length && ev.s >= groupEnd) flush(); group.push(ev); groupEnd = Math.max(groupEnd, +ev.e); }
+  if (group.length) flush();
+  return out;
+}
+function agendaHTML(ws, items){
+  const now = new Date();
+  return [...Array(7)].map((_, i) => { const d = addDays(ws, i), iso = isoDay(d);
+    const evs = items.filter(e => !e.allDay && sameDay(e.s, d)), tk = tasksDueOn(iso);
+    return `<div class="ag-day ${sameDay(d, now) ? 'today' : ''}"><h3>${d.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' })}</h3>
+      ${evs.length ? `<div class="day-list">${evs.map(e => dayItemHTML(e, now, null)).join('')}</div>` : '<div class="none">Nothing scheduled</div>'}
+      ${tk.map(t => `<div class="wk-task" data-task="${t.id}">✓ ${esc(t.title)}</div>`).join('')}</div>`; }).join('');
+}
+function wireCalBody(items){
+  const root = $('#calBody'); if (!root) return;
+  root.querySelectorAll('[data-ev]').forEach(el => el.onclick = e => { if (e.target.closest('a')) return; e.stopPropagation(); openCalEvent(items.find(x => x.id === el.dataset.ev)); });
+  root.querySelectorAll('[data-task]').forEach(el => el.onclick = e => { e.stopPropagation(); openTask(el.dataset.task); });
+  root.querySelectorAll('.wk-col').forEach(col => col.onclick = e => {
+    if (e.target.closest('.wk-ev')) return;
+    const rect = col.getBoundingClientRect(), PX = 46;
+    const slot = col.querySelector('.wk-slot'); const h0 = slot ? +slot.dataset.h : 7;
+    const mins = Math.max(0, Math.floor((e.clientY - rect.top) / PX * 60 / 30) * 30);
+    const s = new Date(col.dataset.day + 'T00:00:00'); s.setMinutes((h0 * 60) + mins);
+    openCalForm({ kind: 'event', start: s });
+  });
+}
+
+/* ----- Event details ----- */
+function openCalEvent(ev){
+  if (!ev) return;
+  const sp = ev.spiro, agent = sp ? agentForEvent(ev) : null, proj = sp ? projectForEvent(ev) : null;
+  const when = ev.allDay ? `${ev.s.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' })} · all day`
+    : `${ev.s.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' })} · ${fmtT(ev.s)} – ${fmtT(ev.e)}`;
+  const desc = ev.raw.description || '';
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><h2><span class="lg ${ev.kind}"></span>${esc(ev.title)}</h2>
+    <p class="muted" style="margin:-10px 0 14px">${esc(when)}${ev.kind === 'block' ? ' · time block' : sp ? ' · Spiro appointment' : ''}</p>
+    ${ev.location ? `<p style="margin:0 0 12px">📍 ${esc(ev.location)}${sp?.unit ? ` (${esc(sp.unit)})` : ''} · <a href="${esc(mapsUrl(ev.location))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([ev.location]))}" target="_blank" rel="noopener">Directions</a></p>` : ''}
+    ${sp ? `<div class="sp-grid">
+        <div><label>Package</label>${esc(sp.bundle || '—')}</div>
+        <div><label>Entry</label>${esc(sp.entry || '—')}</div>
+        <div><label>Vacancy</label>${esc(sp.vacancy || '—')}</div>
+        <div><label>Size</label>${esc(sp.size || '—')}</div>
+      </div>
+      ${sp.services.length || sp.lot ? `<div class="di-chips" style="margin:10px 0">${sp.services.map(x => `<span>${esc(x)}</span>`).join('')}${sp.lot ? '<span>Lot lines</span>' : ''}</div>` : ''}
+      ${sp.extra ? `<p style="margin:8px 0"><b>Note from order:</b> ${esc(sp.extra)}</p>` : ''}
+      <p style="margin:8px 0" class="muted">${esc(sp.client)}${sp.phone ? ` · <a href="tel:${esc(sp.phone)}">${esc(sp.phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3'))}</a>` : ''}${sp.email ? ` · <a href="mailto:${esc(sp.email)}">${esc(sp.email)}</a>` : ''}</p>`
+      : desc ? `<div class="ev-desc">${linkify(desc)}</div>` : ''}
+    <div class="actions" style="flex-wrap:wrap">
+      ${ev.mine && ev.kind !== 'booked' ? `<button class="btn danger" id="evDel" style="margin-right:auto">Delete</button>` : ''}
+      ${agent ? `<button class="btn" id="evAgent">Agent file</button>` : ''}
+      ${proj ? `<button class="btn" id="evProj">Open project</button>` : ''}
+      ${sp?.admin ? `<a class="btn" href="${esc(sp.admin)}" target="_blank" rel="noopener">Open in Spiro</a>` : ''}
+      ${safeUrl(ev.link) ? `<a class="btn" href="${esc(ev.link)}" target="_blank" rel="noopener">Google Calendar</a>` : ''}
+      ${ev.mine && ev.kind !== 'booked' ? `<button class="btn" id="evEdit">Edit</button>` : ''}
+      <button class="btn primary" id="evClose">Close</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#evClose').onclick = closeLayer;
+  const a = $('#evAgent'); if (a) a.onclick = () => { closeLayer(); openAgent(agent.id); };
+  const p = $('#evProj'); if (p) p.onclick = () => { closeLayer(); openProject(proj.id); };
+  const ed = $('#evEdit'); if (ed) ed.onclick = () => openCalForm({ kind: ev.kind === 'block' ? 'block' : 'event', ev });
+  const del = $('#evDel'); if (del) del.onclick = async () => {
+    if (!confirm(`Delete "${ev.title}" from your Google Calendar?`)) return;
+    try { await gcal('delete', { id: ev.id }); clearCalCache(); closeLayer(); render(); toast('Deleted from Google Calendar'); } catch (e) { fail(e); }
+  };
+}
+
+/* ----- Add / edit appointment or time block ----- */
+const toLocalDate = d => isoDay(d);
+const toLocalTime = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+function openCalForm({ kind = 'event', start, ev } = {}){
+  const isEdit = !!ev;
+  let s = ev ? ev.s : start || (() => { const d = new Date(); d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0); return d; })();
+  let e = ev ? ev.e : new Date(s.getTime() + 60 * 60000);
+  const allDay = ev?.allDay || false;
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>${isEdit ? 'Edit' : 'Add to calendar'}</h2>
+    <form id="calForm">
+      <div class="seg" id="cfKind" style="margin-bottom:12px"><button type="button" data-k="event">Appointment</button><button type="button" data-k="block">Time block</button></div>
+      <div id="cfPresets" class="cf-presets"></div>
+      <label>Title</label><input name="summary" id="cfTitle" required value="${esc(ev?.raw.summary || '')}" placeholder="${kind === 'block' ? 'e.g. Editing' : 'e.g. Meeting with Josh at Earthadelic'}" />
+      <div class="grid3" style="margin-top:12px">
+        <div><label>Date</label><input type="date" name="date" required value="${toLocalDate(s)}" /></div>
+        <div><label>Start</label><input type="time" name="start" value="${toLocalTime(s)}" step="900" /></div>
+        <div><label>End</label><input type="time" name="end" value="${toLocalTime(e)}" step="900" /></div>
+      </div>
+      <label class="check" id="cfAllDayWrap" style="margin-top:10px"><input type="checkbox" name="allDay" ${allDay ? 'checked' : ''} /> All day</label>
+      <div id="cfApptFields">
+        <div style="margin-top:12px"><label>Location</label><input name="location" value="${esc(ev?.raw.location || '')}" placeholder="Address or meeting link" /></div>
+      </div>
+      <div style="margin-top:12px"><label>Notes</label><textarea name="description" style="min-height:70px">${esc(ev?.raw.description || '')}</textarea></div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Saves to your Google Calendar (${esc(S.cal.status?.email || '')}).</p>
+      <div class="actions"><button type="button" class="btn" id="cfCancel">Cancel</button><button class="btn primary" id="cfSave">${isEdit ? 'Save' : 'Add'}</button></div>
+    </form></div>`;
+  let k = kind;
+  const paintKind = () => {
+    document.querySelectorAll('#cfKind button').forEach(b => b.classList.toggle('active', b.dataset.k === k));
+    $('#cfApptFields').classList.toggle('hidden', k === 'block');
+    $('#cfAllDayWrap').classList.toggle('hidden', k === 'block');
+    $('#cfPresets').innerHTML = k === 'block' ? BLOCK_PRESETS.map(p => `<button type="button" class="chip" data-p="${esc(p)}">${esc(p)}</button>`).join('') : '';
+    document.querySelectorAll('#cfPresets [data-p]').forEach(b => b.onclick = () => { $('#cfTitle').value = b.dataset.p; });
+    $('#cfTitle').placeholder = k === 'block' ? 'e.g. Editing' : 'e.g. Meeting with Josh at Earthadelic';
+  };
+  document.querySelectorAll('#cfKind button').forEach(b => b.onclick = () => { k = b.dataset.k; paintKind(); });
+  paintKind();
+  const form = $('#calForm');
+  form.start.onchange = () => { const [h, m] = form.start.value.split(':').map(Number), [eh, em] = form.end.value.split(':').map(Number);
+    if (eh * 60 + em <= h * 60 + m) { const t = h * 60 + m + 60; form.end.value = `${String(Math.min(23, Math.floor(t / 60))).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; } };
+  $('#ov').onclick = closeLayer; $('#cfCancel').onclick = closeLayer;
+  form.onsubmit = async evt => {
+    evt.preventDefault();
+    const f = Object.fromEntries(new FormData(form));
+    const isAll = k !== 'block' && form.allDay.checked;
+    const body = { summary: f.summary.trim(), description: f.description || '', location: k === 'block' ? '' : (f.location || '') };
+    if (isAll) { body.start = { date: f.date }; body.end = { date: isoDay(addDays(new Date(f.date + 'T12:00:00'), 1)) }; }
+    else {
+      const sd = new Date(`${f.date}T${f.start || '09:00'}`), ed = new Date(`${f.date}T${f.end || '10:00'}`);
+      if (ed <= sd) return toast('End time must be after the start time');
+      body.start = { dateTime: sd.toISOString(), timeZone: CAL_TZ }; body.end = { dateTime: ed.toISOString(), timeZone: CAL_TZ };
+    }
+    body.extendedProperties = { private: { kvhq: k === 'block' ? 'block' : 'appointment' } };
+    if (k === 'block') { body.colorId = CAL_BLOCK_COLOR; body.transparency = 'opaque'; }
+    $('#cfSave').disabled = true;
+    try {
+      if (isEdit) await gcal('update', { id: ev.id, event: body }); else await gcal('create', { event: body });
+      clearCalCache(); closeLayer(); render(); toast(isEdit ? 'Updated in Google Calendar' : `${k === 'block' ? 'Time block' : 'Appointment'} added to Google Calendar`);
+    } catch (e2) { $('#cfSave').disabled = false; fail(e2); }
+  };
+  setTimeout(() => $('#cfTitle').focus(), 30);
 }
 
 /* ===================== CHAT ===================== */
