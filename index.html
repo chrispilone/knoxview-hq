@@ -46,7 +46,10 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .tcat{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--c)}
 .tcat::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
 .qadd{display:flex;flex-direction:column;gap:8px}
-.qadd .qinput{font-size:16px;padding:12px 14px;border-radius:10px}
+.qadd .qinput{font-size:16px;padding:12px 14px;border-radius:10px;min-height:48px;resize:none;line-height:1.4}
+.qsum{display:flex;align-items:center;gap:8px}
+.qsum-l{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.qsum .qtitle{font-weight:600;padding:6px 10px}
 .qchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;min-height:30px}
 .qchips select,.qchips input[type=date]{width:auto;padding:5px 8px;font-size:13px}
 .chip{display:inline-flex;align-items:center;border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:500}
@@ -70,9 +73,11 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .trow.done .tt{text-decoration:line-through;color:var(--muted)}
 .trow.high .tcheck{border-color:var(--danger)}
 .tmain{flex:1;min-width:0}
-.tt{font-weight:500;line-height:1.35}
+.tt{font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tstate{font-size:11.5px;font-weight:600;color:var(--s-in_progress);background:var(--accent-soft);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .tt .flag{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;margin-right:6px;vertical-align:1px}
-.tmeta{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12px;color:var(--muted)}
+.tmeta{display:flex;gap:4px 12px;margin-top:3px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.tmeta>span{overflow:hidden;text-overflow:ellipsis}
 .trow .due{font-size:12.5px;color:var(--muted);white-space:nowrap}
 .trow .due.today{color:var(--warn);font-weight:600}
 .trow .due.over{color:var(--danger);font-weight:600}
@@ -1337,7 +1342,7 @@ function parseTask(raw){
   let title = raw.trim(), due = null, high = false;
   const now = new Date(); now.setHours(12, 0, 0, 0);
   const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-  const pre = '(?:\\s+(?:by|due|on|before|this))?';
+  const pre = '(?:\\s+(?:by|due|on|before|for|until))?(?:\\s+(?:this|the))?(?:\\s+(?:upcoming|coming))?';
   const rules = [
     [new RegExp(pre + '\\s+(today|tonight|eod)\\b', 'i'), () => now],
     [new RegExp(pre + '\\s+(tomorrow|tmrw|tmr)\\b', 'i'), () => addDays(now, 1)],
@@ -1358,7 +1363,41 @@ function parseTask(raw){
   let cat = 'general', best = 0;
   for (const c of TASK_CATS) { const hits = c.words.filter(w => low.includes(' ' + w.trimStart())).length; if (hits > best) { best = hits; cat = c.k; } }
   if ((agent || project) && (cat === 'general' || cat === 'admin')) cat = 'clients';
-  return { title, due, high, cat, agent_id: agent?.id || null, project_id: project?.id || null };
+  const summary = summarizeTask(title);
+  const words = raw.trim().split(/\s+/).length;
+  const details = words > summary.split(/\s+/).length + 2 ? raw.trim() : null;
+  return { title, summary, details, due, high, cat, agent_id: agent?.id || null, project_id: project?.id || null };
+}
+
+
+/* Turn a dictated sentence into a short card title: "I need to confirm Mercedes Brown's photo shoot and also…" → "Confirm Mercedes Brown's photo shoot" */
+function summarizeTask(text){
+  let t = ' ' + String(text || '').replace(/\s+/g, ' ').trim() + ' ';
+  const lead = [
+    /^\s*(?:um+|uh+|okay|ok|so|hey|alright|all right|well|yeah|and|also|oh)[,.]?\s+/i,
+    /^\s*(?:i|we)\s+(?:really\s+)?(?:need|have|got|want|wanna|gotta|should|must|will need)\s+(?:to\s+)?/i,
+    /^\s*(?:i'm|i am|we're|we are)\s+(?:going|gonna)\s+(?:to\s+)?(?:need\s+to\s+)?/i,
+    /^\s*(?:i\s+)?(?:need|have|got)\s+to\s+/i,
+    /^\s*(?:please\s+)?(?:remind me|remember|don't forget|do not forget|make sure|be sure)\s+(?:to\s+|that\s+(?:i|we)\s+)?/i,
+    /^\s*(?:can|could|would)\s+(?:you|someone|somebody)\s+(?:please\s+)?/i,
+    /^\s*(?:go ahead and|please|let's|lets|let me|i should|task(?: is)?|to do|todo)[:,]?\s+/i,
+    /^\s*(?:to)\s+/i,
+  ];
+  for (let pass = 0; pass < 4; pass++) for (const re of lead) t = t.replace(re, ' ');
+  t = t.trim();
+  // First idea only: stop at sentence ends and the usual "and also / because / so that" joins
+  t = t.split(/(?<=\w)[.!?;](?:\s|$)|\s+[-–—]\s+|,\s*(?:and|but|then|also|so)\s+|\s+(?:and also|and then|and make sure|and maybe|but also|because|since|so that|that way|in order to|which|so i|so we|after that|plus)\s+/i)[0];
+  t = t.replace(/\s+(?:at|around|by)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)?\s*$/i, '').replace(/[,.:;]+$/, '').trim();
+  let words = t.split(/\s+/).filter(Boolean);
+  const weak = /^(?:the|a|an|to|for|with|and|or|of|on|in|at|about|from|that|this|my|our|his|her|their|it|is|be|so|just|really|some|over|into|through)$/i;
+  const cut = words.length > 9;
+  if (cut) words = words.slice(0, 9);
+  while (words.length > 2 && weak.test(words[words.length - 1])) words.pop();
+  if (cut && words.length > 4 && /^to$/i.test(words[words.length - 2])) words.splice(-2);
+  while (words.length > 2 && weak.test(words[words.length - 1])) words.pop();
+  t = words.join(' ');
+  if (!t) t = String(text || '').trim().split(/\s+/).slice(0, 8).join(' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 function dueLabel(d){
@@ -1397,10 +1436,9 @@ function taskRow(t){
   const from = t.assigned_to === S.me.id && t.created_by && t.created_by !== S.me.id ? `<span class="muted">from ${esc(firstName(memberName(t.created_by)))}</span>` : '';
   return `<div class="trow ${t.status === 'done' ? 'done' : ''} ${t.priority === 'high' ? 'high' : ''}" data-task="${t.id}">
     <button class="tcheck" data-toggle-task="${t.id}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
-    <div class="tmain"><div class="tt">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
-      <div class="tmeta">${catTag(t.category)}${t.status === 'doing' ? '<span class="tag" style="color:var(--s-in_progress)">In progress</span>' : ''}
-        ${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${t.notes ? '<span title="Has notes">📝</span>' : ''}
-        ${t.agent_id ? `<span>${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${from}</div></div>
+    <div class="tmain"><div class="tt" title="${esc(t.title)}">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
+      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${from}</div></div>
+    ${t.status === 'doing' ? '<span class="tstate">In progress</span>' : ''}
     ${t.status === 'done' ? `<span class="due">${esc(fmtShort(t.done_at))}</span>` : dueLabel(t.due_date)}${who}
   </div>`;
 }
@@ -1423,18 +1461,25 @@ function bindTaskRows(root){
 /* ----- Quick add (shared by Home button, Tasks page, and "+ New task") ----- */
 function quickAddHTML(id){
   return `<div class="qadd" id="${id}">
-    <input type="text" class="qinput" placeholder="Add a task… e.g. “Send Jared the community reel by Friday”" autocomplete="off" />
+    <textarea class="qinput" rows="1" placeholder="Add or dictate a task… e.g. “I need to send Jared the community reel by Friday”"></textarea>
+    <div class="qsum hidden"><span class="qsum-l">Card title</span><input class="qtitle" maxlength="90" /></div>
     <div class="qchips"></div>
   </div>`;
 }
 function wireQuickAdd(root, { onSaved, autofocus } = {}){
   const input = root.querySelector('.qinput'), chips = root.querySelector('.qchips');
+  const sumBox = root.querySelector('.qsum'), sumIn = root.querySelector('.qtitle');
   let over = {};
+  const grow = () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 180) + 'px'; };
+  sumIn.oninput = () => { over.title = sumIn.value; };
+  sumIn.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } };
   const people = S.team.filter(t => t.active);
   const paint = () => {
     const raw = input.value.trim();
-    if (!raw) { chips.innerHTML = `<span class="muted">Press Enter to save. Dates like “tomorrow” or “Friday” and “!” for high priority are picked up automatically.</span>`; return; }
+    if (!raw) { sumBox.classList.add('hidden'); chips.innerHTML = `<span class="muted">Type or use speech-to-text, then press Enter. HQ writes a short card title and keeps everything you said in the details. Dates like “tomorrow” or “Friday” and “urgent” are picked up automatically.</span>`; return; }
     const p = { ...parseTask(raw), ...over };
+    sumBox.classList.remove('hidden');
+    if (over.title === undefined && document.activeElement !== sumIn) sumIn.value = p.summary;
     chips.innerHTML = `
       <select data-q="cat" title="Category">${TASK_CATS.map(c => `<option value="${c.k}" ${c.k === p.cat ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
       <input type="date" data-q="due" value="${esc(p.due || '')}" title="Due date" />
@@ -1451,19 +1496,20 @@ function wireQuickAdd(root, { onSaved, autofocus } = {}){
   const save = async () => {
     const raw = input.value.trim(); if (!raw) return;
     const p = { ...parseTask(raw), ...over };
-    const row = { title: p.title || raw, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
+    const title = (over.title ?? p.summary ?? '').trim() || p.summary || raw.slice(0, 90);
+    const row = { title, notes: p.details, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
       assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id, project_id: p.project_id };
     input.disabled = true;
     const { data, error } = await sb.from('tasks').insert(row).select().single();
     input.disabled = false;
     if (error) return fail(error);
     S.tasks.unshift(data); paintTaskBadge();
-    input.value = ''; over = {}; paint(); input.focus();
+    input.value = ''; over = {}; sumIn.value = ''; grow(); paint(); input.focus();
     toast(row.assigned_to === S.me.id ? 'Task added' : `Task sent to ${firstName(memberName(row.assigned_to))}`);
     onSaved && onSaved(data);
   };
-  input.oninput = () => { if (!input.value.trim()) over = {}; paint(); };
-  input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); save(); } if (e.key === 'Escape' && root.closest('.modal')) closeLayer(); };
+  input.oninput = () => { if (!input.value.trim()) over = {}; grow(); paint(); };
+  input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); save(); } if (e.key === 'Escape' && root.closest('.modal')) closeLayer(); };
   paint(); if (autofocus) input.focus();
 }
 function openQuickTask(){
@@ -1540,7 +1586,7 @@ function openTask(id){
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal wide"><form id="tForm">
-    <input name="title" class="ttitle" value="${esc(t.title)}" required />
+    <label>Card title</label><input name="title" class="ttitle" value="${esc(t.title)}" maxlength="90" required />
     <div class="grid3" style="margin-top:12px">
       <div><label>Status</label><select name="status">${opt([['todo','To do'],['doing','In progress'],['done','Done']], t.status)}</select></div>
       <div><label>Due date</label><input type="date" name="due_date" value="${esc(t.due_date || '')}" /></div>
@@ -1550,7 +1596,7 @@ function openTask(id){
       <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
       <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
     </div>
-    <div style="margin-top:12px"><label>Details</label><textarea name="notes" placeholder="What needs to be done, links, phone numbers, anything you don't want to keep in your head…" style="min-height:110px">${esc(t.notes || '')}</textarea></div>
+    <div style="margin-top:12px"><label>Details (everything you said)</label><textarea name="notes" placeholder="What needs to be done, links, phone numbers, anything you don't want to keep in your head…" style="min-height:130px">${esc(t.notes || '')}</textarea></div>
     <div style="margin-top:12px"><label>Checklist</label><div id="tChecklist"></div>
       <input id="tCheckNew" placeholder="Add a step and press Enter" /></div>
     <p class="muted" style="font-size:12px;margin:12px 0 0">Created ${esc(fmtDateTime(t.created_at))}${t.created_by ? ' by ' + esc(memberName(t.created_by)) : ''}${t.done_at ? ' · completed ' + esc(fmtDateTime(t.done_at)) : ''}</p>
