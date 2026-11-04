@@ -195,6 +195,10 @@ table.list tr.row:hover td{background:var(--panel-2)}
 .extra{border:1px solid var(--border);border-radius:9px;padding:9px 12px}
 .extra.on{border-color:var(--photo);background:var(--photo-soft)}
 .extra-toggle{color:var(--text);font-size:14px;cursor:pointer}
+label.extra{margin:0}
+.sub-label{font-weight:500}
+.modal .grid3{grid-template-columns:1fr 1fr 1fr}
+@media (max-width:520px){.modal .grid3{grid-template-columns:1fr}}
 .extra-fields{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin-top:8px}
 @media (max-width:520px){.extra-fields{grid-template-columns:1fr}}
 
@@ -698,10 +702,38 @@ function openNewProject(media){
         <div><label>Assign to</label><select name="assigned_to">${team}</select></div>
         ${isPhoto
           ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" /></div>`
-          : `<div><label>Due date</label><input type="date" name="due_date" /></div>
-             <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY,'spiro')}</select></div><div></div>`}
+          : `<div><label>City / text graphic location</label><input name="city" placeholder="Knoxville, TN" /></div>`}
         <div class="full"><label>Dropbox folder link</label><input name="dropbox_url" type="url" placeholder="https://www.dropbox.com/…" /></div>
       </div>
+      ${!isPhoto ? `
+      <div class="np-section">
+        <label>Video brief</label>
+        <div class="grid3">
+          <div><label class="sub-label">Length</label><input name="video_length" id="npLength" placeholder="~60-90 seconds" /></div>
+          <div><label class="sub-label">Format</label><select name="video_format" id="npFormat">${opt([['Vertical','Vertical'],['Horizontal','Horizontal'],['Both','Both']], 'Vertical')}</select></div>
+          <div><label class="sub-label">Color grading</label><select name="color_grading">${opt([['true','Yes'],['false','No']], 'true')}</select></div>
+          <div class="full"><label class="sub-label">Music</label><input name="music_url" placeholder="Spotify link, or a description like “Classical, no lyrics”" /></div>
+          <div class="full"><label class="sub-label">Script</label><textarea name="script" placeholder="Intro lines, talking points, agent name and brokerage for the end card…" style="min-height:96px"></textarea></div>
+        </div>
+      </div>
+      <div class="np-section">
+        <label>Exports</label>
+        <div class="extras">
+          <label class="check extra-toggle extra"><input type="checkbox" data-export="Export Branded & Unbranded" checked /> Branded & unbranded versions</label>
+          <label class="check extra-toggle extra"><input type="checkbox" data-export="Export one agent reel with no audio" /> One agent reel with no audio</label>
+          <label class="check extra-toggle extra"><input type="checkbox" data-export="Export a 20-30 second vertical highlight reel" /> 20-30 second vertical highlight reel</label>
+        </div>
+        <input name="export_extra" placeholder="Other export instructions (optional)" style="margin-top:8px" />
+      </div>
+      <div class="np-section">
+        <label>Reference links</label>
+        <textarea name="reference_links" placeholder="Example reels or videos to match, one per line" style="min-height:56px"></textarea>
+      </div>
+      <div class="np-section">
+        <label>Notes for the editor</label>
+        <textarea name="notes" placeholder="Anything else the editor should know…" style="min-height:70px"></textarea>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Notify the team in Slack</label>` : ''}
       ${isPhoto ? `
       <div class="np-section">
         <label>Editing requests</label>
@@ -723,6 +755,19 @@ function openNewProject(media){
     box.querySelector('.extra-fields').classList.toggle('hidden', !cb.checked);
     if (cb.checked) box.querySelector('[data-nums]').focus();
   });
+  if (!isPhoto) {
+    // Suggest length and format from the project type until the user changes them
+    const typeSel = $('#npForm [name=project_type_id]');
+    const touched = { len:false, fmt:false };
+    $('#npLength').oninput = () => touched.len = true;
+    $('#npFormat').onchange = () => touched.fmt = true;
+    const suggest = () => {
+      const t = S.types.find(x => x.id === typeSel.value); if (!t) return;
+      if (!touched.len) $('#npLength').value = t.default_length || '';
+      if (!touched.fmt) $('#npFormat').value = /cinematic|youtube|lux/i.test(t.name) ? 'Horizontal' : 'Vertical';
+    };
+    typeSel.onchange = suggest; suggest();
+  }
 
   $('#npForm').onsubmit = async e => {
     e.preventDefault();
@@ -730,7 +775,14 @@ function openNewProject(media){
     const fd = Object.fromEntries(new FormData(form));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
     if (fd.photo_count != null) fd.photo_count = parseInt(fd.photo_count, 10);
-    if (isPhoto) { fd.delivery_method = 'spiro'; fd.notify_slack = form.notify_slack.checked; }
+    fd.delivery_method = 'spiro'; fd.notify_slack = form.notify_slack.checked;
+    if (!isPhoto) {
+      fd.color_grading = fd.color_grading === 'true';
+      const exportLines = [...form.querySelectorAll('[data-export]')].filter(c => c.checked).map(c => c.dataset.export);
+      if (fd.export_extra) exportLines.push(fd.export_extra);
+      fd.export_notes = exportLines.join('\n') || null;
+    }
+    delete fd.export_extra;
     fd.media = media; fd.submitted_by = S.me.id;
     $('#npSubmit').disabled = true;
     const { data, error } = await sb.from('projects').insert(fd).select().single();
@@ -805,7 +857,7 @@ async function openProject(id){
             <div><label>Length</label><input name="video_length" value="${esc(p.video_length || type?.default_length || '')}" placeholder="60–90 seconds" /></div>
             <div><label>Format</label><select name="video_format">${opt([['Vertical','Vertical'],['Horizontal','Horizontal'],['Both','Both']], p.video_format, '—')}</select></div>
             <div><label>Color grading</label><select name="color_grading">${opt([['true','Yes'],['false','No']], p.color_grading == null ? '' : String(p.color_grading), '—')}</select></div>
-            <div class="full"><label>Music link</label><input type="url" name="music_url" value="${esc(p.music_url || '')}" /></div>
+            <div class="full"><label>Music</label><input name="music_url" value="${esc(p.music_url || '')}" placeholder="Spotify link or description" /></div>
             <div class="full"><label>Script</label><textarea name="script" style="min-height:120px">${esc(p.script || '')}</textarea></div>
             <div class="full"><label>Export notes</label><textarea name="export_notes" placeholder="Export branded & unbranded…">${esc(p.export_notes || '')}</textarea></div>
             <div class="full"><label>Reference links</label><textarea name="reference_links">${esc(p.reference_links || '')}</textarea></div>
