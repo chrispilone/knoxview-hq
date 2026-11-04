@@ -209,6 +209,29 @@ label.extra{margin:0}
 .entity:hover{border-color:var(--accent)}
 .entity .t{font-weight:600}
 .entity .counts{display:flex;gap:6px;margin-top:10px}
+.entity .ent-row{display:flex;align-items:center;gap:12px}
+.entity .ent-logo{width:52px;height:52px;flex:none;border-radius:8px;border:1px solid var(--border);background:var(--logo-bg);display:grid;place-items:center;overflow:hidden}
+.entity .ent-logo img{max-width:88%;max-height:88%;object-fit:contain}
+.entity .ent-logo.none{color:var(--muted);font-weight:600;font-size:15px;background:var(--panel-2)}
+:root{--logo-bg:repeating-conic-gradient(#e9ecf1 0 25%,#fff 0 50%) 0 0/14px 14px;--logo-dark:#1b1f27}
+@media (prefers-color-scheme: dark){ :root{--logo-bg:repeating-conic-gradient(#262c36 0 25%,#1e232c 0 50%) 0 0/14px 14px;--logo-dark:#0b0d11} }
+.modal.wide{width:min(760px,calc(100% - 32px))}
+.logo-head{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.logo-head h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.logo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.logo-tile{border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;background:var(--panel)}
+.logo-tile .pv{height:112px;display:grid;place-items:center;background:var(--logo-bg);padding:10px}
+.logo-grid.dark .logo-tile .pv{background:var(--logo-dark)}
+.logo-tile .pv img{max-width:100%;max-height:92px;object-fit:contain}
+.logo-tile .pv .ext{font-weight:700;font-size:20px;color:var(--muted);letter-spacing:.04em}
+.logo-tile .nm{font-size:12px;padding:8px 8px 2px;word-break:break-word;line-height:1.3}
+.logo-tile .src{font-size:11px;color:var(--muted);padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo-tile .acts{display:flex;gap:6px;padding:8px;margin-top:auto}
+.logo-tile .acts .btn{flex:1;justify-content:center}
+.logo-strip{display:flex;flex-wrap:wrap;gap:8px}
+.logo-strip a{display:grid;place-items:center;width:84px;height:56px;border:1px solid var(--border);border-radius:8px;background:var(--logo-bg);padding:4px}
+.logo-strip a img{max-width:100%;max-height:100%;object-fit:contain}
+.logo-strip a .ext{font-weight:700;font-size:13px;color:var(--muted)}
 .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
 @media (max-width:720px){
   header.top{flex-wrap:wrap;padding:10px 16px;gap:10px}
@@ -338,7 +361,7 @@ const MEDIA_LABEL = { photo:'Photo', video:'Video' };
 const REVIEWERS = ['owner','qc_admin'];
 
 /* ===================== STATE ===================== */
-const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], view:'home',
+const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
 /* Per-person view preferences, remembered in this browser only */
@@ -432,14 +455,15 @@ sb.auth.onAuthStateChange((evt, session) => {
 
 /* ===================== DATA ===================== */
 async function loadAll(){
-  const [p, t, a, m] = await Promise.all([
+  const [p, t, a, m, l] = await Promise.all([
     sb.from('projects').select('*, project_tasks(id, completed)').order('created_at', { ascending:false }),
     sb.from('project_types').select('*').order('media').order('sort_order'),
     sb.from('agents').select('*').order('full_name'),
     sb.from('team_members').select('*').order('full_name'),
+    sb.from('agent_logos').select('*').order('created_at'),
   ]);
-  for (const r of [p,t,a,m]) if (r.error) fail(r.error);
-  S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || [];
+  for (const r of [p,t,a,m,l]) if (r.error) fail(r.error);
+  S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
   fillAssignee();
 }
 function fillAssignee(){
@@ -827,6 +851,8 @@ async function openProject(id){
     </div>
     <div class="drawer-body">
       ${links ? `<div class="section"><div class="links">${links}</div></div>` : ''}
+      ${agent && logosFor(agent.id).length ? `<div class="section"><h3>${esc(agent.full_name)} logos <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">· click to download</span></h3>
+        <div class="logo-strip" id="dLogos">${logosFor(agent.id).map(l => `<a href="#" data-dl-logo="${l.id}" title="${esc(l.file_name)}">${isImageLogo(l) ? `<img data-logo-path="${esc(l.storage_path)}" alt="${esc(l.file_name)}" />` : `<span class="ext">.${esc(logoExt(l).toUpperCase())}</span>`}</a>`).join('')}</div></div>` : ''}
       <form id="pForm">
         <div class="section"><h3>Details</h3>
           <div class="grid3">
@@ -909,6 +935,7 @@ async function openProject(id){
   </aside>`;
 
   $('#ov').onclick = closeLayer; $('#dClose').onclick = closeLayer; $('#dCancel').onclick = closeLayer;
+  const dl = $('#dLogos'); if (dl) { hydrateLogoImgs(dl); dl.querySelectorAll('[data-dl-logo]').forEach(b => b.onclick = e => { e.preventDefault(); downloadLogo(S.logos.find(l => l.id === b.dataset.dlLogo)); }); }
   const form = $('#pForm');
   form.oninput = () => $('#saveStatus').textContent = 'Unsaved changes';
   $('#saveBtn').onclick = async () => {
@@ -1012,17 +1039,107 @@ function renderAgents(){
   $('#agentsGrid').innerHTML = list.map(a => {
     const ps = S.projects.filter(p => p.agent_id === a.id);
     const ph = ps.filter(p => p.media === 'photo').length, vi = ps.filter(p => p.media === 'video').length;
-    return `<div class="entity" data-id="${a.id}"><div class="t">${esc(a.full_name)}</div>
-      <div class="muted" style="font-size:13px;margin-top:4px">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · ')) || '&nbsp;'}</div>
-      <div class="counts"><span class="tag photo">${ph} photo</span><span class="tag video">${vi} video</span></div></div>`;
+    const logos = logosFor(a.id), cover = logos.find(isImageLogo);
+    const initials = a.full_name.split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="entity" data-id="${a.id}"><div class="ent-row">
+      ${cover ? `<div class="ent-logo"><img data-logo-path="${esc(cover.storage_path)}" alt="" /></div>` : `<div class="ent-logo none">${esc(initials)}</div>`}
+      <div style="min-width:0"><div class="t">${esc(a.full_name)}</div>
+      <div class="muted" style="font-size:13px;margin-top:4px">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
+      <div class="counts"><span class="tag photo">${ph} photo</span><span class="tag video">${vi} video</span>${logos.length ? `<span class="tag">${logos.length} logo${logos.length > 1 ? 's' : ''}</span>` : ''}</div></div>`;
   }).join('');
   document.querySelectorAll('#agentsGrid .entity').forEach(el => el.onclick = () => openAgent(el.dataset.id));
+  hydrateLogoImgs($('#agentsGrid'));
+}
+
+/* ----- Agent logos (Supabase Storage bucket: agent-logos) ----- */
+const LOGO_BUCKET = 'agent-logos';
+const logoUrlCache = new Map(); // path -> { url, exp }
+function logosFor(agentId){ return (S.logos || []).filter(l => l.agent_id === agentId); }
+function logoExt(l){ return (l.file_name.split('.').pop() || '').toLowerCase(); }
+function isImageLogo(l){ return /^image\/(png|jpe?g|webp|gif|svg\+xml)$/.test(l.content_type || '') || ['png','jpg','jpeg','webp','gif','svg'].includes(logoExt(l)); }
+async function signedLogoUrls(paths){
+  const now = Date.now(), need = [...new Set(paths)].filter(p => !(logoUrlCache.get(p)?.exp > now));
+  if (need.length) {
+    const { data, error } = await sb.storage.from(LOGO_BUCKET).createSignedUrls(need, 3600);
+    if (error) { console.warn(error); return; }
+    for (const d of data || []) if (d.signedUrl) logoUrlCache.set(d.path, { url: d.signedUrl, exp: now + 50 * 60 * 1000 });
+  }
+}
+async function hydrateLogoImgs(root){
+  const imgs = [...root.querySelectorAll('img[data-logo-path]')];
+  if (!imgs.length) return;
+  await signedLogoUrls(imgs.map(i => i.dataset.logoPath));
+  for (const i of imgs) { const c = logoUrlCache.get(i.dataset.logoPath); if (c) i.src = c.url; }
+}
+async function downloadLogo(l){
+  const { data, error } = await sb.storage.from(LOGO_BUCKET).createSignedUrl(l.storage_path, 300, { download: l.file_name });
+  if (error) return fail(error);
+  const a = document.createElement('a'); a.href = data.signedUrl; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+}
+function logoSourceLabel(src){
+  if (!src) return 'Uploaded in HQ';
+  if (src.startsWith('notion:')) return 'From Notion';
+  if (src.includes('Client Files')) return 'Dropbox · Client Files';
+  if (src.startsWith('dropbox:')) return 'Dropbox · project folder';
+  return src;
+}
+function logoTileHTML(l, owner){
+  const img = isImageLogo(l);
+  return `<div class="logo-tile">
+    <div class="pv">${img ? `<img data-logo-path="${esc(l.storage_path)}" alt="${esc(l.file_name)}" />` : `<span class="ext">.${esc(logoExt(l).toUpperCase())}</span>`}</div>
+    <div class="nm">${esc(l.file_name)}</div>
+    <div class="src" title="${esc(l.source || '')}">${esc(logoSourceLabel(l.source))}</div>
+    <div class="acts"><button type="button" class="btn small" data-dl-logo="${l.id}">Download</button>${owner ? `<button type="button" class="btn small ghost" data-del-logo="${l.id}" title="Remove logo">✕</button>` : ''}</div>
+  </div>`;
+}
+async function sha256Hex(buf){
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function uploadLogos(agentId, files){
+  let added = 0, skipped = 0;
+  for (const f of files) {
+    const buf = await f.arrayBuffer(), sha = await sha256Hex(buf);
+    if (logosFor(agentId).some(l => l.sha256 === sha)) { skipped++; continue; }
+    const ext = (f.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+    const path = `${agentId}/${sha.slice(0, 20)}.${ext}`;
+    const up = await sb.storage.from(LOGO_BUCKET).upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false });
+    if (up.error) { fail(up.error); continue; }
+    const ins = await sb.from('agent_logos').insert({ agent_id: agentId, file_name: f.name, storage_path: path, content_type: f.type || null, size_bytes: f.size, sha256: sha, source: null }).select().single();
+    if (ins.error) { fail(ins.error); continue; }
+    S.logos.push(ins.data); added++;
+  }
+  toast(added ? `Added ${added} logo${added > 1 ? 's' : ''}${skipped ? ` (${skipped} already on file)` : ''}` : 'Those logos are already on file');
+}
+function renderAgentLogos(agentId){
+  const box = $('#agentLogos'); if (!box) return;
+  const owner = isOwner(), logos = logosFor(agentId);
+  const dark = box.dataset.dark === '1';
+  box.innerHTML = `<div class="logo-head"><h3>Logos ${logos.length ? `(${logos.length})` : ''}</h3><span class="spacer" style="flex:1"></span>
+      ${logos.length ? `<button type="button" class="btn small ghost" id="logoBg">${dark ? 'Light background' : 'Dark background'}</button>` : ''}
+      ${owner ? `<label class="btn small" style="margin:0;cursor:pointer">Upload logo<input type="file" id="logoUpload" multiple accept="image/*,.ai,.eps,.pdf,.svg" hidden /></label>` : ''}</div>
+    ${logos.length ? `<div class="logo-grid ${dark ? 'dark' : ''}">${logos.map(l => logoTileHTML(l, owner)).join('')}</div>`
+      : `<div class="none" style="margin-bottom:16px">No logos on file for this agent yet.</div>`}`;
+  hydrateLogoImgs(box);
+  box.querySelectorAll('[data-dl-logo]').forEach(b => b.onclick = () => downloadLogo(S.logos.find(l => l.id === b.dataset.dlLogo)));
+  box.querySelectorAll('[data-del-logo]').forEach(b => b.onclick = async () => {
+    const l = S.logos.find(x => x.id === b.dataset.delLogo); if (!l) return;
+    if (!confirm(`Remove "${l.file_name}" from ${S.agents.find(a => a.id === agentId)?.full_name || 'this agent'}?`)) return;
+    const del = await sb.from('agent_logos').delete().eq('id', l.id);
+    if (del.error) return fail(del.error);
+    const stillUsed = S.logos.some(x => x.id !== l.id && x.storage_path === l.storage_path);
+    if (!stillUsed) await sb.storage.from(LOGO_BUCKET).remove([l.storage_path]);
+    S.logos = S.logos.filter(x => x.id !== l.id); renderAgentLogos(agentId); toast('Logo removed');
+  });
+  const bg = $('#logoBg'); if (bg) bg.onclick = () => { box.dataset.dark = dark ? '0' : '1'; renderAgentLogos(agentId); };
+  const up = $('#logoUpload'); if (up) up.onchange = async () => { if (up.files.length) { await uploadLogos(agentId, [...up.files]); renderAgentLogos(agentId); } };
 }
 function openAgent(id){
   const a = S.agents.find(x => x.id === id) || {};
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
+  <div class="modal ${id ? 'wide' : ''}"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
+    ${id ? `<div id="agentLogos"></div>` : ''}
     <form id="aForm"><div class="grid2">
       <div class="full"><label>Full name</label><input name="full_name" required value="${esc(a.full_name || '')}" /></div>
       <div><label>Team</label><input name="team_name" value="${esc(a.team_name || '')}" placeholder="Mount LeConte Team" /></div>
@@ -1035,6 +1152,7 @@ function openAgent(id){
     </div>
     <div class="actions"><button type="button" class="btn" id="aCancel">Cancel</button><button class="btn primary">${id ? 'Save' : 'Add agent'}</button></div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
+  if (id) renderAgentLogos(id);
   $('#aForm').onsubmit = async e => {
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
