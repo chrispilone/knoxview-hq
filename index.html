@@ -1363,7 +1363,9 @@ function parseTask(raw){
   let cat = 'general', best = 0;
   for (const c of TASK_CATS) { const hits = c.words.filter(w => low.includes(' ' + w.trimStart())).length; if (hits > best) { best = hits; cat = c.k; } }
   if ((agent || project) && (cat === 'general' || cat === 'admin')) cat = 'clients';
-  const summary = summarizeTask(title);
+  let sumSrc = title;
+  if (agent && title.split(/\s+/).length > 9) sumSrc = title.replace(new RegExp(agent.full_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), firstName(agent.full_name));
+  const summary = summarizeTask(sumSrc);
   const words = raw.trim().split(/\s+/).length;
   const details = words > summary.split(/\s+/).length + 2 ? raw.trim() : null;
   return { title, summary, details, due, high, cat, agent_id: agent?.id || null, project_id: project?.id || null };
