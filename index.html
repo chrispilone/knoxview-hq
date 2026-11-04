@@ -189,6 +189,14 @@ table.list tr.row:hover td{background:var(--panel-2)}
 .modal{position:fixed;z-index:60;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100vh - 40px);overflow-y:auto;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:22px}
 .modal h2{margin:0 0 16px;font-size:18px;display:flex;align-items:center;gap:8px}
 .modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.np-section{margin-top:16px}
+.np-hint{font-size:12.5px;margin:0 0 8px}
+.extras{display:flex;flex-direction:column;gap:6px}
+.extra{border:1px solid var(--border);border-radius:9px;padding:9px 12px}
+.extra.on{border-color:var(--photo);background:var(--photo-soft)}
+.extra-toggle{color:var(--text);font-size:14px;cursor:pointer}
+.extra-fields{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin-top:8px}
+@media (max-width:520px){.extra-fields{grid-template-columns:1fr}}
 
 .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b1f27;color:#fff;padding:10px 16px;border-radius:8px;z-index:100;font-size:13px}
@@ -656,9 +664,29 @@ function closeLayer(){ $('#layer').innerHTML = ''; document.body.style.overflow 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLayer(); });
 
 /* ----- New project ----- */
+// Editing add-ons offered on the new photo project form (drone pin is always added)
+const PHOTO_EXTRAS = [
+  { kind:'virtual_twilight', label:'Virtual Twilight', detail:'' },
+  { kind:'virtual_staging',  label:'Virtual Staging',  detail:'Room type and style (default: Modern)' },
+  { kind:'object_removal',   label:'Object Removal',   detail:'What to remove' },
+  { kind:'property_lines',   label:'Property Lines',   detail:'Reference photo or link (if applicable)' },
+  { kind:'callout_graphics', label:'Callout Graphics', detail:'Preferred locations to call out' },
+];
 function openNewProject(media){
   document.body.style.overflow = 'hidden';
+  const isPhoto = media === 'photo';
   const types = S.types.filter(t => t.media === media && t.active);
+  const team = opt(S.team.filter(t=>t.active).map(t=>[t.id,t.full_name]), '', 'Unassigned');
+  const agents = opt(S.agents.map(a=>[a.id,a.full_name]), '', '— Select agent —');
+  const extrasHTML = PHOTO_EXTRAS.map(x => `
+    <div class="extra" data-kind="${x.kind}">
+      <label class="check extra-toggle"><input type="checkbox" data-extra="${x.kind}" /> ${x.label}</label>
+      <div class="extra-fields hidden">
+        <input data-nums="${x.kind}" placeholder="Photo number(s), e.g. 001, 014" />
+        <input data-details="${x.kind}" placeholder="${esc(x.detail || 'Details (optional)')}" />
+      </div>
+    </div>`).join('');
+
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal">
     <h2><span class="tag ${media}">${MEDIA_LABEL[media]}</span> New ${media} project</h2>
@@ -666,26 +694,58 @@ function openNewProject(media){
       <div class="grid2">
         <div class="full"><label>Project name / address</label><input name="name" required placeholder="11033 Eagle Creek Lane" /></div>
         <div><label>Project type</label><select name="project_type_id">${opt(types.map(t=>[t.id,t.name]), '')}</select></div>
-        <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a=>[a.id,a.full_name]), '', '— Select agent —')}</select></div>
-        <div><label>Assign to</label><select name="assigned_to">${opt(S.team.filter(t=>t.active).map(t=>[t.id,t.full_name]), '', 'Unassigned')}</select></div>
-        <div><label>Due date</label><input type="date" name="due_date" /></div>
-        <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY,'spiro')}</select></div>
-        ${media === 'photo' ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" /></div>` : '<div></div>'}
+        <div><label>Agent</label><select name="agent_id">${agents}</select></div>
+        <div><label>Assign to</label><select name="assigned_to">${team}</select></div>
+        ${isPhoto
+          ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" /></div>`
+          : `<div><label>Due date</label><input type="date" name="due_date" /></div>
+             <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY,'spiro')}</select></div><div></div>`}
         <div class="full"><label>Dropbox folder link</label><input name="dropbox_url" type="url" placeholder="https://www.dropbox.com/…" /></div>
       </div>
-      <div class="actions"><button type="button" class="btn" id="npCancel">Cancel</button><button class="btn ${media}">Create ${media} project</button></div>
+      ${isPhoto ? `
+      <div class="np-section">
+        <label>Editing requests</label>
+        <p class="muted np-hint">A drone pin photo is always included. Check anything else this listing needs.</p>
+        <div class="extras">${extrasHTML}</div>
+      </div>
+      <div class="np-section">
+        <label>Notes for the editor</label>
+        <textarea name="notes" placeholder="Anything else the editor should know…" style="min-height:70px"></textarea>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Notify the team in Slack</label>` : ''}
+      <div class="actions"><button type="button" class="btn" id="npCancel">Cancel</button><button class="btn ${media}" id="npSubmit">Create ${media} project</button></div>
     </form>
   </div>`;
   $('#ov').onclick = closeLayer; $('#npCancel').onclick = closeLayer;
+  document.querySelectorAll('[data-extra]').forEach(cb => cb.onchange = () => {
+    const box = cb.closest('.extra');
+    box.classList.toggle('on', cb.checked);
+    box.querySelector('.extra-fields').classList.toggle('hidden', !cb.checked);
+    if (cb.checked) box.querySelector('[data-nums]').focus();
+  });
+
   $('#npForm').onsubmit = async e => {
     e.preventDefault();
-    const fd = Object.fromEntries(new FormData(e.target));
+    const form = e.target;
+    const fd = Object.fromEntries(new FormData(form));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
     if (fd.photo_count != null) fd.photo_count = parseInt(fd.photo_count, 10);
+    if (isPhoto) { fd.delivery_method = 'spiro'; fd.notify_slack = form.notify_slack.checked; }
     fd.media = media; fd.submitted_by = S.me.id;
+    $('#npSubmit').disabled = true;
     const { data, error } = await sb.from('projects').insert(fd).select().single();
-    if (error) return fail(error);
-    if (media === 'photo') await sb.from('project_tasks').insert({ project_id: data.id, kind:'drone_pin', title:'Drone Pin Photo', details:'One high/far photo with a small drone pin (if applicable)' });
+    if (error) { $('#npSubmit').disabled = false; return fail(error); }
+    if (isPhoto) {
+      const tasks = [{ project_id: data.id, kind:'drone_pin', title:'Drone Pin Photo', details:'One high/far photo with a small drone pin (if applicable)', sort_order:0 }];
+      PHOTO_EXTRAS.forEach(x => {
+        if (!form.querySelector(`[data-extra="${x.kind}"]`).checked) return;
+        tasks.push({ project_id: data.id, kind: x.kind, title: x.label, sort_order: tasks.length,
+          photo_numbers: form.querySelector(`[data-nums="${x.kind}"]`).value.trim() || null,
+          details: form.querySelector(`[data-details="${x.kind}"]`).value.trim() || null });
+      });
+      const { error: tErr } = await sb.from('project_tasks').insert(tasks);
+      if (tErr) fail(tErr);
+    }
     closeLayer(); await reloadProjects(); openProject(data.id); toast('Project created');
   };
 }
