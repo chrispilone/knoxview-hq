@@ -47,8 +47,17 @@ nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:1
 main.chat-mode{max-width:none;padding:0}
 .chat{display:grid;grid-template-columns:250px 1fr;height:calc(100vh - 57px);height:calc(100dvh - 57px);background:var(--panel)}
 .chat-side{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--panel-2);min-height:0}
-.chat-side h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 16px 8px}
-.ch-list{list-style:none;margin:0;padding:0 8px;overflow-y:auto;flex:1}
+.chat-side h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 16px 8px;display:flex;align-items:center;gap:6px}
+.chat-side h2 button{margin-left:auto;border:none;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 4px;border-radius:6px}
+.chat-side h2 button:hover{background:var(--panel);color:var(--text)}
+.ch-scroll{overflow-y:auto;flex:1;padding-bottom:8px}
+.ch-list .ico.person{color:#fff;border:none;font-weight:700;font-size:11.5px}
+.ch-list .new-dm{color:var(--muted)}
+.dm-pick{max-height:360px;overflow-y:auto;margin-top:10px}
+.dm-pick button{width:100%;display:flex;align-items:center;gap:10px;border:none;background:none;padding:10px 6px;border-radius:8px;text-align:left}
+.dm-pick button:hover{background:var(--panel-2)}
+.dm-pick .av{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;flex:none}
+.ch-list{list-style:none;margin:0;padding:0 8px}
 .ch-list button{width:100%;display:flex;align-items:center;gap:10px;border:none;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--text)}
 .ch-list button:hover{background:var(--panel)}
 .ch-list button.active{background:var(--accent);color:#fff}
@@ -444,7 +453,7 @@ const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
 const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
 const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
-  chat:{ channels:[], members:[], unread:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
+  chat:{ channels:[], members:[], unread:{}, lastAt:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
 /* Per-person view preferences, remembered in this browser only */
@@ -1261,13 +1270,17 @@ const initials = n => (n || '?').split(/\s+/).map(w => w[0]).slice(0, 2).join(''
 const chatFileCache = new Map();
 let chatSub = null, chatReadTimer = null;
 
-async function initChat(){
+async function loadChatMeta(){
   const [c, m] = await Promise.all([
     sb.from('chat_channels').select('*').order('sort_order'),
     sb.from('chat_members').select('*'),
   ]);
-  if (c.error) return fail(c.error);
+  if (c.error) { fail(c.error); return false; }
   S.chat.channels = c.data || []; S.chat.members = m.data || [];
+  return true;
+}
+async function initChat(){
+  if (!await loadChatMeta()) return;
   if (!S.chat.active || !S.chat.channels.some(x => x.id === S.chat.active || x.slug === S.chat.active)) {
     let last = null; try { last = localStorage.getItem('kvhq.chat.' + S.me.id); } catch (e) {}
     S.chat.active = S.chat.channels.find(x => x.id === last)?.id || S.chat.channels[0]?.id || null;
@@ -1284,6 +1297,7 @@ async function refreshUnread(){
   const { data, error } = await sb.rpc('chat_unread');
   if (error) return console.warn(error);
   S.chat.unread = Object.fromEntries((data || []).map(r => [r.channel_id, Number(r.unread) || 0]));
+  S.chat.lastAt = Object.fromEntries((data || []).map(r => [r.channel_id, r.last_message_at || '']));
   paintUnread();
 }
 function paintUnread(){
@@ -1297,8 +1311,41 @@ function paintUnread(){
   });
 }
 function activeChannel(){ return S.chat.channels.find(x => x.id === S.chat.active || x.slug === S.chat.active); }
+const isDM = c => c?.kind === 'dm';
+function dmOther(c){
+  const ids = S.chat.members.filter(m => m.channel_id === c.id).map(m => m.member_id);
+  const otherId = ids.find(id => id !== S.me.id) || ids[0];
+  return S.team.find(t => t.id === otherId) || { id: otherId, full_name: 'Former team member', role: '' };
+}
+const chName = c => isDM(c) ? dmOther(c).full_name : c.name;
+const chIcon = c => isDM(c)
+  ? `<span class="ico person" style="background:${avColor(dmOther(c).id)}">${esc(initials(dmOther(c).full_name))}</span>`
+  : `<span class="ico">${CH_ICON[c.slug] || '#'}</span>`;
+async function startDM(memberId){
+  const { data, error } = await sb.rpc('start_dm', { other: memberId });
+  if (error) return fail(error);
+  if (!S.chat.channels.some(c => c.id === data)) await loadChatMeta();
+  closeLayer(); S.chat.files = []; S.chat.editing = null;
+  location.hash = `#/chat/${data}`;
+}
+function openNewDM(){
+  const people = S.team.filter(t => t.active && t.id !== S.me.id);
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>New message</h2>
+    ${people.length ? `<input type="search" id="dmSearch" placeholder="Search team members…" />
+    <div class="dm-pick" id="dmPick">${people.map(t => `<button type="button" data-dm="${t.id}" data-q="${esc((t.full_name + ' ' + ROLE_LABEL[t.role]).toLowerCase())}">
+      <span class="av" style="background:${avColor(t.id)}">${esc(initials(t.full_name))}</span>
+      <span style="flex:1"><b>${esc(t.full_name)}</b></span><span class="role-badge">${ROLE_LABEL[t.role]}</span></button>`).join('')}</div>`
+      : `<p class="muted">No one else is on the team yet. Once team members sign up and you approve them on the Team page, you can message them here.</p>`}
+    <div class="actions"><button class="btn" id="dmCancel">Cancel</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#dmCancel').onclick = closeLayer;
+  document.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => startDM(b.dataset.dm));
+  const q = $('#dmSearch'); if (q) { q.focus(); q.oninput = () => document.querySelectorAll('#dmPick [data-dm]').forEach(b => b.classList.toggle('hidden', !b.dataset.q.includes(q.value.toLowerCase()))); }
+}
 function channelMembers(ch){
   if (!ch) return [];
+  if (isDM(ch)) { const ids = new Set(S.chat.members.filter(m => m.channel_id === ch.id).map(m => m.member_id)); return S.team.filter(t => ids.has(t.id)); }
   if (ch.everyone) return S.team.filter(t => t.active);
   const ids = new Set(S.chat.members.filter(m => m.channel_id === ch.id).map(m => m.member_id));
   return S.team.filter(t => t.active && (ids.has(t.id) || t.role === 'owner'));
@@ -1325,8 +1372,13 @@ function markRead(){
 }
 window.addEventListener('focus', () => { if (S.view === 'chat') markRead(); paintUnread(); });
 
-function onChatChange(payload){
+async function onChatChange(payload){
   const m = payload.new?.id ? payload.new : payload.old; if (!m?.channel_id) return;
+  if (payload.eventType === 'INSERT' && !S.chat.channels.some(c => c.id === m.channel_id)) {
+    await loadChatMeta();
+    if (S.view === 'chat') { const keep = $('#chatInput')?.value; renderChat(); if (keep && $('#chatInput')) $('#chatInput').value = keep; }
+  }
+  if (payload.eventType === 'INSERT') S.chat.lastAt[m.channel_id] = m.created_at;
   const list = S.chat.msgs[m.channel_id];
   if (payload.eventType === 'INSERT') {
     if (list && !list.some(x => x.id === m.id)) list.push(m);
@@ -1347,7 +1399,7 @@ function desktopNotify(m){
   try {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const ch = S.chat.channels.find(c => c.id === m.channel_id);
-    const n = new Notification(`${memberName(m.author_id) || 'Knox View HQ'} · ${ch?.name || 'Chat'}`, { body: m.body || (m.attachments?.length ? 'Shared a file' : ''), tag: m.channel_id });
+    const n = new Notification(isDM(ch) ? (memberName(m.author_id) || 'Direct message') : `${memberName(m.author_id) || 'Knox View HQ'} · ${ch?.name || 'Chat'}`, { body: m.body || (m.attachments?.length ? 'Shared a file' : ''), tag: m.channel_id });
     n.onclick = () => { window.focus(); location.hash = `#/chat/${m.channel_id}`; n.close(); };
   } catch (e) {}
 }
@@ -1361,23 +1413,30 @@ function renderChat(){
   const notifState = !('Notification' in window) ? '' : Notification.permission === 'granted' ? 'Desktop notifications are on.'
     : Notification.permission === 'denied' ? 'Notifications are blocked in your browser settings.' : `<button id="notifOn">Turn on desktop notifications</button>`;
   const members = channelMembers(ch);
+  const groups = S.chat.channels.filter(c => !isDM(c));
+  const dms = S.chat.channels.filter(isDM).sort((a, b) => (S.chat.lastAt[b.id] || b.created_at || '').localeCompare(S.chat.lastAt[a.id] || a.created_at || ''));
+  const chItem = c => `<li><button data-ch="${c.id}" class="${c.id === ch.id ? 'active' : ''}">${chIcon(c)}<span class="nm">${esc(chName(c))}</span><span class="count hidden"></span></button></li>`;
+  const other = isDM(ch) ? dmOther(ch) : null;
   box.innerHTML = `<div class="chat ${mobileThread ? 'show-thread' : ''}" id="chatRoot">
-    <aside class="chat-side"><h2>Channels</h2>
-      <ul class="ch-list">${S.chat.channels.map(c => `<li><button data-ch="${c.id}" class="${c.id === ch.id ? 'active' : ''}">
-        <span class="ico">${CH_ICON[c.slug] || '#'}</span><span class="nm">${esc(c.name)}</span><span class="count hidden"></span></button></li>`).join('')}</ul>
+    <aside class="chat-side"><div class="ch-scroll"><h2>Channels</h2>
+      <ul class="ch-list">${groups.map(chItem).join('')}</ul>
+      <h2>Direct messages<button type="button" id="newDM" title="New message" aria-label="New message">+</button></h2>
+      <ul class="ch-list">${dms.map(chItem).join('')}<li><button type="button" class="new-dm" id="newDM2"><span class="ico">✎</span><span class="nm">New message</span></button></li></ul></div>
       <div class="side-foot">${notifState}</div></aside>
     <section class="chat-main">
       <div class="chat-head">
         <button class="btn small ghost back" id="chBack" aria-label="All channels">‹</button>
-        <div style="flex:1;min-width:0"><h1>${CH_ICON[ch.slug] || '#'} ${esc(ch.name)}</h1>
+        ${other ? `<div class="msg" style="padding:0;display:block;background:none"><div class="av" style="background:${avColor(other.id)}">${esc(initials(other.full_name))}</div></div>
+        <div style="flex:1;min-width:0"><h1>${esc(other.full_name)}</h1><p>${esc(ROLE_LABEL[other.role] || '')}${other.role ? ' · ' : ''}Direct message, only the two of you can see this</p></div>`
+        : `<div style="flex:1;min-width:0"><h1>${CH_ICON[ch.slug] || '#'} ${esc(ch.name)}</h1>
           <p>${esc(ch.description || '')}${ch.description ? ' · ' : ''}${members.length} member${members.length === 1 ? '' : 's'}</p></div>
-        ${isOwner() && !ch.everyone ? `<button class="btn small" id="chMembers">Members</button>` : ''}
+        ${isOwner() && !ch.everyone ? `<button class="btn small" id="chMembers">Members</button>` : ''}`}
       </div>
       <div class="msgs" id="msgs"></div>
       <form class="composer" id="composer">
         <div class="box">
           <div class="pending-files" id="pendingFiles"></div>
-          <textarea id="chatInput" rows="1" placeholder="Message ${esc(ch.name)}"></textarea>
+          <textarea id="chatInput" rows="1" placeholder="Message ${esc(isDM(ch) ? firstName(other.full_name) : ch.name)}"></textarea>
           <div class="row">
             <label class="btn small ghost" style="margin:0;cursor:pointer" title="Attach files">📎 Attach<input type="file" id="chatFile" multiple hidden /></label>
             <span class="hint">Enter to send · Shift+Enter for a new line · @name to mention</span>
@@ -1391,6 +1450,7 @@ function renderChat(){
   const back = $('#chBack'); if (back) back.onclick = () => { location.hash = '#/chat'; };
   const nb = $('#notifOn'); if (nb) nb.onclick = async () => { await Notification.requestPermission(); renderChat(); };
   const mb = $('#chMembers'); if (mb) mb.onclick = () => openChannelMembers(ch);
+  $('#newDM').onclick = openNewDM; $('#newDM2').onclick = openNewDM;
   wireComposer(ch);
   if (!S.chat.loaded[ch.id]) { $('#msgs').innerHTML = `<div class="chat-empty">Loading…</div>`; loadMessages(ch.id).then(() => { if (activeChannel()?.id === ch.id) { paintMessages(true); markRead(); } }); }
   else { paintMessages(true); markRead(); }
@@ -1442,7 +1502,7 @@ function paintMessages(stick){
   const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   const list = S.chat.msgs[ch.id] || [];
   let html = S.chat.more[ch.id] ? `<div class="more"><button class="btn small" id="loadOlder">Load earlier messages</button></div>` : '';
-  if (!list.length) html += `<div class="chat-empty">No messages in ${esc(ch.name)} yet. Say hello 👋</div>`;
+  if (!list.length) html += `<div class="chat-empty">${isDM(ch) ? `This is the start of your conversation with ${esc(dmOther(ch).full_name)}.` : `No messages in ${esc(ch.name)} yet. Say hello 👋`}</div>`;
   let lastDay = '';
   list.forEach((m, i) => {
     const d = new Date(m.created_at).toDateString();
@@ -1540,6 +1600,7 @@ async function sendMessage(ch){
   try { sessionStorage.removeItem('kvhq.draft.' + ch.id); } catch (e) {}
   const list = S.chat.msgs[ch.id] || (S.chat.msgs[ch.id] = []);
   if (!list.some(x => x.id === data.id)) list.push(data);
+  S.chat.lastAt[ch.id] = data.created_at;
   paintMessages(true); markRead(); ta.focus();
 }
 
@@ -1574,12 +1635,12 @@ async function renderTeam(){
   const wl = id => { const w = workload(id); const ph = w.filter(p => p.media === 'photo').length, vi = w.length - ph;
     return `<span class="tag photo">${ph} photo</span> <span class="tag video">${vi} video</span>`; };
   const members = S.team.filter(t => owner || t.active);
-  const rows = members.map(t => owner ? `<tr><td><b>${esc(t.full_name)}</b><div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
+  const rows = members.map(t => owner ? `<tr><td><b>${esc(t.full_name)}</b>${t.active && t.id !== S.me.id ? `<button class="btn small" style="margin-left:8px" data-team-dm="${t.id}">Message</button>` : ''}<div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
     <td><select data-role="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt(ROLES, t.role)}</select></td>
     <td><select data-active="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt([['true','Active'],['false','Disabled']], String(t.active))}</select></td>
     <td style="white-space:nowrap">${wl(t.id)}</td>
     <td><input data-slack="${t.id}" value="${esc(t.slack_user_id || '')}" placeholder="Slack member ID" /></td></tr>`
-    : `<tr><td><b>${esc(t.full_name)}</b></td><td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
+    : `<tr><td><b>${esc(t.full_name)}</b>${t.active && t.id !== S.me.id ? `<button class="btn small" style="margin-left:8px" data-team-dm="${t.id}">Message</button>` : ''}</td><td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
     <td>${t.email ? `<a href="mailto:${esc(t.email)}">${esc(t.email)}</a>` : ''}</td><td style="white-space:nowrap">${wl(t.id)}</td></tr>`).join('');
   const head = owner ? '<th>Name</th><th>Role</th><th>Access</th><th>Active work</th><th>Slack ID</th>' : '<th>Name</th><th>Role</th><th>Email</th><th>Active work</th>';
   let pend = '';
@@ -1596,6 +1657,7 @@ async function renderTeam(){
     <div class="table-wrap"><table class="list"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
   if (!owner) return;
   const upd = async (id, patch) => { const { error } = await sb.from('team_members').update(patch).eq('id', id); if (error) fail(error); else { toast('Updated'); await loadAll(); } };
+  document.querySelectorAll('[data-team-dm]').forEach(b => b.onclick = () => startDM(b.dataset.teamDm));
   document.querySelectorAll('[data-role]').forEach(s => s.onchange = () => upd(s.dataset.role, { role: s.value }));
   document.querySelectorAll('[data-active]').forEach(s => s.onchange = () => upd(s.dataset.active, { active: s.value === 'true' }));
   document.querySelectorAll('[data-slack]').forEach(s => s.onchange = () => upd(s.dataset.slack, { slack_user_id: s.value || null }));
