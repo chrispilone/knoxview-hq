@@ -1594,7 +1594,7 @@ function sugHTML(g){
       <div class="sug-title">${esc(g.title)}</div>
       ${g.snippet ? `<div class="sug-snip">“${esc(g.snippet)}”</div>` : ''}</div>
     <div class="sug-acts"><button class="btn small primary" data-sug-add="${g.id}">Add task</button>
-      ${safeUrl(g.link) ? `<a class="btn small" href="${esc(g.link)}" target="_blank" rel="noopener">Open</a>` : ''}
+      ${safeUrl(g.link) ? `<a class="btn small" href="${esc(g.link)}" target="_blank" rel="noopener">Open</a>` : /^tel:\+?\d+$/.test(g.link || '') ? `<a class="btn small" href="${esc(g.link)}">Call</a>` : ''}
       <button class="btn small ghost" data-sug-dismiss="${g.id}" title="Not a task">Dismiss</button></div>
   </div>`;
 }
