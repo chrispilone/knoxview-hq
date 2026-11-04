@@ -361,6 +361,11 @@ const MEDIA_LABEL = { photo:'Photo', video:'Video' };
 const REVIEWERS = ['owner','qc_admin'];
 
 /* ===================== STATE ===================== */
+const VIDEO_TIERS = [['standard','Standard'],['premium','Premium']];
+const VIDEO_LENGTHS = ['Less than 30 seconds','30 to 60 seconds','60 to 90 seconds','1 to 2 minutes','2+ minutes'].map(x => [x, x]);
+const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
+const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
+const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
@@ -628,7 +633,7 @@ function cardHTML(p){
   const tasks = p.project_tasks || []; const done = tasks.filter(t => t.completed).length;
   const extra = p.media === 'photo'
     ? (p.photo_count ? `<span>${p.photo_count} photos</span>` : '')
-    : [p.video_format, p.video_length].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('<span>·</span>');
+    : [p.video_tier && (p.video_tier === 'premium' ? 'Premium' : 'Standard'), p.video_format, p.video_length].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('<span>·</span>');
   return `<div class="card ${p.media}" draggable="true" data-id="${p.id}">
     <div class="t">${esc(p.name)}</div>
     <div class="meta">
@@ -733,9 +738,9 @@ function openNewProject(media){
       <div class="np-section">
         <label>Video brief</label>
         <div class="grid3">
-          <div><label class="sub-label">Length</label><input name="video_length" id="npLength" placeholder="~60-90 seconds" /></div>
-          <div><label class="sub-label">Format</label><select name="video_format" id="npFormat">${opt([['Vertical','Vertical'],['Horizontal','Horizontal'],['Both','Both']], 'Vertical')}</select></div>
-          <div><label class="sub-label">Color grading</label><select name="color_grading">${opt([['true','Yes'],['false','No']], 'true')}</select></div>
+          <div><label class="sub-label">Video type</label><select name="video_tier" id="npTier">${opt(VIDEO_TIERS, 'standard')}</select></div>
+          <div><label class="sub-label">Length</label><select name="video_length" id="npLength">${opt(VIDEO_LENGTHS, '', 'Choose length')}</select></div>
+          <div><label class="sub-label">Format</label><select name="video_format" id="npFormat">${opt(VIDEO_FORMATS, 'Vertical')}</select></div>
           <div class="full"><label class="sub-label">Music</label><input name="music_url" placeholder="Spotify link, or a description like “Classical, no lyrics”" /></div>
           <div class="full"><label class="sub-label">Script</label><textarea name="script" placeholder="Intro lines, talking points, agent name and brokerage for the end card…" style="min-height:96px"></textarea></div>
         </div>
@@ -782,12 +787,14 @@ function openNewProject(media){
   if (!isPhoto) {
     // Suggest length and format from the project type until the user changes them
     const typeSel = $('#npForm [name=project_type_id]');
-    const touched = { len:false, fmt:false };
-    $('#npLength').oninput = () => touched.len = true;
+    const touched = { len:false, fmt:false, tier:false };
+    $('#npLength').onchange = () => touched.len = true;
     $('#npFormat').onchange = () => touched.fmt = true;
+    $('#npTier').onchange = () => touched.tier = true;
     const suggest = () => {
       const t = S.types.find(x => x.id === typeSel.value); if (!t) return;
-      if (!touched.len) $('#npLength').value = t.default_length || '';
+      if (!touched.tier) $('#npTier').value = /premium|cinematic|lux/i.test(t.name) ? 'premium' : 'standard';
+      if (!touched.len) $('#npLength').value = VIDEO_LENGTHS.some(([x]) => x === t.default_length) ? t.default_length : '';
       if (!touched.fmt) $('#npFormat').value = /cinematic|youtube|lux/i.test(t.name) ? 'Horizontal' : 'Vertical';
     };
     typeSel.onchange = suggest; suggest();
@@ -801,7 +808,6 @@ function openNewProject(media){
     if (fd.photo_count != null) fd.photo_count = parseInt(fd.photo_count, 10);
     fd.delivery_method = 'spiro'; fd.notify_slack = form.notify_slack.checked;
     if (!isPhoto) {
-      fd.color_grading = fd.color_grading === 'true';
       const exportLines = [...form.querySelectorAll('[data-export]')].filter(c => c.checked).map(c => c.dataset.export);
       if (fd.export_extra) exportLines.push(fd.export_extra);
       fd.export_notes = exportLines.join('\n') || null;
@@ -880,9 +886,9 @@ async function openProject(id){
         </div>
         ${isVideo ? `<div class="section"><h3>Video brief</h3>
           <div class="grid3">
-            <div><label>Length</label><input name="video_length" value="${esc(p.video_length || type?.default_length || '')}" placeholder="60–90 seconds" /></div>
-            <div><label>Format</label><select name="video_format">${opt([['Vertical','Vertical'],['Horizontal','Horizontal'],['Both','Both']], p.video_format, '—')}</select></div>
-            <div><label>Color grading</label><select name="color_grading">${opt([['true','Yes'],['false','No']], p.color_grading == null ? '' : String(p.color_grading), '—')}</select></div>
+            <div><label>Video type</label><select name="video_tier">${opt(VIDEO_TIERS, p.video_tier || '', '—')}</select></div>
+            <div><label>Length</label><select name="video_length">${opt(lengthOpts(p.video_length), p.video_length || '', '—')}</select></div>
+            <div><label>Format</label><select name="video_format">${opt(formatOpts(p.video_format), p.video_format || '', '—')}</select></div>
             <div class="full"><label>Music</label><input name="music_url" value="${esc(p.music_url || '')}" placeholder="Spotify link or description" /></div>
             <div class="full"><label>Script</label><textarea name="script" style="min-height:120px">${esc(p.script || '')}</textarea></div>
             <div class="full"><label>Export notes</label><textarea name="export_notes" placeholder="Export branded & unbranded…">${esc(p.export_notes || '')}</textarea></div>
