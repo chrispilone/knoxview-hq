@@ -42,6 +42,50 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .hidden{display:none!important}
 .muted{color:var(--muted)}
 
+/* ----- Tasks ----- */
+.tcat{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--c)}
+.tcat::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.qadd{display:flex;flex-direction:column;gap:8px}
+.qadd .qinput{font-size:16px;padding:12px 14px;border-radius:10px}
+.qchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;min-height:30px}
+.qchips select,.qchips input[type=date]{width:auto;padding:5px 8px;font-size:13px}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:500}
+.chip.on{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.cat-filter{display:flex;flex-wrap:wrap;gap:6px}
+.cat-filter button{border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.cat-filter button b{font-weight:600;margin-left:3px}
+.cat-filter button.on{background:var(--c,var(--accent));border-color:transparent;color:#fff}
+.tgroup{margin-bottom:18px}
+.tgroup h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 8px;display:flex;gap:6px;align-items:center}
+.tgroup h3 span{font-weight:500}
+.tgroup.over h3{color:var(--danger)}
+.tlist{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.panel .tlist{border:none;border-radius:0;background:none}
+.trow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--border);cursor:pointer}
+.tlist .trow:first-child{border-top:none}
+.trow:hover{background:var(--panel-2)}
+.tcheck{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--border);background:var(--panel);display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;padding:0}
+.tcheck:hover{border-color:var(--ok)}
+.trow.done .tcheck{background:var(--ok);border-color:var(--ok)}
+.trow.done .tt{text-decoration:line-through;color:var(--muted)}
+.trow.high .tcheck{border-color:var(--danger)}
+.tmain{flex:1;min-width:0}
+.tt{font-weight:500;line-height:1.35}
+.tt .flag{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;margin-right:6px;vertical-align:1px}
+.tmeta{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12px;color:var(--muted)}
+.trow .due{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.trow .due.today{color:var(--warn);font-weight:600}
+.trow .due.over{color:var(--danger);font-weight:600}
+.tav{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:10.5px;font-weight:700;flex:none}
+.ttitle{font-size:18px;font-weight:600;padding:10px 12px}
+.cl-item{display:flex;align-items:center;gap:8px;padding:4px 0}
+.cl-item input{width:auto}
+.cl-item span{flex:1}
+.linkish{border:none;background:none;padding:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit}
+.home-actions{display:flex;gap:8px;margin-left:auto}
+.panel .more{font-size:12.5px;margin-top:8px}
+@media (max-width:640px){ .qchips .spacer{display:none} .trow{padding:11px 10px;gap:10px} }
+
 /* ----- Chat ----- */
 nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 main.chat-mode{max-width:none;padding:0}
@@ -361,6 +405,7 @@ label.extra{margin:0}
     <div class="brand-mark"><span>KV</span> HQ</div>
     <nav class="tabs" id="tabs">
       <a href="#/home" data-view="home">Home</a>
+      <a href="#/tasks" data-view="tasks">Tasks<span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/projects" data-view="projects">Projects</a>
       <a href="#/agents" data-view="agents">Agents</a>
       <a href="#/chat" data-view="chat">Chat<span class="badge hidden" id="chatBadge"></span></a>
@@ -412,6 +457,9 @@ label.extra{margin:0}
       <div id="agentsGrid" class="cards-grid"></div>
     </div>
 
+    <!-- Tasks -->
+    <div id="tasksView" class="hidden"></div>
+
     <!-- Chat -->
     <div id="chatView" class="hidden"></div>
 
@@ -441,7 +489,7 @@ const DELIVERY = [['spiro','Spiro'],['text_message','Text Message'],['email','Em
 const TASK_KINDS = [['drone_pin','Drone Pin Photo'],['virtual_twilight','Virtual Twilight'],['virtual_staging','Virtual Staging'],
   ['object_removal','Object Removal'],['property_lines','Property Lines'],['callout_graphics','Callout Graphics'],['custom','Custom Task']];
 const TASK_LABEL = Object.fromEntries(TASK_KINDS);
-const ROLES = [['owner','Owner'],['qc_admin','QC Admin'],['video_editor','Video Editor'],['photo_editor','Photo Editor'],['contractor','Contractor']];
+const ROLES = [['owner','Owner'],['qc_admin','QC Admin'],['video_editor','Video Editor'],['photo_editor','Photo Editor'],['virtual_assistant','Virtual Assistant'],['contractor','Contractor']];
 const ROLE_LABEL = Object.fromEntries(ROLES);
 const MEDIA_LABEL = { photo:'Photo', video:'Video' };
 const REVIEWERS = ['owner','qc_admin'];
@@ -453,6 +501,7 @@ const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
 const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
 const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
+  tasks:[], taskScope:'mine', taskCat:'', showDoneTasks:false,
   chat:{ channels:[], members:[], unread:{}, lastAt:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
@@ -533,9 +582,9 @@ async function boot(session){
   loadPrefs();
   $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
   show('app');
-  await loadAll();
+  await Promise.all([loadAll(), loadTasks()]);
   route();
-  initChat();
+  initChat(); subscribeTasks();
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -576,7 +625,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const view = ['home','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  const view = ['home','tasks','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (view === 'projects') {
     if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
@@ -608,6 +657,8 @@ function render(){
   $('#agentsView').classList.toggle('hidden', S.view !== 'agents');
   $('#teamView').classList.toggle('hidden', S.view !== 'team');
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
+  $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
+  if (S.view === 'tasks') renderTasks();
   document.querySelector('main').classList.toggle('chat-mode', S.view === 'chat');
   if (S.view === 'chat') renderChat();
   if (S.view === 'home') renderHome();
@@ -650,8 +701,11 @@ async function renderHome(){
   const now = new Date();
   $('#homeView').innerHTML = `
     <div class="page-head"><div><h1>${greeting()}, ${esc(firstName(S.me.full_name))}</h1>
-      <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div></div>
+      <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
+      <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
     <div class="home-grid">
+      <div class="panel span-12" id="homeTasks"><h2>My tasks <span class="count"></span><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">Open Tasks</a></h2>
+        <div class="tlist"></div><div class="more"></div></div>
       ${pipelineHTML('photo')}
       ${pipelineHTML('video')}
       <div class="panel span-6"><h2>My queue <span class="count">${mine.length}</span></h2>
@@ -664,6 +718,7 @@ async function renderHome(){
       <div class="panel span-12"><h2>Recent activity</h2><ul class="feed" id="homeFeed"><li class="muted">Loading…</li></ul></div>
     </div>`;
   bindOpeners($('#homeView'));
+  $('#homeNewTask').onclick = openQuickTask; paintHomeTasks();
   $('#homeView').querySelectorAll('[data-new]').forEach(b => b.onclick = () => openNewProject(b.dataset.new));
   const { data, error } = await sb.from('activity_log').select('*').order('created_at', { ascending:false }).limit(15);
   const feed = $('#homeFeed'); if (!feed || S.view !== 'home') return;
@@ -1261,6 +1316,275 @@ function openAgent(id){
   };
 }
 
+/* ===================== TASKS ===================== */
+const TASK_CATS = [
+  { k:'clients',    label:'Clients & Agents', color:'#1f5d9e', words:['agent','client','realtor','listing','follow up','follow-up','followup','reel','shoot','booking','book ','spiro','deliver','reschedule','showing','brokerage','team lunch'] },
+  { k:'marketing',  label:'Marketing',        color:'#b4387a', words:['post','instagram','insta','facebook','tiktok','youtube','social','website','site','ads','ad ','campaign','content','seo','blog','newsletter','flyer','google','review','canva','logo','brand'] },
+  { k:'finance',    label:'Finance',          color:'#1e8e5a', words:['invoice','pay ','payment','paid','bill','quickbooks','qbo','tax','expense','budget','price','pricing','refund','payroll','bank','receipt','insurance','loan','cost'] },
+  { k:'operations', label:'Operations & Gear',color:'#b7700a', words:['gear','drone','camera','battery','batteries','lens','equipment','software','subscription','sop','process','system','workflow','dropbox','notion','hq','backup','license','faa','car wash','van','tripod','computer','laptop','storage'] },
+  { k:'team',       label:'Team',             color:'#6b3aa0', words:['hire','hiring','editor','va ','training','train ','onboard','team','contractor','harvey','interview','schedule team','payroll team','1:1','one on one'] },
+  { k:'admin',      label:'Admin',            color:'#4b5563', words:['email','call','text','schedule','calendar','meeting','renew','form','paperwork','sign','contract','organize','file ','update','reply','respond','print','mail','order'] },
+  { k:'personal',   label:'Personal',         color:'#0f766e', words:['house','home','doctor','dentist','appointment','family','gym','personal','kids','mom','dad','birthday','groceries','vet','lender','closing','mortgage'] },
+  { k:'general',    label:'General',          color:'#6b7280', words:[] },
+];
+const CAT = Object.fromEntries(TASK_CATS.map(c => [c.k, c]));
+const catTag = k => { const c = CAT[k] || CAT.general; return `<span class="tcat" style="--c:${c.color}">${esc(c.label)}</span>`; };
+const isoDay = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+/* Read a typed task: pull out a due date, priority, category, agent and project hints */
+function parseTask(raw){
+  let title = raw.trim(), due = null, high = false;
+  const now = new Date(); now.setHours(12, 0, 0, 0);
+  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const pre = '(?:\\s+(?:by|due|on|before|this))?';
+  const rules = [
+    [new RegExp(pre + '\\s+(today|tonight|eod)\\b', 'i'), () => now],
+    [new RegExp(pre + '\\s+(tomorrow|tmrw|tmr)\\b', 'i'), () => addDays(now, 1)],
+    [new RegExp(pre + '\\s+next week\\b', 'i'), () => addDays(now, ((8 - now.getDay()) % 7) || 7)],
+    [new RegExp(pre + '\\s+in (\\d{1,2}) days?\\b', 'i'), m => addDays(now, +m[1])],
+    [new RegExp(pre + '\\s+(next )?(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(?:day|nesday|rsday|urday)?\\b', 'i'), m => {
+      const i = days.findIndex(d => d.startsWith(m[2].toLowerCase().slice(0, 3)));
+      let diff = (i - now.getDay() + 7) % 7 || 7; if (m[1]) diff += diff < 7 ? 7 : 0; return addDays(now, diff); }],
+    [new RegExp(pre + '\\s+(\\d{1,2})/(\\d{1,2})\\b', 'i'), m => { const d = new Date(now.getFullYear(), +m[1] - 1, +m[2], 12); if (d < addDays(now, -1)) d.setFullYear(d.getFullYear() + 1); return d; }],
+  ];
+  for (const [re, fn] of rules) { const m = title.match(re); if (m) { due = isoDay(fn(m)); title = title.replace(m[0], ''); break; } }
+  if (/(^|\s)(!+|urgent|asap)(\s|$)/i.test(title)) { high = true; title = title.replace(/(^|\s)(!+|urgent|asap)(?=\s|$)/ig, ' '); }
+  title = title.replace(/\s{2,}/g, ' ').trim();
+  const low = ' ' + title.toLowerCase() + ' ';
+  const agent = S.agents.filter(a => a.full_name.length > 4).find(a => low.includes(a.full_name.toLowerCase()));
+  const num = low.match(/\b(\d{2,6})\s+([a-z]+)/);
+  const project = num && S.projects.find(p => !DONE.includes(p.status) && (p.name || '').toLowerCase().startsWith(num[1] + ' ' + num[2]));
+  let cat = 'general', best = 0;
+  for (const c of TASK_CATS) { const hits = c.words.filter(w => low.includes(' ' + w.trimStart())).length; if (hits > best) { best = hits; cat = c.k; } }
+  if ((agent || project) && (cat === 'general' || cat === 'admin')) cat = 'clients';
+  return { title, due, high, cat, agent_id: agent?.id || null, project_id: project?.id || null };
+}
+
+function dueLabel(d){
+  if (!d) return '';
+  const t = today(), tm = isoDay(addDays(new Date(), 1));
+  if (d < t) { const n = Math.round((new Date(t) - new Date(d)) / 864e5); return `<span class="due over">${n === 1 ? 'Yesterday' : n + ' days late'}</span>`; }
+  if (d === t) return `<span class="due today">Today</span>`;
+  if (d === tm) return `<span class="due">Tomorrow</span>`;
+  const dt = new Date(d + 'T12:00:00'), diff = (dt - new Date()) / 864e5;
+  return `<span class="due">${diff < 6 ? dt.toLocaleDateString(undefined, { weekday:'long' }) : fmtShort(d)}</span>`;
+}
+const openTasks = () => (S.tasks || []).filter(t => t.status !== 'done');
+const myOpen = () => openTasks().filter(t => t.assigned_to === S.me.id);
+function paintTaskBadge(){
+  const n = myOpen().filter(t => t.due_date && t.due_date <= today()).length;
+  const b = $('#taskBadge'); if (!b) return; b.textContent = n; b.classList.toggle('hidden', !n);
+}
+async function loadTasks(){
+  const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending:false }).limit(1000);
+  if (error) return fail(error);
+  S.tasks = data || []; paintTaskBadge();
+}
+let taskSub = null, taskReloadTimer = null;
+function subscribeTasks(){
+  if (taskSub) return;
+  taskSub = sb.channel('hq-tasks').on('postgres_changes', { event:'*', schema:'public', table:'tasks' }, () => {
+    clearTimeout(taskReloadTimer);
+    taskReloadTimer = setTimeout(async () => { await loadTasks(); const typing = document.querySelector('.qadd .qinput')?.value; if (S.view === 'tasks' && !typing) renderTasks(); if (S.view === 'home') paintHomeTasks(); }, 250);
+  }).subscribe();
+}
+const sortTasks = (a, b) => (b.priority === 'high') - (a.priority === 'high') || (a.due_date || '9999') .localeCompare(b.due_date || '9999') || a.created_at.localeCompare(b.created_at);
+
+function taskRow(t){
+  const cl = t.checklist || [], done = cl.filter(x => x.done).length;
+  const who = t.assigned_to && t.assigned_to !== S.me.id ? `<span class="tav" title="Assigned to ${esc(memberName(t.assigned_to))}" style="background:${avColor(t.assigned_to)}">${esc(initials(memberName(t.assigned_to)))}</span>` : '';
+  const from = t.assigned_to === S.me.id && t.created_by && t.created_by !== S.me.id ? `<span class="muted">from ${esc(firstName(memberName(t.created_by)))}</span>` : '';
+  return `<div class="trow ${t.status === 'done' ? 'done' : ''} ${t.priority === 'high' ? 'high' : ''}" data-task="${t.id}">
+    <button class="tcheck" data-toggle-task="${t.id}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
+    <div class="tmain"><div class="tt">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
+      <div class="tmeta">${catTag(t.category)}${t.status === 'doing' ? '<span class="tag" style="color:var(--s-in_progress)">In progress</span>' : ''}
+        ${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${t.notes ? '<span title="Has notes">📝</span>' : ''}
+        ${t.agent_id ? `<span>${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${from}</div></div>
+    ${t.status === 'done' ? `<span class="due">${esc(fmtShort(t.done_at))}</span>` : dueLabel(t.due_date)}${who}
+  </div>`;
+}
+function bindTaskRows(root){
+  root.querySelectorAll('[data-task]').forEach(el => el.onclick = e => { if (!e.target.closest('[data-toggle-task]')) openTask(el.dataset.task); });
+  root.querySelectorAll('[data-toggle-task]').forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    const t = S.tasks.find(x => x.id === b.dataset.toggleTask); if (!t) return;
+    const status = t.status === 'done' ? 'todo' : 'done';
+    t.status = status; t.done_at = status === 'done' ? new Date().toISOString() : null;
+    const row = b.closest('.trow'); if (row) { row.classList.toggle('done', status === 'done'); b.textContent = status === 'done' ? '✓' : ''; }
+    const { error } = await sb.from('tasks').update({ status }).eq('id', t.id);
+    if (error) return fail(error);
+    paintTaskBadge();
+    setTimeout(() => { if (S.view === 'tasks') renderTasks(); if (S.view === 'home') paintHomeTasks(); }, status === 'done' ? 700 : 0);
+    if (status === 'done') toast('Done ✓');
+  });
+}
+
+/* ----- Quick add (shared by Home button, Tasks page, and "+ New task") ----- */
+function quickAddHTML(id){
+  return `<div class="qadd" id="${id}">
+    <input type="text" class="qinput" placeholder="Add a task… e.g. “Send Jared the community reel by Friday”" autocomplete="off" />
+    <div class="qchips"></div>
+  </div>`;
+}
+function wireQuickAdd(root, { onSaved, autofocus } = {}){
+  const input = root.querySelector('.qinput'), chips = root.querySelector('.qchips');
+  let over = {};
+  const people = S.team.filter(t => t.active);
+  const paint = () => {
+    const raw = input.value.trim();
+    if (!raw) { chips.innerHTML = `<span class="muted">Press Enter to save. Dates like “tomorrow” or “Friday” and “!” for high priority are picked up automatically.</span>`; return; }
+    const p = { ...parseTask(raw), ...over };
+    chips.innerHTML = `
+      <select data-q="cat" title="Category">${TASK_CATS.map(c => `<option value="${c.k}" ${c.k === p.cat ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+      <input type="date" data-q="due" value="${esc(p.due || '')}" title="Due date" />
+      <select data-q="who" title="Assign to">${people.map(t => `<option value="${t.id}" ${t.id === (over.who || S.me.id) ? 'selected' : ''}>${t.id === S.me.id ? 'Me' : esc(t.full_name)}</option>`).join('')}</select>
+      <button type="button" class="chip ${p.high ? 'on' : ''}" data-q="high">! High</button>
+      ${p.agent_id ? `<span class="chip on">${esc(agentName(p.agent_id))}</span>` : ''}${p.project_id ? `<span class="chip on">${esc(S.projects.find(x => x.id === p.project_id)?.name || '')}</span>` : ''}
+      <span class="spacer"></span><button type="button" class="btn small primary" data-q="save">Add task</button>`;
+    chips.querySelector('[data-q=cat]').onchange = e => { over.cat = e.target.value; };
+    chips.querySelector('[data-q=due]').onchange = e => { over.due = e.target.value || null; };
+    chips.querySelector('[data-q=who]').onchange = e => { over.who = e.target.value; };
+    chips.querySelector('[data-q=high]').onclick = () => { over.high = !p.high; paint(); };
+    chips.querySelector('[data-q=save]').onclick = save;
+  };
+  const save = async () => {
+    const raw = input.value.trim(); if (!raw) return;
+    const p = { ...parseTask(raw), ...over };
+    const row = { title: p.title || raw, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
+      assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id, project_id: p.project_id };
+    input.disabled = true;
+    const { data, error } = await sb.from('tasks').insert(row).select().single();
+    input.disabled = false;
+    if (error) return fail(error);
+    S.tasks.unshift(data); paintTaskBadge();
+    input.value = ''; over = {}; paint(); input.focus();
+    toast(row.assigned_to === S.me.id ? 'Task added' : `Task sent to ${firstName(memberName(row.assigned_to))}`);
+    onSaved && onSaved(data);
+  };
+  input.oninput = () => { if (!input.value.trim()) over = {}; paint(); };
+  input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); save(); } if (e.key === 'Escape' && root.closest('.modal')) closeLayer(); };
+  paint(); if (autofocus) input.focus();
+}
+function openQuickTask(){
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><h2>Create new task</h2>${quickAddHTML('qModal')}
+    <p class="muted" style="font-size:12.5px;margin:12px 0 0">Saved tasks land on the Tasks tab. Click a task there to add notes, a checklist, or a related project.</p>
+    <div class="actions"><button class="btn" id="qClose">Close</button><a class="btn" href="#/tasks" id="qGo" style="text-decoration:none">Open Tasks</a></div></div>`;
+  $('#ov').onclick = closeLayer; $('#qClose').onclick = closeLayer; $('#qGo').onclick = () => closeLayer();
+  wireQuickAdd($('#qModal'), { autofocus: true, onSaved: () => { if (S.view === 'home') paintHomeTasks(); if (S.view === 'tasks') renderTasks(); } });
+}
+
+/* ----- Tasks tab ----- */
+function renderTasks(){
+  const owner = isOwner();
+  const scope = S.taskScope || 'mine';
+  const inScope = t => scope === 'mine' ? t.assigned_to === S.me.id
+    : scope === 'delegated' ? t.created_by === S.me.id && t.assigned_to !== S.me.id
+    : true;
+  const base = (S.tasks || []).filter(inScope);
+  const cat = S.taskCat || '';
+  const list = base.filter(t => !cat || t.category === cat);
+  const open = list.filter(t => t.status !== 'done').sort(sortTasks);
+  const t0 = today(), wk = isoDay(addDays(new Date(), 7));
+  const groups = [
+    ['Overdue', open.filter(t => t.due_date && t.due_date < t0), 'over'],
+    ['Today', open.filter(t => t.due_date === t0), ''],
+    ['Next 7 days', open.filter(t => t.due_date && t.due_date > t0 && t.due_date <= wk), ''],
+    ['Later', open.filter(t => t.due_date && t.due_date > wk), ''],
+    ['No due date', open.filter(t => !t.due_date), ''],
+  ];
+  const done = list.filter(t => t.status === 'done').sort((a, b) => (b.done_at || '').localeCompare(a.done_at || '')).slice(0, 30);
+  const catCounts = Object.fromEntries(TASK_CATS.map(c => [c.k, base.filter(t => t.status !== 'done' && t.category === c.k).length]));
+  $('#tasksView').innerHTML = `
+    <div class="page-head"><div><h1>Tasks</h1><p>${open.length} open${scope === 'mine' ? ' for you' : ''}</p></div>
+      <div class="spacer"></div><button class="btn primary" id="tNew">+ New task</button></div>
+    <div class="panel" style="margin-bottom:14px">${quickAddHTML('qPage')}</div>
+    <div class="toolbar">
+      <div class="seg" id="tScope"><button data-s="mine">My tasks</button><button data-s="delegated">Assigned by me</button>${owner ? '<button data-s="all">Everyone</button>' : ''}</div>
+      <div class="cat-filter" id="tCats"><button data-c="" class="${!cat ? 'on' : ''}">All</button>${TASK_CATS.filter(c => catCounts[c.k] || c.k === cat).map(c => `<button data-c="${c.k}" class="${cat === c.k ? 'on' : ''}" style="--c:${c.color}">${esc(c.label)} <b>${catCounts[c.k]}</b></button>`).join('')}</div>
+    </div>
+    ${open.length ? groups.filter(([, g]) => g.length).map(([label, g, cls]) => `<div class="tgroup ${cls}"><h3>${label} <span>${g.length}</span></h3><div class="tlist">${g.map(taskRow).join('')}</div></div>`).join('')
+      : `<div class="empty">${scope === 'delegated' ? 'Nothing assigned to others right now.' : 'You’re all caught up. Add a task above.'}</div>`}
+    ${done.length ? `<div class="tgroup donegrp"><h3><button class="linkish" id="tDoneToggle">${S.showDoneTasks ? '▾' : '▸'} Completed</button> <span>${done.length}</span></h3>
+      ${S.showDoneTasks ? `<div class="tlist">${done.map(taskRow).join('')}</div>` : ''}</div>` : ''}`;
+  document.querySelectorAll('#tScope button').forEach(b => { b.classList.toggle('active', b.dataset.s === scope); b.onclick = () => { S.taskScope = b.dataset.s; renderTasks(); }; });
+  document.querySelectorAll('#tCats button').forEach(b => b.onclick = () => { S.taskCat = b.dataset.c; renderTasks(); });
+  $('#tNew').onclick = openQuickTask;
+  const dt = $('#tDoneToggle'); if (dt) dt.onclick = () => { S.showDoneTasks = !S.showDoneTasks; renderTasks(); };
+  wireQuickAdd($('#qPage'), { onSaved: () => renderTasks(), autofocus: !matchMedia('(max-width:760px)').matches });
+  bindTaskRows($('#tasksView'));
+}
+
+/* ----- Home panel ----- */
+function paintHomeTasks(){
+  const box = $('#homeTasks'); if (!box) return;
+  const t0 = today();
+  const mine = myOpen().sort(sortTasks);
+  const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
+  const show = (focus.length ? focus : mine).slice(0, 7);
+  box.querySelector('.count').textContent = mine.length;
+  box.querySelector('.tlist').innerHTML = show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`;
+  box.querySelector('.more').innerHTML = mine.length > show.length ? `<a href="#/tasks">See all ${mine.length} tasks →</a>` : '';
+  bindTaskRows(box);
+}
+
+/* ----- Task details ----- */
+function openTask(id){
+  const t = S.tasks.find(x => x.id === id); if (!t) return toast('That task is no longer available');
+  const canDelete = isOwner() || t.created_by === S.me.id;
+  let checklist = JSON.parse(JSON.stringify(t.checklist || []));
+  const people = S.team.filter(m => m.active || m.id === t.assigned_to);
+  const projs = S.projects.filter(p => !DONE.includes(p.status) || p.id === t.project_id);
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><form id="tForm">
+    <input name="title" class="ttitle" value="${esc(t.title)}" required />
+    <div class="grid3" style="margin-top:12px">
+      <div><label>Status</label><select name="status">${opt([['todo','To do'],['doing','In progress'],['done','Done']], t.status)}</select></div>
+      <div><label>Due date</label><input type="date" name="due_date" value="${esc(t.due_date || '')}" /></div>
+      <div><label>Assigned to</label><select name="assigned_to">${opt(people.map(m => [m.id, m.id === S.me.id ? `${m.full_name} (me)` : m.full_name]), t.assigned_to, 'Unassigned')}</select></div>
+      <div><label>Category</label><select name="category">${opt(TASK_CATS.map(c => [c.k, c.label]), t.category)}</select></div>
+      <div><label>Priority</label><select name="priority">${opt([['normal','Normal'],['high','High']], t.priority)}</select></div>
+      <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
+      <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
+    </div>
+    <div style="margin-top:12px"><label>Details</label><textarea name="notes" placeholder="What needs to be done, links, phone numbers, anything you don't want to keep in your head…" style="min-height:110px">${esc(t.notes || '')}</textarea></div>
+    <div style="margin-top:12px"><label>Checklist</label><div id="tChecklist"></div>
+      <input id="tCheckNew" placeholder="Add a step and press Enter" /></div>
+    <p class="muted" style="font-size:12px;margin:12px 0 0">Created ${esc(fmtDateTime(t.created_at))}${t.created_by ? ' by ' + esc(memberName(t.created_by)) : ''}${t.done_at ? ' · completed ' + esc(fmtDateTime(t.done_at)) : ''}</p>
+    <div class="actions">${canDelete ? `<button type="button" class="btn danger" id="tDel" style="margin-right:auto">Delete</button>` : ''}
+      ${t.project_id ? `<button type="button" class="btn" id="tOpenProj">Open project</button>` : ''}
+      <button type="button" class="btn" id="tCancel">Cancel</button><button class="btn primary">Save</button></div>
+  </form></div>`;
+  const paintCL = () => {
+    $('#tChecklist').innerHTML = checklist.map((c, i) => `<div class="cl-item"><input type="checkbox" data-cl="${i}" ${c.done ? 'checked' : ''} />
+      <span class="${c.done ? 'muted' : ''}" style="${c.done ? 'text-decoration:line-through' : ''}">${esc(c.text)}</span><button type="button" class="btn small ghost" data-cl-rm="${i}">✕</button></div>`).join('');
+    document.querySelectorAll('[data-cl]').forEach(cb => cb.onchange = () => { checklist[+cb.dataset.cl].done = cb.checked; paintCL(); });
+    document.querySelectorAll('[data-cl-rm]').forEach(b => b.onclick = () => { checklist.splice(+b.dataset.clRm, 1); paintCL(); });
+  };
+  paintCL();
+  $('#tCheckNew').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { checklist.push({ text: v, done: false }); e.target.value = ''; paintCL(); } } };
+  $('#ov').onclick = closeLayer; $('#tCancel').onclick = closeLayer;
+  const op = $('#tOpenProj'); if (op) op.onclick = () => { closeLayer(); openProject(t.project_id); };
+  const del = $('#tDel'); if (del) del.onclick = async () => {
+    if (!confirm('Delete this task?')) return;
+    const { error } = await sb.from('tasks').delete().eq('id', t.id); if (error) return fail(error);
+    S.tasks = S.tasks.filter(x => x.id !== t.id); closeLayer(); paintTaskBadge(); render(); toast('Task deleted');
+  };
+  $('#tForm').onsubmit = async e => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    const pending = $('#tCheckNew').value.trim(); if (pending) checklist.push({ text: pending, done: false });
+    fd.checklist = checklist;
+    const { data, error } = await sb.from('tasks').update(fd).eq('id', t.id).select().single();
+    if (error) return fail(error);
+    Object.assign(t, data); closeLayer(); paintTaskBadge(); render(); toast('Task saved');
+  };
+}
+
 /* ===================== CHAT ===================== */
 const CHAT_BUCKET = 'chat-files';
 const CH_ICON = { team:'👋', photo:'📷', video:'🎬', social:'📱' };
@@ -1476,7 +1800,7 @@ function msgHTML(m, prev){
   if (m.kind === 'system') {
     const p = S.projects.find(x => x.id === m.project_id);
     return `<div class="sys ${p?.media || ''}"><div class="t">${esc(m.body)}<small>${esc(memberName(m.author_id) || 'HQ')} · ${fmtTime(m.created_at)}</small></div>
-      ${m.project_id ? `<button class="btn small" data-open-project="${m.project_id}">Open project</button>` : ''}</div>`;
+      ${m.project_id ? `<button class="btn small" data-open-project="${m.project_id}">Open project</button>` : ''}${m.task_id ? `<button class="btn small" data-open-task="${m.task_id}">Open task</button>` : ''}</div>`;
   }
   const cont = prev && prev.kind !== 'system' && prev.author_id === m.author_id && !prev.deleted_at
     && new Date(m.created_at) - new Date(prev.created_at) < 5 * 60 * 1000 && new Date(m.created_at).toDateString() === new Date(prev.created_at).toDateString();
@@ -1517,6 +1841,10 @@ function paintMessages(stick){
   const lo = $('#loadOlder'); if (lo) lo.onclick = async () => { lo.disabled = true; await loadMessages(ch.id, true); paintMessages('keep'); };
   el.querySelectorAll('[data-open-project]').forEach(b => b.onclick = () => {
     if (S.projects.some(p => p.id === b.dataset.openProject)) openProject(b.dataset.openProject); else toast('That project is no longer available');
+  });
+  el.querySelectorAll('[data-open-task]').forEach(b => b.onclick = async () => {
+    if (!S.tasks.some(t => t.id === b.dataset.openTask)) await loadTasks();
+    openTask(b.dataset.openTask);
   });
   el.querySelectorAll('[data-att]').forEach(a => a.onclick = e => { e.preventDefault(); openChatFile(a.dataset.att, a.dataset.name, e.target.tagName === 'IMG'); });
   el.querySelectorAll('[data-edit-msg]').forEach(b => b.onclick = () => { S.chat.editing = b.dataset.editMsg; paintMessages(false); const t = el.querySelector('.edit-box'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } });
