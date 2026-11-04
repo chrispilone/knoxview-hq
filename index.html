@@ -42,6 +42,79 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .hidden{display:none!important}
 .muted{color:var(--muted)}
 
+/* ----- Chat ----- */
+nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+main.chat-mode{max-width:none;padding:0}
+.chat{display:grid;grid-template-columns:250px 1fr;height:calc(100vh - 57px);height:calc(100dvh - 57px);background:var(--panel)}
+.chat-side{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--panel-2);min-height:0}
+.chat-side h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 16px 8px}
+.ch-list{list-style:none;margin:0;padding:0 8px;overflow-y:auto;flex:1}
+.ch-list button{width:100%;display:flex;align-items:center;gap:10px;border:none;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--text)}
+.ch-list button:hover{background:var(--panel)}
+.ch-list button.active{background:var(--accent);color:#fff}
+.ch-list .ico{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--panel);border:1px solid var(--border)}
+.ch-list button.active .ico{background:rgba(255,255,255,.18);border-color:transparent}
+.ch-list .nm{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-list .unread .nm{font-weight:700}
+.ch-list .count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.chat-side .side-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted)}
+.chat-side .side-foot button{border:none;background:none;padding:0;color:var(--accent-2);font-size:12.5px}
+.chat-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.chat-head{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border)}
+.chat-head h1{font-size:16px;margin:0}
+.chat-head p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.chat-head .back{display:none}
+.msgs{flex:1;overflow-y:auto;padding:12px 0 8px}
+.msgs .more{text-align:center;margin:4px 0 10px}
+.day{display:flex;align-items:center;gap:10px;margin:14px 20px 6px;font-size:12px;font-weight:600;color:var(--muted)}
+.day::before,.day::after{content:"";flex:1;height:1px;background:var(--border)}
+.msg{display:grid;grid-template-columns:36px 1fr;gap:10px;padding:4px 20px;position:relative}
+.msg:hover{background:var(--panel-2)}
+.msg.cont{padding-top:1px}
+.msg.cont .av{visibility:hidden;height:0}
+.msg .av{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.msg .who{display:flex;align-items:baseline;gap:8px}
+.msg .who b{font-size:14px}
+.msg .who time{font-size:11.5px;color:var(--muted)}
+.msg .body{white-space:pre-wrap;word-wrap:break-word;line-height:1.45;font-size:14px}
+.msg .body .mention{background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 3px;font-weight:600}
+.msg .edited{font-size:11px;color:var(--muted);margin-left:4px}
+.msg .deleted{font-style:italic;color:var(--muted)}
+.msg .tools{position:absolute;right:16px;top:-10px;display:none;gap:2px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:2px;box-shadow:var(--shadow)}
+.msg:hover .tools{display:flex}
+.msg .tools button{border:none;background:none;padding:4px 8px;border-radius:6px;font-size:12px;color:var(--muted)}
+.msg .tools button:hover{background:var(--panel-2);color:var(--text)}
+.atts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.atts a.img{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border);max-width:280px}
+.atts a.img img{display:block;max-width:280px;max-height:220px;object-fit:cover;background:var(--panel-2)}
+.atts a.file{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);font-size:13px;background:var(--panel)}
+.atts a.file small{color:var(--muted)}
+.sys{margin:6px 20px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;background:var(--panel)}
+.sys.photo{border-left-color:var(--photo)} .sys.video{border-left-color:var(--video)}
+.sys .t{flex:1;font-size:13.5px}
+.sys .t small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.composer{padding:10px 20px 16px}
+.composer .box{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px}
+.composer .box:focus-within{border-color:var(--accent-2)}
+.composer textarea{border:none;min-height:24px;max-height:200px;resize:none;padding:4px 6px;background:transparent;outline:none}
+.composer .row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.composer .hint{font-size:11.5px;color:var(--muted);margin-left:auto;margin-right:6px}
+.pending-files{display:flex;flex-wrap:wrap;gap:6px;margin:2px 4px 6px}
+.pending-files span{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:var(--panel-2);border-radius:6px;padding:4px 8px}
+.pending-files button{border:none;background:none;padding:0;color:var(--muted)}
+.chat.drag .msgs{outline:2px dashed var(--accent-2);outline-offset:-8px}
+.chat-empty{margin:auto;text-align:center;color:var(--muted);padding:40px}
+.member-list label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--text);padding:8px 4px;border-bottom:1px solid var(--border);margin:0}
+.member-list input{width:auto}
+@media (max-width:760px){
+  .chat{grid-template-columns:1fr;height:calc(100dvh - 104px)}
+  .chat.show-thread .chat-side{display:none}
+  .chat:not(.show-thread) .chat-main{display:none}
+  .chat-head .back{display:inline-flex}
+  .msg,.composer{padding-left:12px;padding-right:12px}
+  .composer .hint{display:none}
+}
+
 /* Auth */
 .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
 .auth-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:28px;width:100%;max-width:380px}
@@ -281,6 +354,7 @@ label.extra{margin:0}
       <a href="#/home" data-view="home">Home</a>
       <a href="#/projects" data-view="projects">Projects</a>
       <a href="#/agents" data-view="agents">Agents</a>
+      <a href="#/chat" data-view="chat">Chat<span class="badge hidden" id="chatBadge"></span></a>
       <a href="#/team" data-view="team">Team</a>
     </nav>
     <div class="spacer"></div>
@@ -329,6 +403,9 @@ label.extra{margin:0}
       <div id="agentsGrid" class="cards-grid"></div>
     </div>
 
+    <!-- Chat -->
+    <div id="chatView" class="hidden"></div>
+
     <!-- Team -->
     <div id="teamView" class="hidden">
       <div class="page-head"><div><h1>Team</h1><p id="teamSub"></p></div></div>
@@ -367,6 +444,7 @@ const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
 const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
 const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
+  chat:{ channels:[], members:[], unread:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
 /* Per-person view preferences, remembered in this browser only */
@@ -448,6 +526,7 @@ async function boot(session){
   show('app');
   await loadAll();
   route();
+  initChat();
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -488,11 +567,12 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const view = ['home','projects','agents','team'].includes(parts[0]) ? parts[0] : 'home';
+  const view = ['home','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (view === 'projects') {
     if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
   }
+  if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   S.view = view;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
   document.querySelector('#tabs a[data-view=projects]').href = `#/projects/${S.media}`;
@@ -518,6 +598,9 @@ function render(){
   $('#projectsView').classList.toggle('hidden', S.view !== 'projects');
   $('#agentsView').classList.toggle('hidden', S.view !== 'agents');
   $('#teamView').classList.toggle('hidden', S.view !== 'team');
+  $('#chatView').classList.toggle('hidden', S.view !== 'chat');
+  document.querySelector('main').classList.toggle('chat-mode', S.view === 'chat');
+  if (S.view === 'chat') renderChat();
   if (S.view === 'home') renderHome();
   if (S.view === 'projects') renderProjects();
   if (S.view === 'agents') renderAgents();
@@ -762,7 +845,7 @@ function openNewProject(media){
         <label>Notes for the editor</label>
         <textarea name="notes" placeholder="Anything else the editor should know…" style="min-height:70px"></textarea>
       </div>
-      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Notify the team in Slack</label>` : ''}
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Post it in the team chat</label>` : ''}
       ${isPhoto ? `
       <div class="np-section">
         <label>Editing requests</label>
@@ -773,7 +856,7 @@ function openNewProject(media){
         <label>Notes for the editor</label>
         <textarea name="notes" placeholder="Anything else the editor should know…" style="min-height:70px"></textarea>
       </div>
-      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Notify the team in Slack</label>` : ''}
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="notify_slack" checked /> Post it in the team chat</label>` : ''}
       <div class="actions"><button type="button" class="btn" id="npCancel">Cancel</button><button class="btn ${media}" id="npSubmit">Create ${media} project</button></div>
     </form>
   </div>`;
@@ -874,7 +957,7 @@ async function openProject(id){
             </div>
             <div><label>City</label><input name="city" value="${esc(p.city || '')}" /></div>
             ${!isVideo ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" value="${esc(p.photo_count ?? '')}" /></div>` : ''}
-            <div><label>Notify Slack</label><select name="notify_slack">${opt([['true','Yes'],['false','No']], String(p.notify_slack))}</select></div>
+            <div><label>Posted in chat</label><select name="notify_slack">${opt([['true','Yes'],['false','No']], String(p.notify_slack))}</select></div>
           </div>
         </div>
         <div class="section"><h3>Links</h3>
@@ -1167,6 +1250,318 @@ function openAgent(id){
     if (error) return fail(error);
     closeLayer(); await loadAll(); render(); toast(id ? 'Agent saved' : 'Agent added');
   };
+}
+
+/* ===================== CHAT ===================== */
+const CHAT_BUCKET = 'chat-files';
+const CH_ICON = { team:'👋', photo:'📷', video:'🎬', social:'📱' };
+const AV_COLORS = ['#1f4e79','#6b3aa0','#1e8e5a','#b7700a','#c0392b','#2f6fab','#7a4b2a','#0f766e'];
+const avColor = id => AV_COLORS[[...(id || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
+const initials = n => (n || '?').split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const chatFileCache = new Map();
+let chatSub = null, chatReadTimer = null;
+
+async function initChat(){
+  const [c, m] = await Promise.all([
+    sb.from('chat_channels').select('*').order('sort_order'),
+    sb.from('chat_members').select('*'),
+  ]);
+  if (c.error) return fail(c.error);
+  S.chat.channels = c.data || []; S.chat.members = m.data || [];
+  if (!S.chat.active || !S.chat.channels.some(x => x.id === S.chat.active || x.slug === S.chat.active)) {
+    let last = null; try { last = localStorage.getItem('kvhq.chat.' + S.me.id); } catch (e) {}
+    S.chat.active = S.chat.channels.find(x => x.id === last)?.id || S.chat.channels[0]?.id || null;
+  }
+  await refreshUnread();
+  if (!chatSub) {
+    chatSub = sb.channel('hq-chat')
+      .on('postgres_changes', { event:'*', schema:'public', table:'chat_messages' }, onChatChange)
+      .subscribe();
+  }
+  if (S.view === 'chat') renderChat();
+}
+async function refreshUnread(){
+  const { data, error } = await sb.rpc('chat_unread');
+  if (error) return console.warn(error);
+  S.chat.unread = Object.fromEntries((data || []).map(r => [r.channel_id, Number(r.unread) || 0]));
+  paintUnread();
+}
+function paintUnread(){
+  const total = Object.entries(S.chat.unread).reduce((a, [id, n]) => a + (S.view === 'chat' && id === activeChannel()?.id && document.hasFocus() ? 0 : n), 0);
+  const b = $('#chatBadge'); b.textContent = total > 99 ? '99+' : total; b.classList.toggle('hidden', !total);
+  document.title = (total ? `(${total}) ` : '') + 'Knox View HQ';
+  document.querySelectorAll('.ch-list [data-ch]').forEach(el => {
+    const n = S.chat.unread[el.dataset.ch] || 0, isAct = el.dataset.ch === activeChannel()?.id;
+    el.classList.toggle('unread', !!n && !isAct);
+    const c = el.querySelector('.count'); c.textContent = n; c.classList.toggle('hidden', !n || isAct);
+  });
+}
+function activeChannel(){ return S.chat.channels.find(x => x.id === S.chat.active || x.slug === S.chat.active); }
+function channelMembers(ch){
+  if (!ch) return [];
+  if (ch.everyone) return S.team.filter(t => t.active);
+  const ids = new Set(S.chat.members.filter(m => m.channel_id === ch.id).map(m => m.member_id));
+  return S.team.filter(t => t.active && (ids.has(t.id) || t.role === 'owner'));
+}
+
+async function loadMessages(cid, older){
+  const list = S.chat.msgs[cid] || [];
+  let q = sb.from('chat_messages').select('*').eq('channel_id', cid).order('created_at', { ascending:false }).limit(60);
+  if (older && list.length) q = q.lt('created_at', list[0].created_at);
+  const { data, error } = await q;
+  if (error) return fail(error);
+  const got = (data || []).reverse();
+  S.chat.msgs[cid] = older ? [...got, ...list] : got;
+  S.chat.more[cid] = (data || []).length === 60;
+  S.chat.loaded[cid] = true;
+}
+function markRead(){
+  const ch = activeChannel(); if (!ch || S.view !== 'chat' || !document.hasFocus()) return;
+  clearTimeout(chatReadTimer);
+  chatReadTimer = setTimeout(async () => {
+    S.chat.unread[ch.id] = 0; paintUnread();
+    await sb.from('chat_reads').upsert({ member_id: S.me.id, channel_id: ch.id, last_read_at: new Date().toISOString() });
+  }, 300);
+}
+window.addEventListener('focus', () => { if (S.view === 'chat') markRead(); paintUnread(); });
+
+function onChatChange(payload){
+  const m = payload.new?.id ? payload.new : payload.old; if (!m?.channel_id) return;
+  const list = S.chat.msgs[m.channel_id];
+  if (payload.eventType === 'INSERT') {
+    if (list && !list.some(x => x.id === m.id)) list.push(m);
+    const viewing = S.view === 'chat' && activeChannel()?.id === m.channel_id && document.hasFocus();
+    if (m.author_id !== S.me.id) {
+      if (viewing) markRead(); else S.chat.unread[m.channel_id] = (S.chat.unread[m.channel_id] || 0) + 1;
+      if (!viewing) desktopNotify(m);
+    }
+  } else if (payload.eventType === 'UPDATE' && list) {
+    const i = list.findIndex(x => x.id === m.id); if (i >= 0) list[i] = m;
+  } else if (payload.eventType === 'DELETE' && list) {
+    S.chat.msgs[m.channel_id] = list.filter(x => x.id !== m.id);
+  }
+  paintUnread();
+  if (S.view === 'chat' && activeChannel()?.id === m.channel_id) paintMessages(payload.eventType === 'INSERT');
+}
+function desktopNotify(m){
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const ch = S.chat.channels.find(c => c.id === m.channel_id);
+    const n = new Notification(`${memberName(m.author_id) || 'Knox View HQ'} · ${ch?.name || 'Chat'}`, { body: m.body || (m.attachments?.length ? 'Shared a file' : ''), tag: m.channel_id });
+    n.onclick = () => { window.focus(); location.hash = `#/chat/${m.channel_id}`; n.close(); };
+  } catch (e) {}
+}
+
+function renderChat(){
+  const box = $('#chatView');
+  if (!S.chat.channels.length) { box.innerHTML = `<div class="chat"><div class="chat-empty" style="grid-column:1/-1">Loading chat…</div></div>`; return; }
+  const ch = activeChannel() || S.chat.channels[0]; S.chat.active = ch.id;
+  try { localStorage.setItem('kvhq.chat.' + S.me.id, ch.id); } catch (e) {}
+  const mobileThread = /#\/chat\/./.test(location.hash);
+  const notifState = !('Notification' in window) ? '' : Notification.permission === 'granted' ? 'Desktop notifications are on.'
+    : Notification.permission === 'denied' ? 'Notifications are blocked in your browser settings.' : `<button id="notifOn">Turn on desktop notifications</button>`;
+  const members = channelMembers(ch);
+  box.innerHTML = `<div class="chat ${mobileThread ? 'show-thread' : ''}" id="chatRoot">
+    <aside class="chat-side"><h2>Channels</h2>
+      <ul class="ch-list">${S.chat.channels.map(c => `<li><button data-ch="${c.id}" class="${c.id === ch.id ? 'active' : ''}">
+        <span class="ico">${CH_ICON[c.slug] || '#'}</span><span class="nm">${esc(c.name)}</span><span class="count hidden"></span></button></li>`).join('')}</ul>
+      <div class="side-foot">${notifState}</div></aside>
+    <section class="chat-main">
+      <div class="chat-head">
+        <button class="btn small ghost back" id="chBack" aria-label="All channels">‹</button>
+        <div style="flex:1;min-width:0"><h1>${CH_ICON[ch.slug] || '#'} ${esc(ch.name)}</h1>
+          <p>${esc(ch.description || '')}${ch.description ? ' · ' : ''}${members.length} member${members.length === 1 ? '' : 's'}</p></div>
+        ${isOwner() && !ch.everyone ? `<button class="btn small" id="chMembers">Members</button>` : ''}
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <form class="composer" id="composer">
+        <div class="box">
+          <div class="pending-files" id="pendingFiles"></div>
+          <textarea id="chatInput" rows="1" placeholder="Message ${esc(ch.name)}"></textarea>
+          <div class="row">
+            <label class="btn small ghost" style="margin:0;cursor:pointer" title="Attach files">📎 Attach<input type="file" id="chatFile" multiple hidden /></label>
+            <span class="hint">Enter to send · Shift+Enter for a new line · @name to mention</span>
+            <button class="btn small primary" id="chatSend">Send</button>
+          </div>
+        </div>
+      </form>
+    </section></div>`;
+  paintUnread();
+  box.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { S.chat.files = []; S.chat.editing = null; location.hash = `#/chat/${b.dataset.ch}`; });
+  const back = $('#chBack'); if (back) back.onclick = () => { location.hash = '#/chat'; };
+  const nb = $('#notifOn'); if (nb) nb.onclick = async () => { await Notification.requestPermission(); renderChat(); };
+  const mb = $('#chMembers'); if (mb) mb.onclick = () => openChannelMembers(ch);
+  wireComposer(ch);
+  if (!S.chat.loaded[ch.id]) { $('#msgs').innerHTML = `<div class="chat-empty">Loading…</div>`; loadMessages(ch.id).then(() => { if (activeChannel()?.id === ch.id) { paintMessages(true); markRead(); } }); }
+  else { paintMessages(true); markRead(); }
+  if (!matchMedia('(max-width:760px)').matches) $('#chatInput').focus();
+}
+
+function linkify(text){
+  const names = S.team.map(t => firstName(t.full_name)).filter(Boolean);
+  let h = esc(text).replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+  if (names.length) h = h.replace(new RegExp(`(^|\\s)@(${names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')}|everyone|channel)\\b`, 'gi'), '$1<span class="mention">@$2</span>');
+  return h;
+}
+function dayLabel(d){
+  const dt = new Date(d), t = new Date(), y = new Date(Date.now() - 864e5);
+  if (dt.toDateString() === t.toDateString()) return 'Today';
+  if (dt.toDateString() === y.toDateString()) return 'Yesterday';
+  return dt.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric', year: dt.getFullYear() === t.getFullYear() ? undefined : 'numeric' });
+}
+const fmtTime = d => new Date(d).toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+
+function msgHTML(m, prev){
+  if (m.kind === 'system') {
+    const p = S.projects.find(x => x.id === m.project_id);
+    return `<div class="sys ${p?.media || ''}"><div class="t">${esc(m.body)}<small>${esc(memberName(m.author_id) || 'HQ')} · ${fmtTime(m.created_at)}</small></div>
+      ${m.project_id ? `<button class="btn small" data-open-project="${m.project_id}">Open project</button>` : ''}</div>`;
+  }
+  const cont = prev && prev.kind !== 'system' && prev.author_id === m.author_id && !prev.deleted_at
+    && new Date(m.created_at) - new Date(prev.created_at) < 5 * 60 * 1000 && new Date(m.created_at).toDateString() === new Date(prev.created_at).toDateString();
+  const name = memberName(m.author_id) || 'Former member';
+  const mine = m.author_id === S.me.id;
+  const editing = S.chat.editing === m.id;
+  const atts = (m.attachments || []).map(a => /^image\//.test(a.type || '')
+    ? `<a class="img" href="#" data-att="${esc(a.path)}" data-name="${esc(a.name)}"><img data-chat-path="${esc(a.path)}" alt="${esc(a.name)}" /></a>`
+    : `<a class="file" href="#" data-att="${esc(a.path)}" data-name="${esc(a.name)}">📄 ${esc(a.name)} <small>${fmtSize(a.size || 0)}</small></a>`).join('');
+  const body = m.deleted_at ? `<span class="deleted">Message deleted</span>`
+    : editing ? `<textarea class="edit-box" data-edit="${m.id}" style="min-height:60px">${esc(m.body)}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px"><button class="btn small primary" data-save-edit="${m.id}">Save</button><button class="btn small" data-cancel-edit>Cancel</button><span class="muted" style="font-size:12px;align-self:center">Enter to save · Esc to cancel</span></div>`
+    : `${linkify(m.body)}${m.edited_at ? '<span class="edited">(edited)</span>' : ''}`;
+  return `<div class="msg ${cont ? 'cont' : ''}" data-msg="${m.id}">
+    <div class="av" style="background:${avColor(m.author_id)}">${esc(initials(name))}</div>
+    <div style="min-width:0">${cont ? '' : `<div class="who"><b>${esc(name)}</b><time title="${esc(fmtDateTime(m.created_at))}">${fmtTime(m.created_at)}</time></div>`}
+      <div class="body">${body}</div>${!m.deleted_at && atts ? `<div class="atts">${atts}</div>` : ''}</div>
+    ${!m.deleted_at && !editing && (mine || isOwner()) ? `<div class="tools">${mine && m.body ? `<button data-edit-msg="${m.id}">Edit</button>` : ''}<button data-del-msg="${m.id}">Delete</button></div>` : ''}
+  </div>`;
+}
+function paintMessages(stick){
+  const el = $('#msgs'); const ch = activeChannel(); if (!el || !ch) return;
+  const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  const list = S.chat.msgs[ch.id] || [];
+  let html = S.chat.more[ch.id] ? `<div class="more"><button class="btn small" id="loadOlder">Load earlier messages</button></div>` : '';
+  if (!list.length) html += `<div class="chat-empty">No messages in ${esc(ch.name)} yet. Say hello 👋</div>`;
+  let lastDay = '';
+  list.forEach((m, i) => {
+    const d = new Date(m.created_at).toDateString();
+    if (d !== lastDay) { html += `<div class="day">${esc(dayLabel(m.created_at))}</div>`; lastDay = d; }
+    html += msgHTML(m, i && new Date(list[i - 1].created_at).toDateString() === d ? list[i - 1] : null);
+  });
+  const prevH = el.scrollHeight, prevTop = el.scrollTop;
+  el.innerHTML = html;
+  hydrateChatImgs(el);
+  if (stick === 'keep') el.scrollTop = el.scrollHeight - prevH + prevTop;
+  else if (stick === true ? true : nearBottom) el.scrollTop = el.scrollHeight;
+  const lo = $('#loadOlder'); if (lo) lo.onclick = async () => { lo.disabled = true; await loadMessages(ch.id, true); paintMessages('keep'); };
+  el.querySelectorAll('[data-open-project]').forEach(b => b.onclick = () => {
+    if (S.projects.some(p => p.id === b.dataset.openProject)) openProject(b.dataset.openProject); else toast('That project is no longer available');
+  });
+  el.querySelectorAll('[data-att]').forEach(a => a.onclick = e => { e.preventDefault(); openChatFile(a.dataset.att, a.dataset.name, e.target.tagName === 'IMG'); });
+  el.querySelectorAll('[data-edit-msg]').forEach(b => b.onclick = () => { S.chat.editing = b.dataset.editMsg; paintMessages(false); const t = el.querySelector('.edit-box'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } });
+  el.querySelectorAll('[data-cancel-edit]').forEach(b => b.onclick = () => { S.chat.editing = null; paintMessages(false); });
+  el.querySelectorAll('[data-save-edit]').forEach(b => b.onclick = () => saveEdit(b.dataset.saveEdit));
+  el.querySelectorAll('.edit-box').forEach(t => t.onkeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(t.dataset.edit); }
+    if (e.key === 'Escape') { S.chat.editing = null; paintMessages(false); }
+  });
+  el.querySelectorAll('[data-del-msg]').forEach(b => b.onclick = async () => {
+    if (!confirm('Delete this message?')) return;
+    const { error } = await sb.from('chat_messages').update({ deleted_at: new Date().toISOString(), body: '', attachments: [] }).eq('id', b.dataset.delMsg);
+    if (error) fail(error);
+  });
+}
+async function saveEdit(id){
+  const t = document.querySelector(`.edit-box[data-edit="${id}"]`); if (!t) return;
+  const body = t.value.trim(); const m = (S.chat.msgs[S.chat.active] || []).find(x => x.id === id);
+  S.chat.editing = null;
+  if (!m || body === m.body || (!body && !(m.attachments || []).length)) return paintMessages(false);
+  const { error } = await sb.from('chat_messages').update({ body, edited_at: new Date().toISOString() }).eq('id', id);
+  if (error) fail(error); else { m.body = body; m.edited_at = new Date().toISOString(); paintMessages(false); }
+}
+async function hydrateChatImgs(root){
+  const imgs = [...root.querySelectorAll('img[data-chat-path]')]; if (!imgs.length) return;
+  const now = Date.now(), need = [...new Set(imgs.map(i => i.dataset.chatPath))].filter(p => !(chatFileCache.get(p)?.exp > now));
+  if (need.length) {
+    const { data } = await sb.storage.from(CHAT_BUCKET).createSignedUrls(need, 3600);
+    for (const d of data || []) if (d.signedUrl) chatFileCache.set(d.path, { url: d.signedUrl, exp: now + 50 * 60 * 1000 });
+  }
+  for (const i of imgs) { const c = chatFileCache.get(i.dataset.chatPath); if (c) i.src = c.url; }
+}
+async function openChatFile(path, name, view){
+  const { data, error } = await sb.storage.from(CHAT_BUCKET).createSignedUrl(path, 600, view ? undefined : { download: name });
+  if (error) return fail(error);
+  if (view) window.open(data.signedUrl, '_blank', 'noopener');
+  else { const a = document.createElement('a'); a.href = data.signedUrl; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+}
+
+function wireComposer(ch){
+  const ta = $('#chatInput'), root = $('#chatRoot');
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 200) + 'px'; };
+  let draft = ''; try { draft = sessionStorage.getItem('kvhq.draft.' + ch.id) || ''; } catch (e) {}
+  ta.value = draft; grow();
+  ta.oninput = () => { grow(); try { sessionStorage.setItem('kvhq.draft.' + ch.id, ta.value); } catch (e) {} };
+  ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendMessage(ch); } };
+  ta.onpaste = e => { const files = [...(e.clipboardData?.files || [])]; if (files.length) { e.preventDefault(); addPending(files); } };
+  $('#chatFile').onchange = e => { addPending([...e.target.files]); e.target.value = ''; };
+  $('#composer').onsubmit = e => { e.preventDefault(); sendMessage(ch); };
+  root.ondragover = e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); root.classList.add('drag'); } };
+  root.ondragleave = e => { if (e.target === root || !root.contains(e.relatedTarget)) root.classList.remove('drag'); };
+  root.ondrop = e => { e.preventDefault(); root.classList.remove('drag'); addPending([...(e.dataTransfer?.files || [])]); };
+  paintPending();
+}
+function addPending(files){
+  for (const f of files) { if (f.size > 50 * 1048576) { toast(`${f.name} is over 50 MB. Share a Dropbox link instead.`); continue; } S.chat.files.push(f); }
+  paintPending(); $('#chatInput')?.focus();
+}
+function paintPending(){
+  const el = $('#pendingFiles'); if (!el) return;
+  el.innerHTML = S.chat.files.map((f, i) => `<span>📎 ${esc(f.name)} <small class="muted">${fmtSize(f.size)}</small><button type="button" data-rm-file="${i}" aria-label="Remove">✕</button></span>`).join('');
+  el.querySelectorAll('[data-rm-file]').forEach(b => b.onclick = () => { S.chat.files.splice(+b.dataset.rmFile, 1); paintPending(); });
+}
+async function sendMessage(ch){
+  const ta = $('#chatInput'), btn = $('#chatSend');
+  const body = ta.value.trim(), files = [...S.chat.files];
+  if (!body && !files.length) return;
+  btn.disabled = true;
+  const attachments = [];
+  for (const f of files) {
+    const clean = f.name.replace(/[^\w.\- ()]+/g, '_').slice(-120) || 'file';
+    const path = `${ch.id}/${crypto.randomUUID()}/${clean}`;
+    const up = await sb.storage.from(CHAT_BUCKET).upload(path, f, { contentType: f.type || 'application/octet-stream' });
+    if (up.error) { btn.disabled = false; return fail(up.error); }
+    attachments.push({ path, name: f.name, size: f.size, type: f.type || '' });
+  }
+  const { data, error } = await sb.from('chat_messages').insert({ channel_id: ch.id, author_id: S.me.id, body, attachments }).select().single();
+  btn.disabled = false;
+  if (error) return fail(error);
+  ta.value = ''; ta.style.height = 'auto'; S.chat.files = []; paintPending();
+  try { sessionStorage.removeItem('kvhq.draft.' + ch.id); } catch (e) {}
+  const list = S.chat.msgs[ch.id] || (S.chat.msgs[ch.id] = []);
+  if (!list.some(x => x.id === data.id)) list.push(data);
+  paintMessages(true); markRead(); ta.focus();
+}
+
+function openChannelMembers(ch){
+  const ids = new Set(S.chat.members.filter(m => m.channel_id === ch.id).map(m => m.member_id));
+  const people = S.team.filter(t => t.active);
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>${CH_ICON[ch.slug] || '#'} ${esc(ch.name)} members</h2>
+    <p class="muted" style="margin:-8px 0 12px;font-size:13px">New team members join automatically based on their role. Check or uncheck to change who's in this channel.</p>
+    <div class="member-list">${people.map(t => `<label><input type="checkbox" data-mem="${t.id}" ${ids.has(t.id) || t.role === 'owner' ? 'checked' : ''} ${t.role === 'owner' ? 'disabled' : ''} />
+      <span style="flex:1">${esc(t.full_name)}</span><span class="role-badge">${ROLE_LABEL[t.role]}</span></label>`).join('')}</div>
+    <div class="actions"><button class="btn primary" id="memDone">Done</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#memDone').onclick = () => { closeLayer(); renderChat(); };
+  document.querySelectorAll('[data-mem]').forEach(cb => cb.onchange = async () => {
+    const r = cb.checked
+      ? await sb.from('chat_members').insert({ channel_id: ch.id, member_id: cb.dataset.mem })
+      : await sb.from('chat_members').delete().eq('channel_id', ch.id).eq('member_id', cb.dataset.mem);
+    if (r.error) { cb.checked = !cb.checked; return fail(r.error); }
+    if (cb.checked) S.chat.members.push({ channel_id: ch.id, member_id: cb.dataset.mem });
+    else S.chat.members = S.chat.members.filter(m => !(m.channel_id === ch.id && m.member_id === cb.dataset.mem));
+  });
 }
 
 /* ===================== TEAM ===================== */
