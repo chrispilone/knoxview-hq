@@ -91,6 +91,24 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .panel .more{font-size:12.5px;margin-top:8px}
 @media (max-width:640px){ .qchips .spacer{display:none} .trow{padding:11px 10px;gap:10px} }
 
+.inbox{margin-bottom:14px;border-color:var(--accent-soft)}
+.inbox h2{margin-bottom:4px}
+.inbox-status{font-size:12.5px;margin:0 0 10px}
+.sugs{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.sug{display:flex;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--border);background:var(--panel)}
+.sug:first-child{border-top:none}
+.sug-main{flex:1;min-width:0}
+.sug-top{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.sug-top .flag{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800}
+.sug-title{font-weight:600;margin-top:3px}
+.sug-snip{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sug-acts{display:flex;gap:6px;flex:none}
+.src{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:5px}
+.src.gmail{background:#fdecea;color:#c5221f} .src.quo{background:#e8f0fe;color:#1a56db}
+@media (prefers-color-scheme: dark){ .src.gmail{background:#3a1f1c;color:#f4a29b} .src.quo{background:#1d2a3a;color:#8ab4f8} }
+.inbox-chip{font-size:12.5px;font-weight:600;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 10px;text-decoration:none}
+@media (max-width:640px){ .sug{flex-direction:column;align-items:stretch} .sug-acts{justify-content:flex-end} }
+
 /* ----- Chat ----- */
 nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 main.chat-mode{max-width:none;padding:0}
@@ -506,7 +524,7 @@ const VIDEO_FORMATS = [['Horizontal','Horizontal'],['Vertical','Vertical']];
 const lengthOpts = v => VIDEO_LENGTHS.some(([x]) => x === v) || !v ? VIDEO_LENGTHS : [...VIDEO_LENGTHS, [v, v]];
 const formatOpts = v => VIDEO_FORMATS.some(([x]) => x === v) || !v ? VIDEO_FORMATS : [...VIDEO_FORMATS, [v, v]];
 const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos:[], view:'home',
-  tasks:[], taskScope:'mine', taskCat:'', showDoneTasks:false,
+  tasks:[], suggestions:[], scans:[], taskScope:'mine', taskCat:'', showDoneTasks:false,
   chat:{ channels:[], members:[], unread:{}, lastAt:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
   media:'photo', layout:'board', search:'', assignee:'', showDone:false };
 
@@ -588,8 +606,9 @@ async function boot(session){
   $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
   show('app');
   await Promise.all([loadAll(), loadTasks()]);
+  await loadInbox();
   route();
-  initChat(); subscribeTasks();
+  initChat(); subscribeTasks(); subscribeInbox();
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -709,7 +728,7 @@ async function renderHome(){
       <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
       <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
     <div class="home-grid">
-      <div class="panel span-12" id="homeTasks"><h2>My tasks <span class="count"></span><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">Open Tasks</a></h2>
+      <div class="panel span-12" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">Open Tasks</a></h2>
         <div class="tlist"></div><div class="more"></div></div>
       ${pipelineHTML('photo')}
       ${pipelineHTML('video')}
@@ -1523,6 +1542,94 @@ function openQuickTask(){
   wireQuickAdd($('#qModal'), { autofocus: true, onSaved: () => { if (S.view === 'home') paintHomeTasks(); if (S.view === 'tasks') renderTasks(); } });
 }
 
+/* ----- Missed messages (Gmail + Quo check, owner only) ----- */
+const SCAN_TIMES = [[8, 40], [12, 40], [16, 40]]; // weekday automatic checks (local time)
+async function loadInbox(){
+  if (!isOwner()) return;
+  const [s, sc] = await Promise.all([
+    sb.from('task_suggestions').select('*').eq('status', 'pending').order('received_at', { ascending:false }),
+    sb.from('inbox_scans').select('*').order('requested_at', { ascending:false }).limit(5),
+  ]);
+  if (s.error) return console.warn(s.error);
+  S.suggestions = s.data || []; S.scans = sc.data || [];
+}
+let inboxSub = null, inboxTimer = null;
+function subscribeInbox(){
+  if (inboxSub || !isOwner()) return;
+  const refresh = () => { clearTimeout(inboxTimer); inboxTimer = setTimeout(async () => { await loadInbox(); paintInbox(); paintHomeTasks(); }, 300); };
+  inboxSub = sb.channel('hq-inbox')
+    .on('postgres_changes', { event:'*', schema:'public', table:'task_suggestions' }, refresh)
+    .on('postgres_changes', { event:'*', schema:'public', table:'inbox_scans' }, refresh)
+    .subscribe();
+}
+function nextAutoCheck(){
+  const now = new Date();
+  for (let d = 0; d < 8; d++) {
+    const day = addDays(now, d); if (day.getDay() === 0 || day.getDay() === 6) continue;
+    for (const [h, m] of SCAN_TIMES) { const t = new Date(day); t.setHours(h, m, 0, 0); if (t > now) return t; }
+  }
+  return null;
+}
+const ago = d => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} hr ago` : fmtShort(d); };
+function inboxHTML(){
+  if (!isOwner()) return '';
+  const list = S.suggestions || [];
+  const pend = (S.scans || []).find(x => x.status === 'queued' || x.status === 'running');
+  const last = (S.scans || []).find(x => x.status === 'done' || x.status === 'failed');
+  const nx = nextAutoCheck();
+  const status = pend ? (pend.status === 'running' ? 'Checking Gmail & Quo now…' : 'Check requested. Results show up here within the hour.')
+    : `${last ? `Last checked ${ago(last.finished_at || last.requested_at)}${last.status === 'failed' ? ' (had a problem)' : ''}` : 'Not checked yet'}${nx ? ` · next automatic check ${nx.toLocaleString(undefined, { weekday: nx.toDateString() === new Date().toDateString() ? undefined : 'short', hour:'numeric', minute:'2-digit' })}` : ''}`;
+  return `<div class="panel inbox" id="inboxPanel">
+    <h2>📬 Missed messages <span class="count">${list.length}</span><span class="spacer"></span>
+      <button class="btn small" id="scanBtn" ${pend ? 'disabled' : ''}>${pend ? 'Checking…' : '↻ Check Gmail & Quo'}</button></h2>
+    <p class="muted inbox-status">${esc(status)}${last?.note && !pend ? ` · ${esc(last.note)}` : ''}</p>
+    ${list.length ? `<div class="sugs">${list.map(sugHTML).join('')}</div>`
+      : `<div class="none">Nothing waiting on you from the last 2 days of Gmail and Quo.</div>`}
+  </div>`;
+}
+function sugHTML(g){
+  const src = g.source === 'quo' ? '<span class="src quo">Quo</span>' : '<span class="src gmail">Gmail</span>';
+  return `<div class="sug" data-sug="${g.id}">
+    <div class="sug-main"><div class="sug-top">${src}<b>${esc(g.from_name || g.from_contact || 'Unknown')}</b><span class="muted">${esc(ago(g.received_at || g.created_at))}</span>${g.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}</div>
+      <div class="sug-title">${esc(g.title)}</div>
+      ${g.snippet ? `<div class="sug-snip">“${esc(g.snippet)}”</div>` : ''}</div>
+    <div class="sug-acts"><button class="btn small primary" data-sug-add="${g.id}">Add task</button>
+      ${safeUrl(g.link) ? `<a class="btn small" href="${esc(g.link)}" target="_blank" rel="noopener">Open</a>` : ''}
+      <button class="btn small ghost" data-sug-dismiss="${g.id}" title="Not a task">Dismiss</button></div>
+  </div>`;
+}
+function paintInbox(){
+  const box = $('#inboxPanel'); if (!box) return;
+  box.outerHTML = inboxHTML(); wireInbox();
+}
+function wireInbox(){
+  const box = $('#inboxPanel'); if (!box) return;
+  const sb1 = $('#scanBtn'); if (sb1) sb1.onclick = async () => {
+    sb1.disabled = true; sb1.textContent = 'Requesting…';
+    const { data, error } = await sb.from('inbox_scans').insert({ requested_by: S.me.id }).select().single();
+    if (error) { sb1.disabled = false; return fail(error); }
+    S.scans.unshift(data); paintInbox(); toast('Check requested. New items will show up here.');
+  };
+  box.querySelectorAll('[data-sug-add]').forEach(b => b.onclick = async () => {
+    const g = S.suggestions.find(x => x.id === b.dataset.sugAdd); if (!g) return;
+    b.disabled = true;
+    const notes = [g.details, '', `From: ${g.from_name || ''}${g.from_contact ? ` <${g.from_contact}>` : ''} via ${g.source === 'quo' ? 'Quo' : 'Gmail'}`, g.link ? `Link: ${g.link}` : ''].filter(x => x !== null && x !== undefined).join('\n').trim();
+    const { data, error } = await sb.from('tasks').insert({ title: g.title, notes, category: g.category, priority: g.priority, due_date: g.due_date,
+      agent_id: g.agent_id, assigned_to: S.me.id, created_by: S.me.id }).select().single();
+    if (error) { b.disabled = false; return fail(error); }
+    await sb.from('task_suggestions').update({ status: 'accepted', task_id: data.id, decided_at: new Date().toISOString() }).eq('id', g.id);
+    S.tasks.unshift(data); S.suggestions = S.suggestions.filter(x => x.id !== g.id);
+    paintTaskBadge(); toast('Added to your tasks');
+    if (S.view === 'tasks') renderTasks(); else paintHomeTasks();
+  });
+  box.querySelectorAll('[data-sug-dismiss]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.sugDismiss;
+    const { error } = await sb.from('task_suggestions').update({ status: 'dismissed', decided_at: new Date().toISOString() }).eq('id', id);
+    if (error) return fail(error);
+    S.suggestions = S.suggestions.filter(x => x.id !== id); paintInbox(); paintHomeTasks();
+  });
+}
+
 /* ----- Tasks tab ----- */
 function renderTasks(){
   const owner = isOwner();
@@ -1547,6 +1654,7 @@ function renderTasks(){
   $('#tasksView').innerHTML = `
     <div class="page-head"><div><h1>Tasks</h1><p>${open.length} open${scope === 'mine' ? ' for you' : ''}</p></div>
       <div class="spacer"></div><button class="btn primary" id="tNew">+ New task</button></div>
+    ${inboxHTML()}
     <div class="panel" style="margin-bottom:14px">${quickAddHTML('qPage')}</div>
     <div class="toolbar">
       <div class="seg" id="tScope"><button data-s="mine">My tasks</button><button data-s="delegated">Assigned by me</button>${owner ? '<button data-s="all">Everyone</button>' : ''}</div>
@@ -1561,6 +1669,7 @@ function renderTasks(){
   $('#tNew').onclick = openQuickTask;
   const dt = $('#tDoneToggle'); if (dt) dt.onclick = () => { S.showDoneTasks = !S.showDoneTasks; renderTasks(); };
   wireQuickAdd($('#qPage'), { onSaved: () => renderTasks(), autofocus: !matchMedia('(max-width:760px)').matches });
+  wireInbox();
   bindTaskRows($('#tasksView'));
 }
 
@@ -1572,6 +1681,8 @@ function paintHomeTasks(){
   const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
   const show = (focus.length ? focus : mine).slice(0, 7);
   box.querySelector('.count').textContent = mine.length;
+  const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length;
+  if (chip) { chip.textContent = `📬 ${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
   box.querySelector('.tlist').innerHTML = show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`;
   box.querySelector('.more').innerHTML = mine.length > show.length ? `<a href="#/tasks">See all ${mine.length} tasks →</a>` : '';
   bindTaskRows(box);
