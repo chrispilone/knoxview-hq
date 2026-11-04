@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Knox View Projects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --panel-2:#f0f2f5; --border:#e3e6eb; --text:#1b1f27; --muted:#6b7280;
+  --accent:#1f4e79; --accent-2:#2f6fab; --accent-soft:#e6eef7; --danger:#c0392b; --ok:#1e8e5a;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05); --radius:10px;
+  --s-not_started:#9aa3af; --s-in_progress:#2f6fab; --s-ready_for_review:#d48a0a; --s-needs_revision:#c0392b;
+  --s-approved:#1e8e5a; --s-delivered:#5b3fa6; --s-archived:#6b7280;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1217; --panel:#171b22; --panel-2:#1e232c; --border:#2a303b; --text:#e7eaf0; --muted:#9aa3af;
+    --accent:#5b9bd5; --accent-2:#7fb3e3; --accent-soft:#1d2a3a; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px}
+a{color:var(--accent-2)}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:80px;resize:vertical}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 4px}
+.btn{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:8px 14px;font-weight:500}
+.btn:hover{background:var(--panel-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--danger)}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+
+/* Auth */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.auth-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:28px;width:100%;max-width:380px}
+.auth-card h1{margin:0 0 4px;font-size:22px}
+.auth-card .field{margin-bottom:12px}
+.brand-mark{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);margin-bottom:18px}
+.brand-mark span{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px}
+
+/* Layout */
+header.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:10px 20px}
+header.top .brand-mark{margin:0}
+nav.tabs{display:flex;gap:4px}
+nav.tabs button{border:none;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-weight:500}
+nav.tabs button.active{background:var(--accent-soft);color:var(--accent)}
+.spacer{flex:1}
+.user-chip{font-size:13px;color:var(--muted)}
+main{padding:18px 20px 40px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.toolbar input[type=search]{max-width:260px}
+.toolbar select{width:auto}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:none;background:none;padding:7px 12px;color:var(--muted);font-weight:500}
+.seg button.active{background:var(--accent-soft);color:var(--accent)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.stat .n{font-size:22px;font-weight:700}
+.stat .l{font-size:12px;color:var(--muted)}
+
+/* Board */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--panel-2);border-radius:var(--radius);padding:10px;min-height:200px;display:flex;flex-direction:column}
+.col.drag-over{outline:2px dashed var(--accent)}
+.col-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;margin:2px 4px 10px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.col-head .count{margin-left:auto;color:var(--muted);font-weight:500}
+.cards{display:flex;flex-direction:column;gap:8px;flex:1}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 12px;box-shadow:var(--shadow);cursor:pointer}
+.card:hover{border-color:var(--accent)}
+.card .t{font-weight:600;margin-bottom:6px;word-break:break-word}
+.card .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;background:var(--panel-2);font-size:11.5px;font-weight:500;color:var(--muted)}
+.tag.photo{background:#e8f1fb;color:#1f5d9e}
+.tag.video{background:#f3eafa;color:#6b3aa0}
+@media (prefers-color-scheme: dark){ .tag.photo{background:#1b2a3d;color:#8cbcf0} .tag.video{background:#2a1f38;color:#c5a3ec} }
+.tag.overdue{background:#fbe9e7;color:var(--danger)}
+.progress{height:4px;background:var(--panel-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.progress > i{display:block;height:100%;background:var(--ok)}
+
+/* Table */
+table.list{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table.list th,table.list td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.list th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2)}
+table.list tr.row{cursor:pointer}
+table.list tr.row:hover td{background:var(--panel-2)}
+.status-pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500}
+.table-wrap{overflow-x:auto}
+
+/* Drawer */
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100%);background:var(--panel);z-index:50;box-shadow:-8px 0 30px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.drawer-head h2{margin:0;font-size:18px;flex:1;word-break:break-word}
+.drawer-body{overflow-y:auto;padding:18px 20px 40px;flex:1}
+.section{margin-bottom:24px}
+.section h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.full{grid-column:1/-1}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;text-decoration:none;font-weight:500;font-size:13px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:9px;margin-bottom:8px}
+.task input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex:none}
+.task .body{flex:1;min-width:0}
+.task .name{font-weight:600}
+.task.done .name{text-decoration:line-through;color:var(--muted)}
+.task .sub{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:pre-wrap}
+.rev{border-left:3px solid var(--s-needs_revision);padding:8px 12px;background:var(--panel-2);border-radius:0 8px 8px 0;margin-bottom:8px}
+.rev.resolved{border-left-color:var(--ok);opacity:.75}
+.rev .h{display:flex;gap:8px;font-size:12px;color:var(--muted);margin-bottom:4px;align-items:center}
+.rev .n{white-space:pre-wrap}
+.activity li{font-size:13px;margin-bottom:6px;color:var(--muted)}
+.activity{padding-left:18px;margin:0}
+.sop{white-space:pre-wrap;background:var(--panel-2);border-radius:8px;padding:12px;font-size:13px}
+.save-bar{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:12px 20px;border-top:1px solid var(--border)}
+.save-bar .status{margin-right:auto;font-size:13px;color:var(--muted)}
+
+/* Modal */
+.modal{position:fixed;z-index:60;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100vh - 40px);overflow-y:auto;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+.modal h2{margin:0 0 16px;font-size:18px}
+.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+.empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b1f27;color:#fff;padding:10px 16px;border-radius:8px;z-index:100;font-size:13px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.entity{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer}
+.entity:hover{border-color:var(--accent)}
+.entity .t{font-weight:600}
+@media (max-width:720px){
+  header.top{flex-wrap:wrap;padding:10px 16px}
+  nav.tabs{order:3;width:100%;overflow-x:auto}
+  main{padding:14px 16px 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<section id="auth" class="hidden">
+  <div class="auth-card">
+    <div class="brand-mark"><span>KV</span> Knox View Projects</div>
+    <h1 id="authTitle">Sign in</h1>
+    <p class="muted" id="authSub" style="margin:0 0 18px">Team access only.</p>
+    <form id="authForm">
+      <div class="field" id="nameField" style="display:none"><label>Full name</label><input id="authName" autocomplete="name" /></div>
+      <div class="field"><label>Email</label><input id="authEmail" type="email" required autocomplete="email" /></div>
+      <div class="field"><label>Password</label><input id="authPass" type="password" required minlength="8" autocomplete="current-password" /></div>
+      <button class="btn primary" style="width:100%" id="authBtn">Sign in</button>
+    </form>
+    <p class="muted" style="margin:14px 0 0;font-size:13px;text-align:center">
+      <a href="#" id="authToggle">New team member? Create an account</a>
+    </p>
+    <p id="authMsg" class="muted" style="font-size:13px;margin-top:12px"></p>
+  </div>
+</section>
+
+<!-- ============ PENDING ============ -->
+<section id="pending" class="hidden" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div class="auth-card">
+    <div class="brand-mark"><span>KV</span> Knox View Projects</div>
+    <h1>Waiting for access</h1>
+    <p class="muted">You're signed in as <b id="pendingEmail"></b>, but you haven't been added to the team yet. Ask Chris to add you.</p>
+    <button class="btn" id="pendingSignOut">Sign out</button>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section id="app" class="hidden">
+  <header class="top">
+    <div class="brand-mark"><span>KV</span> Projects</div>
+    <nav class="tabs" id="tabs">
+      <button data-view="board" class="active">Board</button>
+      <button data-view="list">List</button>
+      <button data-view="agents">Agents</button>
+      <button data-view="team" id="teamTab">Team</button>
+    </nav>
+    <div class="spacer"></div>
+    <span class="user-chip" id="userChip"></span>
+    <button class="btn small ghost" id="signOut">Sign out</button>
+  </header>
+
+  <main>
+    <!-- Projects (board + list) -->
+    <div id="projectsView">
+      <div class="stats" id="stats"></div>
+      <div class="toolbar">
+        <button class="btn primary" id="newProjectBtn">+ New project</button>
+        <input type="search" id="search" placeholder="Search address, agent…" />
+        <div class="seg" id="mediaSeg">
+          <button data-m="all" class="active">All</button>
+          <button data-m="photo">Photo</button>
+          <button data-m="video">Video</button>
+        </div>
+        <select id="assigneeFilter"><option value="">Everyone</option><option value="me">Assigned to me</option></select>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--muted)">
+          <input type="checkbox" id="showDone" style="width:auto" /> Show delivered/archived
+        </label>
+      </div>
+      <div id="boardWrap" class="board"></div>
+      <div id="listWrap" class="table-wrap hidden"></div>
+    </div>
+
+    <!-- Agents -->
+    <div id="agentsView" class="hidden">
+      <div class="toolbar">
+        <button class="btn primary" id="newAgentBtn">+ New agent</button>
+        <input type="search" id="agentSearch" placeholder="Search agents…" />
+      </div>
+      <div id="agentsGrid" class="cards-grid"></div>
+    </div>
+
+    <!-- Team -->
+    <div id="teamView" class="hidden">
+      <p class="muted" style="margin-top:0">New team members create an account on the sign-in page, then show up here as pending so you can approve them and set their role.</p>
+      <div id="teamList"></div>
+    </div>
+  </main>
+</section>
+
+<div id="layer"></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const SUPABASE_URL = 'https://sqlkswwwpkzadrrbhqip.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_X-Pafdzgf9cDIdtGO8RofA_YBwlvktq';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const STATUSES = [
+  ['not_started','Not Started'],['in_progress','In Progress'],['ready_for_review','Ready for Review'],
+  ['needs_revision','Needs Revision'],['approved','Approved'],['delivered','Delivered'],['archived','Archived']
+];
+const STATUS_LABEL = Object.fromEntries(STATUSES);
+const DONE = ['delivered','archived'];
+const DELIVERY = [['spiro','Spiro'],['text_message','Text Message'],['email','Email (template)'],['chris_delivers','Chris will deliver']];
+const DELIVERY_LABEL = Object.fromEntries(DELIVERY);
+const TASK_KINDS = [['drone_pin','Drone Pin Photo'],['virtual_twilight','Virtual Twilight'],['virtual_staging','Virtual Staging'],
+  ['object_removal','Object Removal'],['property_lines','Property Lines'],['callout_graphics','Callout Graphics'],['custom','Custom Task']];
+const TASK_LABEL = Object.fromEntries(TASK_KINDS);
+const ROLES = [['owner','Owner'],['qc_admin','QC Admin'],['video_editor','Video Editor'],['photo_editor','Photo Editor'],['contractor','Contractor']];
+const ROLE_LABEL = Object.fromEntries(ROLES);
+
+/* ===================== STATE ===================== */
+const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], view:'board', media:'all', search:'', assignee:'', showDone:false };
+
+/* ===================== HELPERS ===================== */
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '';
+const fmtDateTime = d => d ? new Date(d).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+const opt = (pairs, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') +
+  pairs.map(([v,l]) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(l)}</option>`).join('');
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+function toast(msg){ const t = document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+function fail(err){ console.error(err); toast(err?.message || 'Something went wrong'); }
+const isOwner = () => S.me?.role === 'owner';
+const memberName = id => S.team.find(t => t.id === id)?.full_name || '';
+const today = () => new Date().toISOString().slice(0,10);
+
+/* ===================== AUTH ===================== */
+let signUpMode = false;
+$('#authToggle').onclick = e => {
+  e.preventDefault(); signUpMode = !signUpMode;
+  $('#authTitle').textContent = signUpMode ? 'Create account' : 'Sign in';
+  $('#authBtn').textContent = signUpMode ? 'Create account' : 'Sign in';
+  $('#nameField').style.display = signUpMode ? '' : 'none';
+  $('#authToggle').textContent = signUpMode ? 'Already have an account? Sign in' : 'New team member? Create an account';
+  $('#authMsg').textContent = '';
+};
+$('#authForm').onsubmit = async e => {
+  e.preventDefault();
+  const email = $('#authEmail').value.trim(), password = $('#authPass').value;
+  $('#authMsg').textContent = '';
+  $('#authBtn').disabled = true;
+  try {
+    if (signUpMode) {
+      const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name: $('#authName').value.trim() }, emailRedirectTo: location.origin + location.pathname } });
+      if (error) throw error;
+      if (!data.session) $('#authMsg').textContent = 'Check your email to confirm your account, then sign in here.';
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+  } catch (err) { $('#authMsg').textContent = err.message; }
+  $('#authBtn').disabled = false;
+};
+const doSignOut = async () => { await sb.auth.signOut(); };
+$('#signOut').onclick = doSignOut; $('#pendingSignOut').onclick = doSignOut;
+
+function show(section){ ['auth','pending','app'].forEach(id => $('#'+id).classList.toggle('hidden', id !== section)); }
+
+async function boot(session){
+  S.user = session?.user || null;
+  if (!S.user) { show('auth'); return; }
+  const { data: me } = await sb.from('team_members').select('*').eq('id', S.user.id).maybeSingle();
+  if (!me || !me.active) { $('#pendingEmail').textContent = S.user.email; show('pending'); return; }
+  S.me = me;
+  $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
+  $('#teamTab').classList.toggle('hidden', !isOwner());
+  show('app');
+  await loadAll();
+  render();
+}
+let booted = false;
+sb.auth.onAuthStateChange((evt, session) => {
+  if (evt === 'TOKEN_REFRESHED') return;
+  if (evt === 'INITIAL_SESSION' || evt === 'SIGNED_IN' || evt === 'SIGNED_OUT') {
+    if (evt === 'SIGNED_IN' && booted && S.me) return;
+    booted = true; boot(session);
+  }
+});
+
+/* ===================== DATA ===================== */
+async function loadAll(){
+  const [p, t, a, m] = await Promise.all([
+    sb.from('projects').select('*, project_tasks(id, completed)').order('created_at', { ascending:false }),
+    sb.from('project_types').select('*').order('media').order('sort_order'),
+    sb.from('agents').select('*').order('full_name'),
+    sb.from('team_members').select('*').order('full_name'),
+  ]);
+  for (const r of [p,t,a,m]) if (r.error) fail(r.error);
+  S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || [];
+  const af = $('#assigneeFilter'); const cur = af.value;
+  af.innerHTML = `<option value="">Everyone</option><option value="me">Assigned to me</option><option value="none">Unassigned</option>` +
+    S.team.filter(x=>x.active).map(x => `<option value="${x.id}">${esc(x.full_name)}</option>`).join('');
+  af.value = cur;
+}
+async function reloadProjects(){
+  const { data, error } = await sb.from('projects').select('*, project_tasks(id, completed)').order('created_at', { ascending:false });
+  if (error) return fail(error);
+  S.projects = data; render();
+}
+const typeName = id => S.types.find(t => t.id === id)?.name || '';
+const agentName = id => S.agents.find(a => a.id === id)?.full_name || '';
+
+/* ===================== NAV ===================== */
+$('#tabs').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.view = b.dataset.view;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x === b));
+  render();
+};
+$('#mediaSeg').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.media = b.dataset.m;
+  document.querySelectorAll('#mediaSeg button').forEach(x => x.classList.toggle('active', x === b));
+  render();
+};
+$('#search').oninput = e => { S.search = e.target.value.toLowerCase(); render(); };
+$('#assigneeFilter').onchange = e => { S.assignee = e.target.value; render(); };
+$('#showDone').onchange = e => { S.showDone = e.target.checked; render(); };
+$('#newProjectBtn').onclick = () => openNewProject();
+$('#newAgentBtn').onclick = () => openAgent(null);
+$('#agentSearch').oninput = () => renderAgents();
+
+/* ===================== RENDER ===================== */
+function filtered(){
+  return S.projects.filter(p => {
+    if (S.media !== 'all' && p.media !== S.media) return false;
+    if (S.assignee === 'me' && p.assigned_to !== S.me.id) return false;
+    if (S.assignee === 'none' && p.assigned_to) return false;
+    if (S.assignee && !['me','none'].includes(S.assignee) && p.assigned_to !== S.assignee) return false;
+    if (S.search) {
+      const hay = [p.name, p.address, p.city, agentName(p.agent_id), typeName(p.project_type_id), memberName(p.assigned_to)].join(' ').toLowerCase();
+      if (!hay.includes(S.search)) return false;
+    }
+    return true;
+  });
+}
+function render(){
+  const isProj = S.view === 'board' || S.view === 'list';
+  $('#projectsView').classList.toggle('hidden', !isProj);
+  $('#agentsView').classList.toggle('hidden', S.view !== 'agents');
+  $('#teamView').classList.toggle('hidden', S.view !== 'team');
+  if (isProj) {
+    renderStats();
+    $('#boardWrap').classList.toggle('hidden', S.view !== 'board');
+    $('#listWrap').classList.toggle('hidden', S.view !== 'list');
+    S.view === 'board' ? renderBoard() : renderList();
+  }
+  if (S.view === 'agents') renderAgents();
+  if (S.view === 'team') renderTeam();
+}
+function renderStats(){
+  const ps = S.projects;
+  const active = ps.filter(p => !DONE.includes(p.status));
+  const now = new Date(); const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const deliveredMonth = ps.filter(p => p.delivered_at && new Date(p.delivered_at) >= monthStart).length;
+  const overdue = active.filter(p => p.due_date && p.due_date < today()).length;
+  const items = [
+    ['Active projects', active.length],
+    ['Ready for review', ps.filter(p => p.status === 'ready_for_review').length],
+    ['Needs revision', ps.filter(p => p.status === 'needs_revision').length],
+    ['Overdue', overdue],
+    ['Delivered this month', deliveredMonth],
+  ];
+  $('#stats').innerHTML = items.map(([l,n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+}
+function cardHTML(p){
+  const tasks = p.project_tasks || []; const done = tasks.filter(t => t.completed).length;
+  const overdue = p.due_date && p.due_date < today() && !DONE.includes(p.status);
+  return `<div class="card" draggable="true" data-id="${p.id}">
+    <div class="t">${esc(p.name)}</div>
+    <div class="meta">
+      <span class="tag ${p.media}">${p.media === 'photo' ? 'Photo' : 'Video'}</span>
+      ${typeName(p.project_type_id) ? `<span class="tag">${esc(typeName(p.project_type_id))}</span>` : ''}
+      ${p.due_date ? `<span class="tag ${overdue ? 'overdue' : ''}">Due ${esc(fmtDate(p.due_date))}</span>` : ''}
+    </div>
+    <div class="meta" style="margin-top:6px">
+      ${[agentName(p.agent_id) ? esc(agentName(p.agent_id)) : '', p.assigned_to ? esc(memberName(p.assigned_to)) : 'Unassigned', p.photo_count ? `${p.photo_count} photos` : '']
+        .filter(Boolean).map(x => `<span>${x}</span>`).join('<span>·</span>')}
+    </div>
+    ${tasks.length ? `<div class="progress" title="${done}/${tasks.length} tasks"><i style="width:${Math.round(done/tasks.length*100)}%"></i></div>` : ''}
+  </div>`;
+}
+function renderBoard(){
+  const list = filtered();
+  const cols = STATUSES.filter(([s]) => S.showDone || !DONE.includes(s));
+  $('#boardWrap').innerHTML = cols.map(([s,l]) => {
+    const items = list.filter(p => p.status === s);
+    return `<div class="col" data-status="${s}">
+      <div class="col-head"><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>
+      <div class="cards">${items.map(cardHTML).join('')}</div></div>`;
+  }).join('');
+  // click + drag
+  document.querySelectorAll('#boardWrap .card').forEach(c => {
+    c.onclick = () => openProject(c.dataset.id);
+    c.ondragstart = e => { e.dataTransfer.setData('text/plain', c.dataset.id); };
+  });
+  document.querySelectorAll('#boardWrap .col').forEach(col => {
+    col.ondragover = e => { e.preventDefault(); col.classList.add('drag-over'); };
+    col.ondragleave = () => col.classList.remove('drag-over');
+    col.ondrop = async e => {
+      e.preventDefault(); col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain'); const status = col.dataset.status;
+      const p = S.projects.find(x => x.id === id); if (!p || p.status === status) return;
+      p.status = status; render();
+      const { error } = await sb.from('projects').update({ status }).eq('id', id);
+      if (error) fail(error); else toast(`Moved to ${STATUS_LABEL[status]}`);
+      reloadProjects();
+    };
+  });
+}
+function renderList(){
+  const list = filtered().filter(p => S.showDone || !DONE.includes(p.status));
+  if (!list.length) { $('#listWrap').innerHTML = `<div class="empty">No projects match.</div>`; return; }
+  $('#listWrap').innerHTML = `<table class="list"><thead><tr>
+    <th>Project</th><th>Media</th><th>Type</th><th>Agent</th><th>Assigned</th><th>Status</th><th>Due</th><th>Created</th></tr></thead><tbody>
+    ${list.map(p => `<tr class="row" data-id="${p.id}">
+      <td><b>${esc(p.name)}</b></td>
+      <td><span class="tag ${p.media}">${p.media === 'photo' ? 'Photo' : 'Video'}</span></td>
+      <td>${esc(typeName(p.project_type_id))}</td>
+      <td>${esc(agentName(p.agent_id))}</td>
+      <td>${esc(memberName(p.assigned_to)) || '<span class="muted">—</span>'}</td>
+      <td><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></td>
+      <td>${esc(fmtDate(p.due_date))}</td>
+      <td class="muted">${esc(fmtDate(p.created_at))}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('#listWrap tr.row').forEach(r => r.onclick = () => openProject(r.dataset.id));
+}
+
+/* ===================== LAYER (drawer/modal) ===================== */
+function closeLayer(){ $('#layer').innerHTML = ''; document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLayer(); });
+
+/* ----- New project ----- */
+function openNewProject(){
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal">
+    <h2>New project</h2>
+    <form id="npForm">
+      <div class="grid2">
+        <div class="full"><label>Project name / address</label><input name="name" required placeholder="11033 Eagle Creek Lane" /></div>
+        <div><label>Media</label><select name="media" id="npMedia">${opt([['photo','Photo'],['video','Video']],'photo')}</select></div>
+        <div><label>Project type</label><select name="project_type_id" id="npType"></select></div>
+        <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a=>[a.id,a.full_name]), '', '— Select agent —')}</select></div>
+        <div><label>Assign to</label><select name="assigned_to">${opt(S.team.filter(t=>t.active).map(t=>[t.id,t.full_name]), '', 'Unassigned')}</select></div>
+        <div><label>Due date</label><input type="date" name="due_date" /></div>
+        <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY,'spiro')}</select></div>
+        <div class="full"><label>Dropbox folder link</label><input name="dropbox_url" type="url" placeholder="https://www.dropbox.com/…" /></div>
+      </div>
+      <div class="actions"><button type="button" class="btn" id="npCancel">Cancel</button><button class="btn primary">Create project</button></div>
+    </form>
+  </div>`;
+  const fillTypes = () => { const m = $('#npMedia').value; $('#npType').innerHTML = opt(S.types.filter(t=>t.media===m && t.active).map(t=>[t.id,t.name]), ''); };
+  fillTypes(); $('#npMedia').onchange = fillTypes;
+  $('#ov').onclick = closeLayer; $('#npCancel').onclick = closeLayer;
+  $('#npForm').onsubmit = async e => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    fd.submitted_by = S.me.id;
+    const { data, error } = await sb.from('projects').insert(fd).select().single();
+    if (error) return fail(error);
+    // default checklist for photo jobs
+    if (data.media === 'photo') await sb.from('project_tasks').insert({ project_id: data.id, kind:'drone_pin', title:'Drone Pin Photo', details:'One high/far photo with a small drone pin (if applicable)' });
+    closeLayer(); await reloadProjects(); openProject(data.id); toast('Project created');
+  };
+}
+
+/* ----- Project drawer ----- */
+async function openProject(id){
+  const p = S.projects.find(x => x.id === id); if (!p) return;
+  document.body.style.overflow = 'hidden';
+  const [tasks, revs, acts] = await Promise.all([
+    sb.from('project_tasks').select('*').eq('project_id', id).order('sort_order').order('created_at'),
+    sb.from('revisions').select('*').eq('project_id', id).order('created_at', { ascending:false }),
+    sb.from('activity_log').select('*').eq('project_id', id).order('created_at', { ascending:false }).limit(30),
+  ]);
+  const type = S.types.find(t => t.id === p.project_type_id);
+  const agent = S.agents.find(a => a.id === p.agent_id);
+  const related = S.projects.filter(x => x.id !== p.id && (x.parent_project_id === p.id || x.id === p.parent_project_id || (p.parent_project_id && x.parent_project_id === p.parent_project_id)));
+  const isVideo = p.media === 'video';
+  const links = [['Dropbox',p.dropbox_url],['Vimeo',p.vimeo_url],['Spiro',p.spiro_url],['Music',p.music_url],['Agent branding',agent?.branding_folder_url]]
+    .filter(([,u]) => safeUrl(u)).map(([l,u]) => `<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${l} ↗</a>`).join('');
+
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <aside class="drawer">
+    <div class="drawer-head">
+      <span class="tag ${p.media}">${isVideo ? 'Video' : 'Photo'}</span>
+      <h2>${esc(p.name)}</h2>
+      <button class="btn small ghost" id="dClose">✕</button>
+    </div>
+    <div class="drawer-body">
+      ${links ? `<div class="section"><div class="links">${links}</div></div>` : ''}
+      <form id="pForm">
+        <div class="section"><h3>Details</h3>
+          <div class="grid3">
+            <div><label>Status</label><select name="status">${opt(STATUSES, p.status)}</select></div>
+            <div><label>Assigned to</label><select name="assigned_to">${opt(S.team.filter(t=>t.active||t.id===p.assigned_to).map(t=>[t.id,t.full_name]), p.assigned_to, 'Unassigned')}</select></div>
+            <div><label>Due date</label><input type="date" name="due_date" value="${esc(p.due_date || '')}" /></div>
+            <div><label>Project type</label><select name="project_type_id">${opt(S.types.filter(t=>t.media===p.media).map(t=>[t.id,t.name]), p.project_type_id, '—')}</select></div>
+            <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a=>[a.id,a.full_name]), p.agent_id, '—')}</select></div>
+            <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY, p.delivery_method, '—')}</select></div>
+            <div class="full grid2" style="gap:12px">
+              <div><label>Name</label><input name="name" value="${esc(p.name)}" required /></div>
+              <div><label>Address</label><input name="address" value="${esc(p.address || '')}" placeholder="Street address" /></div>
+            </div>
+            <div><label>City</label><input name="city" value="${esc(p.city || '')}" /></div>
+            ${!isVideo ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" value="${esc(p.photo_count ?? '')}" /></div>` : ''}
+            <div><label>Notify Slack</label><select name="notify_slack">${opt([['true','Yes'],['false','No']], String(p.notify_slack))}</select></div>
+          </div>
+        </div>
+        <div class="section"><h3>Links</h3>
+          <div class="grid2">
+            <div class="full"><label>Dropbox folder</label><input type="url" name="dropbox_url" value="${esc(p.dropbox_url || '')}" /></div>
+            ${isVideo ? `<div><label>Vimeo link</label><input type="url" name="vimeo_url" value="${esc(p.vimeo_url || '')}" /></div>` : ''}
+            <div ${isVideo ? '' : 'class="full"'}><label>Spiro order link</label><input type="url" name="spiro_url" value="${esc(p.spiro_url || '')}" /></div>
+          </div>
+        </div>
+        ${isVideo ? `<div class="section"><h3>Video brief</h3>
+          <div class="grid3">
+            <div><label>Length</label><input name="video_length" value="${esc(p.video_length || type?.default_length || '')}" placeholder="60–90 seconds" /></div>
+            <div><label>Format</label><select name="video_format">${opt([['Vertical','Vertical'],['Horizontal','Horizontal'],['Both','Both']], p.video_format, '—')}</select></div>
+            <div><label>Color grading</label><select name="color_grading">${opt([['true','Yes'],['false','No']], p.color_grading == null ? '' : String(p.color_grading), '—')}</select></div>
+            <div class="full"><label>Music link</label><input type="url" name="music_url" value="${esc(p.music_url || '')}" /></div>
+            <div class="full"><label>Script</label><textarea name="script" style="min-height:120px">${esc(p.script || '')}</textarea></div>
+            <div class="full"><label>Export notes</label><textarea name="export_notes" placeholder="Export branded & unbranded…">${esc(p.export_notes || '')}</textarea></div>
+            <div class="full"><label>Reference links</label><textarea name="reference_links">${esc(p.reference_links || '')}</textarea></div>
+          </div></div>` : ''}
+        <div class="section"><h3>Notes</h3><textarea name="notes" placeholder="Anything the editor should know…">${esc(p.notes || '')}</textarea></div>
+      </form>
+
+      ${!isVideo ? `<div class="section"><h3>Editing checklist</h3>
+        <div id="taskList">${(tasks.data||[]).map(taskHTML).join('') || '<p class="muted">No checklist items yet.</p>'}</div>
+        <form id="taskForm" class="grid3" style="margin-top:8px;align-items:end">
+          <div><label>Add item</label><select name="kind">${opt(TASK_KINDS,'virtual_twilight')}</select></div>
+          <div><label>Photo number(s)</label><input name="photo_numbers" placeholder="001, 014" /></div>
+          <div><button class="btn">Add</button></div>
+          <div class="full"><input name="details" placeholder="Details (room type, style, preferred locations…)" /></div>
+        </form></div>` : `<div class="section"><h3>Tasks</h3>
+        <div id="taskList">${(tasks.data||[]).map(taskHTML).join('') || '<p class="muted">No tasks yet.</p>'}</div>
+        <form id="taskForm" class="grid3" style="margin-top:8px;align-items:end">
+          <input type="hidden" name="kind" value="custom" />
+          <div class="full" style="display:flex;gap:8px"><input name="title" placeholder="e.g. Export one agent reel with no audio" required /><button class="btn">Add</button></div>
+        </form></div>`}
+
+      <div class="section"><h3>Revision requests</h3>
+        <div id="revList">${(revs.data||[]).map(revHTML).join('') || '<p class="muted">No revisions requested.</p>'}</div>
+        <form id="revForm" style="margin-top:8px">
+          <textarea name="notes" placeholder="What needs to change?" required style="min-height:60px"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <span class="muted" style="font-size:12.5px">Adding a revision moves the project to Needs Revision.</span>
+            <button class="btn">Request revision</button>
+          </div>
+        </form>
+      </div>
+
+      ${type?.sop ? `<div class="section"><h3>SOP · ${esc(type.name)}</h3><div class="sop">${esc(type.sop)}</div></div>` : ''}
+      ${agent?.preferences ? `<div class="section"><h3>Agent preferences · ${esc(agent.full_name)}</h3><div class="sop">${esc(agent.preferences)}</div></div>` : ''}
+
+      ${related.length ? `<div class="section"><h3>Related projects</h3>${related.map(r => `<div class="task" style="cursor:pointer" data-open="${r.id}"><div class="body"><div class="name">${esc(r.name)}</div><div class="sub">${r.media} · ${STATUS_LABEL[r.status]}</div></div></div>`).join('')}</div>` : ''}
+
+      <div class="section"><h3>Activity</h3>
+        <ul class="activity">${(acts.data||[]).map(a => `<li>${esc(fmtDateTime(a.created_at))} — ${esc(memberName(a.actor_id) || 'System')} ${a.action === 'created' ? 'created the project' : `moved it from ${esc(STATUS_LABEL[a.from_status])} to <b>${esc(STATUS_LABEL[a.to_status])}</b>`}</li>`).join('') || '<li>No activity yet.</li>'}</ul>
+        <p class="muted" style="font-size:12.5px">Created ${esc(fmtDateTime(p.created_at))}${p.submitted_by ? ' by ' + esc(memberName(p.submitted_by)) : ''}${p.delivered_at ? ' · Delivered ' + esc(fmtDate(p.delivered_at)) : ''}</p>
+      </div>
+      <div class="section" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small" id="reshootBtn">+ Create reshoot / related project</button>
+        ${isOwner() ? `<button class="btn small danger" id="deleteBtn">Delete project</button>` : ''}
+      </div>
+    </div>
+    <div class="save-bar"><span class="status" id="saveStatus"></span><button class="btn" id="dCancel">Close</button><button class="btn primary" id="saveBtn">Save changes</button></div>
+  </aside>`;
+
+  $('#ov').onclick = closeLayer; $('#dClose').onclick = closeLayer; $('#dCancel').onclick = closeLayer;
+  const form = $('#pForm');
+  form.oninput = () => $('#saveStatus').textContent = 'Unsaved changes';
+  $('#saveBtn').onclick = async () => {
+    if (!form.reportValidity()) return;
+    const fd = Object.fromEntries(new FormData(form));
+    for (const k of Object.keys(fd)) {
+      if (fd[k] === '') fd[k] = null;
+      else if (fd[k] === 'true') fd[k] = true;
+      else if (fd[k] === 'false') fd[k] = false;
+    }
+    if ('photo_count' in fd && fd.photo_count !== null) fd.photo_count = parseInt(fd.photo_count, 10);
+    fd.notify_slack = fd.notify_slack ?? false;
+    const { error } = await sb.from('projects').update(fd).eq('id', id);
+    if (error) return fail(error);
+    toast('Saved'); await reloadProjects(); openProject(id);
+  };
+
+  // tasks
+  $('#taskForm').onsubmit = async e => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    fd.project_id = id; fd.title = fd.title || TASK_LABEL[fd.kind];
+    fd.sort_order = (tasks.data || []).length;
+    const { error } = await sb.from('project_tasks').insert(fd);
+    if (error) return fail(error);
+    await reloadProjects(); openProject(id);
+  };
+  document.querySelectorAll('#taskList input[type=checkbox]').forEach(cb => cb.onchange = async () => {
+    const { error } = await sb.from('project_tasks').update({ completed: cb.checked }).eq('id', cb.dataset.id);
+    if (error) return fail(error);
+    await reloadProjects(); openProject(id);
+  });
+  document.querySelectorAll('#taskList [data-del-task]').forEach(b => b.onclick = async () => {
+    if (!confirm('Remove this checklist item?')) return;
+    const { error } = await sb.from('project_tasks').delete().eq('id', b.dataset.delTask);
+    if (error) return fail(error);
+    await reloadProjects(); openProject(id);
+  });
+
+  // revisions
+  $('#revForm').onsubmit = async e => {
+    e.preventDefault();
+    const notes = new FormData(e.target).get('notes').trim(); if (!notes) return;
+    const round = (revs.data || []).length + 1;
+    const { error } = await sb.from('revisions').insert({ project_id:id, notes, round, requested_by:S.me.id });
+    if (error) return fail(error);
+    if (p.status !== 'needs_revision') await sb.from('projects').update({ status:'needs_revision' }).eq('id', id);
+    toast('Revision requested'); await reloadProjects(); openProject(id);
+  };
+  document.querySelectorAll('[data-resolve]').forEach(b => b.onclick = async () => {
+    const resolved = b.dataset.state !== 'true';
+    const { error } = await sb.from('revisions').update({ resolved, resolved_at: resolved ? new Date().toISOString() : null }).eq('id', b.dataset.resolve);
+    if (error) return fail(error);
+    openProject(id);
+  });
+
+  document.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
+  $('#reshootBtn').onclick = async () => {
+    const name = prompt('Name for the related project:', p.name + ' (Reshoot)'); if (!name) return;
+    const media = confirm('Is this a VIDEO project? (OK = Video, Cancel = Photo)') ? 'video' : 'photo';
+    const { data, error } = await sb.from('projects').insert({
+      name, media, parent_project_id: p.parent_project_id || p.id, agent_id: p.agent_id, address: p.address, city: p.city,
+      dropbox_url: p.dropbox_url, delivery_method: p.delivery_method, submitted_by: S.me.id,
+      project_type_id: S.types.find(t => t.media === media)?.id || null
+    }).select().single();
+    if (error) return fail(error);
+    await reloadProjects(); openProject(data.id);
+  };
+  if ($('#deleteBtn')) $('#deleteBtn').onclick = async () => {
+    if (!confirm(`Permanently delete "${p.name}"? This can't be undone.`)) return;
+    const { error } = await sb.from('projects').delete().eq('id', id);
+    if (error) return fail(error);
+    closeLayer(); toast('Project deleted'); reloadProjects();
+  };
+}
+function taskHTML(t){
+  return `<div class="task ${t.completed ? 'done' : ''}">
+    <input type="checkbox" data-id="${t.id}" ${t.completed ? 'checked' : ''} />
+    <div class="body">
+      <div class="name">${esc(t.title || TASK_LABEL[t.kind])}</div>
+      ${t.photo_numbers ? `<div class="sub">Photo #: ${esc(t.photo_numbers)}</div>` : ''}
+      ${t.details ? `<div class="sub">${esc(t.details)}</div>` : ''}
+      ${t.completed ? `<div class="sub">✓ ${esc(memberName(t.completed_by))} · ${esc(fmtDateTime(t.completed_at))}</div>` : ''}
+    </div>
+    <button class="btn small ghost" data-del-task="${t.id}" title="Remove">✕</button>
+  </div>`;
+}
+function revHTML(r){
+  return `<div class="rev ${r.resolved ? 'resolved' : ''}">
+    <div class="h"><b>Round ${r.round}</b><span>${esc(memberName(r.requested_by))}</span><span>${esc(fmtDateTime(r.created_at))}</span>
+      <span class="spacer"></span><button class="btn small" data-resolve="${r.id}" data-state="${r.resolved}">${r.resolved ? 'Reopen' : 'Mark resolved'}</button></div>
+    <div class="n">${esc(r.notes)}</div>
+  </div>`;
+}
+
+/* ===================== AGENTS ===================== */
+function renderAgents(){
+  const q = ($('#agentSearch').value || '').toLowerCase();
+  const list = S.agents.filter(a => [a.full_name, a.team_name, a.brokerage].join(' ').toLowerCase().includes(q));
+  if (!list.length) { $('#agentsGrid').innerHTML = `<div class="empty" style="grid-column:1/-1">No agents yet. Add your first one.</div>`; return; }
+  $('#agentsGrid').innerHTML = list.map(a => {
+    const n = S.projects.filter(p => p.agent_id === a.id).length;
+    return `<div class="entity" data-id="${a.id}"><div class="t">${esc(a.full_name)}</div>
+      <div class="muted" style="font-size:13px;margin-top:4px">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · '))}</div>
+      <div class="muted" style="font-size:12.5px;margin-top:8px">${n} project${n === 1 ? '' : 's'}</div></div>`;
+  }).join('');
+  document.querySelectorAll('#agentsGrid .entity').forEach(el => el.onclick = () => openAgent(el.dataset.id));
+}
+function openAgent(id){
+  const a = S.agents.find(x => x.id === id) || {};
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
+    <form id="aForm"><div class="grid2">
+      <div class="full"><label>Full name</label><input name="full_name" required value="${esc(a.full_name || '')}" /></div>
+      <div><label>Team</label><input name="team_name" value="${esc(a.team_name || '')}" placeholder="Mount LeConte Team" /></div>
+      <div><label>Brokerage</label><input name="brokerage" value="${esc(a.brokerage || '')}" /></div>
+      <div><label>Email</label><input type="email" name="email" value="${esc(a.email || '')}" /></div>
+      <div><label>Phone</label><input name="phone" value="${esc(a.phone || '')}" /></div>
+      <div class="full"><label>Branding files (Dropbox link)</label><input type="url" name="branding_folder_url" value="${esc(a.branding_folder_url || '')}" /></div>
+      <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
+      <div class="full"><label>Preferences (shown on every project for this agent)</label><textarea name="preferences" placeholder="Name/brokerage at end of reels, music style, export needs…">${esc(a.preferences || '')}</textarea></div>
+    </div>
+    <div class="actions"><button type="button" class="btn" id="aCancel">Cancel</button><button class="btn primary">${id ? 'Save' : 'Add agent'}</button></div></form></div>`;
+  $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
+  $('#aForm').onsubmit = async e => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    const { error } = id ? await sb.from('agents').update(fd).eq('id', id) : await sb.from('agents').insert(fd);
+    if (error) return fail(error);
+    closeLayer(); await loadAll(); render(); toast(id ? 'Agent saved' : 'Agent added');
+  };
+}
+
+/* ===================== TEAM (owner) ===================== */
+async function renderTeam(){
+  if (!isOwner()) { $('#teamList').innerHTML = ''; return; }
+  const { data: pending, error } = await sb.rpc('pending_signups');
+  if (error) console.warn(error);
+  const rows = S.team.map(t => `<tr><td><b>${esc(t.full_name)}</b><div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
+    <td><select data-role="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt(ROLES, t.role)}</select></td>
+    <td><select data-active="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt([['true','Active'],['false','Disabled']], String(t.active))}</select></td>
+    <td><input data-slack="${t.id}" value="${esc(t.slack_user_id || '')}" placeholder="Slack member ID" /></td></tr>`).join('');
+  const pend = (pending || []).map(u => `<tr><td><b>${esc(u.full_name || u.email)}</b><div class="muted" style="font-size:12.5px">${esc(u.email)}</div></td>
+    <td><select data-new-role="${u.id}">${opt(ROLES.filter(r => r[0] !== 'owner'), 'contractor')}</select></td>
+    <td colspan="2"><button class="btn small primary" data-approve="${u.id}" data-name="${esc(u.full_name || u.email)}" data-email="${esc(u.email)}">Approve</button></td></tr>`).join('');
+  $('#teamList').innerHTML = `
+    ${pend ? `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase">Pending sign-ups</h3><div class="table-wrap"><table class="list" style="margin-bottom:24px"><tbody>${pend}</tbody></table></div>` : ''}
+    <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase">Team</h3>
+    <div class="table-wrap"><table class="list"><thead><tr><th>Name</th><th>Role</th><th>Access</th><th>Slack ID</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const upd = async (id, patch) => { const { error } = await sb.from('team_members').update(patch).eq('id', id); if (error) fail(error); else { toast('Updated'); await loadAll(); } };
+  document.querySelectorAll('[data-role]').forEach(s => s.onchange = () => upd(s.dataset.role, { role: s.value }));
+  document.querySelectorAll('[data-active]').forEach(s => s.onchange = () => upd(s.dataset.active, { active: s.value === 'true' }));
+  document.querySelectorAll('[data-slack]').forEach(s => s.onchange = () => upd(s.dataset.slack, { slack_user_id: s.value || null }));
+  document.querySelectorAll('[data-approve]').forEach(b => b.onclick = async () => {
+    const role = document.querySelector(`[data-new-role="${b.dataset.approve}"]`).value;
+    const { error } = await sb.from('team_members').insert({ id: b.dataset.approve, full_name: b.dataset.name, email: b.dataset.email, role });
+    if (error) return fail(error);
+    toast('Approved'); await loadAll(); renderTeam();
+  });
+}
+</script>
+</body>
+</html>
