@@ -1968,7 +1968,8 @@ async function renderCalendar(){
   const st = S.cal.status;
   if (!S.cal.week) S.cal.week = weekStartOf(new Date());
   const ws = S.cal.week, we = addDays(ws, 7);
-  const label = `${ws.toLocaleDateString(undefined, { month:'short', day:'numeric' })} – ${addDays(ws, 6).toLocaleDateString(undefined, { month: ws.getMonth() === addDays(ws, 6).getMonth() ? undefined : 'short', day:'numeric', year:'numeric' })}`;
+  const wEnd = addDays(ws, 6), mon = d => d.toLocaleDateString(undefined, { month:'short' });
+  const label = ws.getMonth() === wEnd.getMonth() ? `${mon(ws)} ${ws.getDate()} – ${wEnd.getDate()}, ${wEnd.getFullYear()}` : `${mon(ws)} ${ws.getDate()} – ${mon(wEnd)} ${wEnd.getDate()}, ${wEnd.getFullYear()}`;
   box.innerHTML = `
     <div class="page-head"><div><h1>My Week at a Glance</h1><p>${st?.connected ? `Google Calendar · ${esc(st.email || '')}` : 'Google Calendar'}</p></div>
       <div class="spacer"></div>
