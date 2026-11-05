@@ -793,46 +793,23 @@ function pipelineHTML(m){
   </div>`;
 }
 async function renderHome(){
-  const mine = S.projects.filter(p => p.assigned_to === S.me.id && !DONE.includes(p.status)).sort(byDue);
-  const scope = isReviewer() ? S.projects : S.projects.filter(p => p.assigned_to === S.me.id);
-  const attention = scope.filter(p => !DONE.includes(p.status) && (isOverdue(p) || p.status === 'needs_revision' || (isReviewer() && p.status === 'ready_for_review')))
-    .sort((a,b) => (b.status === 'needs_revision') - (a.status === 'needs_revision') || byDue(a,b));
   const now = new Date();
   $('#homeView').innerHTML = `
     <div class="page-head"><div><h1>${greeting()}, ${esc(firstName(S.me.full_name))}</h1>
       <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
       <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
     <div class="home-grid">
-      <div class="panel span-12" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
-        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}<a href="#/calendar" style="font-size:13px;font-weight:500">Calendar</a></h2>
+      <div class="panel span-7" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
+        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}<a href="#/calendar" style="font-size:13px;font-weight:500">Week</a></h2>
         <div class="md-body"><div class="none">Loading your day…</div></div></div>
-      <div class="panel span-12" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">Open Tasks</a></h2>
-        <div class="tlist"></div><div class="more"></div></div>
-      ${pipelineHTML('photo')}
-      ${pipelineHTML('video')}
-      <div class="panel span-6"><h2>My queue <span class="count">${mine.length}</span></h2>
-        <div class="mini">${mine.slice(0,8).map(miniRow).join('') || '<div class="none">Nothing assigned to you right now.</div>'}</div>
-        ${mine.length > 8 ? `<p class="muted" style="font-size:12.5px;margin:8px 0 0">+ ${mine.length - 8} more on the boards</p>` : ''}
-      </div>
-      <div class="panel span-6"><h2>${isReviewer() ? 'Needs attention' : 'Needs your attention'} <span class="count">${attention.length}</span></h2>
-        <div class="mini">${attention.slice(0,8).map(miniRow).join('') || '<div class="none">All clear. Nothing overdue or waiting on revisions.</div>'}</div>
-      </div>
-      <div class="panel span-12"><h2>Recent activity</h2><ul class="feed" id="homeFeed"><li class="muted">Loading…</li></ul></div>
+      <div class="panel span-5" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
+        ${quickAddHTML('qHome')}
+        <div class="tlist" style="margin-top:10px"></div><div class="more"></div></div>
     </div>`;
-  bindOpeners($('#homeView'));
-  $('#homeNewTask').onclick = openQuickTask; paintHomeTasks(); paintMyDay();
+  $('#homeNewTask').onclick = openQuickTask;
+  wireQuickAdd($('#qHome'), { onSaved: () => paintHomeTasks() });
+  paintHomeTasks(); paintMyDay();
   const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
-  $('#homeView').querySelectorAll('[data-new]').forEach(b => b.onclick = () => openNewProject(b.dataset.new));
-  const { data, error } = await sb.from('activity_log').select('*').order('created_at', { ascending:false }).limit(15);
-  const feed = $('#homeFeed'); if (!feed || S.view !== 'home') return;
-  if (error) { feed.innerHTML = '<li class="muted">Couldn\'t load activity.</li>'; return; }
-  feed.innerHTML = (data || []).map(a => {
-    const p = S.projects.find(x => x.id === a.project_id);
-    const who = esc(memberName(a.actor_id) || 'System');
-    const what = a.action === 'created' ? 'created' : `moved to <b>${esc(STATUS_LABEL[a.to_status] || a.to_status)}</b>`;
-    return `<li><time>${esc(fmtDateTime(a.created_at))}</time><span>${who} ${what} ${p ? `<a data-open="${p.id}">${esc(p.name)}</a> <span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span>` : '<span class="muted">a deleted project</span>'}</span></li>`;
-  }).join('') || '<li class="muted">No activity yet. It will show up here as projects move along.</li>';
-  bindOpeners(feed);
 }
 function bindOpeners(root){ root.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open)); }
 
@@ -1758,7 +1735,7 @@ function paintHomeTasks(){
   const t0 = today();
   const mine = myOpen().sort(sortTasks);
   const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
-  const show = (focus.length ? focus : mine).slice(0, 7);
+  const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, 10);
   box.querySelector('.count').textContent = mine.length;
   const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length;
   if (chip) { chip.textContent = `📬 ${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
