@@ -456,6 +456,57 @@ label.extra{margin:0}
   main{padding:14px 16px 40px}
   .toolbar input[type=search]{max-width:none;flex:1 1 100%}
 }
+/* ----- Finance (QuickBooks) ----- */
+:root{ --fin-rev:#2f6fab; --fin-exp:#d48a0a; --fin-net:#1e8e5a; --fin-ly:#9aa3af; }
+@media (prefers-color-scheme: dark){ :root{ --fin-rev:#7fb3e3; --fin-exp:#e0a84a; --fin-net:#4cc38a; --fin-ly:#6b7280; } }
+.fin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fin-updated{font-size:12.5px;color:var(--muted)}
+.fin-kpis{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.fin-kpis .panel h2 small{font-weight:500;color:var(--muted);font-size:12.5px}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:var(--panel-2);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.kpi .l i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.kpi .n{font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .n.neg{color:var(--danger)}
+.kpi .d{font-size:12px;margin-top:3px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){ .kpi .d .vs{display:none} }
+.kpi .d b.up{color:var(--ok)} .kpi .d b.down{color:var(--danger)}
+.fin-bal{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.fin-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.fin-grid .wide{grid-column:span 8} .fin-grid .side{grid-column:span 4}
+.chart-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.chart-head h2{margin:0}
+.chart-legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.chart-legend i{width:10px;height:10px;border-radius:2px;background:var(--c)}
+.chart-legend i.line{height:3px;border-radius:2px}
+.chart-wrap{position:relative}
+.chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
+.chart-wrap .ax{font-size:11px;fill:var(--muted);font-family:Inter,system-ui,sans-serif}
+.chart-wrap .grid{stroke:var(--border);stroke-width:1}
+.chart-wrap .zero{stroke:var(--muted);stroke-width:1;opacity:.5}
+.chart-wrap .hit{fill:transparent;cursor:pointer}
+.chart-wrap .hit:hover,.chart-wrap .hit.on{fill:var(--text);fill-opacity:.05}
+.chart-tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:8px;padding:8px 10px;font-size:12.5px;min-width:150px;z-index:5}
+.chart-tip b{display:block;margin-bottom:4px}
+.chart-tip div{display:flex;justify-content:space-between;gap:12px}
+.chart-tip div span:first-child{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+.chart-tip i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.cat-bars{display:flex;flex-direction:column;gap:9px}
+.cat-bar .top{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cat-bar .top span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-bar .top b{font-weight:600;white-space:nowrap}
+.cat-bar .track{height:6px;background:var(--panel-2);border-radius:4px;margin-top:4px;overflow:hidden}
+.cat-bar .track i{display:block;height:100%;background:var(--c,var(--fin-exp));border-radius:4px}
+.cat-bar .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.fin-note{font-size:12px;color:var(--muted);margin-top:14px}
+.fin-loading{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn .spin{width:12px;height:12px;vertical-align:-2px;margin-right:6px}
+@media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .side{grid-column:span 12} }
+@media (max-width:640px){ .fin-bal{grid-template-columns:1fr 1fr} .kpi .n{font-size:19px} .kpi{padding:10px} .kpi-row{gap:8px} .fin-actions{width:100%} .fin-actions .btn.primary{flex:1} }
 </style>
 </head>
 <body>
@@ -499,6 +550,7 @@ label.extra{margin:0}
       <a href="#/calendar" data-view="calendar">Calendar</a>
       <a href="#/projects" data-view="projects">Projects</a>
       <a href="#/agents" data-view="agents">Agents</a>
+      <a href="#/finance" data-view="finance" id="financeTab" class="hidden">Finance</a>
       <a href="#/chat" data-view="chat">Chat<span class="badge hidden" id="chatBadge"></span></a>
       <a href="#/team" data-view="team">Team</a>
     </nav>
@@ -554,6 +606,9 @@ label.extra{margin:0}
     <!-- Calendar -->
     <div id="calendarView" class="hidden"></div>
 
+    <!-- Finance (owner only) -->
+    <div id="financeView" class="hidden"></div>
+
     <!-- Chat -->
     <div id="chatView" class="hidden"></div>
 
@@ -571,6 +626,15 @@ label.extra{margin:0}
 /* ===================== CONFIG ===================== */
 const SUPABASE_URL = 'https://sqlkswwwpkzadrrbhqip.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_X-Pafdzgf9cDIdtGO8RofA_YBwlvktq';
+/* QuickBooks sends you back to https://hq.knoxview.com/?code=…&state=…&realmId=… after sign-in.
+   Grab those values and clean the address bar before anything else reads the URL. */
+const QBO_RETURN = (() => {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('state') || !(p.has('realmId') || p.has('error'))) return null;
+  const r = { code: p.get('code'), realmId: p.get('realmId'), state: p.get('state'), error: p.get('error') };
+  history.replaceState(null, '', location.pathname + '#/finance');
+  return r;
+})();
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const STATUSES = [
@@ -676,10 +740,12 @@ async function boot(session){
   S.me = me;
   loadPrefs();
   $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
+  $('#financeTab').classList.toggle('hidden', !isOwner());
   show('app');
   await Promise.all([loadAll(), loadTasks(), loadCalStatus()]);
   await loadInbox();
   route();
+  if (QBO_RETURN && isOwner()) finishQboConnect(QBO_RETURN);
   initChat(); subscribeTasks(); subscribeInbox();
   setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } }, 5 * 60 * 1000);
 }
@@ -722,7 +788,8 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const view = ['home','tasks','calendar','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','tasks','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  if (view === 'finance' && !isOwner()) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
@@ -756,7 +823,9 @@ function render(){
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
   $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
   $('#calendarView').classList.toggle('hidden', S.view !== 'calendar');
+  $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   if (S.view === 'calendar') renderCalendar();
+  if (S.view === 'finance') renderFinance();
   if (S.view === 'tasks') renderTasks();
   document.querySelector('main').classList.toggle('chat-mode', S.view === 'chat');
   if (S.view === 'chat') renderChat();
@@ -2144,6 +2213,251 @@ function openCalForm({ kind = 'event', start, ev } = {}){
     } catch (e2) { $('#cfSave').disabled = false; fail(e2); }
   };
   setTimeout(() => $('#cfTitle').focus(), 30);
+}
+
+/* ===================== FINANCE (QuickBooks via the qbo edge function, owner only) ===================== */
+const FIN = { status:null, loading:false, refreshing:false, connecting:false, chart:'monthly', error:null };
+const FIN_STALE_MS = 6 * 60 * 60 * 1000; // auto-refresh on open when the last pull is older than this
+const QBO_REDIRECT = () => location.origin + '/';
+const usd = (n, cents) => (n < 0 ? '-' : '') + '$' + Math.abs(n || 0).toLocaleString(undefined, { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+const usdShort = n => { const a = Math.abs(n); const s = a >= 1e6 ? (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(a >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(Math.round(a)); return (n < 0 ? '-$' : '$') + s; };
+const monthName = (key, long) => new Date(key + '-15T12:00:00').toLocaleDateString(undefined, { month: long ? 'long' : 'short' });
+const monthYear = key => new Date(key + '-15T12:00:00').toLocaleDateString(undefined, { month:'short', year:'numeric' });
+
+async function qboCall(action, payload = {}){
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/qbo`, { method:'POST',
+    headers: { Authorization: 'Bearer ' + session?.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(d.error || 'QuickBooks error'); Object.assign(e, d); throw e; }
+  return d;
+}
+async function loadFinStatus(){
+  FIN.loading = true;
+  try { FIN.status = await qboCall('status'); FIN.error = null; }
+  catch (e) { FIN.status = { configured:false, connected:false }; FIN.error = e.message; }
+  FIN.loading = false;
+}
+async function connectQuickBooks(){
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const state = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  try { sessionStorage.setItem('kvhq.qbo.state', state); } catch (e) {}
+  try { const { url } = await qboCall('auth_url', { redirect_uri: QBO_REDIRECT(), state }); location.href = url; }
+  catch (e) { fail(e); }
+}
+async function finishQboConnect(ret){
+  let expected = null; try { expected = sessionStorage.getItem('kvhq.qbo.state'); sessionStorage.removeItem('kvhq.qbo.state'); } catch (e) {}
+  if (ret.error) { toast('QuickBooks was not connected'); return; }
+  if (!expected || expected !== ret.state || !ret.code) { toast('QuickBooks sign-in didn’t match. Please try connecting again.'); return; }
+  FIN.connecting = true; if (S.view === 'finance') renderFinance();
+  try {
+    const d = await qboCall('connect', { code: ret.code, realmId: ret.realmId, redirect_uri: QBO_REDIRECT() });
+    toast(`Connected ${d.company || 'QuickBooks'}`);
+    if (d.warning) toast('Connected, but the first pull failed: ' + d.warning);
+  } catch (e) { fail(e); }
+  FIN.connecting = false;
+  await loadFinStatus();
+  if (S.view === 'finance') renderFinance();
+}
+async function refreshFinance(){
+  if (FIN.refreshing) return;
+  FIN.refreshing = true; paintFinRefresh();
+  try {
+    const snap = await qboCall('refresh');
+    FIN.status = { ...FIN.status, snapshot: snap, company: snap.data?.company || FIN.status?.company };
+    FIN.error = null;
+  } catch (e) {
+    if (e.notConnected) { await loadFinStatus(); toast(e.message); }
+    else { FIN.error = e.message; toast('Couldn’t refresh from QuickBooks: ' + e.message); }
+  }
+  FIN.refreshing = false;
+  if (S.view === 'finance') renderFinance();
+}
+function paintFinRefresh(){
+  const b = $('#finRefresh'); if (!b) return;
+  b.disabled = FIN.refreshing;
+  b.innerHTML = FIN.refreshing ? '<span class="spin"></span>Refreshing…' : '↻ Refresh from QuickBooks';
+}
+
+async function renderFinance(){
+  const box = $('#financeView');
+  if (!isOwner()) { box.innerHTML = ''; return; }
+  if (!FIN.status) {
+    box.innerHTML = `<div class="page-head"><div><h1>Finance</h1><p>QuickBooks</p></div></div><div class="panel fin-loading"><span class="spin"></span>Loading…</div>`;
+    if (!FIN.loading) { await loadFinStatus(); if (S.view === 'finance') renderFinance(); }
+    return;
+  }
+  const st = FIN.status, snap = st.snapshot, d = snap?.data;
+  const head = (actions) => `<div class="page-head"><div><h1>Finance</h1><p>${st.connected ? `QuickBooks · ${esc(st.company || 'Connected')}${st.env === 'sandbox' ? ' (sandbox)' : ''}` : 'QuickBooks'}</p></div><div class="spacer"></div>${actions || ''}</div>`;
+
+  if (FIN.connecting) { box.innerHTML = head() + `<div class="panel fin-loading"><span class="spin"></span>Connecting QuickBooks and pulling your numbers…</div>`; return; }
+  if (!st.configured) {
+    box.innerHTML = head() + `<div class="panel"><div class="cal-cta"><div><b>QuickBooks setup isn’t finished yet</b><p class="muted">Once the QuickBooks app keys are added to HQ, a Connect button shows up here.${FIN.error ? ` (${esc(FIN.error)})` : ''}</p></div></div></div>`;
+    return;
+  }
+  if (!st.connected) {
+    box.innerHTML = head() + `<div class="panel"><div class="cal-cta"><div><b>Connect QuickBooks</b><p class="muted">See revenue, expenses and profit for this month and year to date, with trends, pulled straight from QuickBooks. Read-only: HQ never changes anything in QuickBooks.</p></div>
+      <button class="btn primary" id="finConnect">Connect QuickBooks</button></div></div>`;
+    $('#finConnect').onclick = connectQuickBooks;
+    return;
+  }
+
+  const actions = `<div class="fin-actions"><span class="fin-updated">${snap ? `Updated ${esc(fmtDateTime(snap.refreshedAt))}` : ''}</span>
+    <button class="btn primary" id="finRefresh"></button>
+    <button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`;
+  if (!d) {
+    box.innerHTML = head(actions) + `<div class="panel">${FIN.refreshing || !FIN.error ? `<div class="fin-loading"><span class="spin"></span>Pulling your numbers from QuickBooks…</div>` : `<div class="none">Couldn’t load your numbers: ${esc(FIN.error)}</div>`}</div>`;
+    wireFinHead();
+    if (!FIN.refreshing && !FIN.error) refreshFinance();
+    return;
+  }
+
+  const t = new Date(d.asOf + 'T12:00:00');
+  const mtdLabel = `${monthName(d.asOf.slice(0, 7))} 1–${t.getDate()}`;
+  box.innerHTML = head(actions) + `
+    ${FIN.error ? `<div class="panel" style="margin-bottom:16px"><div class="none">Last refresh failed: ${esc(FIN.error)}. Showing the numbers from ${esc(fmtDateTime(snap.refreshedAt))}.</div></div>` : ''}
+    <div class="fin-kpis">
+      <div class="panel"><h2>Month to date <small>${esc(mtdLabel)}</small></h2>${kpiRowHTML(d.mtd, d.mtdLastYear, 'last year', `Compared with ${monthName(d.asOf.slice(0, 7))} 1–${t.getDate()}, ${t.getFullYear() - 1}`)}</div>
+      <div class="panel"><h2>Year to date <small>Jan 1–${esc(fmtShort(d.asOf))}</small></h2>${kpiRowHTML(d.ytd, d.ytdLastYear, 'last year', `Compared with Jan 1–${fmtShort(d.asOf)}, ${t.getFullYear() - 1}`)}</div>
+    </div>
+    <div class="fin-bal">
+      ${balHTML('Cash in bank', d.balances?.cash, 'Bank account balances')}
+      ${balHTML('Owed to you', d.balances?.receivables, 'Unpaid invoices (A/R)')}
+      ${balHTML('Credit cards', d.balances?.creditCards, 'Card balances owed')}
+      ${balHTML(`${monthName(d.lastMonth.month, true)} profit`, d.lastMonth.net, `${usd(d.lastMonth.revenue)} revenue · ${usd(d.lastMonth.expenses)} expenses`, true)}
+    </div>
+    <div class="fin-grid">
+      <div class="panel wide">
+        <div class="chart-head"><h2>${FIN.chart === 'monthly' ? 'Last 12 months' : 'Revenue: this year vs last year'}</h2><span class="spacer"></span>
+          <div class="seg" id="finChartSeg"><button data-c="monthly" class="${FIN.chart === 'monthly' ? 'active' : ''}">Monthly</button><button data-c="yoy" class="${FIN.chart === 'yoy' ? 'active' : ''}">Year vs last year</button></div></div>
+        ${FIN.chart === 'monthly'
+          ? `<div class="chart-legend"><span><i style="--c:var(--fin-rev)"></i>Revenue</span><span><i style="--c:var(--fin-exp)"></i>Expenses</span><span><i class="line" style="--c:var(--fin-net)"></i>Net profit</span></div>`
+          : `<div class="chart-legend"><span><i class="line" style="--c:var(--fin-rev)"></i>${t.getFullYear()} (running total)</span><span><i class="line" style="--c:var(--fin-ly)"></i>${t.getFullYear() - 1}</span></div>`}
+        <div class="chart-wrap" id="finChart">${FIN.chart === 'monthly' ? monthlyChartSVG(d) : yoyChartSVG(d)}<div class="chart-tip hidden"></div></div>
+      </div>
+      <div class="panel side"><h2>Where the money goes <span class="count">YTD</span></h2>${catBarsHTML(d.categories, d.ytd.expenses, 'var(--fin-exp)')}
+        ${(d.incomeLines || []).length > 1 ? `<h2 style="margin-top:20px">Where it comes from <span class="count">YTD</span></h2>${catBarsHTML(d.incomeLines, d.ytd.revenue, 'var(--fin-rev)')}` : ''}</div>
+    </div>
+    <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}: Profit &amp; Loss and Balance Sheet. Expenses include cost of goods sold. Read-only: HQ never changes anything in QuickBooks.</p>`;
+  wireFinHead();
+  $('#finChartSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; FIN.chart = b.dataset.c; renderFinance(); };
+  wireFinChart(d);
+  if (!FIN.refreshing && !FIN.error && Date.now() - new Date(snap.refreshedAt).getTime() > FIN_STALE_MS) refreshFinance();
+}
+function wireFinHead(){
+  paintFinRefresh();
+  $('#finRefresh').onclick = refreshFinance;
+  $('#finDisconnect').onclick = async () => {
+    if (!confirm('Disconnect QuickBooks from HQ? Nothing in QuickBooks is changed.')) return;
+    try { await qboCall('disconnect'); await loadFinStatus(); renderFinance(); toast('QuickBooks disconnected'); } catch (e) { fail(e); }
+  };
+}
+function deltaHTML(now, before, goodWhenUp, label){
+  if (!before) return now ? `<span>No ${esc(label)} data to compare</span>` : '&nbsp;';
+  const pct = (now - before) / Math.abs(before) * 100;
+  const up = pct >= 0, good = up === goodWhenUp;
+  return `<b class="${Math.abs(pct) < 0.5 ? '' : good ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(pct) >= 999 ? '999+' : Math.abs(pct).toFixed(0)}%</b><span class="vs"> vs ${esc(label)}</span>`;
+}
+function kpiRowHTML(cur, prev, label, hint){
+  const margin = cur.revenue ? Math.round(cur.net / cur.revenue * 100) : null;
+  return `<div class="kpi-row">
+    <div class="kpi"><div class="l"><i style="--c:var(--fin-rev)"></i>Revenue</div><div class="n" title="${esc(usd(cur.revenue, true))}">${usd(cur.revenue)}</div><div class="d" title="${esc(hint)}">${deltaHTML(cur.revenue, prev.revenue, true, label)}</div></div>
+    <div class="kpi"><div class="l"><i style="--c:var(--fin-exp)"></i>Expenses</div><div class="n" title="${esc(usd(cur.expenses, true))}">${usd(cur.expenses)}</div><div class="d" title="${esc(hint)}">${deltaHTML(cur.expenses, prev.expenses, false, label)}</div></div>
+    <div class="kpi"><div class="l"><i style="--c:var(--fin-net)"></i>Net profit</div><div class="n ${cur.net < 0 ? 'neg' : ''}" title="${esc(usd(cur.net, true))}">${usd(cur.net)}</div><div class="d">${margin === null ? '&nbsp;' : `${margin}% margin`}${prev.revenue ? `<span class="vs"> · was ${usd(prev.net)}</span>` : ''}</div></div>
+  </div>`;
+}
+function balHTML(label, val, sub, colorNet){
+  return `<div class="stat"><div class="l">${esc(label)}</div><div class="n" ${colorNet && val < 0 ? 'style="color:var(--danger)"' : ''}>${val === null || val === undefined ? '—' : usd(val)}</div><div class="l">${esc(sub)}</div></div>`;
+}
+function catBarsHTML(list, total, color){
+  if (!list?.length) return `<div class="none">Nothing recorded yet this year.</div>`;
+  const top = list.slice(0, 7), rest = list.slice(7);
+  if (rest.length) top.push({ name: `Everything else (${rest.length})`, ytd: rest.reduce((a, x) => a + x.ytd, 0) });
+  const max = Math.max(...top.map(x => x.ytd), 1);
+  return `<div class="cat-bars">${top.map(c => `<div class="cat-bar" style="--c:${color}">
+    <div class="top"><span title="${esc(c.name)}">${esc(c.name)}</span><b>${usd(c.ytd)}</b></div>
+    <div class="track"><i style="width:${Math.max(2, c.ytd / max * 100).toFixed(1)}%"></i></div>
+    <div class="sub">${total ? Math.round(c.ytd / total * 100) + '% of total' : ''}${c.mtd ? ` · ${usd(c.mtd)} this month` : ''}</div></div>`).join('')}</div>`;
+}
+
+/* ----- Charts (hand-drawn SVG so they follow HQ's light/dark colors) ----- */
+function niceScale(min, max, ticks = 4){
+  if (max === min) max = min + 1;
+  const raw = (max - min) / ticks, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, out = [];
+  for (let v = lo; v <= hi + step / 2; v += step) out.push(Math.round(v * 100) / 100);
+  return out;
+}
+let CH = { w: 720, h: 260, l: 52, r: 8, t: 10, b: 26, every: 1 };
+const sizeChart = () => { CH = matchMedia('(max-width:640px)').matches ? { w: 360, h: 230, l: 40, r: 4, t: 10, b: 24, every: 2 } : { w: 720, h: 260, l: 52, r: 8, t: 10, b: 26, every: 1 }; };
+function axesSVG(ticks, y, labels, xAt){
+  return ticks.map(v => `<line class="${v === 0 ? 'zero' : 'grid'}" x1="${CH.l}" x2="${CH.w - CH.r}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${CH.l - 8}" y="${y(v) + 4}" text-anchor="end">${usdShort(v)}</text>`).join('')
+    + labels.map((lab, i) => (labels.length - 1 - i) % CH.every ? '' : `<text class="ax" x="${xAt(i)}" y="${CH.h - 6}" text-anchor="middle">${esc(lab)}</text>`).join('');
+}
+function last12(d){ return (d.months || []).slice(-12); }
+function monthlyChartSVG(d){
+  sizeChart();
+  const m = last12(d);
+  if (!m.length) return `<div class="none">No monthly data yet.</div>`;
+  const vals = m.flatMap(x => [x.revenue, x.expenses, x.net]);
+  const ticks = niceScale(Math.min(0, ...vals), Math.max(...vals));
+  const lo = ticks[0], hi = ticks[ticks.length - 1];
+  const y = v => CH.t + (hi - v) / (hi - lo) * (CH.h - CH.t - CH.b);
+  const slot = (CH.w - CH.l - CH.r) / m.length, xAt = i => CH.l + slot * i + slot / 2;
+  const bw = Math.min(16, slot * 0.32);
+  const bar = (v, x, c) => { const y0 = y(0), y1 = y(v); return `<rect x="${x}" y="${Math.min(y0, y1)}" width="${bw}" height="${Math.max(1, Math.abs(y1 - y0))}" rx="2" fill="var(${c})"/>`; };
+  const pts = m.map((x, i) => `${xAt(i)},${y(x.net)}`).join(' ');
+  return `<svg viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="Revenue, expenses and net profit for the last 12 months">
+    ${axesSVG(ticks, y, m.map(x => monthName(x.month)), xAt)}
+    ${m.map((x, i) => bar(x.revenue, xAt(i) - bw - 1, '--fin-rev') + bar(x.expenses, xAt(i) + 1, '--fin-exp')).join('')}
+    <polyline points="${pts}" fill="none" stroke="var(--fin-net)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${m.map((x, i) => `<circle cx="${xAt(i)}" cy="${y(x.net)}" r="3.5" fill="var(--panel)" stroke="var(--fin-net)" stroke-width="2"/>`).join('')}
+    ${m.map((x, i) => `<rect class="hit" data-i="${i}" x="${CH.l + slot * i}" y="${CH.t}" width="${slot}" height="${CH.h - CH.t - CH.b}"/>`).join('')}
+  </svg>`;
+}
+function yoyData(d){
+  const y = Number(d.asOf.slice(0, 4)), cm = Number(d.asOf.slice(5, 7));
+  const run = yr => { let s = 0; return [...Array(12)].map((_, i) => { const k = `${yr}-${String(i + 1).padStart(2, '0')}`; const x = (d.months || []).find(v => v.month === k); s += x ? x.revenue : 0; return { k, v: s, has: !!x }; }); };
+  return { cur: run(y).slice(0, cm), prev: run(y - 1), y };
+}
+function yoyChartSVG(d){
+  sizeChart();
+  const { cur, prev } = yoyData(d);
+  const ticks = niceScale(0, Math.max(1, ...cur.map(p => p.v), ...prev.map(p => p.v)));
+  const hi = ticks[ticks.length - 1];
+  const y = v => CH.t + (hi - v) / hi * (CH.h - CH.t - CH.b);
+  const slot = (CH.w - CH.l - CH.r) / 12, xAt = i => CH.l + slot * i + slot / 2;
+  const line = (arr, c, w, dash) => `<polyline points="${arr.map((p, i) => `${xAt(i)},${y(p.v)}`).join(' ')}" fill="none" stroke="var(${c})" stroke-width="${w}" ${dash ? 'stroke-dasharray="5 4"' : ''} stroke-linejoin="round" stroke-linecap="round"/>`;
+  const last = cur[cur.length - 1];
+  return `<svg viewBox="0 0 ${CH.w} ${CH.h}" role="img" aria-label="Running total of revenue, this year compared with last year">
+    ${axesSVG(ticks, y, [...Array(12)].map((_, i) => monthName(`2000-${String(i + 1).padStart(2, '0')}`)), xAt)}
+    ${line(prev, '--fin-ly', 2, true)}
+    ${line(cur, '--fin-rev', 3)}
+    ${last ? `<circle cx="${xAt(cur.length - 1)}" cy="${y(last.v)}" r="4.5" fill="var(--fin-rev)"/><text class="ax" x="${xAt(cur.length - 1)}" y="${y(last.v) - 10}" text-anchor="middle" style="font-weight:600;fill:var(--text)">${usdShort(last.v)}</text>` : ''}
+    ${[...Array(12)].map((_, i) => `<rect class="hit" data-i="${i}" x="${CH.l + slot * i}" y="${CH.t}" width="${slot}" height="${CH.h - CH.t - CH.b}"/>`).join('')}
+  </svg>`;
+}
+function wireFinChart(d){
+  const wrap = $('#finChart'); if (!wrap) return;
+  const tip = wrap.querySelector('.chart-tip'), svg = wrap.querySelector('svg'); if (!svg) return;
+  const row = (c, label, v, dash) => `<div><span><i style="--c:var(${c})${dash ? ';height:3px' : ''}"></i>${label}</span><b style="margin:0">${usd(v)}</b></div>`;
+  const content = i => {
+    if (FIN.chart === 'monthly') { const x = last12(d)[i]; return `<b>${esc(monthYear(x.month))}</b>${row('--fin-rev', 'Revenue', x.revenue)}${row('--fin-exp', 'Expenses', x.expenses)}${row('--fin-net', 'Net profit', x.net)}`; }
+    const { cur, prev, y } = yoyData(d); const name = monthName(`2000-${String(i + 1).padStart(2, '0')}`, true);
+    return `<b>Through ${esc(name)}</b>${cur[i] ? row('--fin-rev', String(y), cur[i].v) : ''}${row('--fin-ly', String(y - 1), prev[i].v, true)}${cur[i] && prev[i].v ? `<div><span>Change</span><b style="margin:0">${cur[i].v >= prev[i].v ? '+' : ''}${Math.round((cur[i].v - prev[i].v) / prev[i].v * 100)}%</b></div>` : ''}`;
+  };
+  const showAt = el => {
+    svg.querySelectorAll('.hit.on').forEach(h => h.classList.remove('on')); el.classList.add('on');
+    tip.innerHTML = content(Number(el.dataset.i)); tip.classList.remove('hidden');
+    const wr = wrap.getBoundingClientRect(), er = el.getBoundingClientRect();
+    let left = er.left - wr.left + er.width / 2 - tip.offsetWidth / 2;
+    left = Math.max(0, Math.min(left, wr.width - tip.offsetWidth));
+    tip.style.left = left + 'px'; tip.style.top = '0px';
+  };
+  svg.querySelectorAll('.hit').forEach(el => { el.onmouseenter = () => showAt(el); el.onclick = () => showAt(el); });
+  svg.onmouseleave = () => { tip.classList.add('hidden'); svg.querySelectorAll('.hit.on').forEach(h => h.classList.remove('on')); };
 }
 
 /* ===================== CHAT ===================== */
