@@ -800,7 +800,7 @@ async function renderHome(){
       <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
     <div class="home-grid">
       <div class="panel span-7" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
-        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}<a href="#/calendar" style="font-size:13px;font-weight:500">Week</a></h2>
+        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
         <div class="md-body"><div class="none">Loading your day…</div></div></div>
       <div class="panel span-5" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
         ${quickAddHTML('qHome')}
@@ -1537,7 +1537,7 @@ function bindTaskRows(root){
 /* ----- Quick add (shared by Home button, Tasks page, and "+ New task") ----- */
 function quickAddHTML(id){
   return `<div class="qadd" id="${id}">
-    <textarea class="qinput" rows="1" placeholder="Add or dictate a task… e.g. “I need to send Jared the community reel by Friday”"></textarea>
+    <textarea class="qinput" rows="1" placeholder="Add or dictate a task…"></textarea>
     <div class="qsum hidden"><span class="qsum-l">Card title</span><input class="qtitle" maxlength="90" /></div>
     <div class="qchips"></div>
   </div>`;
@@ -1552,7 +1552,7 @@ function wireQuickAdd(root, { onSaved, autofocus } = {}){
   const people = S.team.filter(t => t.active);
   const paint = () => {
     const raw = input.value.trim();
-    if (!raw) { sumBox.classList.add('hidden'); chips.innerHTML = `<span class="muted">Type or use speech-to-text, then press Enter. HQ writes a short card title and keeps everything you said in the details. Dates like “tomorrow” or “Friday” and “urgent” are picked up automatically.</span>`; return; }
+    if (!raw) { sumBox.classList.add('hidden'); chips.innerHTML = `<span class="muted">Type or dictate, then press Enter. Dates like “Friday” and “urgent” are picked up automatically.</span>`; return; }
     const p = { ...parseTask(raw), ...over };
     sumBox.classList.remove('hidden');
     if (over.title === undefined && document.activeElement !== sumIn) sumIn.value = p.summary;
