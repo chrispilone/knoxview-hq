@@ -540,6 +540,47 @@ label.extra{margin:0}
 .spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .btn .spin{width:12px;height:12px;vertical-align:-2px;margin-right:6px}
+
+.fin-tabs{margin:-4px 0 16px}
+.fin-tabs a{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;color:var(--muted);font-weight:500;text-decoration:none}
+.fin-tabs a.active{background:var(--accent-soft);color:var(--accent)}
+.fin-tabs .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700}
+.books-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.books-bar select{width:auto}
+.books-bar .seg button b{font-weight:700;margin-left:4px}
+.books-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+.books-bulk span{flex:1;min-width:200px}
+.txns{display:flex;flex-direction:column;gap:10px}
+.txn{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.txn.needs{border-left:4px solid var(--fin-exp)}
+.txn.done{opacity:.8}
+.txn-top{display:flex;gap:12px;align-items:flex-start}
+.txn-main{flex:1;min-width:0}
+.txn-payee{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.txn-meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+.txn-memo{font-size:12.5px;color:var(--muted);margin-top:4px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.txn-amt{font-weight:700;font-size:16px;white-space:nowrap}
+.txn-amt.in{color:var(--ok)}
+.tlines{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.tline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tline-amt{font-size:12.5px;color:var(--muted);min-width:76px}
+.tline-desc{font-size:12px;color:var(--muted)}
+.cat-btn{border:1px solid var(--border);background:var(--panel-2);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:500;color:var(--text);max-width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-btn span{color:var(--muted);margin-left:4px}
+.cat-btn.bad{border-color:var(--fin-exp);background:transparent;color:var(--fin-exp)}
+.cat-btn.edited{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.cat-select{max-width:420px;font-size:13px;padding:6px 8px}
+.cat-ro{font-size:13px;color:var(--muted)}
+.sug-chip{margin-top:8px;border:1px dashed var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:4px 12px;font-size:12.5px}
+.sug-chip:hover{background:var(--accent-soft)}
+.apply-all{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:12.5px;font-weight:500;color:var(--text)}
+.apply-all input{width:auto}
+.txn-actions{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.txn-actions a.btn{text-decoration:none}
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+.pill.ok{background:#e6f4ec;color:var(--ok)} .pill.warn{background:#fdf1dc;color:#9a5b00}
+@media (prefers-color-scheme: dark){ .pill.ok{background:#16352a} .pill.warn{background:#3a2a10;color:#e0a84a} }
+@media (max-width:640px){ .books-bar .seg{width:100%;overflow-x:auto} .books-bar .seg button{white-space:nowrap} .txn-actions a.btn{display:none} .cat-select{max-width:100%;width:100%} }
 @media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .side{grid-column:span 12} }
 @media (max-width:640px){ .fin-bal{grid-template-columns:1fr 1fr} .kpi .n{font-size:19px} .kpi{padding:10px} .kpi-row{gap:8px} .fin-actions{width:100%} .fin-actions .btn.primary{flex:1} }
 </style>
@@ -2364,8 +2405,15 @@ async function renderFinance(){
   const actions = `<div class="fin-actions"><span class="fin-updated">${snap ? `Updated ${esc(fmtDateTime(snap.refreshedAt))}` : ''}</span>
     <button class="btn primary" id="finRefresh"></button>
     <button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`;
+  FIN.tab = /^#\/finance\/books/.test(location.hash) ? 'books' : 'overview';
+  if (FIN.tab === 'books') {
+    box.innerHTML = head(`<div class="fin-actions"><button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`) + finTabsHTML() + `<div id="booksBox"></div>`;
+    $('#finDisconnect').onclick = disconnectQuickBooks;
+    renderBooks();
+    return;
+  }
   if (!d) {
-    box.innerHTML = head(actions) + `<div class="panel">${FIN.refreshing || !FIN.error ? `<div class="fin-loading"><span class="spin"></span>Pulling your numbers from QuickBooks…</div>` : `<div class="none">Couldn’t load your numbers: ${esc(FIN.error)}</div>`}</div>`;
+    box.innerHTML = head(actions) + finTabsHTML() + `<div class="panel">${FIN.refreshing || !FIN.error ? `<div class="fin-loading"><span class="spin"></span>Pulling your numbers from QuickBooks…</div>` : `<div class="none">Couldn’t load your numbers: ${esc(FIN.error)}</div>`}</div>`;
     wireFinHead();
     if (!FIN.refreshing && !FIN.error) refreshFinance();
     return;
@@ -2373,7 +2421,7 @@ async function renderFinance(){
 
   const t = new Date(d.asOf + 'T12:00:00');
   const mtdLabel = `${monthName(d.asOf.slice(0, 7))} 1–${t.getDate()}`;
-  box.innerHTML = head(actions) + `
+  box.innerHTML = head(actions) + finTabsHTML() + `
     ${FIN.error ? `<div class="panel" style="margin-bottom:16px"><div class="none">Last refresh failed: ${esc(FIN.error)}. Showing the numbers from ${esc(fmtDateTime(snap.refreshedAt))}.</div></div>` : ''}
     <div class="fin-kpis">
       <div class="panel"><h2>Month to date <small>${esc(mtdLabel)}</small></h2>${kpiRowHTML(d.mtd, d.mtdLastYear, 'last year', `Compared with ${monthName(d.asOf.slice(0, 7))} 1–${t.getDate()}, ${t.getFullYear() - 1}`)}</div>
@@ -2406,10 +2454,7 @@ async function renderFinance(){
 function wireFinHead(){
   paintFinRefresh();
   $('#finRefresh').onclick = refreshFinance;
-  $('#finDisconnect').onclick = async () => {
-    if (!confirm('Disconnect QuickBooks from HQ? Nothing in QuickBooks is changed.')) return;
-    try { await qboCall('disconnect'); await loadFinStatus(); renderFinance(); toast('QuickBooks disconnected'); } catch (e) { fail(e); }
-  };
+  $('#finDisconnect').onclick = disconnectQuickBooks;
 }
 function deltaHTML(now, before, goodWhenUp, label){
   if (!before) return now ? `<span>No ${esc(label)} data to compare</span>` : '&nbsp;';
@@ -2437,6 +2482,214 @@ function catBarsHTML(list, total, color){
     <div class="top"><span title="${esc(c.name)}">${esc(c.name)}</span><b>${usd(c.ytd)}</b></div>
     <div class="track"><i style="width:${Math.max(2, c.ytd / max * 100).toFixed(1)}%"></i></div>
     <div class="sub">${total ? Math.round(c.ytd / total * 100) + '% of total' : ''}${c.mtd ? ` · ${usd(c.mtd)} this month` : ''}</div></div>`).join('')}</div>`;
+}
+
+
+async function disconnectQuickBooks(){
+  if (!confirm('Disconnect QuickBooks from HQ? Nothing in QuickBooks is changed.')) return;
+  try { await qboCall('disconnect'); BOOKS.data = null; await loadFinStatus(); renderFinance(); toast('QuickBooks disconnected'); } catch (e) { fail(e); }
+}
+function finTabsHTML(){
+  const n = BOOKS.data?.counts?.toReview;
+  return `<div class="fin-tabs seg"><a href="#/finance" class="${FIN.tab !== 'books' ? 'active' : ''}">Overview</a><a href="#/finance/books" class="${FIN.tab === 'books' ? 'active' : ''}">Bookkeeping${n ? ` <span class="badge">${n > 999 ? '999+' : n}</span>` : ''}</a></div>`;
+}
+
+/* ----- Bookkeeping: every transaction gets confirmed; categories save to QuickBooks ----- */
+const BOOKS = { data:null, loading:false, error:null, filter:'review', range:'90', edits:{}, open:{}, busy:{}, applyAll:{} };
+try { BOOKS.range = localStorage.getItem('kvhq.books.range') || '90'; } catch (e) {}
+const BOOK_RANGES = [['month','This month'],['30','Last 30 days'],['90','Last 90 days'],['year','This year'],['lastyear','Since Jan 1 last year']];
+const TXN_LABEL = { Purchase:'Expense', Deposit:'Deposit', Bill:'Bill', Transfer:'Transfer', Payment:'Client payment', SalesReceipt:'Sales receipt', BillPayment:'Bill payment', JournalEntry:'Journal entry' };
+const QBO_PAGE = { Purchase:'expense', Deposit:'deposit', Bill:'bill', Transfer:'transfer', Payment:'recvpayment', SalesReceipt:'salesreceipt', BillPayment:'billpayment', JournalEntry:'journal' };
+const tkey = x => `${x.type}:${x.id}`;
+function booksSince(){
+  const now = new Date(), pad2 = n => String(n).padStart(2, '0'), ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  if (BOOKS.range === 'month') return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
+  if (BOOKS.range === 'year') return `${now.getFullYear()}-01-01`;
+  if (BOOKS.range === 'lastyear') return `${now.getFullYear() - 1}-01-01`;
+  const d = new Date(now); d.setDate(d.getDate() - Number(BOOKS.range || 90)); return ymd(d);
+}
+async function loadBooks(){
+  BOOKS.loading = true; BOOKS.error = null; paintBooks();
+  try { BOOKS.data = await qboCall('books', { since: booksSince() }); BOOKS.edits = {}; BOOKS.open = {}; }
+  catch (e) { BOOKS.error = e.message; if (e.notConnected) { await loadFinStatus(); BOOKS.loading = false; return renderFinance(); } }
+  BOOKS.loading = false;
+  if (S.view === 'finance' && FIN.tab === 'books') renderFinance(); // also refreshes the tab badge
+}
+function renderBooks(){
+  if (!BOOKS.data && !BOOKS.loading && !BOOKS.error) { loadBooks(); return; }
+  paintBooks();
+}
+function booksList(){
+  const items = BOOKS.data?.items || [];
+  if (BOOKS.filter === 'uncat') return items.filter(i => i.uncategorized);
+  if (BOOKS.filter === 'done') return items.filter(i => i.reviewed);
+  if (BOOKS.filter === 'all') return items;
+  return items.filter(i => !i.reviewed).sort((a, b) => (b.uncategorized - a.uncategorized) || (b.changedSinceReview - a.changedSinceReview) || (b.date || '').localeCompare(a.date || ''));
+}
+function paintBooks(){
+  const box = $('#booksBox'); if (!box) return;
+  const d = BOOKS.data, c = d?.counts || { total:0, toReview:0, uncategorized:0 };
+  const items = d?.items || [];
+  const list = booksList();
+  const shown = list.slice(0, BOOKS.limit || 60);
+  const easy = items.filter(i => !i.reviewed && !i.uncategorized && !BOOKS.edits[tkey(i)]);
+  box.innerHTML = `
+    <div class="books-bar">
+      <div class="seg" id="booksFilter">
+        <button data-f="review" class="${BOOKS.filter === 'review' ? 'active' : ''}">To review <b>${c.toReview}</b></button>
+        <button data-f="uncat" class="${BOOKS.filter === 'uncat' ? 'active' : ''}">Needs category <b>${c.uncategorized}</b></button>
+        <button data-f="done" class="${BOOKS.filter === 'done' ? 'active' : ''}">Confirmed</button>
+        <button data-f="all" class="${BOOKS.filter === 'all' ? 'active' : ''}">All <b>${c.total}</b></button>
+      </div>
+      <span class="spacer"></span>
+      <select id="booksRange" title="Which transactions to show">${opt(BOOK_RANGES, BOOKS.range)}</select>
+      <button class="btn small" id="booksReload" ${BOOKS.loading ? 'disabled' : ''}>${BOOKS.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
+    </div>
+    ${BOOKS.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load transactions: ${esc(BOOKS.error)}</div></div>` : ''}
+    ${!d && BOOKS.loading ? `<div class="panel fin-loading"><span class="spin"></span>Pulling transactions from QuickBooks…</div>` : ''}
+    ${d && BOOKS.filter === 'review' && easy.length > 1 ? `<div class="books-bulk"><span>${easy.length} already have a category. Look them over, then confirm them together.</span><button class="btn small" id="booksBulk">✓ Confirm all ${easy.length} categorized</button></div>` : ''}
+    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${BOOKS.filter === 'review' ? '🎉 All caught up. Every transaction in this range is confirmed.' : 'Nothing here.'}</div>`) : ''}
+    ${list.length > shown.length ? `<div style="text-align:center;margin-top:12px"><button class="btn" id="booksMore">Show more (${list.length - shown.length} left)</button></div>` : ''}
+    ${d ? `<p class="fin-note">Every expense, deposit, bill, transfer and payment in QuickBooks from ${esc(fmtDate(d.since))} on. Changing a category saves it to QuickBooks. Suggestions come from how you’ve categorized the same payee before. Matching deposits to invoices and bank-feed “For Review” items still happen in QuickBooks.</p>` : ''}`;
+  wireBooks();
+}
+function acctName(id){ return BOOKS.data?.accounts?.find(a => a.id === id)?.full || ''; }
+function txnHTML(x){
+  const k = tkey(x), edits = BOOKS.edits[k] || {}, busy = BOOKS.busy[k];
+  const sign = x.direction === 'out' ? '-' : x.direction === 'in' ? '+' : '';
+  const editable = x.lines.filter(l => l.editable);
+  const changed = Object.keys(edits).length > 0;
+  const samePayee = x.payee ? (BOOKS.data.items || []).filter(o => o !== x && !o.reviewed && o.editable && o.payee.trim().toLowerCase() === x.payee.trim().toLowerCase() && o.lines.filter(l => l.editable).length === 1) : [];
+  const sug = x.suggestion && editable.length === 1 && x.suggestion.id !== (edits[editable[0].id] || editable[0].account?.id) ? x.suggestion : null;
+  const lineRow = l => {
+    const cur = edits[l.id] || l.account?.id || '';
+    const name = edits[l.id] ? acctName(edits[l.id]) : (l.account?.name || 'No category');
+    const bad = !edits[l.id] && (!l.account || /uncategori[sz]ed|ask my accountant/i.test(l.account.name));
+    return `<div class="tline">
+      ${x.lines.length > 1 ? `<span class="tline-amt">${usd(l.amount, true)}</span>` : ''}
+      ${l.editable
+        ? (BOOKS.open[k + '|' + l.id]
+            ? `<select class="cat-select" data-k="${esc(k)}" data-line="${esc(l.id)}">${acctOptions(x, cur)}</select>`
+            : `<button class="cat-btn ${bad ? 'bad' : ''} ${edits[l.id] ? 'edited' : ''}" data-open="${esc(k + '|' + l.id)}">${esc(name)} <span>▾</span></button>`)
+        : `<span class="cat-ro">${esc(l.account?.name || l.note || l.desc || '')}</span>`}
+      ${l.desc && x.lines.length > 1 ? `<span class="tline-desc">${esc(l.desc)}</span>` : ''}
+    </div>`;
+  };
+  return `<div class="txn ${x.uncategorized && !changed ? 'needs' : ''} ${x.reviewed ? 'done' : ''}" data-k="${esc(k)}">
+    <div class="txn-top">
+      <div class="txn-main">
+        <div class="txn-payee">${esc(x.payee || TXN_LABEL[x.type])}</div>
+        <div class="txn-meta">${esc(fmtShort(x.date))} · ${esc(TXN_LABEL[x.type] || x.type)}${x.account?.name ? ` · ${esc(x.account.name)}` : ''}${x.doc ? ` · #${esc(x.doc)}` : ''}</div>
+        ${x.memo ? `<div class="txn-memo">${esc(x.memo)}</div>` : (x.lines.length === 1 && x.lines[0].desc ? `<div class="txn-memo">${esc(x.lines[0].desc)}</div>` : '')}
+      </div>
+      <div class="txn-amt ${x.direction}">${sign}${usd(x.amount, true)}</div>
+    </div>
+    ${x.lines.length ? `<div class="tlines">${x.lines.map(lineRow).join('')}</div>` : ''}
+    ${sug ? `<button class="sug-chip" data-sug="${esc(k)}">Usually <b>${esc(sug.name)}</b> (${sug.count} of ${sug.total}) · Use this</button>` : ''}
+    ${changed && samePayee.length ? `<label class="apply-all"><input type="checkbox" data-apply="${esc(k)}" ${BOOKS.applyAll[k] ? 'checked' : ''}/> Also apply to ${samePayee.length} other ${esc(x.payee)} transaction${samePayee.length === 1 ? '' : 's'} to review</label>` : ''}
+    <div class="txn-actions">
+      ${x.changedSinceReview ? `<span class="pill warn">Changed in QuickBooks</span>` : ''}
+      ${x.reviewed ? `<span class="pill ok">✓ Confirmed ${esc(fmtShort(x.confirmedAt))}</span><span class="spacer"></span><button class="btn small ghost" data-undo="${esc(k)}">Undo</button>`
+        : `<span class="spacer"></span>
+           <a class="btn small ghost" href="https://qbo.intuit.com/app/${QBO_PAGE[x.type] || 'expense'}?txnId=${encodeURIComponent(x.id)}" target="_blank" rel="noopener">Open in QuickBooks ↗</a>
+           ${changed ? `<button class="btn small ghost" data-reset="${esc(k)}">Reset</button>` : ''}
+           <button class="btn small ${changed || !x.uncategorized ? 'primary' : ''}" data-confirm="${esc(k)}" ${busy ? 'disabled' : ''} ${x.uncategorized && !changed ? 'title="Pick a category first"' : ''}>${busy ? '<span class="spin"></span>Saving…' : changed ? 'Save & confirm' : x.uncategorized ? 'Pick a category' : '✓ Confirm'}</button>`}
+    </div>
+  </div>`;
+}
+function acctOptions(x, cur){
+  const accts = BOOKS.data?.accounts || [];
+  const groups = x.direction === 'in'
+    ? [['Income', a => a.classification === 'Revenue'], ['Other', a => a.classification !== 'Revenue']]
+    : [['Expenses', a => a.classification === 'Expense'], ['Other', a => a.classification !== 'Expense']];
+  return `<option value="">Choose a category…</option>` + groups.map(([label, f]) => `<optgroup label="${label}">${accts.filter(f).map(a => `<option value="${esc(a.id)}" ${a.id === cur ? 'selected' : ''}>${esc(a.full)}</option>`).join('')}</optgroup>`).join('');
+}
+function findTxn(k){ return BOOKS.data?.items?.find(i => tkey(i) === k); }
+function setEdit(x, lineId, accountId){
+  const k = tkey(x), line = x.lines.find(l => l.id === lineId);
+  BOOKS.edits[k] = BOOKS.edits[k] || {};
+  if (!accountId || accountId === line?.account?.id) delete BOOKS.edits[k][lineId]; else BOOKS.edits[k][lineId] = accountId;
+  if (!Object.keys(BOOKS.edits[k]).length) delete BOOKS.edits[k];
+}
+function replaceTxn(updated){
+  const items = BOOKS.data.items, i = items.findIndex(o => tkey(o) === tkey(updated));
+  if (i >= 0) items[i] = { ...items[i], ...updated, suggestion: items[i].suggestion };
+  recount();
+}
+function recount(){
+  const items = BOOKS.data.items;
+  BOOKS.data.counts = { total: items.length, toReview: items.filter(i => !i.reviewed).length, uncategorized: items.filter(i => i.uncategorized).length };
+  const b = document.querySelector('.fin-tabs .badge'); const n = BOOKS.data.counts.toReview;
+  if (b) { b.textContent = n; b.classList.toggle('hidden', !n); }
+}
+async function confirmTxn(k){
+  const x = findTxn(k); if (!x) return;
+  const edits = BOOKS.edits[k];
+  if (x.uncategorized && !edits) { toast('Pick a category first'); BOOKS.open[k + '|' + x.lines.find(l => l.editable)?.id] = true; return paintBooks(); }
+  BOOKS.busy[k] = true; paintBooks();
+  try {
+    if (edits) {
+      const { item } = await qboCall('categorize', { type: x.type, id: x.id, changes: Object.entries(edits).map(([lineId, accountId]) => ({ lineId, accountId })) });
+      delete BOOKS.edits[k]; replaceTxn(item);
+      if (BOOKS.applyAll[k]) {
+        const acct = Object.values(edits)[0];
+        const others = BOOKS.data.items.filter(o => o !== findTxn(k) && !o.reviewed && o.editable && o.payee.trim().toLowerCase() === x.payee.trim().toLowerCase() && o.lines.filter(l => l.editable).length === 1);
+        let ok = 0;
+        for (const o of others) {
+          BOOKS.busy[tkey(o)] = true; paintBooks();
+          try {
+            const line = o.lines.find(l => l.editable);
+            if (line.account?.id === acct) { await qboCall('confirm', { items: [{ type: o.type, id: o.id, updated: o.updated }] }); replaceTxn({ ...o, reviewed: true, confirmedAt: new Date().toISOString(), changedSinceReview: false }); }
+            else { const r = await qboCall('categorize', { type: o.type, id: o.id, changes: [{ lineId: line.id, accountId: acct }] }); replaceTxn(r.item); }
+            ok++;
+          } catch (e) { toast(`${o.payee} ${fmtShort(o.date)}: ${e.message}`); }
+          delete BOOKS.busy[tkey(o)];
+        }
+        delete BOOKS.applyAll[k];
+        toast(`Saved to QuickBooks · ${ok + 1} ${x.payee} transactions updated`);
+      } else toast('Saved to QuickBooks and confirmed');
+    } else {
+      await qboCall('confirm', { items: [{ type: x.type, id: x.id, updated: x.updated }] });
+      replaceTxn({ ...x, reviewed: true, confirmedAt: new Date().toISOString(), changedSinceReview: false });
+    }
+  } catch (e) { fail(e); }
+  delete BOOKS.busy[k];
+  paintBooks();
+}
+function wireBooks(){
+  const box = $('#booksBox'); if (!box) return;
+  box.querySelector('#booksFilter')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; BOOKS.filter = b.dataset.f; BOOKS.limit = 60; paintBooks(); });
+  const rng = box.querySelector('#booksRange'); if (rng) rng.onchange = () => { BOOKS.range = rng.value; try { localStorage.setItem('kvhq.books.range', BOOKS.range); } catch (e) {} loadBooks(); };
+  const rl = box.querySelector('#booksReload'); if (rl) rl.onclick = loadBooks;
+  const more = box.querySelector('#booksMore'); if (more) more.onclick = () => { BOOKS.limit = (BOOKS.limit || 60) + 60; paintBooks(); };
+  const bulk = box.querySelector('#booksBulk'); if (bulk) bulk.onclick = async () => {
+    const easy = BOOKS.data.items.filter(i => !i.reviewed && !i.uncategorized && !BOOKS.edits[tkey(i)]);
+    if (!confirm(`Confirm ${easy.length} transactions as categorized right now? Only do this after looking them over.`)) return;
+    bulk.disabled = true; bulk.innerHTML = '<span class="spin"></span>Confirming…';
+    try {
+      for (let i = 0; i < easy.length; i += 400) await qboCall('confirm', { items: easy.slice(i, i + 400).map(x => ({ type: x.type, id: x.id, updated: x.updated })) });
+      easy.forEach(x => replaceTxn({ ...x, reviewed: true, confirmedAt: new Date().toISOString(), changedSinceReview: false }));
+      toast(`${easy.length} confirmed`);
+    } catch (e) { fail(e); }
+    paintBooks();
+  };
+  box.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
+    BOOKS.open[b.dataset.open] = true; paintBooks();
+    const sel = box.querySelector(`.cat-select[data-k="${CSS.escape(b.dataset.open.split('|')[0])}"][data-line="${CSS.escape(b.dataset.open.split('|')[1])}"]`);
+    if (sel) { sel.focus(); try { sel.showPicker?.(); } catch (e) {} }
+  });
+  box.querySelectorAll('.cat-select').forEach(sel => {
+    sel.onchange = () => { const x = findTxn(sel.dataset.k); setEdit(x, sel.dataset.line, sel.value); delete BOOKS.open[sel.dataset.k + '|' + sel.dataset.line]; paintBooks(); };
+    sel.onblur = () => { setTimeout(() => { if (BOOKS.open[sel.dataset.k + '|' + sel.dataset.line]) { delete BOOKS.open[sel.dataset.k + '|' + sel.dataset.line]; paintBooks(); } }, 150); };
+  });
+  box.querySelectorAll('[data-sug]').forEach(b => b.onclick = () => { const x = findTxn(b.dataset.sug); const l = x.lines.find(l => l.editable); setEdit(x, l.id, x.suggestion.id); paintBooks(); });
+  box.querySelectorAll('[data-apply]').forEach(cb => cb.onchange = () => { BOOKS.applyAll[cb.dataset.apply] = cb.checked; });
+  box.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => { delete BOOKS.edits[b.dataset.reset]; delete BOOKS.applyAll[b.dataset.reset]; paintBooks(); });
+  box.querySelectorAll('[data-confirm]').forEach(b => b.onclick = () => confirmTxn(b.dataset.confirm));
+  box.querySelectorAll('[data-undo]').forEach(b => b.onclick = async () => {
+    const x = findTxn(b.dataset.undo);
+    try { await qboCall('unconfirm', { type: x.type, id: x.id }); replaceTxn({ ...x, reviewed: false, confirmedAt: null }); paintBooks(); } catch (e) { fail(e); }
+  });
 }
 
 /* ----- Charts (hand-drawn SVG so they follow HQ's light/dark colors) ----- */

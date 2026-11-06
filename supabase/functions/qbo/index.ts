@@ -67,11 +67,13 @@ async function accessToken(force = false) {
   }
 }
 
-async function qbo(path: string, params: Record<string, string> = {}) {
+async function qbo(path: string, params: Record<string, string> = {}, body?: unknown) {
   let { token, realm } = await accessToken();
   const url = `${API}/v3/company/${realm}/${path}?${new URLSearchParams({ minorversion: '75', ...params })}`;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    const r = await fetch(url, body === undefined
+      ? { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } }
+      : { method: 'POST', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (r.status === 401 && attempt === 0) { ({ token } = await accessToken(true)); continue; }
     const d = await r.json().catch(() => ({}));
     if (!r.ok) {
@@ -123,12 +125,16 @@ function findGroupDeep(rows: Row[], group: string): Row | undefined {
   }
 }
 const sectionVals = (sec: Row | undefined) => (sec?.Summary?.ColData || []).map((c: any) => num(c.value));
-// Child lines of a section (an account, or an account with sub-accounts rolled up)
-function childLines(sec: Row | undefined) {
-  return (sec?.Rows?.Row || []).map((r: Row) => {
-    if (r.type === 'Data' || r.ColData) return { name: r.ColData?.[0]?.value || 'Other', vals: (r.ColData || []).map((c: any) => num(c.value)) };
-    return { name: r.Header?.ColData?.[0]?.value || 'Other', vals: sectionVals(r) };
-  });
+// Leaf account lines of a section: parent accounts are opened up so the real accounts show
+// (a parent's own postings come through as a Data row inside its section).
+function childLines(sec: Row | undefined): { name: string; vals: number[] }[] {
+  const out: { name: string; vals: number[] }[] = [];
+  for (const r of sec?.Rows?.Row || []) {
+    if (r.type === 'Data' || r.ColData) out.push({ name: r.ColData?.[0]?.value || 'Other', vals: (r.ColData || []).map((c: any) => num(c.value)) });
+    else if (r.Rows?.Row?.length) out.push(...childLines(r));
+    else out.push({ name: r.Header?.ColData?.[0]?.value || 'Other', vals: sectionVals(r) });
+  }
+  return out;
 }
 
 function plByMonth(rep: any) {
@@ -214,6 +220,143 @@ async function buildSnapshot() {
   };
 }
 
+/* ---------- Bookkeeping: review every transaction, recategorize ---------- */
+// Types HQ lists for review. Purchase (checks, card charges, expenses), Bill and Deposit lines can be
+// recategorized; the rest are confirm-only (their money moves through other accounts/links).
+const REVIEW_TYPES = ['Purchase', 'Deposit', 'Bill', 'Transfer', 'Payment', 'SalesReceipt', 'BillPayment', 'JournalEntry'] as const;
+const EDITABLE = new Set(['Purchase', 'Bill', 'Deposit']);
+const UNCAT = /uncategori[sz]ed|ask my accountant/i;
+const isoDate = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s)) ? String(s) : null;
+
+async function queryAll(entity: string, where: string) {
+  const out: any[] = [];
+  for (let start = 1; start < 20000; start += 1000) {
+    const d = await qbo('query', { query: `select * from ${entity} where ${where} orderby TxnDate desc startposition ${start} maxresults 1000` });
+    const rows = d?.QueryResponse?.[entity] || [];
+    out.push(...rows);
+    if (rows.length < 1000) break;
+  }
+  return out;
+}
+
+async function chartOfAccounts() {
+  const d = await qbo('query', { query: 'select * from Account where Active = true maxresults 1000' });
+  return (d?.QueryResponse?.Account || []).map((a: any) => ({
+    id: String(a.Id), name: a.Name, full: a.FullyQualifiedName || a.Name, type: a.AccountType, sub: a.AccountSubType || null,
+    classification: a.Classification, parent: a.ParentRef?.value || null,
+  })).sort((a: any, b: any) => a.full.localeCompare(b.full));
+}
+
+// One transaction → a flat shape the review screen can show.
+function normalizeTxn(type: string, t: any, accts: Map<string, any>) {
+  const ref = (r: any) => r ? { id: String(r.value), name: accts.get(String(r.value))?.full || r.name || '' } : null;
+  const lines: any[] = [];
+  let payee = t.EntityRef?.name || t.VendorRef?.name || t.CustomerRef?.name || '';
+  let account: any = null, direction = 'out', amount = num(t.TotalAmt ?? t.Amount);
+  for (const l of t.Line || []) {
+    if (l.DetailType === 'AccountBasedExpenseLineDetail') lines.push({ id: String(l.Id), amount: num(l.Amount), desc: l.Description || '', account: ref(l.AccountBasedExpenseLineDetail?.AccountRef), editable: true });
+    else if (l.DetailType === 'ItemBasedExpenseLineDetail') lines.push({ id: String(l.Id), amount: num(l.Amount), desc: l.Description || l.ItemBasedExpenseLineDetail?.ItemRef?.name || 'Item', account: null, editable: false, note: 'Item line' });
+    else if (l.DetailType === 'DepositLineDetail') {
+      const dd = l.DepositLineDetail || {};
+      if (!payee && dd.Entity?.name) payee = dd.Entity.name;
+      lines.push({ id: String(l.Id), amount: num(l.Amount), desc: l.Description || '', account: ref(dd.AccountRef), editable: true });
+    } else if (l.LinkedTxn?.length && type === 'Deposit') lines.push({ id: String(l.Id ?? ''), amount: num(l.Amount), desc: 'Payment from ' + (l.LinkedTxn.map((x: any) => x.TxnType).join(', ')), account: null, editable: false, note: 'Linked payment' });
+    else if (l.DetailType === 'JournalEntryLineDetail') {
+      const jd = l.JournalEntryLineDetail || {};
+      lines.push({ id: String(l.Id), amount: num(l.Amount) * (jd.PostingType === 'Credit' ? -1 : 1), desc: l.Description || '', account: ref(jd.AccountRef), editable: false });
+    }
+  }
+  if (type === 'Purchase') { account = ref(t.AccountRef); direction = t.Credit ? 'in' : 'out'; }
+  else if (type === 'Bill') { account = ref(t.APAccountRef) || { id: '', name: 'Accounts Payable' }; }
+  else if (type === 'Deposit') { account = ref(t.DepositToAccountRef); direction = 'in'; }
+  else if (type === 'Transfer') { account = ref(t.FromAccountRef); direction = 'transfer'; payee = `To ${t.ToAccountRef?.name || 'account'}`; }
+  else if (type === 'Payment') { account = ref(t.DepositToAccountRef) || { id: '', name: 'Undeposited Funds' }; direction = 'in'; }
+  else if (type === 'SalesReceipt') { account = ref(t.DepositToAccountRef); direction = 'in'; }
+  else if (type === 'BillPayment') { account = ref(t.CheckPayment?.BankAccountRef || t.CreditCardPayment?.CCAccountRef); }
+  else if (type === 'JournalEntry') { direction = 'journal'; amount = (t.Line || []).filter((l: any) => l.JournalEntryLineDetail?.PostingType === 'Debit').reduce((a: number, l: any) => a + num(l.Amount), 0); }
+  const uncategorized = lines.some(l => l.editable && (!l.account || UNCAT.test(l.account.name)));
+  return {
+    type, id: String(t.Id), sync: String(t.SyncToken ?? ''), date: t.TxnDate, amount: round2(amount), direction, payee,
+    account, memo: t.PrivateNote || '', doc: t.DocNumber || '', updated: t.MetaData?.LastUpdatedTime || null,
+    created: t.MetaData?.CreateTime || null, lines, editable: EDITABLE.has(type) && lines.some(l => l.editable), uncategorized,
+  };
+}
+
+async function booksReview(since: string) {
+  const t = todayET();
+  const yearAgo = `${t.y - 1}-${pad(t.m)}-${pad(Math.min(t.d, lastDayOf(t.y - 1, t.m)))}`;
+  const from = since < yearAgo ? since : yearAgo; // a year of history feeds the payee suggestions
+  await accessToken();
+  const accounts = await chartOfAccounts();
+  const accts = new Map<string, any>(accounts.map((a: any) => [a.id, a]));
+  const lists = await Promise.all(REVIEW_TYPES.map(ty =>
+    queryAll(ty, `TxnDate >= '${['Purchase', 'Bill', 'Deposit'].includes(ty) ? from : since}'`).then(rows => rows.map(r => normalizeTxn(ty, r, accts)))));
+  const all = lists.flat();
+
+  // Payee suggestions: the account each payee is most often categorized to (ignoring uncategorized).
+  const tally = new Map<string, Map<string, number>>();
+  for (const x of all) {
+    if (!x.editable || !x.payee) continue;
+    const key = x.payee.trim().toLowerCase();
+    for (const l of x.lines) {
+      if (!l.editable || !l.account || UNCAT.test(l.account.name)) continue;
+      const m = tally.get(key) || new Map(); m.set(l.account.id, (m.get(l.account.id) || 0) + 1); tally.set(key, m);
+    }
+  }
+  const suggestFor = (payee: string) => {
+    const m = tally.get(payee.trim().toLowerCase()); if (!m) return null;
+    const [id, count] = [...m.entries()].sort((a, b) => b[1] - a[1])[0];
+    const total = [...m.values()].reduce((a, b) => a + b, 0);
+    const a = accts.get(id); return a ? { id, name: a.full, count, total } : null;
+  };
+
+  const inWindow = all.filter(x => x.date >= since);
+  const { data: revs } = await admin.from('txn_reviews').select('txn_type, txn_id, qbo_updated, confirmed_at');
+  const rev = new Map((revs || []).map((r: any) => [`${r.txn_type}:${r.txn_id}`, r]));
+  const items = inWindow.map(x => {
+    const r: any = rev.get(`${x.type}:${x.id}`);
+    const reviewed = !!r && (!x.updated || !r.qbo_updated || new Date(x.updated).getTime() <= new Date(r.qbo_updated).getTime() + 1000);
+    return { ...x, reviewed, confirmedAt: r?.confirmed_at || null, changedSinceReview: !!r && !reviewed, suggestion: x.editable && x.payee ? suggestFor(x.payee) : null };
+  }).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id.localeCompare(a.id));
+  return {
+    since, accounts, items,
+    counts: { total: items.length, toReview: items.filter(i => !i.reviewed).length, uncategorized: items.filter(i => i.uncategorized).length },
+  };
+}
+
+async function markReviewed(list: { type: string; id: string; updated: string | null }[], uid: string) {
+  const rows = list.filter(x => REVIEW_TYPES.includes(x.type as any) && /^\d+$/.test(x.id))
+    .map(x => ({ txn_type: x.type, txn_id: x.id, qbo_updated: x.updated || null, confirmed_at: new Date().toISOString(), confirmed_by: uid }));
+  if (rows.length) { const { error } = await admin.from('txn_reviews').upsert(rows); if (error) throw new Error(error.message); }
+  return rows.length;
+}
+
+// Change the account on one or more lines of a Purchase, Bill or Deposit, write it to QuickBooks,
+// and mark it confirmed.
+async function recategorize(type: string, id: string, changes: { lineId: string; accountId: string }[], uid: string) {
+  if (!EDITABLE.has(type) || !/^\d+$/.test(id)) throw new Error('This kind of transaction can’t be recategorized here');
+  if (!changes.length || changes.some(c => !/^\d+$/.test(String(c.lineId)) || !/^\d+$/.test(String(c.accountId)))) throw new Error('Nothing to change');
+  const accounts = await chartOfAccounts();
+  if (changes.some(c => !accounts.find((a: any) => a.id === String(c.accountId)))) throw new Error('That category isn’t an active account in QuickBooks');
+  const cur = (await qbo(`${type.toLowerCase()}/${id}`))?.[type];
+  if (!cur) throw new Error('Transaction not found in QuickBooks');
+  const want = new Map(changes.map(c => [String(c.lineId), String(c.accountId)]));
+  let changed = 0;
+  const Line = (cur.Line || []).map((l: any) => {
+    const acc = want.get(String(l.Id)); if (!acc) return l;
+    if (l.DetailType === 'AccountBasedExpenseLineDetail') { changed++; return { ...l, AccountBasedExpenseLineDetail: { ...l.AccountBasedExpenseLineDetail, AccountRef: { value: acc } } }; }
+    if (l.DetailType === 'DepositLineDetail') { changed++; return { ...l, DepositLineDetail: { ...l.DepositLineDetail, AccountRef: { value: acc } } }; }
+    return l;
+  });
+  if (!changed) throw new Error('Those lines can’t be recategorized');
+  const upd = (await qbo(type.toLowerCase(), { operation: 'update' }, { Id: cur.Id, SyncToken: cur.SyncToken, sparse: true, Line }))?.[type];
+  if (!upd) throw new Error('QuickBooks didn’t confirm the change');
+  const accts = new Map<string, any>(accounts.map((a: any) => [a.id, a]));
+  const x = normalizeTxn(type, upd, accts);
+  await markReviewed([{ type, id: x.id, updated: x.updated }], uid);
+  return { ...x, reviewed: true, confirmedAt: new Date().toISOString(), changedSinceReview: false };
+}
+
 async function saveSnapshot(data: unknown, uid: string) {
   const refreshed_at = new Date().toISOString();
   await admin.from('finance_snapshots').upsert({ id: 1, data, refreshed_at, refreshed_by: uid });
@@ -282,6 +425,24 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'refresh') return json(req, await saveSnapshot(await buildSnapshot(), uid));
+
+    if (action === 'books') {
+      const since = isoDate(body.since);
+      if (!since) return json(req, { error: 'Pick a start date' }, 400);
+      return json(req, await booksReview(since));
+    }
+    if (action === 'confirm') {
+      const list = Array.isArray(body.items) ? body.items.slice(0, 500).map((x: any) => ({ type: String(x.type), id: String(x.id), updated: x.updated ? String(x.updated) : null })) : [];
+      return json(req, { confirmed: await markReviewed(list, uid) });
+    }
+    if (action === 'unconfirm') {
+      await admin.from('txn_reviews').delete().eq('txn_type', String(body.type)).eq('txn_id', String(body.id));
+      return json(req, { ok: true });
+    }
+    if (action === 'categorize') {
+      const changes = Array.isArray(body.changes) ? body.changes.slice(0, 100).map((c: any) => ({ lineId: String(c.lineId), accountId: String(c.accountId) })) : [];
+      return json(req, { item: await recategorize(String(body.type), String(body.id), changes, uid) });
+    }
 
     return json(req, { error: 'Unknown action' }, 400);
   } catch (e) {
