@@ -142,7 +142,7 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:6px;background:var(--c-event)}
 .lg.shoot{background:var(--c-shoot)} .lg.block{background:var(--c-block)} .modal h2 .lg{margin:0}
 .wk{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.wk-head{display:grid;grid-template-columns:56px repeat(7,1fr);border-bottom:1px solid var(--border);position:sticky;top:57px;background:var(--panel);z-index:3}
+.wk-head{display:grid;grid-template-columns:56px repeat(7,1fr);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:3}
 .wk-h{padding:8px 6px;border-left:1px solid var(--border);min-width:0}
 .wk-h.today .wk-dn b{background:var(--accent);color:#fff;border-radius:999px;padding:1px 7px}
 .wk-dn{font-size:12.5px;color:var(--muted);font-weight:600}
@@ -177,9 +177,9 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 @media (max-width:760px){ .sp-grid{grid-template-columns:1fr 1fr} .cal-legend{display:none} .page-head .cal-actions{width:100%} .cal-actions .btn{flex:1} }
 
 /* ----- Chat ----- */
-nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+nav.tabs a .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:auto;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 main.chat-mode{max-width:none;padding:0}
-.chat{display:grid;grid-template-columns:250px 1fr;height:calc(100vh - 57px);height:calc(100dvh - 57px);background:var(--panel)}
+.chat{display:grid;grid-template-columns:250px 1fr;height:100vh;height:100dvh;background:var(--panel)}
 .chat-side{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--panel-2);min-height:0}
 .chat-side h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 16px 8px;display:flex;align-items:center;gap:6px}
 .chat-side h2 button{margin-left:auto;border:none;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 4px;border-radius:6px}
@@ -250,7 +250,7 @@ main.chat-mode{max-width:none;padding:0}
 .member-list label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--text);padding:8px 4px;border-bottom:1px solid var(--border);margin:0}
 .member-list input{width:auto}
 @media (max-width:760px){
-  .chat{grid-template-columns:1fr;height:calc(100dvh - 104px)}
+  .chat{grid-template-columns:1fr;height:calc(100dvh - 53px)}
   .chat.show-thread .chat-side{display:none}
   .chat:not(.show-thread) .chat-main{display:none}
   .chat-head .back{display:inline-flex}
@@ -267,11 +267,49 @@ main.chat-mode{max-width:none;padding:0}
 .brand-mark span{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px}
 
 /* Layout */
-header.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:10px 20px}
-header.top .brand-mark{margin:0}
-nav.tabs{display:flex;gap:4px}
-nav.tabs a{text-decoration:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-weight:500}
+/* ----- Left menu ----- */
+.side{position:fixed;top:0;left:0;bottom:0;width:224px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:width .15s ease,transform .2s ease}
+.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 12px 12px 18px}
+.side-head .brand-mark{margin:0;font-size:16px}
+.icon-btn{border:none;background:none;width:34px;height:34px;border-radius:8px;display:inline-grid;place-items:center;color:var(--muted);padding:0;position:relative;flex:none}
+.icon-btn:hover{background:var(--panel-2);color:var(--text)}
+.icon-btn svg{width:18px;height:18px}
+#sideClose{display:none;font-size:16px}
+nav.tabs{display:flex;flex-direction:column;gap:2px;padding:4px 10px;flex:1;overflow-y:auto}
+nav.tabs a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;color:var(--muted);font-weight:500;text-decoration:none;position:relative;white-space:nowrap}
+nav.tabs a:hover{background:var(--panel-2);color:var(--text)}
 nav.tabs a.active{background:var(--accent-soft);color:var(--accent)}
+nav.tabs a svg{width:18px;height:18px;flex:none}
+nav.tabs a.hidden{display:none}
+.side-foot{border-top:1px solid var(--border);padding:12px 10px 14px;display:flex;flex-direction:column;gap:4px}
+.side-foot .user-chip{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-out{display:flex;align-items:center;gap:12px;border:none;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-weight:500;text-align:left}
+.side-out:hover{background:var(--panel-2);color:var(--text)}
+.side-out svg{width:18px;height:18px;flex:none}
+.side-scrim{display:none}
+.app-body{margin-left:224px;transition:margin-left .15s ease;min-width:0}
+header.top{display:none}
+@media (min-width:901px){
+  body.side-mini .side{width:68px}
+  body.side-mini .app-body{margin-left:68px}
+  body.side-mini .side .lbl{display:none}
+  body.side-mini .side-head{flex-direction:column;padding:16px 0 10px}
+  body.side-mini #sideCollapse svg{transform:rotate(180deg)}
+  body.side-mini nav.tabs a,body.side-mini .side-out{justify-content:center;padding:10px 0}
+  body.side-mini nav.tabs a .badge{position:absolute;top:2px;right:6px;margin:0;min-width:16px;height:16px;font-size:10px}
+}
+@media (max-width:900px){
+  .side{width:264px;transform:translateX(-100%);box-shadow:none}
+  body.menu-open .side{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.18)}
+  body.menu-open .side-scrim{display:block;position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:39}
+  #sideCollapse{display:none} #sideClose{display:inline-grid}
+  nav.tabs a{padding:11px 12px;font-size:15px}
+  .app-body{margin-left:0}
+  header.top{display:flex;position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);align-items:center;gap:10px;padding:8px 12px;height:53px}
+  header.top .brand-mark{margin:0}
+  .top-title{margin-left:auto;font-weight:600;color:var(--muted);font-size:14px}
+  .menu-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--panel)}
+}
 .spacer{flex:1}
 .user-chip{font-size:13px;color:var(--muted)}
 main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
@@ -450,9 +488,6 @@ label.extra{margin:0}
 .logo-strip a .ext{font-weight:700;font-size:13px;color:var(--muted)}
 .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
 @media (max-width:720px){
-  header.top{flex-wrap:wrap;padding:10px 16px;gap:10px}
-  nav.tabs{order:3;width:100%;overflow-x:auto}
-  .user-chip{display:none}
   main{padding:14px 16px 40px}
   .toolbar input[type=search]{max-width:none;flex:1 1 100%}
 }
@@ -542,22 +577,34 @@ label.extra{margin:0}
 
 <!-- ============ APP ============ -->
 <section id="app" class="hidden">
-  <header class="top">
-    <div class="brand-mark"><span>KV</span> HQ</div>
+  <aside class="side" id="side" aria-label="Menu">
+    <div class="side-head">
+      <div class="brand-mark"><span>KV</span><b class="lbl">HQ</b></div>
+      <button class="icon-btn" id="sideCollapse" title="Collapse menu" aria-label="Collapse menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button class="icon-btn" id="sideClose" title="Close menu" aria-label="Close menu">✕</button>
+    </div>
     <nav class="tabs" id="tabs">
-      <a href="#/home" data-view="home">Home</a>
-      <a href="#/tasks" data-view="tasks">Tasks<span class="badge hidden" id="taskBadge"></span></a>
-      <a href="#/calendar" data-view="calendar">Calendar</a>
-      <a href="#/projects" data-view="projects">Projects</a>
-      <a href="#/agents" data-view="agents">Agents</a>
-      <a href="#/finance" data-view="finance" id="financeTab" class="hidden">Finance</a>
-      <a href="#/chat" data-view="chat">Chat<span class="badge hidden" id="chatBadge"></span></a>
-      <a href="#/team" data-view="team">Team</a>
+      <a href="#/home" data-view="home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">Home</span></a>
+      <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
+      <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
+      <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
+      <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
+      <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
+      <a href="#/chat" data-view="chat" title="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="lbl">Chat</span><span class="badge hidden" id="chatBadge"></span></a>
+      <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
     </nav>
-    <div class="spacer"></div>
-    <span class="user-chip" id="userChip"></span>
-    <button class="btn small ghost" id="signOut">Sign out</button>
+    <div class="side-foot">
+      <span class="user-chip lbl" id="userChip"></span>
+      <button class="side-out" id="signOut" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span class="lbl">Sign out</span></button>
+    </div>
+  </aside>
+  <div class="side-scrim" id="sideScrim"></div>
+  <header class="top">
+    <button class="icon-btn" id="menuBtn" title="Menu" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><i class="menu-dot hidden" id="menuDot"></i></button>
+    <div class="brand-mark"><span>KV</span> HQ</div>
+    <span class="top-title" id="topTitle"></span>
   </header>
+  <div class="app-body">
 
   <main>
     <!-- Home -->
@@ -618,6 +665,7 @@ label.extra{margin:0}
       <div id="teamList"></div>
     </div>
   </main>
+  </div>
 </section>
 
 <div id="layer"></div>
@@ -728,7 +776,15 @@ $('#authForm').onsubmit = async e => {
   $('#authBtn').disabled = false;
 };
 const doSignOut = async () => { await sb.auth.signOut(); };
-$('#signOut').onclick = doSignOut; $('#pendingSignOut').onclick = doSignOut;
+$('#signOut').onclick = doSignOut;
+/* Left menu: always shown on computers (collapsible to icons), slide-out drawer on phones */
+try { if (localStorage.getItem('kvhq.sideMini') === '1') document.body.classList.add('side-mini'); } catch (e) {}
+$('#sideCollapse').onclick = () => { const on = document.body.classList.toggle('side-mini'); try { localStorage.setItem('kvhq.sideMini', on ? '1' : '0'); } catch (e) {} };
+$('#menuBtn').onclick = () => document.body.classList.add('menu-open');
+$('#sideClose').onclick = $('#sideScrim').onclick = () => document.body.classList.remove('menu-open');
+$('#tabs').addEventListener('click', () => document.body.classList.remove('menu-open'));
+const paintMenuDot = () => $('#menuDot').classList.toggle('hidden', !document.querySelector('#tabs .badge:not(.hidden)'));
+new MutationObserver(paintMenuDot).observe($('#tabs'), { subtree: true, attributes: true, attributeFilter: ['class'] }); $('#pendingSignOut').onclick = doSignOut;
 
 function show(section){ ['auth','pending','app'].forEach(id => $('#'+id).classList.toggle('hidden', id !== section)); }
 
@@ -797,6 +853,8 @@ function route(){
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   S.view = view;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
+  $('#topTitle').textContent = document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || '';
+  document.body.classList.remove('menu-open');
   document.querySelector('#tabs a[data-view=projects]').href = `#/projects/${S.media}`;
   render();
   window.scrollTo(0, 0);
