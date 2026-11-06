@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Knox View HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -250,7 +250,7 @@ main.chat-mode{max-width:none;padding:0}
 .member-list label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--text);padding:8px 4px;border-bottom:1px solid var(--border);margin:0}
 .member-list input{width:auto}
 @media (max-width:760px){
-  .chat{grid-template-columns:1fr;height:calc(100dvh - 53px)}
+  .chat{grid-template-columns:1fr;height:calc(100dvh - 58px - env(safe-area-inset-top))}
   .chat.show-thread .chat-side{display:none}
   .chat:not(.show-thread) .chat-main{display:none}
   .chat-head .back{display:inline-flex}
@@ -268,47 +268,57 @@ main.chat-mode{max-width:none;padding:0}
 
 /* Layout */
 /* ----- Left menu ----- */
-.side{position:fixed;top:0;left:0;bottom:0;width:224px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:width .15s ease,transform .2s ease}
-.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 12px 12px 18px}
-.side-head .brand-mark{margin:0;font-size:16px}
-.icon-btn{border:none;background:none;width:34px;height:34px;border-radius:8px;display:inline-grid;place-items:center;color:var(--muted);padding:0;position:relative;flex:none}
+.side{position:fixed;top:0;left:0;bottom:0;width:252px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:width .15s ease,transform .2s ease;padding-top:env(safe-area-inset-top)}
+.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 12px 14px 20px}
+.side-head .brand-mark{margin:0;font-size:18px;gap:10px}
+.side-head .brand-mark span{width:34px;height:34px;border-radius:9px;font-size:14px}
+.icon-btn{border:none;background:none;width:40px;height:40px;border-radius:10px;display:inline-grid;place-items:center;color:var(--muted);padding:0;position:relative;flex:none;-webkit-tap-highlight-color:transparent}
 .icon-btn:hover{background:var(--panel-2);color:var(--text)}
-.icon-btn svg{width:18px;height:18px}
-#sideClose{display:none;font-size:16px}
-nav.tabs{display:flex;flex-direction:column;gap:2px;padding:4px 10px;flex:1;overflow-y:auto}
-nav.tabs a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;color:var(--muted);font-weight:500;text-decoration:none;position:relative;white-space:nowrap}
+.icon-btn svg{width:20px;height:20px}
+#sideClose{display:none;font-size:18px}
+nav.tabs{display:flex;flex-direction:column;gap:4px;padding:6px 12px;flex:1;overflow-y:auto;overscroll-behavior:contain}
+nav.tabs a{display:flex;align-items:center;gap:14px;min-height:46px;padding:11px 14px;border-radius:10px;color:var(--muted);font-weight:500;font-size:15px;text-decoration:none;position:relative;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background .12s,color .12s}
 nav.tabs a:hover{background:var(--panel-2);color:var(--text)}
-nav.tabs a.active{background:var(--accent-soft);color:var(--accent)}
-nav.tabs a svg{width:18px;height:18px;flex:none}
+nav.tabs a:active{transform:scale(.98)}
+nav.tabs a.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+nav.tabs a.active::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--accent)}
+nav.tabs a svg{width:21px;height:21px;flex:none}
+nav.tabs a .badge{min-width:20px;height:20px;font-size:11.5px}
 nav.tabs a.hidden{display:none}
-.side-foot{border-top:1px solid var(--border);padding:12px 10px 14px;display:flex;flex-direction:column;gap:4px}
-.side-foot .user-chip{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.side-out{display:flex;align-items:center;gap:12px;border:none;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-weight:500;text-align:left}
+.side-foot{border-top:1px solid var(--border);padding:12px 12px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px}
+.side-foot .user-chip{padding:2px 14px 4px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-out{display:flex;align-items:center;gap:14px;border:none;background:none;min-height:44px;padding:10px 14px;border-radius:10px;color:var(--muted);font-weight:500;font-size:15px;text-align:left}
 .side-out:hover{background:var(--panel-2);color:var(--text)}
-.side-out svg{width:18px;height:18px;flex:none}
+.side-out svg{width:21px;height:21px;flex:none}
 .side-scrim{display:none}
-.app-body{margin-left:224px;transition:margin-left .15s ease;min-width:0}
+.app-body{margin-left:252px;transition:margin-left .15s ease;min-width:0}
 header.top{display:none}
 @media (min-width:901px){
-  body.side-mini .side{width:68px}
-  body.side-mini .app-body{margin-left:68px}
+  body.side-mini .side{width:76px}
+  body.side-mini .app-body{margin-left:76px}
   body.side-mini .side .lbl{display:none}
-  body.side-mini .side-head{flex-direction:column;padding:16px 0 10px}
+  body.side-mini .side-head{flex-direction:column;padding:18px 0 12px}
   body.side-mini #sideCollapse svg{transform:rotate(180deg)}
-  body.side-mini nav.tabs a,body.side-mini .side-out{justify-content:center;padding:10px 0}
-  body.side-mini nav.tabs a .badge{position:absolute;top:2px;right:6px;margin:0;min-width:16px;height:16px;font-size:10px}
+  body.side-mini nav.tabs a,body.side-mini .side-out{justify-content:center;padding:12px 0}
+  body.side-mini nav.tabs a .badge{position:absolute;top:3px;right:6px;margin:0;min-width:17px;height:17px;font-size:10px}
 }
 @media (max-width:900px){
-  .side{width:264px;transform:translateX(-100%);box-shadow:none}
+  .side{width:min(300px,86vw);transform:translateX(-100%);box-shadow:none}
+  body.menu-open{overflow:hidden}
   body.menu-open .side{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.18)}
   body.menu-open .side-scrim{display:block;position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:39}
-  #sideCollapse{display:none} #sideClose{display:inline-grid}
-  nav.tabs a{padding:11px 12px;font-size:15px}
+  #sideCollapse{display:none} #sideClose{display:inline-grid;width:44px;height:44px}
+  nav.tabs{gap:6px}
+  nav.tabs a{min-height:52px;padding:13px 16px;font-size:16.5px;gap:16px}
+  nav.tabs a svg{width:23px;height:23px}
+  .side-out{min-height:50px;padding:12px 16px;gap:16px;font-size:16px}
   .app-body{margin-left:0}
-  header.top{display:flex;position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);align-items:center;gap:10px;padding:8px 12px;height:53px}
+  header.top{display:flex;position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);align-items:center;gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));min-height:58px}
   header.top .brand-mark{margin:0}
-  .top-title{margin-left:auto;font-weight:600;color:var(--muted);font-size:14px}
-  .menu-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--panel)}
+  #menuBtn{width:44px;height:44px}
+  #menuBtn svg{width:24px;height:24px}
+  .top-title{margin-left:auto;font-weight:600;color:var(--muted);font-size:15px}
+  .menu-dot{position:absolute;top:7px;right:7px;width:9px;height:9px;border-radius:50%;background:var(--danger);border:2px solid var(--panel)}
 }
 .spacer{flex:1}
 .user-chip{font-size:13px;color:var(--muted)}
