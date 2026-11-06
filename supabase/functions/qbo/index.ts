@@ -446,7 +446,9 @@ async function recategorize(type: string, id: string, changes: { lineId: string;
     return l;
   });
   if (!changed) throw new Error('Those lines can’t be recategorized');
-  const upd = (await qbo(type.toLowerCase(), { operation: 'update' }, { Id: cur.Id, SyncToken: cur.SyncToken, sparse: true, Line }))?.[type];
+  // Full update: QuickBooks wants the whole transaction (PaymentType, AccountRef…), not just the lines.
+  const full: any = { ...cur, Line }; delete full.sparse;
+  const upd = (await qbo(type.toLowerCase(), { operation: 'update' }, full))?.[type];
   if (!upd) throw new Error('QuickBooks didn’t confirm the change');
   const accts = new Map<string, any>(accounts.map((a: any) => [a.id, a]));
   const x = normalizeTxn(type, upd, accts);

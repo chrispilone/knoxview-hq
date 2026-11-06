@@ -1,9 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-// One-time, read-only QuickBooks export for the P&L category cleanup.
+// One-time QuickBooks jobs for the P&L category cleanup (Nov 2026).
 // Runs only with a single-use token whose SHA-256 hash sits in qbo_export_jobs (server-only table)
-// and hasn't expired. Reads the chart of accounts (active + inactive), items, and expense/deposit/
-// journal transactions since a date, and stores a compact copy on that job row. Never writes to QuickBooks.
+// and hasn't expired. mode 'export' (read-only): chart of accounts, items and transactions since a date.
+// mode 'subtypes' and 'apply' write to QuickBooks, approved by Chris on Nov 6, 2026: fix the detail type of
+// six categories, and move transactions off old categories per the cleanup plan (same rules as HQ's
+// Bookkeeping → Category cleanup; "your call" items are left alone).
 const CLIENT_ID = (Deno.env.get('QBO_CLIENT_ID') ?? '').trim();
 const CLIENT_SECRET = (Deno.env.get('QBO_CLIENT_SECRET') ?? '').trim();
 const API = (Deno.env.get('QBO_ENV') ?? '').trim().toLowerCase() === 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com';
@@ -36,6 +38,38 @@ async function accessToken() {
   return { token: t.access_token as string, realm: c.realm_id as string };
 }
 
+async function qboGet(tok: { token: string; realm: string }, path: string) {
+  const r = await fetch(`${API}/v3/company/${tok.realm}/${path}?minorversion=75`, { headers: { Authorization: `Bearer ${tok.token}`, Accept: 'application/json' } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`QuickBooks error ${r.status}: ${JSON.stringify(d?.Fault?.Error?.[0] ?? '').slice(0, 300)}`);
+  return d;
+}
+async function qboPost(tok: { token: string; realm: string }, path: string, body: unknown, params: Record<string, string> = {}) {
+  const r = await fetch(`${API}/v3/company/${tok.realm}/${path}?${new URLSearchParams({ minorversion: '75', ...params })}`, {
+    method: 'POST', headers: { Authorization: `Bearer ${tok.token}`, Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`QuickBooks error ${r.status}: ${JSON.stringify(d?.Fault?.Error?.[0] ?? '').slice(0, 300)}`);
+  return d;
+}
+
+// The cleanup plan (mirrors COA in HQ's index.html). Target account ids as created on Nov 6, 2026.
+const T: Record<string, string> = { media:'1150040004', otherinc:'139', photo:'1150040001', video:'1150040000', floor:'1150040003', spiro:'1150040005',
+  merchant:'140', software:'1150040006', team:'1150040008', edu:'83', gear:'1150040007', supplies:'141', marketing:'1150040009', dues:'142',
+  travel:'143', vehicle:'1150040010', meals:'144', taxes:'145', bank:'146' };
+const MOVES: Record<string, string> = { '26':'media', '28':'media', '5':'otherinc', '108':'software', '84':'software', '1150040002':'team', '110':'supplies', '106':'supplies',
+  '51':'travel', '114':'travel', '82':'bank', '43':'bank', '2':'bank', '45':'meals', '101':'meals', '102':'meals', '53':'vehicle', '123':'vehicle', '124':'vehicle',
+  '46':'gear', '50':'taxes', '32':'taxes', '30':'dues' };
+const RULES: { re: RegExp; to: string | null; dir?: string; from?: string[] }[] = [
+  { re:/\birs\b/i, to:null }, { re:/earnnest/i, to:null }, { re:/stripe ?connect/i, to:null }, { re:/link\.com/i, to:null }, { re:/awhittington|anthonywh/i, to:null },
+  { re:/autohdr/i, to:'photo', dir:'out' }, { re:/cubicasa/i, to:'floor', dir:'out' }, { re:/spiro/i, to:'spiro', dir:'out' },
+  { re:/anthropic|openai|chatgpt|creativefabrica|intuit|qbooks/i, to:'software', dir:'out' },
+  { re:/edreams|mytrip|metropolis|hotel/i, to:'travel', dir:'out' },
+  { re:/weigel|pilot|\bbp\b|shell|exxon|marathon/i, to:'vehicle', dir:'out', from:['51','114','53','123','124'] },
+  { re:/tnsos|tn sos|servicefee tn|tn state revenue/i, to:'taxes', dir:'out' }, { re:/realtor association/i, to:'dues', dir:'out' },
+  { re:/thunders/i, to:'video', dir:'out' }, { re:/onlinejobs/i, to:'team', dir:'out' }, { re:/aalto/i, to:'media', dir:'in' },
+];
+const SUBTYPES: Record<string, string> = { '1150040006':'OfficeGeneralAdministrativeExpenses', '1150040007':'SuppliesMaterials', '1150040008':'CostOfLabor', '83':'OtherBusinessExpenses', '1150040010':'Auto' };
+
 async function query(tok: { token: string; realm: string }, q: string, entity: string) {
   const out: any[] = [];
   for (let start = 1; start < 20000; start += 1000) {
@@ -62,6 +96,66 @@ Deno.serve(async (req) => {
     try {
       const tok = await accessToken();
       const since = String(job.since);
+      if (job.mode === 'subtypes') {
+        const done: any[] = [];
+        for (const [id, sub] of Object.entries(SUBTYPES)) {
+          const cur = (await qboGet(tok, `account/${id}`))?.Account;
+          if (!cur) { done.push({ id, error: 'not found' }); continue; }
+          if (cur.AccountSubType === sub) { done.push({ id, name: cur.Name, sub, unchanged: true }); continue; }
+          const upd: any = { ...cur, AccountSubType: sub }; delete upd.FullyQualifiedName; delete upd.CurrentBalance; delete upd.CurrentBalanceWithSubAccounts;
+          try { const a = (await qboPost(tok, 'account', upd))?.Account; done.push({ id, name: a?.Name, from: cur.AccountSubType, sub: a?.AccountSubType }); }
+          catch (e) { done.push({ id, name: cur.Name, error: String((e as Error).message) }); }
+        }
+        await admin.from('qbo_export_jobs').update({ result: { subtypes: done } }).eq('id', job.id);
+        return new Response(JSON.stringify({ ok: true, subtypes: done }), { headers: { 'Content-Type': 'application/json' } });
+      }
+      if (job.mode === 'apply') {
+        const started = Date.now();
+        const active = new Map((await query(tok, 'select * from Account where Active = true', 'Account')).map((a: any) => [String(a.Id), a]));
+        const { data: owner } = await admin.from('team_members').select('id').eq('role', 'owner').eq('active', true).limit(1).maybeSingle();
+        const plan: { type: string; t: any; want: Map<string, string> }[] = [];
+        let decide = 0;
+        for (const ty of ['Purchase', 'Bill', 'Deposit']) {
+          for (const t of await query(tok, `select * from ${ty} where TxnDate >= '${since}' orderby TxnDate desc`, ty)) {
+            const text = [t.EntityRef?.name, t.VendorRef?.name, t.PrivateNote, ...(t.Line || []).map((l: any) => l.Description)].filter(Boolean).join(' ');
+            const want = new Map<string, string>();
+            for (const l of t.Line || []) {
+              const ref = l.AccountBasedExpenseLineDetail?.AccountRef || l.DepositLineDetail?.AccountRef;
+              if (!ref?.value || !(l.DetailType === 'AccountBasedExpenseLineDetail' || l.DetailType === 'DepositLineDetail')) continue;
+              const from = String(ref.value), acct: any = active.get(from);
+              if (acct ? !['Revenue', 'Expense'].includes(acct.Classification) : !MOVES[from]) continue;
+              const dir = acct ? (acct.Classification === 'Revenue' ? 'in' : 'out') : (ty === 'Deposit' || t.Credit ? 'in' : 'out');
+              const rule = RULES.find(r => r.re.test(text) && (!r.dir || r.dir === dir) && (!r.from || r.from.includes(from)));
+              const key = rule ? rule.to : (MOVES[from] ?? undefined);
+              if (key === undefined) continue;
+              if (key === null) { decide++; continue; }
+              if (T[key] && T[key] !== from) want.set(String(l.Id), T[key]);
+            }
+            if (want.size) plan.push({ type: ty, t, want });
+          }
+        }
+        let moved = 0; const errors: any[] = [];
+        for (const p of plan) {
+          if (Date.now() - started > 110_000) break;
+          try {
+            const cur = (await qboGet(tok, `${p.type.toLowerCase()}/${p.t.Id}`))?.[p.type];
+            const Line = (cur.Line || []).map((l: any) => {
+              const acc = p.want.get(String(l.Id)); if (!acc) return l;
+              if (l.DetailType === 'AccountBasedExpenseLineDetail') return { ...l, AccountBasedExpenseLineDetail: { ...l.AccountBasedExpenseLineDetail, AccountRef: { value: acc } } };
+              if (l.DetailType === 'DepositLineDetail') return { ...l, DepositLineDetail: { ...l.DepositLineDetail, AccountRef: { value: acc } } };
+              return l;
+            });
+            // Full update: QuickBooks wants the whole transaction (PaymentType, AccountRef…), not just the lines.
+            const full: any = { ...cur, Line }; delete full.sparse;
+            const upd = (await qboPost(tok, p.type.toLowerCase(), full, { operation: 'update' }))?.[p.type];
+            if (owner?.id && upd) await admin.from('txn_reviews').upsert({ txn_type: p.type, txn_id: String(upd.Id), qbo_updated: upd.MetaData?.LastUpdatedTime || null, confirmed_at: new Date().toISOString(), confirmed_by: owner.id });
+            moved++;
+          } catch (e) { errors.push({ type: p.type, id: String(p.t.Id), date: p.t.TxnDate, error: String((e as Error).message).slice(0, 200) }); }
+        }
+        const summary = { planned: plan.length, moved, remaining: plan.length - moved - errors.length, decide, errors };
+        await admin.from('qbo_export_jobs').update({ result: summary }).eq('id', job.id);
+        return new Response(JSON.stringify({ ok: true, ...summary }), { headers: { 'Content-Type': 'application/json' } });
+      }
       const accounts = (await query(tok, 'select * from Account where Active in (true, false)', 'Account')).map((a: any) => ({
         id: String(a.Id), name: a.Name, full: a.FullyQualifiedName || a.Name, type: a.AccountType, sub: a.AccountSubType || null,
         active: !!a.Active, parent: a.ParentRef?.value || null, balance: num(a.CurrentBalance),
