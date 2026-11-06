@@ -209,6 +209,7 @@ Deno.serve(async (req) => {
     if (action === 'delete') return json(req, await gfetch(token, `/calendars/${cal}/events/${encodeURIComponent(String(body.id))}`, { method: 'DELETE' }));
     return json(req, { error: 'Unknown action' }, 400);
   } catch (e) {
+    console.error('gcal error:', String((e as Error)?.message || e));
     return json(req, { error: String((e as Error)?.message || e) }, 500);
   }
 });
