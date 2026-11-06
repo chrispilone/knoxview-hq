@@ -617,6 +617,36 @@ label.extra{margin:0}
 .books-bar .seg button b{font-weight:700;margin-left:4px}
 .books-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px}
 .books-bulk span{flex:1;min-width:200px}
+.cl-step{margin-bottom:14px}
+.cl-step-h{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.cl-step-h > div{flex:1;min-width:220px}
+.cl-step-h h3{margin:2px 0 4px;font-size:15px}
+.cl-step-h p{margin:0;font-size:13px;color:var(--muted)}
+.cl-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.cl-step details{margin-top:12px}
+.cl-step summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--accent-2)}
+.cl-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.cl-table td{padding:6px 4px;border-bottom:1px solid var(--border)}
+.cl-table td:last-child{text-align:right}
+.cl-sec td{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:12px}
+.cl-note{margin-top:10px;font-size:13px;background:var(--accent-soft);border-radius:8px;padding:8px 12px}
+.cl-group{border:1px solid var(--border);border-radius:10px;margin-top:10px;overflow:hidden}
+.cl-group.decide{border-color:var(--fin-exp)}
+.cl-gh{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--panel-2)}
+.cl-caret{color:var(--muted);width:12px}
+.cl-gt{flex:1;min-width:0;font-size:13.5px}
+.cl-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.cl-rows{display:flex;flex-direction:column}
+.cl-rows > .btn{margin:8px auto}
+.cl-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--border);flex-wrap:wrap}
+.cl-row.decide{background:rgba(212,138,10,.07)}
+.cl-main{flex:1;min-width:180px}
+.cl-payee{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-amt{font-weight:600;font-size:13.5px;white-space:nowrap;min-width:84px;text-align:right}
+.cl-amt.in{color:var(--ok)}
+.cl-row .cl-pick{width:260px;max-width:100%}
+.cl-retire{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--border);margin-top:8px;font-size:13.5px}
+@media (max-width:640px){ .cl-row .cl-pick{width:100%} .cl-amt{min-width:0} }
 .txns{display:flex;flex-direction:column;gap:10px}
 .txn{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
 .txn.needs{border-left:4px solid var(--fin-exp)}
@@ -2774,6 +2804,7 @@ function paintBooks(){
         <button data-f="uncat" class="${BOOKS.filter === 'uncat' ? 'active' : ''}">Needs category <b>${c.uncategorized}</b></button>
         <button data-f="done" class="${BOOKS.filter === 'done' ? 'active' : ''}">Confirmed</button>
         <button data-f="all" class="${BOOKS.filter === 'all' ? 'active' : ''}">All <b>${c.total}</b></button>
+        <button data-f="cleanup" class="${BOOKS.filter === 'cleanup' ? 'active' : ''}">Category cleanup${d ? ` <b>${cleanupCount()}</b>` : ''}</button>
       </div>
       <span class="spacer"></span>
       <select id="booksRange" title="Which transactions to show">${opt(BOOK_RANGES, BOOKS.range)}</select>
@@ -2781,10 +2812,11 @@ function paintBooks(){
     </div>
     ${BOOKS.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load transactions: ${esc(BOOKS.error)}</div></div>` : ''}
     ${!d && BOOKS.loading ? `<div class="panel fin-loading"><span class="spin"></span>Pulling transactions from QuickBooks…</div>` : ''}
+    ${d && BOOKS.filter === 'cleanup' ? cleanupHTML() : ''}
     ${d && BOOKS.filter === 'review' && easy.length > 1 ? `<div class="books-bulk"><span>${easy.length} already have a category. Look them over, then confirm them together.</span><button class="btn small" id="booksBulk">✓ Confirm all ${easy.length} categorized</button></div>` : ''}
-    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${BOOKS.filter === 'review' ? '🎉 All caught up. Every transaction in this range is confirmed.' : 'Nothing here.'}</div>`) : ''}
-    ${list.length > shown.length ? `<div style="text-align:center;margin-top:12px"><button class="btn" id="booksMore">Show more (${list.length - shown.length} left)</button></div>` : ''}
-    ${d ? `<p class="fin-note">Every expense, deposit, bill, transfer and payment in QuickBooks from ${esc(fmtDate(d.since))} on. Changing a category saves it to QuickBooks. Suggestions come from how you’ve categorized the same payee before. Matching deposits to invoices and bank-feed “For Review” items still happen in QuickBooks.</p>` : ''}`;
+    ${d && BOOKS.filter !== 'cleanup' ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${BOOKS.filter === 'review' ? '🎉 All caught up. Every transaction in this range is confirmed.' : 'Nothing here.'}</div>`) : ''}
+    ${BOOKS.filter !== 'cleanup' && list.length > shown.length ? `<div style="text-align:center;margin-top:12px"><button class="btn" id="booksMore">Show more (${list.length - shown.length} left)</button></div>` : ''}
+    ${d && BOOKS.filter !== 'cleanup' ? `<p class="fin-note">Every expense, deposit, bill, transfer and payment in QuickBooks from ${esc(fmtDate(d.since))} on. Changing a category saves it to QuickBooks. Suggestions come from how you’ve categorized the same payee before. Matching deposits to invoices and bank-feed “For Review” items still happen in QuickBooks.</p>` : ''}`;
   wireBooks();
 }
 function acctName(id){ return BOOKS.data?.accounts?.find(a => a.id === id)?.full || ''; }
@@ -2892,7 +2924,12 @@ async function confirmTxn(k){
 }
 function wireBooks(){
   const box = $('#booksBox'); if (!box) return;
-  box.querySelector('#booksFilter')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; BOOKS.filter = b.dataset.f; BOOKS.limit = 60; paintBooks(); });
+  box.querySelector('#booksFilter')?.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; BOOKS.filter = b.dataset.f; BOOKS.limit = 60;
+    if (b.dataset.f === 'cleanup' && BOOKS.range !== 'lastyear') { BOOKS.range = 'lastyear'; try { localStorage.setItem('kvhq.books.range', BOOKS.range); } catch (e) {} loadBooks(); return; }
+    paintBooks();
+  });
+  if (BOOKS.filter === 'cleanup') wireCleanup(box);
   const rng = box.querySelector('#booksRange'); if (rng) rng.onchange = () => { BOOKS.range = rng.value; try { localStorage.setItem('kvhq.books.range', BOOKS.range); } catch (e) {} loadBooks(); };
   const rl = box.querySelector('#booksReload'); if (rl) rl.onclick = loadBooks;
   const more = box.querySelector('#booksMore'); if (more) more.onclick = () => { BOOKS.limit = (BOOKS.limit || 60) + 60; paintBooks(); };
@@ -2923,6 +2960,215 @@ function wireBooks(){
   box.querySelectorAll('[data-undo]').forEach(b => b.onclick = async () => {
     const x = findTxn(b.dataset.undo);
     try { await qboCall('unconfirm', { type: x.type, id: x.id }); replaceTxn({ ...x, reviewed: false, confirmedAt: null }); paintBooks(); } catch (e) { fail(e); }
+  });
+}
+
+/* ----- Category cleanup (Bookkeeping → Cleanup): new chart of accounts + move transactions off old categories ----- */
+// The plan from "P&L Category Cleanup — Proposed Chart of Accounts" (Nov 2026). Suggestions only:
+// nothing changes in QuickBooks until Chris clicks a button, and every move can be changed first.
+const COA = {
+  // parent: 'cogs' = Cost of Goods Sold, 'opex' = Operating Expenses. from = existing account renamed into this one.
+  targets: [
+    { key:'media',    name:'Media Services Income',   section:'Income',           type:'Income', from:'1150040004' },
+    { key:'otherinc', name:'Other Income',            section:'Income',           type:'Other Income', sub:'OtherMiscellaneousIncome' },
+    { key:'photo',    name:'Photo Editing',           section:'Cost of services', from:'1150040001' },
+    { key:'video',    name:'Video Editing',           section:'Cost of services', from:'1150040000' },
+    { key:'floor',    name:'Floor Plans',             section:'Cost of services', from:'1150040003' },
+    { key:'spiro',    name:'Spiro Delivery Fees',     section:'Cost of services', from:'1150040005' },
+    { key:'merchant', name:'Merchant & Payment Fees', section:'Cost of services', type:'Cost of Goods Sold', sub:'OtherCostsOfServiceCos', parent:'cogs' },
+    { key:'software', name:'Software & Subscriptions', section:'Operating expenses', from:'1150040006' },
+    { key:'team',     name:'Team & Admin Support',    section:'Operating expenses', from:'1150040008' },
+    { key:'edu',      name:'Education & Coaching',    section:'Operating expenses', from:'83', parent:'opex' },
+    { key:'gear',     name:'Gear & Equipment',        section:'Operating expenses', from:'1150040007' },
+    { key:'supplies', name:'Supplies',                section:'Operating expenses', type:'Expense', sub:'SuppliesMaterials', parent:'opex' },
+    { key:'marketing',name:'Marketing & Advertising', section:'Operating expenses', from:'1150040009' },
+    { key:'dues',     name:'Dues & Memberships',      section:'Operating expenses', type:'Expense', sub:'DuesSubscriptions', parent:'opex' },
+    { key:'travel',   name:'Travel',                  section:'Operating expenses', type:'Expense', sub:'Travel', parent:'opex' },
+    { key:'vehicle',  name:'Vehicle & Fuel',          section:'Operating expenses', from:'1150040010' },
+    { key:'meals',    name:'Meals',                   section:'Operating expenses', type:'Expense', sub:'EntertainmentMeals', parent:'opex' },
+    { key:'taxes',    name:'Taxes, Licenses & Fees',  section:'Operating expenses', type:'Expense', sub:'TaxesPaid', parent:'opex' },
+    { key:'bank',     name:'Bank Fees & Interest',    section:'Operating expenses', type:'Expense', sub:'BankCharges', parent:'opex' },
+  ],
+  // Old category (QuickBooks account id) → where its transactions go by default.
+  moves: {
+    '26':'media', '28':'media', '5':'otherinc',
+    '108':'software', '84':'software', '1150040002':'team', '110':'supplies', '106':'supplies',
+    '51':'travel', '114':'travel', '82':'bank', '43':'bank', '2':'bank',
+    '45':'meals', '101':'meals', '102':'meals', '53':'vehicle', '123':'vehicle', '124':'vehicle',
+    '46':'gear', '50':'taxes', '32':'taxes', '30':'dues',
+  },
+  // Vendor rules win over the default above. to:null = "your call" (no suggestion).
+  rules: [
+    { re:/\birs\b/i, to:null, why:'Personal or estimated income tax? Usually an owner draw, not an expense' },
+    { re:/earnnest/i, to:null, why:'Earnest-money payment or refund: owner draw if personal' },
+    { re:/stripe ?connect/i, to:null, why:'What was this payment?' },
+    { re:/link\.com/i, to:null, why:'What was this payment?' },
+    { re:/awhittington|anthonywh/i, to:null, why:'Contract photographer or VA?' },
+    { re:/autohdr/i, to:'photo', dir:'out' },
+    { re:/cubicasa/i, to:'floor', dir:'out' },
+    { re:/spiro/i, to:'spiro', dir:'out' },
+    { re:/anthropic|openai|chatgpt|creativefabrica|intuit|qbooks/i, to:'software', dir:'out' },
+    { re:/edreams|mytrip|metropolis|hotel/i, to:'travel', dir:'out' },
+    { re:/weigel|pilot|\bbp\b|shell|exxon|marathon/i, to:'vehicle', dir:'out', from:['51','114','53','123','124'] },
+    { re:/tnsos|tn sos|servicefee tn|tn state revenue/i, to:'taxes', dir:'out' },
+    { re:/realtor association/i, to:'dues', dir:'out' },
+    { re:/thunders/i, to:'video', dir:'out' },
+    { re:/onlinejobs/i, to:'team', dir:'out' },
+    { re:/aalto/i, to:'media', dir:'in' },
+  ],
+  // Active categories that should be made inactive once nothing is left on them.
+  retire: ['34', '52'],
+};
+const CLEAN = { pick:{}, open:{}, busy:false, progress:'', setupBusy:false };
+const coaAccounts = () => BOOKS.data?.accounts || [];
+function coaParentId(p){
+  const want = p === 'cogs' ? 'Cost of Goods Sold' : 'Operating Expenses';
+  return coaAccounts().find(a => a.name === want && !a.parent)?.id || (p === 'cogs' ? '29' : '40');
+}
+// Where each target stands in QuickBooks right now: ready, needs a rename/move, or needs creating.
+function coaStatus(t){
+  const accts = coaAccounts();
+  if (t.from) {
+    const a = accts.find(x => x.id === t.from);
+    const named = accts.find(x => x.name === t.name && x.id !== t.from);
+    if (!a) return named ? { state:'ok', id: named.id } : { state:'missing' };
+    const parentOk = !t.parent || a.parent === coaParentId(t.parent);
+    if (a.name === t.name && parentOk) return { state:'ok', id: a.id };
+    return { state:'rename', id: a.id, was: a.name };
+  }
+  const a = accts.find(x => x.name === t.name);
+  return a ? { state:'ok', id: a.id } : { state:'create' };
+}
+function coaTargetId(key){ const t = COA.targets.find(x => x.key === key); if (!t) return null; const s = coaStatus(t); return s.state === 'ok' ? s.id : null; }
+// Every editable line that sits on an old category or matches a vendor rule.
+function cleanupLines(){
+  const out = [], accts = new Map(coaAccounts().map(a => [a.id, a]));
+  for (const x of BOOKS.data?.items || []) {
+    if (!x.editable) continue;
+    const text = [x.payee, x.memo, ...x.lines.map(l => l.desc)].join(' ');
+    for (const l of x.lines) {
+      if (!l.editable || !l.account?.id) continue;
+      const from = l.account.id, acct = accts.get(from);
+      const pl = !acct || ['Revenue', 'Expense'].includes(acct.classification); // inactive (deleted) accounts aren't in the list
+      if (!pl) continue;
+      const dir = acct ? (acct.classification === 'Revenue' ? 'in' : 'out') : (x.direction === 'in' ? 'in' : 'out');
+      const rule = COA.rules.find(r => r.re.test(text) && (!r.dir || r.dir === dir) && (!r.from || r.from.includes(from)));
+      let key, why = '';
+      if (rule) { key = rule.to; why = rule.why || ''; }
+      else if (COA.moves[from]) key = COA.moves[from];
+      else continue;
+      const toId = key ? coaTargetId(key) : null;
+      if (key && toId === from) continue;                       // already where it belongs
+      out.push({ x, l, k: tkey(x) + '|' + l.id, from, fromName: l.account.name || 'Old category', key, toId, why });
+    }
+  }
+  return out;
+}
+const cleanupCount = () => BOOKS.data ? cleanupLines().length : 0;
+function cleanupHTML(){
+  const lines = cleanupLines();
+  const setup = COA.targets.map(t => ({ t, s: coaStatus(t) }));
+  const todo = setup.filter(r => r.s.state !== 'ok');
+  const retire = COA.retire.map(id => coaAccounts().find(a => a.id === id)).filter(Boolean)
+    .filter(a => !lines.some(c => c.from === a.id) && !coaAccounts().some(o => o.parent === a.id));
+  const nameOf = key => COA.targets.find(t => t.key === key)?.name || '';
+  const choice = c => CLEAN.pick[c.k] !== undefined ? CLEAN.pick[c.k] : (c.toId || '');
+  const ready = lines.filter(c => choice(c));
+  // groups: "your call" first, then by old category
+  const groups = new Map();
+  for (const c of lines) { const g = c.key === null ? '__decide' : c.fromName; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(c); }
+  const order = [...groups.keys()].sort((a, b) => (a === '__decide' ? -1 : b === '__decide' ? 1 : groups.get(b).length - groups.get(a).length));
+  const row = c => {
+    const v = choice(c);
+    return `<div class="cl-row ${c.key === null && !v ? 'decide' : ''}">
+      <div class="cl-main"><div class="cl-payee">${esc(c.x.payee || TXN_LABEL[c.x.type])}</div>
+        <div class="cl-meta">${esc(fmtShort(c.x.date))} · ${esc(c.fromName)}${c.why ? ` · <b>${esc(c.why)}</b>` : ''}</div></div>
+      <div class="cl-amt ${c.x.direction}">${c.x.direction === 'in' ? '+' : '-'}${usd(c.l.amount, true)}</div>
+      <select class="cat-select cl-pick" data-ck="${esc(c.k)}">${acctOptions(c.x, v)}</select>
+    </div>`;
+  };
+  return `
+    <div class="panel cl-step">
+      <div class="cl-step-h"><span class="cl-num">1</span><div><h3>Set up the new categories</h3><p>${todo.length ? `${todo.length} of ${COA.targets.length} need to be created or renamed in QuickBooks. Nothing moves yet.` : 'All set: every category from the plan exists in QuickBooks.'}</p></div>
+        ${todo.length ? `<button class="btn primary" id="clSetup" ${CLEAN.setupBusy ? 'disabled' : ''}>${CLEAN.setupBusy ? `<span class="spin"></span>${esc(CLEAN.progress)}` : `Set up ${todo.length} categor${todo.length === 1 ? 'y' : 'ies'}`}</button>` : ''}</div>
+      <details ${todo.length ? 'open' : ''}><summary>The new list (${COA.targets.length})</summary>
+        <table class="cl-table">${['Income', 'Cost of services', 'Operating expenses'].map(sec => `<tr class="cl-sec"><td colspan="2">${sec}</td></tr>` + setup.filter(r => r.t.section === sec).map(({ t, s }) =>
+          `<tr><td>${esc(t.name)}</td><td>${s.state === 'ok' ? '<span class="pill ok">Ready</span>' : s.state === 'rename' ? `<span class="pill warn">Rename from “${esc(s.was)}”</span>` : s.state === 'create' ? '<span class="pill warn">New</span>' : '<span class="pill warn">Not found</span>'}</td></tr>`).join('')).join('')}</table>
+      </details>
+    </div>
+    <div class="panel cl-step">
+      <div class="cl-step-h"><span class="cl-num">2</span><div><h3>Move transactions off the old categories</h3><p>${lines.length ? `${lines.length} transaction line${lines.length === 1 ? '' : 's'} since ${esc(fmtDate(BOOKS.data.since))}. Each has a suggested category you can change; the ones marked <b>your call</b> have none.` : 'Nothing left on the old categories. 🎉'}</p></div>
+        ${ready.length ? `<button class="btn primary" id="clMoveAll" ${CLEAN.busy || todo.length ? 'disabled' : ''} ${todo.length ? 'title="Set up the categories first"' : ''}>${CLEAN.busy ? `<span class="spin"></span>${esc(CLEAN.progress)}` : `Move all ${ready.length}`}</button>` : ''}</div>
+      ${todo.length && lines.length ? `<div class="cl-note">Finish step 1 first: suggestions point at categories that don’t exist in QuickBooks yet.</div>` : ''}
+      ${order.map(g => {
+        const list = groups.get(g), gReady = list.filter(c => choice(c)), open = CLEAN.open[g] ?? (g === '__decide');
+        const to = g === '__decide' ? '' : [...new Set(list.map(c => c.key).filter(Boolean))].map(nameOf);
+        const total = list.reduce((a, c) => a + c.l.amount, 0);
+        return `<div class="cl-group ${g === '__decide' ? 'decide' : ''}">
+          <div class="cl-gh" data-g="${esc(g)}"><span class="cl-caret">${open ? '▾' : '▸'}</span>
+            <div class="cl-gt"><b>${g === '__decide' ? 'Your call' : esc(g)}</b>${to ? ` <span class="muted">→ ${esc(to.join(', '))}</span>` : ''}<div class="cl-meta">${list.length} line${list.length === 1 ? '' : 's'} · ${usd(total)}</div></div>
+            ${gReady.length ? `<button class="btn small" data-gmove="${esc(g)}" ${CLEAN.busy || todo.length ? 'disabled' : ''}>Move ${gReady.length}</button>` : ''}</div>
+          ${open ? `<div class="cl-rows">${list.slice(0, CLEAN.open[g + '|more'] ? 9999 : 40).map(row).join('')}${list.length > 40 && !CLEAN.open[g + '|more'] ? `<button class="btn small ghost" data-gmore="${esc(g)}">Show all ${list.length}</button>` : ''}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="panel cl-step">
+      <div class="cl-step-h"><span class="cl-num">3</span><div><h3>Retire the old categories</h3><p>Deleted categories drop off the P&amp;L by themselves once they’re empty. ${retire.length ? 'These active ones are empty now and can be made inactive:' : 'Nothing else to retire right now.'}</p></div></div>
+      ${retire.map(a => `<div class="cl-retire"><span>${esc(a.full)}</span><button class="btn small" data-retire="${esc(a.id)}">Make inactive</button></div>`).join('')}
+    </div>
+    <p class="fin-note">Moving a transaction saves its new category to QuickBooks and confirms it here. Your totals don’t change, only which line each dollar sits on.</p>`;
+}
+async function cleanupSetup(){
+  const todo = COA.targets.map(t => ({ t, s: coaStatus(t) })).filter(r => r.s.state !== 'ok');
+  const list = todo.map(({ t, s }) => s.state === 'rename' ? `• Rename “${s.was}” → ${t.name}` : `• Create ${t.name}`).join('\n');
+  if (!confirm(`Make these changes in QuickBooks?\n\n${list}\n\nNo transactions move yet.`)) return;
+  CLEAN.setupBusy = true; let done = 0, errs = [];
+  for (const { t, s } of todo) {
+    CLEAN.progress = `${done + 1} of ${todo.length}…`; paintBooks();
+    try {
+      if (s.state === 'rename') await qboCall('account_save', { id: s.id, name: t.name, ...(t.parent ? { parentId: coaParentId(t.parent) } : {}) });
+      else await qboCall('account_save', { name: t.name, type: t.type, subType: t.sub, ...(t.parent ? { parentId: coaParentId(t.parent) } : {}) });
+      done++;
+    } catch (e) { errs.push(`${t.name}: ${e.message}`); }
+  }
+  CLEAN.setupBusy = false; CLEAN.progress = '';
+  if (errs.length) alert(`Set up ${done} of ${todo.length}. These didn’t work:\n\n${errs.join('\n')}`); else toast(`${done} categories set up in QuickBooks`);
+  await loadBooks();
+}
+async function cleanupMove(lines){
+  const choice = c => CLEAN.pick[c.k] !== undefined ? CLEAN.pick[c.k] : (c.toId || '');
+  const byTxn = new Map();
+  for (const c of lines) { const v = choice(c); if (!v || v === c.from) continue; const k = tkey(c.x); if (!byTxn.has(k)) byTxn.set(k, { type: c.x.type, id: c.x.id, changes: [] }); byTxn.get(k).changes.push({ lineId: c.l.id, accountId: v }); }
+  const list = [...byTxn.values()];
+  if (!list.length) return toast('Pick a category first');
+  if (list.length > 1 && !confirm(`Move ${list.length} transaction${list.length === 1 ? '' : 's'} to their new categories in QuickBooks?`)) return;
+  CLEAN.busy = true; let moved = 0; const errs = [];
+  for (let i = 0; i < list.length; i += 10) {
+    CLEAN.progress = `Moving ${Math.min(i + 10, list.length)} of ${list.length}…`; paintBooks();
+    try {
+      const r = await qboCall('categorize_batch', { items: list.slice(i, i + 10) });
+      (r.items || []).forEach(it => { replaceTxn(it); moved++; });
+      (r.errors || []).forEach(e => errs.push(e));
+    } catch (e) { errs.push({ error: e.message }); if (e.notConnected) break; }
+  }
+  for (const c of lines) delete CLEAN.pick[c.k];
+  CLEAN.busy = false; CLEAN.progress = '';
+  if (errs.length) { console.warn('Cleanup errors', errs); alert(`Moved ${moved} of ${list.length}. ${errs.length} didn’t save:\n\n${errs.slice(0, 8).map(e => e.error).join('\n')}`); }
+  else toast(`Moved ${moved} transaction${moved === 1 ? '' : 's'} in QuickBooks`);
+  paintBooks();
+}
+function wireCleanup(box){
+  const setup = box.querySelector('#clSetup'); if (setup) setup.onclick = cleanupSetup;
+  const all = box.querySelector('#clMoveAll'); if (all) all.onclick = () => cleanupMove(cleanupLines());
+  box.querySelectorAll('[data-g]').forEach(h => h.onclick = e => { if (e.target.closest('button')) return; const g = h.dataset.g; CLEAN.open[g] = !(CLEAN.open[g] ?? (g === '__decide')); paintBooks(); });
+  box.querySelectorAll('[data-gmore]').forEach(b => b.onclick = () => { CLEAN.open[b.dataset.gmore + '|more'] = true; paintBooks(); });
+  box.querySelectorAll('[data-gmove]').forEach(b => b.onclick = () => { const g = b.dataset.gmove; cleanupMove(cleanupLines().filter(c => (c.key === null ? '__decide' : c.fromName) === g)); });
+  box.querySelectorAll('.cl-pick').forEach(sel => sel.onchange = () => { CLEAN.pick[sel.dataset.ck] = sel.value; paintBooks(); });
+  box.querySelectorAll('[data-retire]').forEach(b => b.onclick = async () => {
+    const a = coaAccounts().find(x => x.id === b.dataset.retire);
+    if (!confirm(`Make “${a?.full}” inactive in QuickBooks? It disappears from the category picker; past transactions keep it.`)) return;
+    b.disabled = true;
+    try { await qboCall('account_active', { id: b.dataset.retire, active: false }); toast('Made inactive'); await loadBooks(); } catch (e) { fail(e); b.disabled = false; }
   });
 }
 

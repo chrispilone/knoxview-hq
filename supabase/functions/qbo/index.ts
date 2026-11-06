@@ -430,10 +430,10 @@ async function markReviewed(list: { type: string; id: string; updated: string | 
 
 // Change the account on one or more lines of a Purchase, Bill or Deposit, write it to QuickBooks,
 // and mark it confirmed.
-async function recategorize(type: string, id: string, changes: { lineId: string; accountId: string }[], uid: string) {
+async function recategorize(type: string, id: string, changes: { lineId: string; accountId: string }[], uid: string, preloaded?: any[]) {
   if (!EDITABLE.has(type) || !/^\d+$/.test(id)) throw new Error('This kind of transaction can’t be recategorized here');
   if (!changes.length || changes.some(c => !/^\d+$/.test(String(c.lineId)) || !/^\d+$/.test(String(c.accountId)))) throw new Error('Nothing to change');
-  const accounts = await chartOfAccounts();
+  const accounts = preloaded || await chartOfAccounts();
   if (changes.some(c => !accounts.find((a: any) => a.id === String(c.accountId)))) throw new Error('That category isn’t an active account in QuickBooks');
   const cur = (await qbo(`${type.toLowerCase()}/${id}`))?.[type];
   if (!cur) throw new Error('Transaction not found in QuickBooks');
@@ -452,6 +452,58 @@ async function recategorize(type: string, id: string, changes: { lineId: string;
   const x = normalizeTxn(type, upd, accts);
   await markReviewed([{ type, id: x.id, updated: x.updated }], uid);
   return { ...x, reviewed: true, confirmedAt: new Date().toISOString(), changedSinceReview: false };
+}
+
+/* ---------- Chart of accounts: list all, create, rename / move, make inactive ---------- */
+async function allAccounts() {
+  const d = await qbo('query', { query: 'select * from Account where Active in (true, false) maxresults 1000' });
+  return (d?.QueryResponse?.Account || []).map((a: any) => ({
+    id: String(a.Id), name: a.Name, full: a.FullyQualifiedName || a.Name, type: a.AccountType, sub: a.AccountSubType || null,
+    classification: a.Classification, parent: a.ParentRef?.value || null, active: !!a.Active,
+  })).sort((a: any, b: any) => a.full.localeCompare(b.full));
+}
+const ACCOUNT_TYPES = new Set(['Income', 'Other Income', 'Expense', 'Other Expense', 'Cost of Goods Sold']);
+async function saveAccount(body: any) {
+  const name = String(body.name || '').trim();
+  if (!name || name.length > 100 || /[:"]/.test(name)) throw new Error('Category names can’t be empty or contain : or "');
+  const parentId = body.parentId ? String(body.parentId) : null;
+  if (parentId && !/^\d+$/.test(parentId)) throw new Error('Bad parent category');
+  if (body.id) {
+    const id = String(body.id); if (!/^\d+$/.test(id)) throw new Error('Bad category');
+    const cur = (await qbo(`account/${id}`))?.Account;
+    if (!cur) throw new Error('Category not found in QuickBooks');
+    if (!ACCOUNT_TYPES.has(cur.AccountType)) throw new Error('Only Profit & Loss categories can be changed here');
+    const upd: any = { ...cur, Name: name };
+    if ('parentId' in body) { if (parentId) { upd.SubAccount = true; upd.ParentRef = { value: parentId }; } else { upd.SubAccount = false; delete upd.ParentRef; } }
+    delete upd.FullyQualifiedName; delete upd.CurrentBalance; delete upd.CurrentBalanceWithSubAccounts;
+    return (await qbo('account', {}, upd))?.Account;
+  }
+  const type = String(body.type || '');
+  if (!ACCOUNT_TYPES.has(type)) throw new Error('Pick a category type');
+  const acc: any = { Name: name, AccountType: type };
+  if (body.subType) acc.AccountSubType = String(body.subType);
+  if (parentId) { acc.SubAccount = true; acc.ParentRef = { value: parentId }; }
+  return (await qbo('account', {}, acc))?.Account;
+}
+async function setAccountActive(id: string, active: boolean) {
+  if (!/^\d+$/.test(id)) throw new Error('Bad category');
+  const cur = (await qbo(`account/${id}`))?.Account;
+  if (!cur) throw new Error('Category not found in QuickBooks');
+  if (!ACCOUNT_TYPES.has(cur.AccountType)) throw new Error('Only Profit & Loss categories can be changed here');
+  const upd: any = { ...cur, Active: active };
+  delete upd.FullyQualifiedName; delete upd.CurrentBalance; delete upd.CurrentBalanceWithSubAccounts;
+  return (await qbo('account', {}, upd))?.Account;
+}
+// Move several transactions at once (one chart-of-accounts load); each saves and confirms on its own.
+async function recategorizeBatch(list: { type: string; id: string; changes: { lineId: string; accountId: string }[] }[], uid: string) {
+  await accessToken();
+  const accounts = await chartOfAccounts();
+  const items: any[] = [], errors: any[] = [];
+  for (const x of list) {
+    try { items.push(await recategorize(x.type, x.id, x.changes, uid, accounts)); }
+    catch (e) { errors.push({ type: x.type, id: x.id, error: String((e as Error)?.message || e) }); }
+  }
+  return { items, errors };
 }
 
 async function saveSnapshot(data: unknown, uid: string) {
@@ -551,6 +603,21 @@ Deno.serve(async (req) => {
     if (action === 'categorize') {
       const changes = Array.isArray(body.changes) ? body.changes.slice(0, 100).map((c: any) => ({ lineId: String(c.lineId), accountId: String(c.accountId) })) : [];
       return json(req, { item: await recategorize(String(body.type), String(body.id), changes, uid) });
+    }
+
+    if (action === 'categorize_batch') {
+      const list = Array.isArray(body.items) ? body.items.slice(0, 25).map((x: any) => ({ type: String(x.type), id: String(x.id),
+        changes: (Array.isArray(x.changes) ? x.changes : []).slice(0, 100).map((c: any) => ({ lineId: String(c.lineId), accountId: String(c.accountId) })) })) : [];
+      return json(req, await recategorizeBatch(list, uid));
+    }
+    if (action === 'accounts') return json(req, { accounts: await allAccounts() });
+    if (action === 'account_save') {
+      const a = await saveAccount(body);
+      return json(req, { account: a ? { id: String(a.Id), name: a.Name, full: a.FullyQualifiedName || a.Name, active: !!a.Active } : null });
+    }
+    if (action === 'account_active') {
+      const a = await setAccountActive(String(body.id || ''), !!body.active);
+      return json(req, { account: a ? { id: String(a.Id), name: a.Name, active: !!a.Active } : null });
     }
 
     return json(req, { error: 'Unknown action' }, 400);
