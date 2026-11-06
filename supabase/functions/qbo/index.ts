@@ -39,7 +39,11 @@ async function tokenRequest(params: Record<string, string>) {
     body: new URLSearchParams(params),
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) { const e = new Error(d.error_description || d.error || `QuickBooks sign-in error ${r.status}`); (e as any).code = d.error; throw e; }
+  if (!r.ok) {
+    const tid = r.headers.get('intuit_tid') || '';
+    console.error('QuickBooks sign-in error', JSON.stringify({ grant: params.grant_type, status: r.status, error: d.error ?? null, intuit_tid: tid }));
+    const e = new Error((d.error_description || d.error || `QuickBooks sign-in error ${r.status}`) + (tid ? ` (Intuit ref ${tid})` : '')); (e as any).code = d.error; throw e;
+  }
   return d;
 }
 const expiry = (secs: number | undefined, fallback: number) => new Date(Date.now() + (secs ?? fallback) * 1000).toISOString();
@@ -71,8 +75,12 @@ async function qbo(path: string, params: Record<string, string> = {}) {
     if (r.status === 401 && attempt === 0) { ({ token } = await accessToken(true)); continue; }
     const d = await r.json().catch(() => ({}));
     if (!r.ok) {
+      // intuit_tid identifies the request for Intuit support; keep it in the logs and the error text.
+      const tid = r.headers.get('intuit_tid') || '';
       const f = d?.Fault?.Error?.[0] || d?.fault?.error?.[0];
-      throw new Error(f ? `${f.Message || f.message}${f.Detail || f.detail ? ': ' + (f.Detail || f.detail) : ''}` : `QuickBooks error ${r.status}`);
+      const msg = f ? `${f.Message || f.message}${f.Detail || f.detail ? ': ' + (f.Detail || f.detail) : ''}` : `QuickBooks error ${r.status}`;
+      console.error('QuickBooks API error', JSON.stringify({ path, status: r.status, intuit_tid: tid, fault: f ?? null }));
+      throw new Error(tid ? `${msg} (Intuit ref ${tid})` : msg);
     }
     return d;
   }
