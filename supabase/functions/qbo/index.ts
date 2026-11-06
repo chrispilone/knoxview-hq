@@ -228,6 +228,28 @@ const EDITABLE = new Set(['Purchase', 'Bill', 'Deposit']);
 const UNCAT = /uncategori[sz]ed|ask my accountant/i;
 const isoDate = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s)) ? String(s) : null;
 
+// Bank-feed transactions often have no payee, only the bank's description
+// ("Electronic Withdrawal Wise Us Inc", "Web Authorized Pmt Spiro.media"). Turn that into a readable
+// name plus a short key, so suggestions can group "Wise Us Inc" and "Wise Ltd" together.
+const BANK_NOISE = new Set('electronic withdrawal deposit web authorized auth pmt payment purchase recurring card debit credit pos ach online mobile banking transfer on ppd ccd id ref checkcard visa mastercard bill pay paid sq tst des indn co'.split(' '));
+const NAME_SUFFIX = new Set('inc ltd llc us co corp company the www com net'.split(' '));
+function bankName(desc: string) {
+  const raw = String(desc || '').replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ').replace(/[#*]/g, ' ').split(/\s+/).filter(Boolean);
+  const root = (w: string) => w.toLowerCase().replace(/^www\./, '').replace(/\.(com|net|io|media|co|us)\.?$/, '').replace(/[^a-z0-9&]/g, '');
+  const words: string[] = [];
+  for (const w of raw) {
+    if (/\d/.test(w) || !/[a-z]/i.test(w)) continue;                 // card refs, phone numbers, store numbers, dashes
+    if (words.some(x => root(x) === root(w))) continue;               // "Cubicasa Www.cubicasa." / "Dropbox Dropbox.com"
+    words.push(w);
+  }
+  if (words.length > 1 && /^[A-Z]{2}$/.test(words[words.length - 1])) words.pop(); // trailing state code
+  if (!words.length) return { label: '', key: '' };
+  const kept = words.filter(w => !BANK_NOISE.has(root(w)));
+  const label = (kept.length ? kept : words).join(' ').replace(/[.,;:]+$/, '');
+  const keyWords = [...new Set(label.split(/\s+/).map(root).filter(w => w.length > 2 && !NAME_SUFFIX.has(w)))];
+  return { label, key: keyWords.slice(0, 2).join(' ') || label.toLowerCase() };
+}
+
 async function queryAll(entity: string, where: string) {
   const out: any[] = [];
   for (let start = 1; start < 20000; start += 1000) {
@@ -275,7 +297,13 @@ function normalizeTxn(type: string, t: any, accts: Map<string, any>) {
   else if (type === 'BillPayment') { account = ref(t.CheckPayment?.BankAccountRef || t.CreditCardPayment?.CCAccountRef); }
   else if (type === 'JournalEntry') { direction = 'journal'; amount = (t.Line || []).filter((l: any) => l.JournalEntryLineDetail?.PostingType === 'Debit').reduce((a: number, l: any) => a + num(l.Amount), 0); }
   const uncategorized = lines.some(l => l.editable && (!l.account || UNCAT.test(l.account.name)));
+  let payeeKey = payee.trim().toLowerCase(), payeeFromBank = false;
+  if (!payee) {
+    const b = bankName(t.PrivateNote || lines[0]?.desc || '');
+    if (b.label) { payee = b.label; payeeKey = b.key; payeeFromBank = true; }
+  }
   return {
+    payeeKey, payeeFromBank,
     type, id: String(t.Id), sync: String(t.SyncToken ?? ''), date: t.TxnDate, amount: round2(amount), direction, payee,
     account, memo: t.PrivateNote || '', doc: t.DocNumber || '', updated: t.MetaData?.LastUpdatedTime || null,
     created: t.MetaData?.CreateTime || null, lines, editable: EDITABLE.has(type) && lines.some(l => l.editable), uncategorized,
@@ -296,15 +324,15 @@ async function booksReview(since: string) {
   // Payee suggestions: the account each payee is most often categorized to (ignoring uncategorized).
   const tally = new Map<string, Map<string, number>>();
   for (const x of all) {
-    if (!x.editable || !x.payee) continue;
-    const key = x.payee.trim().toLowerCase();
+    if (!x.editable || !x.payeeKey) continue;
+    const key = x.payeeKey;
     for (const l of x.lines) {
       if (!l.editable || !l.account || UNCAT.test(l.account.name)) continue;
       const m = tally.get(key) || new Map(); m.set(l.account.id, (m.get(l.account.id) || 0) + 1); tally.set(key, m);
     }
   }
-  const suggestFor = (payee: string) => {
-    const m = tally.get(payee.trim().toLowerCase()); if (!m) return null;
+  const suggestFor = (key: string) => {
+    const m = tally.get(key); if (!m) return null;
     const [id, count] = [...m.entries()].sort((a, b) => b[1] - a[1])[0];
     const total = [...m.values()].reduce((a, b) => a + b, 0);
     const a = accts.get(id); return a ? { id, name: a.full, count, total } : null;
@@ -316,7 +344,7 @@ async function booksReview(since: string) {
   const items = inWindow.map(x => {
     const r: any = rev.get(`${x.type}:${x.id}`);
     const reviewed = !!r && (!x.updated || !r.qbo_updated || new Date(x.updated).getTime() <= new Date(r.qbo_updated).getTime() + 1000);
-    return { ...x, reviewed, confirmedAt: r?.confirmed_at || null, changedSinceReview: !!r && !reviewed, suggestion: x.editable && x.payee ? suggestFor(x.payee) : null };
+    return { ...x, reviewed, confirmedAt: r?.confirmed_at || null, changedSinceReview: !!r && !reviewed, suggestion: x.editable && x.payeeKey ? suggestFor(x.payeeKey) : null };
   }).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id.localeCompare(a.id));
   return {
     since, accounts, items,

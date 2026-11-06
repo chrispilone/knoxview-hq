@@ -2559,7 +2559,7 @@ function txnHTML(x){
   const sign = x.direction === 'out' ? '-' : x.direction === 'in' ? '+' : '';
   const editable = x.lines.filter(l => l.editable);
   const changed = Object.keys(edits).length > 0;
-  const samePayee = x.payee ? (BOOKS.data.items || []).filter(o => o !== x && !o.reviewed && o.editable && o.payee.trim().toLowerCase() === x.payee.trim().toLowerCase() && o.lines.filter(l => l.editable).length === 1) : [];
+  const samePayee = x.payeeKey ? (BOOKS.data.items || []).filter(o => o !== x && !o.reviewed && o.editable && o.payeeKey === x.payeeKey && o.lines.filter(l => l.editable).length === 1) : [];
   const sug = x.suggestion && editable.length === 1 && x.suggestion.id !== (edits[editable[0].id] || editable[0].account?.id) ? x.suggestion : null;
   const lineRow = l => {
     const cur = edits[l.id] || l.account?.id || '';
@@ -2580,7 +2580,7 @@ function txnHTML(x){
       <div class="txn-main">
         <div class="txn-payee">${esc(x.payee || TXN_LABEL[x.type])}</div>
         <div class="txn-meta">${esc(fmtShort(x.date))} · ${esc(TXN_LABEL[x.type] || x.type)}${x.account?.name ? ` · ${esc(x.account.name)}` : ''}${x.doc ? ` · #${esc(x.doc)}` : ''}</div>
-        ${x.memo ? `<div class="txn-memo">${esc(x.memo)}</div>` : (x.lines.length === 1 && x.lines[0].desc ? `<div class="txn-memo">${esc(x.lines[0].desc)}</div>` : '')}
+        ${x.memo ? `<div class="txn-memo" title="${esc(x.memo)}">${esc(x.memo)}</div>` : (x.lines.length === 1 && x.lines[0].desc ? `<div class="txn-memo">${esc(x.lines[0].desc)}</div>` : '')}
       </div>
       <div class="txn-amt ${x.direction}">${sign}${usd(x.amount, true)}</div>
     </div>
@@ -2633,7 +2633,7 @@ async function confirmTxn(k){
       delete BOOKS.edits[k]; replaceTxn(item);
       if (BOOKS.applyAll[k]) {
         const acct = Object.values(edits)[0];
-        const others = BOOKS.data.items.filter(o => o !== findTxn(k) && !o.reviewed && o.editable && o.payee.trim().toLowerCase() === x.payee.trim().toLowerCase() && o.lines.filter(l => l.editable).length === 1);
+        const others = BOOKS.data.items.filter(o => o !== findTxn(k) && !o.reviewed && o.editable && o.payeeKey === x.payeeKey && o.lines.filter(l => l.editable).length === 1);
         let ok = 0;
         for (const o of others) {
           BOOKS.busy[tkey(o)] = true; paintBooks();
