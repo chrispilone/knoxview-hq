@@ -5,25 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Knox View HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" sizes="32x32" href="https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/favicon-32.png" />
+<link rel="apple-touch-icon" href="https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/apple-touch-icon.png" />
+<meta name="theme-color" content="#1f3c66" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
-  --bg:#f5f6f8; --panel:#ffffff; --panel-2:#f0f2f5; --border:#e3e6eb; --text:#1b1f27; --muted:#6b7280;
-  --accent:#1f4e79; --accent-2:#2f6fab; --accent-soft:#e6eef7; --danger:#c0392b; --ok:#1e8e5a; --warn:#b7700a;
+  --bg:#f5f4f0; --panel:#ffffff; --panel-2:#eef1f5; --border:#e0e5ec; --text:#1a2638; --muted:#5f7389;
+  --accent:#1f3c66; --accent-2:#2f5486; --accent-soft:#e4eaf3; --on-accent:#ffffff; --brand-ink:#1f3c66;
+  --font-display:"Cormorant Garamond",Marcellus,Georgia,serif; --danger:#c0392b; --ok:#1e8e5a; --warn:#b7700a;
   --photo:#1f5d9e; --photo-soft:#e8f1fb; --video:#6b3aa0; --video-soft:#f3eafa;
   --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05); --radius:10px;
-  --s-not_started:#9aa3af; --s-in_progress:#2f6fab; --s-ready_for_review:#d48a0a; --s-needs_revision:#c0392b;
+  --s-not_started:#9aa3af; --s-in_progress:#2f5486; --s-ready_for_review:#d48a0a; --s-needs_revision:#c0392b;
   --s-approved:#1e8e5a; --s-delivered:#5b3fa6; --s-archived:#6b7280;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#0f1217; --panel:#171b22; --panel-2:#1e232c; --border:#2a303b; --text:#e7eaf0; --muted:#9aa3af;
-    --accent:#5b9bd5; --accent-2:#7fb3e3; --accent-soft:#1d2a3a; --warn:#e0a84a;
+  :root{ --bg:#13213a; --panel:#1a2c48; --panel-2:#22385a; --border:#2c4466; --text:#e7edf6; --muted:#a9b6c9;
+    --accent:#8ca6cc; --accent-2:#bccadc; --accent-soft:rgba(140,166,204,.16); --on-accent:#13213a; --brand-ink:#e7edf6; --warn:#e0a84a;
     --photo:#8cbcf0; --photo-soft:#1b2a3d; --video:#c5a3ec; --video-soft:#2a1f38;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);}
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Figtree,"Segoe UI",system-ui,-apple-system,sans-serif;font-size:14px}
 a{color:var(--accent-2)}
 button{font:inherit;cursor:pointer;color:inherit}
 input,select,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:100%}
@@ -31,11 +36,11 @@ textarea{min-height:80px;resize:vertical}
 label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 4px}
 .btn{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:8px 14px;font-weight:500;white-space:nowrap}
 .btn:hover{background:var(--panel-2)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn.primary:hover{background:var(--accent-2)}
 .btn.photo{background:var(--photo);border-color:var(--photo);color:#fff}
 .btn.video{background:var(--video);border-color:var(--video);color:#fff}
-@media (prefers-color-scheme: dark){ .btn.photo,.btn.video{color:#0f1217} }
+@media (prefers-color-scheme: dark){ .btn.photo,.btn.video{color:#13213a} }
 .btn.small{padding:5px 10px;font-size:13px}
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.danger{color:var(--danger)}
@@ -144,7 +149,7 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .wk{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .wk-head{display:grid;grid-template-columns:56px repeat(7,1fr);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:3}
 .wk-h{padding:8px 6px;border-left:1px solid var(--border);min-width:0}
-.wk-h.today .wk-dn b{background:var(--accent);color:#fff;border-radius:999px;padding:1px 7px}
+.wk-h.today .wk-dn b{background:var(--accent);color:var(--on-accent);border-radius:999px;padding:1px 7px}
 .wk-dn{font-size:12.5px;color:var(--muted);font-weight:600}
 .wk-dn b{font-size:15px;color:var(--text);margin-left:2px}
 .wk-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -194,7 +199,7 @@ main.chat-mode{max-width:none;padding:0}
 .ch-list{list-style:none;margin:0;padding:0 8px}
 .ch-list button{width:100%;display:flex;align-items:center;gap:10px;border:none;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--text)}
 .ch-list button:hover{background:var(--panel)}
-.ch-list button.active{background:var(--accent);color:#fff}
+.ch-list button.active{background:var(--accent);color:var(--on-accent)}
 .ch-list .ico{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--panel);border:1px solid var(--border)}
 .ch-list button.active .ico{background:rgba(255,255,255,.18);border-color:transparent}
 .ch-list .nm{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -259,19 +264,28 @@ main.chat-mode{max-width:none;padding:0}
 }
 
 /* Auth */
-.center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-.auth-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:28px;width:100%;max-width:380px}
-.auth-card h1{margin:0 0 4px;font-size:22px}
+.center-screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px 16px;position:relative;overflow:hidden;background:#1d3250 url("https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/hero-smokies-1400.jpg") center/cover no-repeat;isolation:isolate}
+@media (max-width:700px){ .center-screen{background-image:url("https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/hero-smokies-mobile.jpg")} }
+.center-screen::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(29,50,80,.78) 0%,rgba(29,50,80,.64) 45%,rgba(29,50,80,.86) 100%)}
+.auth-logo{width:190px;aspect-ratio:560/251;background:#e7edf6}
+.auth-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 50px rgba(10,20,40,.35);padding:28px;width:100%;max-width:380px}
+.auth-card h1{margin:0 0 4px;font-family:var(--font-display);font-size:30px;font-weight:600;line-height:1.1}
 .auth-card .field{margin-bottom:12px}
-.brand-mark{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);margin-bottom:18px}
-.brand-mark span{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px}
+.auth-card .btn.primary{padding:11px 14px;font-weight:600}
+.auth-foot{color:rgba(231,237,246,.7);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+/* Logo (mask, so it takes the current theme color) */
+.kv-logo{display:block;aspect-ratio:560/251;background:var(--brand-ink);-webkit-mask:url("https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/knoxview-logo-mask.png") center/contain no-repeat;mask:url("https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/knoxview-logo-mask.png") center/contain no-repeat}
+.kv-icon{display:none;width:40px;height:40px;border-radius:10px;background:#0f1a2e url("https://sqlkswwwpkzadrrbhqip.supabase.co/storage/v1/object/public/brand/apple-touch-icon.png") center/cover no-repeat;flex:none}
+.brand-mark{display:inline-flex;align-items:center;gap:10px;color:var(--accent);text-decoration:none}
+.brand-mark .kv-logo{width:128px}
+.hq-tag{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:3px 6px;align-self:flex-end;margin-bottom:6px}
 
 /* Layout */
 /* ----- Left menu ----- */
 .side{position:fixed;top:0;left:0;bottom:0;width:252px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:width .15s ease,transform .2s ease;padding-top:env(safe-area-inset-top)}
 .side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 12px 14px 20px}
-.side-head .brand-mark{margin:0;font-size:18px;gap:10px}
-.side-head .brand-mark span{width:34px;height:34px;border-radius:9px;font-size:14px}
+.side-head .brand-mark{margin:0}
+.side-head .brand-mark .kv-logo{width:132px}
 .icon-btn{border:none;background:none;width:40px;height:40px;border-radius:10px;display:inline-grid;place-items:center;color:var(--muted);padding:0;position:relative;flex:none;-webkit-tap-highlight-color:transparent}
 .icon-btn:hover{background:var(--panel-2);color:var(--text)}
 .icon-btn svg{width:20px;height:20px}
@@ -298,6 +312,8 @@ header.top{display:none}
   body.side-mini .app-body{margin-left:76px}
   body.side-mini .side .lbl{display:none}
   body.side-mini .side-head{flex-direction:column;padding:18px 0 12px}
+  body.side-mini .side-head .kv-logo,body.side-mini .side-head .hq-tag{display:none}
+  body.side-mini .side-head .kv-icon{display:block}
   body.side-mini #sideCollapse svg{transform:rotate(180deg)}
   body.side-mini nav.tabs a,body.side-mini .side-out{justify-content:center;padding:12px 0}
   body.side-mini nav.tabs a .badge{position:absolute;top:3px;right:6px;margin:0;min-width:17px;height:17px;font-size:10px}
@@ -315,6 +331,8 @@ header.top{display:none}
   .app-body{margin-left:0}
   header.top{display:flex;position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--border);align-items:center;gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));min-height:58px}
   header.top .brand-mark{margin:0}
+  header.top .brand-mark .kv-logo{width:104px}
+  header.top .hq-tag{margin-bottom:3px}
   #menuBtn{width:44px;height:44px}
   #menuBtn svg{width:24px;height:24px}
   .top-title{margin-left:auto;font-weight:600;color:var(--muted);font-size:15px}
@@ -324,7 +342,7 @@ header.top{display:none}
 .user-chip{font-size:13px;color:var(--muted)}
 main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .page-head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-bottom:16px}
-.page-head h1{margin:0;font-size:22px}
+.page-head h1{margin:0;font-family:var(--font-display);font-size:30px;font-weight:600;line-height:1.1;letter-spacing:.005em}
 .page-head p{margin:2px 0 0;color:var(--muted)}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
 .toolbar input[type=search]{max-width:260px}
@@ -502,7 +520,7 @@ label.extra{margin:0}
   .toolbar input[type=search]{max-width:none;flex:1 1 100%}
 }
 /* ----- Finance (QuickBooks) ----- */
-:root{ --fin-rev:#2f6fab; --fin-exp:#d48a0a; --fin-net:#1e8e5a; --fin-ly:#9aa3af; }
+:root{ --fin-rev:#2f5486; --fin-exp:#d48a0a; --fin-net:#1e8e5a; --fin-ly:#9aa3af; }
 @media (prefers-color-scheme: dark){ :root{ --fin-rev:#7fb3e3; --fin-exp:#e0a84a; --fin-net:#4cc38a; --fin-ly:#6b7280; } }
 .fin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fin-updated{font-size:12.5px;color:var(--muted)}
@@ -528,7 +546,7 @@ label.extra{margin:0}
 .chart-legend i.line{height:3px;border-radius:2px}
 .chart-wrap{position:relative}
 .chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
-.chart-wrap .ax{font-size:11px;fill:var(--muted);font-family:Inter,system-ui,sans-serif}
+.chart-wrap .ax{font-size:11px;fill:var(--muted);font-family:Figtree,system-ui,sans-serif}
 .chart-wrap .grid{stroke:var(--border);stroke-width:1}
 .chart-wrap .zero{stroke:var(--muted);stroke-width:1;opacity:.5}
 .chart-wrap .hit{fill:transparent;cursor:pointer}
@@ -637,8 +655,8 @@ label.extra{margin:0}
 
 <!-- ============ AUTH ============ -->
 <section id="auth" class="hidden center-screen">
+  <div class="auth-logo kv-logo" role="img" aria-label="Knox View Real Estate Media"></div>
   <div class="auth-card">
-    <div class="brand-mark"><span>KV</span> Knox View HQ</div>
     <h1 id="authTitle">Sign in</h1>
     <p class="muted" style="margin:0 0 18px">Team access only.</p>
     <form id="authForm">
@@ -652,12 +670,13 @@ label.extra{margin:0}
     </p>
     <p id="authMsg" class="muted" style="font-size:13px;margin-top:12px"></p>
   </div>
+  <div class="auth-foot">Knox View HQ</div>
 </section>
 
 <!-- ============ PENDING ============ -->
 <section id="pending" class="hidden center-screen">
+  <div class="auth-logo kv-logo" role="img" aria-label="Knox View Real Estate Media"></div>
   <div class="auth-card">
-    <div class="brand-mark"><span>KV</span> Knox View HQ</div>
     <h1>Waiting for access</h1>
     <p class="muted">You're signed in as <b id="pendingEmail"></b>, but you haven't been added to the team yet. Ask Chris to approve you.</p>
     <button class="btn" id="pendingSignOut">Sign out</button>
@@ -668,7 +687,7 @@ label.extra{margin:0}
 <section id="app" class="hidden">
   <aside class="side" id="side" aria-label="Menu">
     <div class="side-head">
-      <div class="brand-mark"><span>KV</span><b class="lbl">HQ</b></div>
+      <a class="brand-mark" href="#/home" aria-label="Knox View HQ home"><span class="kv-logo" role="img" aria-label="Knox View"></span><span class="kv-icon" aria-hidden="true"></span><span class="hq-tag lbl">HQ</span></a>
       <button class="icon-btn" id="sideCollapse" title="Collapse menu" aria-label="Collapse menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
       <button class="icon-btn" id="sideClose" title="Close menu" aria-label="Close menu">✕</button>
     </div>
@@ -690,7 +709,7 @@ label.extra{margin:0}
   <div class="side-scrim" id="sideScrim"></div>
   <header class="top">
     <button class="icon-btn" id="menuBtn" title="Menu" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><i class="menu-dot hidden" id="menuDot"></i></button>
-    <div class="brand-mark"><span>KV</span> HQ</div>
+    <a class="brand-mark" href="#/home" aria-label="Knox View HQ home"><span class="kv-logo" role="img" aria-label="Knox View"></span><span class="hq-tag">HQ</span></a>
     <span class="top-title" id="topTitle"></span>
   </header>
   <div class="app-body">
