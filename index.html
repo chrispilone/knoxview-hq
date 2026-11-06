@@ -680,6 +680,85 @@ label.extra{margin:0}
 @media (max-width:640px){ .books-bar .seg{width:100%;overflow-x:auto} .books-bar .seg button{white-space:nowrap} .txn-actions a.btn{display:none} .cat-select{max-width:100%;width:100%} }
 @media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .side{grid-column:span 12} }
 @media (max-width:640px){ .fin-bal{grid-template-columns:1fr 1fr} .kpi .n{font-size:19px} .kpi{padding:10px} .kpi-row{gap:8px} .fin-actions{width:100%} .fin-actions .btn.primary{flex:1} }
+/* Mail */
+.mail-head{align-items:flex-end}
+.mail-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
+.mail-search input{width:220px;padding:6px 10px}
+.mail-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between;max-width:760px}
+.mail-cta p{margin:6px 0 0;font-size:13px;max-width:560px}
+.mail{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:14px;align-items:start}
+.mail-list{padding:0;overflow:hidden;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow-y:auto}
+.mail-read{min-height:420px;padding:16px 18px}
+.mrows{display:flex;flex-direction:column}
+.mrow{display:block;padding:11px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);border-left:3px solid transparent}
+.mrow:hover{background:var(--panel-2)}
+.mrow.active{background:var(--accent-soft);border-left-color:var(--accent)}
+.mrow-top{display:flex;gap:8px;align-items:baseline}
+.mfrom{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px;color:var(--muted)}
+.mcount{font-size:11.5px;color:var(--muted);font-weight:500}
+.mwhen{font-size:12px;color:var(--muted);white-space:nowrap;flex:none}
+.mstar{color:#e0a400;margin-right:4px}
+.msubj{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;color:var(--muted)}
+.msnip{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.mrow.unread .mfrom,.mrow.unread .msubj{color:var(--text);font-weight:700}
+.mrow.unread{border-left-color:var(--accent-2)}
+.mrow.unread.active{border-left-color:var(--accent)}
+.mtags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.mtag{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--panel-2);color:var(--muted)}
+.mtag.needs{background:#fdecea;color:#c5221f}
+.mtag.agent{background:var(--accent-soft);color:var(--accent)}
+@media (prefers-color-scheme: dark){ .mtag.needs{background:#3a1f1c;color:#f4a29b} }
+.mail-needs{display:block;width:100%;text-align:left;border:none;border-bottom:1px solid var(--border);background:#fff7ed;color:#9a3412;padding:9px 14px;font-weight:600;font-size:13px}
+.mail-needs.on{background:var(--accent-soft);color:var(--accent)}
+@media (prefers-color-scheme: dark){ .mail-needs{background:#33240f;color:#f2b56b} }
+.mail-qnote{padding:8px 14px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+.mail-err{margin:12px 14px;padding:10px 12px;border-radius:8px;background:#fdecea;color:#a1271b;font-size:13px}
+@media (prefers-color-scheme: dark){ .mail-err{background:#3a1f1c;color:#f4a29b} }
+.mail-more{margin:10px auto 14px;display:block}
+.mail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;color:var(--muted)}
+.mail-empty svg{width:44px;height:44px;opacity:.5}
+.mread-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.mail-back{display:none}
+.mail-read h2.mread-subj{display:block;font-size:20px;margin:6px 0 4px;font-weight:600;word-break:break-word;line-height:1.25}
+#mailView a.btn{text-decoration:none}
+.mread-agent{font-size:13px;color:var(--muted);margin-bottom:6px}
+.mneeds{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;margin:10px 0}
+.mneeds>div{flex:1;min-width:200px;display:flex;flex-direction:column;font-size:13px}
+.mneeds span{color:var(--muted)}
+@media (prefers-color-scheme: dark){ .mneeds{background:#2a2012;border-color:#5b3d17} }
+.mmsgs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.mmsg{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.mmsg.closed{cursor:pointer;padding:9px 14px}
+.mmsg.closed:hover{background:var(--panel-2)}
+.mmsg.closed .mmsg-top{display:flex;gap:10px;align-items:baseline}
+.mmsg.closed .msnip{flex:1;min-width:0}
+.mmsg-top{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.mav{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;flex:none}
+.mmsg-who{flex:1;min-width:0;font-size:13.5px;word-break:break-word}
+.mto{font-size:12px;margin-top:1px}
+.mimgbar{font-size:12.5px;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:6px 10px;margin:10px 0 0}
+.mbody{margin-top:12px}
+.mframe{width:100%;border:none;height:120px;display:block;background:#fff;border-radius:6px;color-scheme:light}
+.mtext{white-space:pre-wrap;font-size:14px;line-height:1.55;word-break:break-word}
+.mquote{border:1px solid var(--border);background:var(--panel-2);border-radius:6px;padding:0 8px;font-size:12px;color:var(--muted);margin-top:8px;line-height:18px}
+.mfiles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.mfile{display:inline-flex;gap:4px;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;text-decoration:none;color:var(--text);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mread-foot{margin-top:14px;display:flex;justify-content:flex-end}
+@media (max-width:860px){
+  .mail{grid-template-columns:1fr}
+  .mail-list{position:static;max-height:none}
+  .mail .mail-read{display:none}
+  .mail.reading .mail-list{display:none}
+  .mail.reading .mail-read{display:block;padding:12px}
+  .mail-back{display:inline-flex}
+  .mail-tools{margin-left:0;width:100%}
+  .mail-search{flex:1}
+  .mail-search input{width:100%}
+  .mail-read h2.mread-subj{font-size:18px}
+  .mail-tools .mail-gmail{display:none}
+  .mail-search{flex:1 1 100%;order:3}
+  .mread-head .mread-top-reply{display:none}
+}
 </style>
 </head>
 <body>
@@ -725,6 +804,7 @@ label.extra{margin:0}
     <nav class="tabs" id="tabs">
       <a href="#/home" data-view="home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">Home</span></a>
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
+      <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
       <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
@@ -788,6 +868,9 @@ label.extra{margin:0}
 
     <!-- Tasks -->
     <div id="tasksView" class="hidden"></div>
+
+    <!-- Mail -->
+    <div id="mailView" class="hidden"></div>
 
     <!-- Calendar -->
     <div id="calendarView" class="hidden"></div>
@@ -941,8 +1024,8 @@ async function boot(session){
   await loadInbox();
   route();
   if (QBO_RETURN && isOwner()) finishQboConnect(QBO_RETURN);
-  initChat(); subscribeTasks(); subscribeInbox();
-  setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } }, 5 * 60 * 1000);
+  initChat(); subscribeTasks(); subscribeInbox(); loadMail({ quiet:true });
+  setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } loadMail({ quiet:true }); }, 5 * 60 * 1000);
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -983,13 +1066,14 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  let view = ['home','tasks','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','tasks','mail','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (view === 'finance' && !isOwner()) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
+  if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
   $('#topTitle').textContent = document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || '';
@@ -1020,6 +1104,8 @@ function render(){
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
   $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
   $('#calendarView').classList.toggle('hidden', S.view !== 'calendar');
+  $('#mailView').classList.toggle('hidden', S.view !== 'mail');
+  if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   if (S.view === 'calendar') renderCalendar();
   if (S.view === 'finance') renderFinance();
@@ -1808,7 +1894,7 @@ function quickAddHTML(id){
     <div class="qchips"></div>
   </div>`;
 }
-function wireQuickAdd(root, { onSaved, autofocus } = {}){
+function wireQuickAdd(root, { onSaved, autofocus, prefill, extraNotes, agentId } = {}){
   const input = root.querySelector('.qinput'), chips = root.querySelector('.qchips');
   const sumBox = root.querySelector('.qsum'), sumIn = root.querySelector('.qtitle');
   let over = {};
@@ -1839,8 +1925,9 @@ function wireQuickAdd(root, { onSaved, autofocus } = {}){
     const raw = input.value.trim(); if (!raw) return;
     const p = { ...parseTask(raw), ...over };
     const title = (over.title ?? p.summary ?? '').trim() || p.summary || raw.slice(0, 90);
-    const row = { title, notes: p.details, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
-      assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id, project_id: p.project_id };
+    const notes = [p.details, extraNotes].filter(Boolean).join('\n\n');
+    const row = { title, notes, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
+      assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id || agentId || null, project_id: p.project_id };
     input.disabled = true;
     const { data, error } = await sb.from('tasks').insert(row).select().single();
     input.disabled = false;
@@ -1852,7 +1939,8 @@ function wireQuickAdd(root, { onSaved, autofocus } = {}){
   };
   input.oninput = () => { if (!input.value.trim()) over = {}; grow(); paint(); };
   input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); save(); } if (e.key === 'Escape' && root.closest('.modal')) closeLayer(); };
-  paint(); if (autofocus) input.focus();
+  if (prefill) { input.value = prefill; grow(); }
+  paint(); if (autofocus) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
 }
 function openQuickTask(){
   document.body.style.overflow = 'hidden';
@@ -1878,7 +1966,7 @@ async function loadInbox(){
 let inboxSub = null, inboxTimer = null;
 function subscribeInbox(){
   if (inboxSub || !isOwner()) return;
-  const refresh = () => { clearTimeout(inboxTimer); inboxTimer = setTimeout(async () => { await loadInbox(); paintInbox(); paintHomeTasks(); }, 300); };
+  const refresh = () => { clearTimeout(inboxTimer); inboxTimer = setTimeout(async () => { await loadInbox(); paintInbox(); paintHomeTasks(); if (S.view === 'mail') renderMail(); }, 300); };
   inboxSub = sb.channel('hq-inbox')
     .on('postgres_changes', { event:'*', schema:'public', table:'task_suggestions' }, refresh)
     .on('postgres_changes', { event:'*', schema:'public', table:'inbox_scans' }, refresh)
@@ -1935,21 +2023,29 @@ function wireInbox(){
   box.querySelectorAll('[data-sug-add]').forEach(b => b.onclick = async () => {
     const g = S.suggestions.find(x => x.id === b.dataset.sugAdd); if (!g) return;
     b.disabled = true;
+    if (!(await acceptSuggestion(g))) b.disabled = false;
+  });
+  box.querySelectorAll('[data-sug-dismiss]').forEach(b => b.onclick = async () => {
+    if (await dismissSuggestion(b.dataset.sugDismiss)) { paintInbox(); paintHomeTasks(); }
+  });
+}
+async function acceptSuggestion(g){
     const notes = [g.details, '', `From: ${g.from_name || ''}${g.from_contact ? ` <${g.from_contact}>` : ''} via ${g.source === 'quo' ? 'Quo' : 'Gmail'}`, g.link ? `Link: ${g.link}` : ''].filter(x => x !== null && x !== undefined).join('\n').trim();
     const { data, error } = await sb.from('tasks').insert({ title: g.title, notes, category: g.category, priority: g.priority, due_date: g.due_date,
       agent_id: g.agent_id, assigned_to: S.me.id, created_by: S.me.id }).select().single();
-    if (error) { b.disabled = false; return fail(error); }
+    if (error) { fail(error); return false; }
     await sb.from('task_suggestions').update({ status: 'accepted', task_id: data.id, decided_at: new Date().toISOString() }).eq('id', g.id);
     S.tasks.unshift(data); S.suggestions = S.suggestions.filter(x => x.id !== g.id);
     paintTaskBadge(); toast('Added to your tasks');
-    if (S.view === 'tasks') renderTasks(); else paintHomeTasks();
-  });
-  box.querySelectorAll('[data-sug-dismiss]').forEach(b => b.onclick = async () => {
-    const id = b.dataset.sugDismiss;
+    if (S.view === 'tasks') renderTasks(); else if (S.view === 'mail') renderMail(); else paintHomeTasks();
+    return true;
+}
+async function dismissSuggestion(id){
     const { error } = await sb.from('task_suggestions').update({ status: 'dismissed', decided_at: new Date().toISOString() }).eq('id', id);
-    if (error) return fail(error);
-    S.suggestions = S.suggestions.filter(x => x.id !== id); paintInbox(); paintHomeTasks();
-  });
+    if (error) { fail(error); return false; }
+    S.suggestions = S.suggestions.filter(x => x.id !== id);
+    if (S.view === 'mail') renderMail();
+    return true;
 }
 
 /* ----- Tasks tab ----- */
@@ -2063,6 +2159,340 @@ function openTask(id){
     if (error) return fail(error);
     Object.assign(t, data); closeLayer(); paintTaskBadge(); render(); toast('Task saved');
   };
+}
+
+/* ===================== MAIL (Gmail Primary inbox via the gcal edge function) ===================== */
+// Stage 1: read your inbox, open threads, mark read/unread, turn emails into tasks.
+// Replying happens in Gmail for now (stage 2 adds replying here).
+const MAIL = { box:'primary', q:'', threads:null, next:null, loading:false, more:false, error:null, needsGmail:false,
+  openId:null, cache:{}, busy:{}, showImages:{}, showQuoted:{}, expanded:{}, needsOnly:false, loadedAt:0, lastKey:'' };
+const MAIL_IMG_KEY = () => 'kvhq.mailimgs.' + (S.me?.id || 'anon');
+const mailAlwaysImages = () => { try { return localStorage.getItem(MAIL_IMG_KEY()) === '1'; } catch (e) { return false; } };
+
+function parseAddr(v){
+  const s = String(v || '').trim();
+  const m = s.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  const email = (m ? m[2] : s).trim().toLowerCase();
+  let name = (m ? m[1] : '').trim();
+  if (!name) name = email.split('@')[0] || s;
+  return { name, email };
+}
+const myEmail = () => (S.cal.status?.email || S.me?.email || '').toLowerCase();
+const isMe = a => parseAddr(a).email === myEmail();
+function mailWhen(ms){
+  if (!ms) return '';
+  const d = new Date(ms), now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+  const y = addDays(now, -1); if (d.toDateString() === y.toDateString()) return 'Yesterday';
+  if (now - d < 6 * 864e5) return d.toLocaleDateString(undefined, { weekday:'short' });
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric', ...(d.getFullYear() !== now.getFullYear() ? { year:'numeric' } : {}) });
+}
+const gmailThreadUrl = id => `https://mail.google.com/mail/?authuser=${encodeURIComponent(myEmail())}#all/${id}`;
+function agentForEmail(addr){
+  const { name, email } = parseAddr(addr);
+  return S.agents.find(a => a.email && a.email.toLowerCase() === email)
+    || S.agents.find(a => name && a.full_name.toLowerCase() === name.toLowerCase()) || null;
+}
+// Missed-messages suggestions carry "gmail:<threadId>[:<messageId>]"
+const sugForThread = id => (S.suggestions || []).find(g => g.source === 'gmail' && (g.external_id || '').split(':')[1] === id);
+
+async function loadMail({ quiet = false, more = false } = {}){
+  if (!S.cal.status?.gmail) { MAIL.needsGmail = !!S.cal.status; paintMailBadge(); return; }
+  if (MAIL.loading) return;
+  const key = MAIL.box + '|' + MAIL.q;
+  if (!more && key !== MAIL.lastKey) { MAIL.threads = null; MAIL.next = null; }
+  MAIL.loading = true; MAIL.more = more; MAIL.error = null;
+  if (!quiet && S.view === 'mail') renderMail();
+  try {
+    const d = await gcal('mail_list', { box: MAIL.box, q: MAIL.q, max: 30, pageToken: more ? MAIL.next : undefined });
+    MAIL.threads = more ? [...(MAIL.threads || []), ...d.threads.filter(t => !(MAIL.threads || []).some(x => x.id === t.id))] : d.threads;
+    MAIL.next = d.nextPageToken; MAIL.loadedAt = Date.now(); MAIL.lastKey = key; MAIL.needsGmail = false;
+  } catch (e) {
+    if (e.needsGmail) MAIL.needsGmail = true; else MAIL.error = e.message;
+  }
+  MAIL.loading = false; MAIL.more = false;
+  paintMailBadge();
+  if (S.view === 'mail') renderMail();
+}
+function paintMailBadge(){
+  const b = $('#mailBadge'); if (!b) return;
+  // Badge counts unread Primary threads (only known when the Primary list is loaded)
+  const n = MAIL.lastKey === 'primary|' ? (MAIL.threads || []).filter(t => t.unread).length : (b.dataset.n | 0);
+  b.dataset.n = n;
+  b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n);
+}
+
+async function connectMail(){
+  const st = S.cal.status;
+  if (!st?.configured) return toast('Google setup isn’t finished yet');
+  try { await loadGsi(); } catch (e) { return fail(e); }
+  const client = google.accounts.oauth2.initCodeClient({
+    client_id: st.clientId, scope: st.mailScopes, ux_mode: 'popup', select_account: false, include_granted_scopes: true,
+    login_hint: st.email || S.me?.email || undefined,
+    callback: async resp => {
+      if (resp.error || !resp.code) return toast('Gmail was not connected');
+      try {
+        const r = await gcal('connect', { code: resp.code });
+        await loadCalStatus(); clearCalCache();
+        if (!r.gmail) return toast('Gmail access wasn’t allowed. Try again and tick the Gmail box.');
+        toast('Gmail connected'); MAIL.lastKey = ''; loadMail();
+      } catch (e) { fail(e); }
+    },
+  });
+  client.requestCode();
+}
+
+function renderMail(){
+  const v = $('#mailView');
+  const st = S.cal.status;
+  if (!st) { v.innerHTML = `<div class="page-head"><div><h1>Mail</h1></div></div><div class="empty">Loading…</div>`; return; }
+  if (!st.gmail) {
+    v.innerHTML = `<div class="page-head"><div><h1>Mail</h1><p>Your Gmail inbox inside HQ</p></div></div>
+      <div class="panel mail-cta"><div>
+        <b>Connect Gmail</b>
+        <p class="muted">Shows your Primary inbox (no promotions, social, notifications or spam), lets you read full threads and turn any email into a task. Emails you open here are marked as read in Gmail too. HQ never sends, deletes or moves your email.</p>
+        ${st.connected ? `<p class="muted">Google will ask you to allow Gmail access for ${esc(st.email || 'your account')}. Your calendar stays connected.</p>` : ''}
+      </div><button class="btn primary" id="mailConnect">Connect Gmail</button></div>`;
+    $('#mailConnect').onclick = connectMail;
+    return;
+  }
+  if (MAIL.threads === null && !MAIL.loading && !MAIL.error) loadMail();
+  const list = MAIL.threads || [];
+  const needs = list.filter(t => sugForThread(t.id));
+  const shown = MAIL.needsOnly ? needs : list;
+  const unread = list.filter(t => t.unread).length;
+  const reading = !!MAIL.openId;
+  v.innerHTML = `
+    <div class="page-head mail-head"><div><h1>Mail</h1><p>${esc(st.email || '')}${MAIL.box === 'primary' && !MAIL.q && MAIL.threads ? ` · ${unread} unread` : ''}</p></div>
+      <div class="mail-tools">
+        <div class="seg" id="mailBox">
+          <button data-b="primary" class="${MAIL.box === 'primary' ? 'active' : ''}">Primary</button>
+          <button data-b="unread" class="${MAIL.box === 'unread' ? 'active' : ''}">Unread</button>
+          <button data-b="all" class="${MAIL.box === 'all' ? 'active' : ''}" title="Everything in your inbox, including Updates and Promotions">All inbox</button>
+        </div>
+        <form id="mailSearch" class="mail-search"><input type="search" placeholder="Search all mail" value="${esc(MAIL.q)}" /></form>
+        <button class="btn small" id="mailRefresh" title="Refresh">${MAIL.loading && !MAIL.more ? 'Loading…' : '↻'}</button>
+        <a class="btn small mail-gmail" href="https://mail.google.com/mail/?authuser=${encodeURIComponent(myEmail())}" target="_blank" rel="noopener">Gmail ↗</a>
+      </div></div>
+    <div class="mail ${reading ? 'reading' : ''}">
+      <div class="mail-list panel">
+        ${needs.length || MAIL.needsOnly ? `<button class="mail-needs ${MAIL.needsOnly ? 'on' : ''}" id="mailNeeds">📬 ${needs.length} need${needs.length === 1 ? 's' : ''} a reply${MAIL.needsOnly ? ' · show all' : ''}</button>` : ''}
+        ${MAIL.q ? `<div class="mail-qnote">Results for “${esc(MAIL.q)}” <a href="#" id="mailClearQ">Clear</a></div>` : ''}
+        ${MAIL.error ? `<div class="mail-err">${esc(MAIL.error)}${/Gmail API/.test(MAIL.error) ? '<br><span class="muted">Turn on the Gmail API in Google Cloud (project Knox View HQ), then refresh.</span>' : ''}</div>` : ''}
+        ${MAIL.threads === null ? `<div class="none" style="padding:16px">Loading your inbox…</div>`
+          : shown.length ? `<div class="mrows">${shown.map(mailRowHTML).join('')}</div>`
+          : `<div class="none" style="padding:16px">${MAIL.needsOnly ? 'Nothing flagged as needing a reply.' : MAIL.q ? 'No emails match.' : MAIL.box === 'unread' ? 'No unread email in Primary. 🎉' : 'Your inbox is empty.'}</div>`}
+        ${MAIL.next && !MAIL.needsOnly ? `<button class="btn small mail-more" id="mailMore" ${MAIL.more ? 'disabled' : ''}>${MAIL.more ? 'Loading…' : 'Load more'}</button>` : ''}
+      </div>
+      <div class="mail-read panel" id="mailRead">${reading ? mailThreadHTML(MAIL.openId) : `<div class="mail-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><p>Pick an email to read it here.</p></div>`}</div>
+    </div>`;
+  wireMail();
+  if (reading) openMailThread(MAIL.openId);
+}
+function mailRowHTML(t){
+  const who = t.lastFromMe && t.people.length > 1 ? parseAddr(t.people.find(p => !isMe(p)) || t.from) : parseAddr(t.from);
+  const names = [...new Set(t.people.map(p => isMe(p) ? 'me' : firstName(parseAddr(p).name)))];
+  const label = t.people.length > 1 ? names.slice(0, 3).join(', ') : who.name;
+  const g = sugForThread(t.id);
+  const ag = agentForEmail(who.email);
+  return `<a class="mrow ${t.unread ? 'unread' : ''} ${MAIL.openId === t.id ? 'active' : ''}" href="#/mail/${t.id}" data-thread="${t.id}">
+    <div class="mrow-top"><span class="mfrom">${esc(label)}${t.count > 1 ? ` <span class="mcount">${t.count}</span>` : ''}</span>
+      <span class="mwhen">${t.starred ? '<span class="mstar" title="Starred">★</span>' : ''}${esc(mailWhen(t.date))}</span></div>
+    <div class="msubj">${esc(t.subject)}</div>
+    <div class="msnip">${esc(decodeEntities(t.snippet))}</div>
+    ${g || ag ? `<div class="mtags">${g ? `<span class="mtag needs" title="${esc(g.title)}">Needs reply</span>` : ''}${ag ? `<span class="mtag agent">${esc(ag.full_name)}</span>` : ''}</div>` : ''}
+  </a>`;
+}
+function decodeEntities(s){ const t = document.createElement('textarea'); t.innerHTML = s || ''; return t.value; }
+
+function mailThreadHTML(id){
+  const th = MAIL.cache[id];
+  const meta = (MAIL.threads || []).find(t => t.id === id);
+  if (!th) return `<div class="mread-head"><button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button></div>
+    <h2 class="mread-subj">${esc(meta?.subject || 'Loading…')}</h2><div class="none">Loading…</div>`;
+  if (th.error) return `<div class="mread-head"><button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button></div><div class="mail-err">${esc(th.error)}</div>`;
+  const msgs = th.messages;
+  const subject = msgs[0]?.subject || meta?.subject || '(no subject)';
+  const g = sugForThread(id);
+  const other = parseAddr((msgs.slice().reverse().find(m => !isMe(m.from)) || msgs[msgs.length - 1] || {}).from);
+  const ag = agentForEmail(other.email);
+  const unreadNow = msgs.some(m => (m.labels || []).includes('UNREAD'));
+  return `<div class="mread-head">
+      <button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button><span class="spacer"></span>
+      <button class="btn small" data-mail-unread title="${unreadNow ? 'Mark as read' : 'Keep it bold in your inbox'}">${unreadNow ? 'Mark read' : 'Mark unread'}</button>
+      <button class="btn small" data-mail-task>+ Task</button>
+      <a class="btn small primary mread-top-reply" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener">Reply in Gmail ↗</a>
+    </div>
+    <h2 class="mread-subj">${esc(subject)}</h2>
+    ${ag ? `<div class="mread-agent">Agent: <a href="#" data-mail-agent="${ag.id}">${esc(ag.full_name)}</a></div>` : ''}
+    ${g ? `<div class="mneeds"><div><b>📬 Needs a reply</b><span>${esc(g.title)}</span></div>
+      <button class="btn small primary" data-sug-accept="${g.id}">Add task</button><button class="btn small ghost" data-sug-dis="${g.id}">Dismiss</button></div>` : ''}
+    <div class="mmsgs">${msgs.map((m, i) => mailMsgHTML(id, m, i, msgs.length)).join('')}</div>
+    <div class="mread-foot"><a class="btn primary" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener">Reply in Gmail ↗</a></div>`;
+}
+function mailMsgHTML(tid, m, i, n){
+  const key = m.id;
+  const open = MAIL.expanded[key] ?? (i === n - 1 || (m.labels || []).includes('UNREAD'));
+  const f = parseAddr(m.from);
+  const when = m.date ? new Date(m.date).toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : '';
+  if (!open) return `<div class="mmsg closed" data-mmsg="${key}"><div class="mmsg-top"><b>${esc(isMe(m.from) ? 'Me' : f.name)}</b><span class="msnip">${esc(decodeEntities(m.snippet))}</span><span class="mwhen">${esc(mailWhen(m.date))}</span></div></div>`;
+  const to = [m.to, m.cc].filter(Boolean).join(', ').split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.trim()).filter(Boolean).map(x => isMe(x) ? 'me' : parseAddr(x).name);
+  const remoteImgs = /<img[^>]+src\s*=\s*["']?https?:/i.test(m.html || '') || /url\(\s*['"]?https?:/i.test(m.html || '');
+  const imgs = mailAlwaysImages() || MAIL.showImages[key];
+  const hasQuote = m.html ? /class="?[^"]*(gmail_quote|yahoo_quoted)|blockquote[^>]*type="?cite|id="?(divRplyFwdMsg|appendonsend)/i.test(m.html) : /^(On .+wrote:|>)/m.test(m.text || '');
+  const files = (m.files || []).filter(x => x.name);
+  return `<div class="mmsg" data-mmsg-open="${key}">
+    <div class="mmsg-top" data-mmsg-toggle="${key}"><div class="mav">${esc((isMe(m.from) ? 'Me' : f.name).slice(0, 1).toUpperCase())}</div>
+      <div class="mmsg-who"><b>${esc(isMe(m.from) ? 'Me' : f.name)}</b> <span class="muted">&lt;${esc(f.email)}&gt;</span>
+        <div class="muted mto">to ${esc(to.join(', ') || '—')}</div></div>
+      <span class="mwhen">${esc(when)}</span></div>
+    ${remoteImgs && !imgs ? `<div class="mimgbar">Images are hidden. <a href="#" data-mail-imgs="${key}">Show images</a> · <a href="#" data-mail-imgs-always>Always show</a></div>` : ''}
+    <div class="mbody">${m.html ? `<iframe class="mframe" data-frame="${key}" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" referrerpolicy="no-referrer" title="Email"></iframe>`
+      : `<div class="mtext">${linkifyMail(MAIL.showQuoted[key] ? (m.text || '') : stripQuotedText(m.text || ''))}</div>`}</div>
+    ${hasQuote ? `<button class="mquote" data-mail-quote="${key}">${MAIL.showQuoted[key] ? 'Hide quoted text' : '•••'}</button>` : ''}
+    ${files.length ? `<div class="mfiles">${files.map(x => `<a class="mfile" href="${esc(gmailThreadUrl(tid))}" target="_blank" rel="noopener" title="Open in Gmail to download">📎 ${esc(x.name)}<span class="muted">${x.size ? ' · ' + fmtBytes(x.size) : ''}</span></a>`).join('')}</div>` : ''}
+  </div>`;
+}
+const fmtBytes = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+function stripQuotedText(t){
+  const lines = t.split('\n'); const out = [];
+  for (const l of lines) { if (/^On .+(wrote|écrit):\s*$/.test(l.trim()) || /^-{2,}\s*Original Message/i.test(l.trim()) || /^>/.test(l)) break; out.push(l); }
+  return out.join('\n').trim() || t;
+}
+function linkifyMail(t){
+  return esc(t).replace(/\bhttps?:\/\/[^\s<>"')]+/g, u => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u.length > 70 ? u.slice(0, 67) + '…' : u}</a>`).replace(/\n{3,}/g, '\n\n');
+}
+function mailSrcdoc(html, { images, quoted }){
+  const img = images ? 'https: http: data: cid:' : 'data: cid:';
+  const css = `html,body{margin:0;padding:0;background:#fff}
+    body{display:flow-root;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:#1b1f27;overflow-wrap:anywhere;word-break:break-word}
+    img{max-width:100%!important;height:auto!important} table{max-width:100%!important} pre{white-space:pre-wrap}
+    a{color:#1a56db}
+    ${images ? '' : 'img[src^="http"]{opacity:0}'}
+    ${quoted ? '' : '.gmail_quote,.gmail_attr,.yahoo_quoted,blockquote[type=cite],#divRplyFwdMsg,#divRplyFwdMsg~*,#appendonsend~*{display:none!important}'}`;
+  return `<!doctype html><html><head><meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${img}; style-src 'unsafe-inline' ${images ? 'https:' : ''}; font-src data: ${images ? 'https:' : ''}; media-src 'none'; frame-src 'none'; form-action 'none'">
+    <base target="_blank"><style>${css}</style></head><body>${html}</body></html>`;
+}
+function sizeFrame(fr){
+  try {
+    const d = fr.contentDocument; if (!d) return;
+    // body is a flow-root, so its own height covers its content (the frame's viewport doesn't inflate it)
+    const h = d.body ? Math.ceil(d.body.getBoundingClientRect().height) + 2 : d.documentElement.scrollHeight;
+    fr.style.height = Math.min(Math.max(h, 40), 20000) + 'px';
+  } catch (e) { fr.style.height = '600px'; }
+}
+function paintFrames(id){
+  const th = MAIL.cache[id]; if (!th?.messages) return;
+  document.querySelectorAll('#mailRead iframe[data-frame]').forEach(fr => {
+    const m = th.messages.find(x => x.id === fr.dataset.frame); if (!m) return;
+    fr.onload = () => { sizeFrame(fr); setTimeout(() => sizeFrame(fr), 400); setTimeout(() => sizeFrame(fr), 1500);
+      try { fr.contentDocument.querySelectorAll('img').forEach(i => i.addEventListener('load', () => sizeFrame(fr))); } catch (e) {} };
+    fr.srcdoc = mailSrcdoc(m.html, { images: mailAlwaysImages() || MAIL.showImages[m.id], quoted: MAIL.showQuoted[m.id] });
+  });
+}
+async function openMailThread(id, force){
+  if (!MAIL.cache[id] || force) {
+    if (MAIL.busy[id]) return; MAIL.busy[id] = true;
+    try { MAIL.cache[id] = await gcal('mail_thread', { id }); }
+    catch (e) { MAIL.cache[id] = { error: e.message }; }
+    MAIL.busy[id] = false;
+    if (MAIL.openId !== id || S.view !== 'mail') return;
+    paintMailRead();
+  } else paintFrames(id);
+  // Mark read (like opening it in Gmail)
+  const meta = (MAIL.threads || []).find(t => t.id === id);
+  const th = MAIL.cache[id];
+  if (th?.messages?.some(m => (m.labels || []).includes('UNREAD')) && !MAIL.busy['mark' + id]) {
+    MAIL.busy['mark' + id] = true;
+    try {
+      await gcal('mail_mark', { id, read: true });
+      th.messages.forEach(m => { m.labels = (m.labels || []).filter(l => l !== 'UNREAD'); });
+      if (meta) meta.unread = false;
+      paintMailBadge(); paintMailList(); if (MAIL.openId === id) paintMailReadHead();
+    } catch (e) { console.warn('mark read failed', e); }
+    MAIL.busy['mark' + id] = false;
+  }
+}
+function paintMailList(){
+  const box = document.querySelector('#mailView .mrows'); if (!box) return;
+  const list = MAIL.needsOnly ? (MAIL.threads || []).filter(t => sugForThread(t.id)) : (MAIL.threads || []);
+  box.innerHTML = list.map(mailRowHTML).join('');
+  const p = document.querySelector('#mailView .page-head p');
+  if (p && MAIL.box === 'primary' && !MAIL.q) p.textContent = `${S.cal.status?.email || ''} · ${(MAIL.threads || []).filter(t => t.unread).length} unread`;
+}
+function paintMailReadHead(){
+  const b = document.querySelector('[data-mail-unread]'); if (!b) return;
+  const th = MAIL.cache[MAIL.openId]; const u = th?.messages?.some(m => (m.labels || []).includes('UNREAD'));
+  b.textContent = u ? 'Mark read' : 'Mark unread';
+}
+function paintMailRead(){
+  const r = $('#mailRead'); if (!r || !MAIL.openId) return;
+  r.innerHTML = mailThreadHTML(MAIL.openId);
+  wireMailRead(); paintFrames(MAIL.openId);
+}
+function wireMail(){
+  const v = $('#mailView');
+  v.querySelectorAll('#mailBox button').forEach(b => b.onclick = () => { MAIL.box = b.dataset.b; MAIL.q = ''; MAIL.needsOnly = false; loadMail(); });
+  $('#mailSearch').onsubmit = e => { e.preventDefault(); MAIL.q = e.target.querySelector('input').value.trim(); MAIL.needsOnly = false; loadMail(); };
+  $('#mailRefresh').onclick = () => { MAIL.lastKey = ''; loadMail(); };
+  const cq = $('#mailClearQ'); if (cq) cq.onclick = e => { e.preventDefault(); MAIL.q = ''; loadMail(); };
+  const nb = $('#mailNeeds'); if (nb) nb.onclick = () => { MAIL.needsOnly = !MAIL.needsOnly; renderMail(); };
+  const mb = $('#mailMore'); if (mb) mb.onclick = () => loadMail({ more: true });
+  wireMailRead();
+}
+function wireMailRead(){
+  const r = $('#mailRead'); if (!r) return;
+  const id = MAIL.openId;
+  r.querySelectorAll('[data-mail-back]').forEach(b => b.onclick = () => { location.hash = '#/mail'; });
+  r.querySelectorAll('[data-mmsg]').forEach(el => el.onclick = () => { MAIL.expanded[el.dataset.mmsg] = true; paintMailRead(); });
+  r.querySelectorAll('[data-mmsg-toggle]').forEach(el => el.onclick = () => {
+    const th = MAIL.cache[id]; if (!th?.messages || th.messages.length < 2) return;
+    MAIL.expanded[el.dataset.mmsgToggle] = false; paintMailRead();
+  });
+  r.querySelectorAll('[data-mail-imgs]').forEach(a => a.onclick = e => { e.preventDefault(); MAIL.showImages[a.dataset.mailImgs] = true; paintMailRead(); });
+  r.querySelectorAll('[data-mail-imgs-always]').forEach(a => a.onclick = e => { e.preventDefault(); try { localStorage.setItem(MAIL_IMG_KEY(), '1'); } catch (er) {} paintMailRead(); toast('Images will always show'); });
+  r.querySelectorAll('[data-mail-quote]').forEach(b => b.onclick = () => { const k = b.dataset.mailQuote; MAIL.showQuoted[k] = !MAIL.showQuoted[k]; paintMailRead(); });
+  r.querySelectorAll('[data-mail-agent]').forEach(a => a.onclick = e => { e.preventDefault(); location.hash = '#/agents'; setTimeout(() => openAgent(a.dataset.mailAgent), 50); });
+  r.querySelectorAll('[data-sug-accept]').forEach(b => b.onclick = async () => { const g = S.suggestions.find(x => x.id === b.dataset.sugAccept); if (!g) return; b.disabled = true; if (!(await acceptSuggestion(g))) b.disabled = false; });
+  r.querySelectorAll('[data-sug-dis]').forEach(b => b.onclick = () => dismissSuggestion(b.dataset.sugDis));
+  const ub = r.querySelector('[data-mail-unread]'); if (ub) ub.onclick = async () => {
+    const th = MAIL.cache[id]; if (!th?.messages) return;
+    const makeUnread = !th.messages.some(m => (m.labels || []).includes('UNREAD'));
+    ub.disabled = true;
+    try {
+      await gcal('mail_mark', { id, read: !makeUnread });
+      const last = th.messages[th.messages.length - 1];
+      th.messages.forEach(m => { m.labels = (m.labels || []).filter(l => l !== 'UNREAD'); });
+      if (makeUnread && last) last.labels.push('UNREAD');
+      const meta = (MAIL.threads || []).find(t => t.id === id); if (meta) meta.unread = makeUnread;
+      paintMailBadge(); paintMailList(); paintMailReadHead();
+      if (makeUnread) { toast('Marked unread'); MAIL.busy['mark' + id] = true; location.hash = '#/mail'; setTimeout(() => { MAIL.busy['mark' + id] = false; }, 1500); }
+    } catch (e) { fail(e); }
+    ub.disabled = false;
+  };
+  const tb = r.querySelector('[data-mail-task]'); if (tb) tb.onclick = () => mailToTask(id);
+}
+function mailToTask(id){
+  const th = MAIL.cache[id]; if (!th?.messages) return;
+  const g = sugForThread(id);
+  if (g) return acceptSuggestion(g);
+  const msgs = th.messages;
+  const last = msgs.slice().reverse().find(m => !isMe(m.from)) || msgs[msgs.length - 1];
+  const who = parseAddr(last.from);
+  const subject = msgs[0].subject || '(no subject)';
+  const ag = agentForEmail(who.email);
+  const extra = [`Email from ${who.name} <${who.email}>: “${subject}”`, (last.snippet ? decodeEntities(last.snippet) : ''), `Open in Gmail: ${gmailThreadUrl(id)}`].filter(Boolean).join('\n');
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><h2>Task from email</h2>
+    <p class="muted" style="margin:-8px 0 12px;font-size:13px">${esc(who.name)} · ${esc(subject)}</p>
+    ${quickAddHTML('qMail')}
+    <p class="muted" style="font-size:12.5px;margin:12px 0 0">The email’s sender, subject and Gmail link are saved in the task’s details.</p>
+    <div class="actions"><button class="btn" id="qClose">Close</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#qClose').onclick = closeLayer;
+  wireQuickAdd($('#qMail'), { autofocus: true, prefill: `Reply to ${firstName(who.name)} about ${subject.replace(/^(re|fwd?|fw):\s*/gi, '')}`, extraNotes: extra, agentId: ag?.id,
+    onSaved: () => closeLayer() });
 }
 
 /* ===================== CALENDAR (Google Calendar via the gcal edge function) ===================== */
