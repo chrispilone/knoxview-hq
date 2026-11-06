@@ -541,6 +541,44 @@ label.extra{margin:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .btn .spin{width:12px;height:12px;vertical-align:-2px;margin-right:6px}
 
+.pl-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pl-bar select,.pl-bar input[type=date]{width:auto}
+.pl-range{font-size:13px;font-weight:600;margin-bottom:12px}
+.pl-range .muted{font-weight:400}
+.pl-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.pl-sum .n.neg{color:var(--danger)}
+.pl-sum .l b.up{color:var(--ok)} .pl-sum .l b.down{color:var(--danger)}
+.pl-panel{padding:0;overflow:hidden}
+.pl-scroll{overflow-x:auto}
+.pl-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.pl-table th{position:sticky;top:0;background:var(--panel-2);font-size:12px;font-weight:600;color:var(--muted);text-align:right;padding:9px 12px;white-space:nowrap;border-bottom:1px solid var(--border)}
+.pl-table th.pl-name{text-align:left}
+.pl-table td{padding:7px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.pl-table td.pl-name{text-align:left;white-space:normal;min-width:180px}
+.pl-table td.neg{color:var(--danger)}
+.pl-row.section td{font-weight:700;background:var(--panel-2)}
+.pl-row.total td{font-weight:700;border-top:2px solid var(--border)}
+.pl-row.total td.pl-name{font-size:14px}
+.pl-row.account.d0 td,.pl-row.account.d1 td{font-weight:500}
+.pl-row.account.d2 td,.pl-row.account.d3 td,.pl-row.account.d4 td{color:var(--muted)}
+.pl-row td.pl-pct,.pl-row td.pl-cmp{color:var(--muted)}
+.pl-row td.up{color:var(--ok)} .pl-row td.down{color:var(--danger)}
+.pl-caret{border:none;background:none;padding:0;width:18px;color:var(--muted);font-size:12px}
+.pl-caret-sp{display:inline-block;width:18px}
+.pl-drill{color:inherit;text-decoration:none;border-bottom:1px dashed var(--border)}
+.pl-drill:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.pl-detail td{background:var(--panel-2);text-align:left;padding:10px 14px 12px 40px;white-space:normal}
+.pl-det-head{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.pl-det-list{display:flex;flex-direction:column;max-height:360px;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.pl-det{display:grid;grid-template-columns:56px 1fr auto 22px;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px}
+.pl-det:last-child{border-bottom:none}
+.pl-det-date{color:var(--muted);font-size:12px}
+.pl-det-main{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pl-det-amt{font-weight:600;font-variant-numeric:tabular-nums}
+.pl-det-link{text-decoration:none;color:var(--muted)}
+@media (max-width:960px){ .pl-sum{grid-template-columns:1fr 1fr} }
+@media (max-width:640px){ .pl-table .pl-cmp,.pl-table .pl-chg{display:none} .pl-table td.pl-name{min-width:140px} .pl-detail td{padding-left:14px} .pl-bar select{flex:1 1 45%} }
+
 .fin-tabs{margin:-4px 0 16px}
 .fin-tabs a{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;color:var(--muted);font-weight:500;text-decoration:none}
 .fin-tabs a.active{background:var(--accent-soft);color:var(--accent)}
@@ -2405,7 +2443,13 @@ async function renderFinance(){
   const actions = `<div class="fin-actions"><span class="fin-updated">${snap ? `Updated ${esc(fmtDateTime(snap.refreshedAt))}` : ''}</span>
     <button class="btn primary" id="finRefresh"></button>
     <button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`;
-  FIN.tab = /^#\/finance\/books/.test(location.hash) ? 'books' : 'overview';
+  FIN.tab = /^#\/finance\/books/.test(location.hash) ? 'books' : /^#\/finance\/pl/.test(location.hash) ? 'pl' : 'overview';
+  if (FIN.tab === 'pl') {
+    box.innerHTML = head(`<div class="fin-actions"><button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`) + finTabsHTML() + `<div id="plBox"></div>`;
+    $('#finDisconnect').onclick = disconnectQuickBooks;
+    renderPL();
+    return;
+  }
   if (FIN.tab === 'books') {
     box.innerHTML = head(`<div class="fin-actions"><button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`) + finTabsHTML() + `<div id="booksBox"></div>`;
     $('#finDisconnect').onclick = disconnectQuickBooks;
@@ -2491,7 +2535,167 @@ async function disconnectQuickBooks(){
 }
 function finTabsHTML(){
   const n = BOOKS.data?.counts?.toReview;
-  return `<div class="fin-tabs seg"><a href="#/finance" class="${FIN.tab !== 'books' ? 'active' : ''}">Overview</a><a href="#/finance/books" class="${FIN.tab === 'books' ? 'active' : ''}">Bookkeeping${n ? ` <span class="badge">${n > 999 ? '999+' : n}</span>` : ''}</a></div>`;
+  return `<div class="fin-tabs seg"><a href="#/finance" class="${FIN.tab === 'overview' ? 'active' : ''}">Overview</a><a href="#/finance/pl" class="${FIN.tab === 'pl' ? 'active' : ''}">Profit &amp; Loss</a><a href="#/finance/books" class="${FIN.tab === 'books' ? 'active' : ''}">Bookkeeping${n ? ` <span class="badge">${n > 999 ? '999+' : n}</span>` : ''}</a></div>`;
+}
+
+
+/* ----- Profit & Loss: full statement, any period, compare, by month, drill-down ----- */
+const PL = { period:'ytd', compare:'ly', byMonth:false, data:null, loading:false, error:null, collapsed:{}, detail:{}, custom:{ start:'', end:'' } };
+try { Object.assign(PL, JSON.parse(localStorage.getItem('kvhq.pl') || '{}')); PL.data = null; PL.detail = {}; } catch (e) {}
+const PL_PERIODS = [['month','This month'],['lastmonth','Last month'],['quarter','This quarter'],['lastquarter','Last quarter'],['ytd','Year to date'],['last12','Last 12 months'],['lastyear','Last year'],['custom','Custom dates']];
+const PL_COMPARE = [['ly','vs. same period last year'],['prev','vs. previous period'],['none','No comparison']];
+const COST_GROUPS = new Set(['gCOGS','gExpenses','gOtherExpenses']);
+const QBO_TXN_PAGE = { 'Expense':'expense', 'Check':'check', 'Deposit':'deposit', 'Bill':'bill', 'Invoice':'invoice', 'Sales Receipt':'salesreceipt', 'Journal Entry':'journal', 'Credit Card Credit':'creditcardcredit', 'Payment':'recvpayment', 'Transfer':'transfer', 'Bill Payment (Check)':'billpayment', 'Bill Payment (Credit Card)':'billpayment', 'Refund':'refundreceipt', 'Credit Memo':'creditmemo', 'Vendor Credit':'vendorcredit' };
+const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const dOf = s => new Date(s + 'T12:00:00');
+function shiftMonths(s, n, endOfMonth){
+  const d = dOf(s), day = d.getDate();
+  const t = new Date(d.getFullYear(), d.getMonth() + n, 1, 12);
+  const last = new Date(t.getFullYear(), t.getMonth() + 1, 0, 12).getDate();
+  t.setDate(endOfMonth ? last : Math.min(day, last));
+  return ymdOf(t);
+}
+const isMonthEnd = s => { const d = dOf(s); return new Date(d.getFullYear(), d.getMonth() + 1, 0, 12).getDate() === d.getDate(); };
+function plRange(){
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth(), today = ymdOf(now);
+  const q0 = Math.floor(m / 3) * 3;
+  let start, end, span;
+  switch (PL.period) {
+    case 'month': start = ymdOf(new Date(y, m, 1, 12)); end = today; span = 1; break;
+    case 'lastmonth': start = ymdOf(new Date(y, m - 1, 1, 12)); end = ymdOf(new Date(y, m, 0, 12)); span = 1; break;
+    case 'quarter': start = ymdOf(new Date(y, q0, 1, 12)); end = today; span = 3; break;
+    case 'lastquarter': start = ymdOf(new Date(y, q0 - 3, 1, 12)); end = ymdOf(new Date(y, q0, 0, 12)); span = 3; break;
+    case 'last12': start = ymdOf(new Date(y, m - 11, 1, 12)); end = today; span = 12; break;
+    case 'lastyear': start = `${y - 1}-01-01`; end = `${y - 1}-12-31`; span = 12; break;
+    case 'custom': start = PL.custom.start || `${y}-01-01`; end = PL.custom.end || today; span = null; break;
+    default: start = `${y}-01-01`; end = today; span = 12;
+  }
+  let cStart = null, cEnd = null;
+  if (PL.compare === 'ly' || (PL.compare === 'prev' && span === 12)) { cStart = shiftMonths(start, -12); cEnd = shiftMonths(end, -12, isMonthEnd(end) && dOf(end).getMonth() === 1); }
+  else if (PL.compare === 'prev' && span) { cStart = shiftMonths(start, -span); cEnd = shiftMonths(end, -span, isMonthEnd(end)); }
+  else if (PL.compare === 'prev') { const days = Math.round((dOf(end) - dOf(start)) / 864e5) + 1; const ce = new Date(dOf(start)); ce.setDate(ce.getDate() - 1); const cs = new Date(ce); cs.setDate(cs.getDate() - days + 1); cStart = ymdOf(cs); cEnd = ymdOf(ce); }
+  return { start, end, cStart, cEnd };
+}
+function savePL(){ try { localStorage.setItem('kvhq.pl', JSON.stringify({ period: PL.period, compare: PL.compare, byMonth: PL.byMonth, custom: PL.custom, collapsed: PL.collapsed })); } catch (e) {} }
+async function loadPL(){
+  const r = plRange();
+  PL.loading = true; PL.error = null; PL.detail = {}; paintPL();
+  try { PL.data = await qboCall('pl', { start: r.start, end: r.end, byMonth: PL.byMonth, compareStart: PL.byMonth ? null : r.cStart, compareEnd: PL.byMonth ? null : r.cEnd }); }
+  catch (e) { PL.error = e.message; if (e.notConnected) { await loadFinStatus(); PL.loading = false; return renderFinance(); } }
+  PL.loading = false; paintPL();
+}
+function renderPL(){ if (!PL.data && !PL.loading) loadPL(); else paintPL(); }
+const rangeLabel = (a, b) => `${fmtDate(a)} – ${fmtDate(b)}`;
+function plFind(rows, key){ for (const n of rows || []) { if (n.key === key) return n; const f = plFind(n.children, key); if (f) return f; } return null; }
+const plTotal = n => n ? (n.values[n.values.length - 1] || 0) : 0;
+function paintPL(){
+  const box = $('#plBox'); if (!box) return;
+  const d = PL.data, r = plRange();
+  const income = d ? plTotal(plFind(d.rows, 'gIncome')) : 0;
+  const cmp = d?.compare?.totals || null;
+  const key = k => d ? plTotal(plFind(d.rows, k)) : 0;
+  const cmpOf = k => cmp ? (cmp[k] || 0) : null;
+  const expenses = key('gCOGS') + key('gExpenses') + key('gOtherExpenses');
+  const cExpenses = cmp ? (cmpOf('gCOGS') + cmpOf('gExpenses') + cmpOf('gOtherExpenses')) : null;
+  const summary = d ? [
+    ['Income', income, cmpOf('gIncome'), true, null],
+    ['Gross profit', key('gGrossProfit'), cmpOf('gGrossProfit'), true, income ? `${Math.round(key('gGrossProfit') / income * 100)}% margin` : null],
+    ['Expenses', expenses, cExpenses, false, 'incl. cost of goods sold'],
+    ['Net income', key('gNetIncome'), cmpOf('gNetIncome'), true, income ? `${Math.round(key('gNetIncome') / income * 100)}% margin` : null],
+  ] : [];
+  box.innerHTML = `
+    <div class="pl-bar">
+      <select id="plPeriod">${opt(PL_PERIODS, PL.period)}</select>
+      ${PL.period === 'custom' ? `<input type="date" id="plFrom" value="${esc(r.start)}"/><span class="muted">to</span><input type="date" id="plTo" value="${esc(r.end)}"/>` : ''}
+      <select id="plCompare" ${PL.byMonth ? 'disabled title="Comparison is shown in the Total view"' : ''}>${opt(PL_COMPARE, PL.compare)}</select>
+      <div class="seg" id="plView"><button data-v="total" class="${!PL.byMonth ? 'active' : ''}">Total</button><button data-v="month" class="${PL.byMonth ? 'active' : ''}">By month</button></div>
+      <span class="spacer"></span>
+      <button class="btn small" id="plCsv" ${d ? '' : 'disabled'}>⬇ CSV</button>
+      <button class="btn small" id="plReload" ${PL.loading ? 'disabled' : ''}>${PL.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
+    </div>
+    <div class="pl-range">${esc(rangeLabel(r.start, r.end))}${!PL.byMonth && r.cStart ? ` <span class="muted">compared with ${esc(rangeLabel(r.cStart, r.cEnd))}</span>` : ''}</div>
+    ${PL.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load the Profit &amp; Loss: ${esc(PL.error)}</div></div>` : ''}
+    ${!d && PL.loading ? `<div class="panel fin-loading"><span class="spin"></span>Building your Profit &amp; Loss from QuickBooks…</div>` : ''}
+    ${d ? `<div class="pl-sum">${summary.map(([l, v, c, goodUp, sub]) => `<div class="stat"><div class="l">${esc(l)}</div><div class="n ${l === 'Net income' && v < 0 ? 'neg' : ''}">${usd(v)}</div><div class="l">${c !== null ? deltaHTML(v, c, goodUp, PL.compare === 'ly' ? 'last year' : 'prior period') : (sub ? esc(sub) : '&nbsp;')}${c !== null && sub ? ` · ${esc(sub)}` : ''}</div></div>`).join('')}</div>
+      <div class="panel pl-panel"><div class="pl-scroll">${plTableHTML(d, income)}</div></div>
+      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}. Tap ▸ to open or close a section; tap an account name to see its transactions. % of income shows each line as a share of total income.</p>` : ''}`;
+  wirePL();
+}
+function plTableHTML(d, income){
+  const cols = d.columns, cmp = d.compare?.totals || null, byMonth = d.byMonth;
+  const valCols = byMonth ? cols : cols.slice(-1);
+  const head = `<tr><th class="pl-name">Account</th>${valCols.map(c => `<th>${esc(byMonth ? (c.total ? 'Total' : (c.start ? new Date(c.start + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', year: '2-digit' }) : c.title)) : 'Amount')}</th>`).join('')}${!byMonth ? `<th class="pl-pct">% of income</th>` : ''}${cmp ? `<th class="pl-cmp">${PL.compare === 'ly' ? 'Last year' : 'Prior period'}</th><th class="pl-chg">Change</th><th class="pl-chgp">%</th>` : ''}</tr>`;
+  const rows = [];
+  const walk = (nodes, depth, cost) => {
+    for (const n of nodes) {
+      const isCost = cost || COST_GROUPS.has(n.key);
+      const hasKids = n.children.length > 0, closed = PL.collapsed[n.key];
+      const vals = byMonth ? n.values : [plTotal(n)];
+      const tot = plTotal(n);
+      const c = cmp ? (cmp[n.key] ?? 0) : null;
+      const chg = c !== null ? tot - c : null;
+      const good = chg === null || Math.abs(chg) < 0.5 ? '' : (chg > 0) !== isCost ? 'up' : 'down';
+      const pctOfIncome = income ? (n.key === 'gGrossProfit' || n.key === 'gNetIncome' || n.key === 'gNetOperatingIncome' ? `${(tot / income * 100).toFixed(1)}%` : `${(Math.abs(tot) / Math.abs(income) * 100).toFixed(1)}%`) : '';
+      const cls = `pl-row ${n.kind} d${Math.min(depth, 4)}`;
+      const nameCell = `<td class="pl-name" style="padding-left:${10 + depth * 18}px">${hasKids ? `<button class="pl-caret" data-toggle="${esc(n.key)}">${closed ? '▸' : '▾'}</button>` : '<span class="pl-caret-sp"></span>'}${n.id && !hasKids || n.id && closed ? `<a href="#" class="pl-drill" data-drill="${esc(n.key)}" data-acct="${esc(n.id)}">${esc(n.name)}</a>` : esc(n.name)}${hasKids && !closed && n.kind !== 'total' ? '' : ''}</td>`;
+      rows.push(`<tr class="${cls}">${nameCell}${vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${usd(v, true)}</td>`).join('')}${!byMonth ? `<td class="pl-pct">${pctOfIncome}</td>` : ''}${cmp ? `<td class="pl-cmp">${usd(c, true)}</td><td class="pl-chg ${good}">${chg >= 0 ? '+' : ''}${usd(chg, true)}</td><td class="pl-chgp ${good}">${c ? `${chg >= 0 ? '+' : ''}${Math.round(chg / Math.abs(c) * 100)}%` : (tot ? 'new' : '')}</td>` : ''}</tr>`);
+      const det = PL.detail[n.key];
+      if (det) {
+        const span = 1 + vals.length + (!byMonth ? 1 : 0) + (cmp ? 3 : 0);
+        rows.push(`<tr class="pl-detail"><td colspan="${span}">${det.loading ? '<div class="fin-loading"><span class="spin"></span>Loading transactions…</div>' : det.error ? `<div class="none">${esc(det.error)}</div>` : plDetailHTML(det.data)}</td></tr>`);
+      }
+      if (hasKids && !closed) walk(n.children, depth + 1, isCost);
+    }
+  };
+  walk(d.rows, 0, false);
+  return `<table class="pl-table"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function plDetailHTML(dt){
+  if (!dt.items.length) return `<div class="none">No transactions in this period.</div>`;
+  return `<div class="pl-det-head"><b>${dt.count} transaction${dt.count === 1 ? '' : 's'}</b> · ${usd(dt.total, true)}${dt.count > dt.items.length ? ` · showing the latest ${dt.items.length}` : ''}</div>
+    <div class="pl-det-list">${dt.items.map(x => `<div class="pl-det">
+      <span class="pl-det-date">${esc(fmtShort(x.date))}</span>
+      <span class="pl-det-main"><b>${esc(x.name || x.memo || x.type)}</b>${x.memo && x.name ? `<span class="muted"> · ${esc(x.memo)}</span>` : ''}<br><span class="muted">${esc(x.type)}${x.doc ? ` #${esc(x.doc)}` : ''}${x.split ? ` · ${esc(x.split)}` : ''}</span></span>
+      <span class="pl-det-amt">${usd(x.amount, true)}</span>
+      ${x.txnId && QBO_TXN_PAGE[x.type] ? `<a class="pl-det-link" href="https://qbo.intuit.com/app/${QBO_TXN_PAGE[x.type]}?txnId=${encodeURIComponent(x.txnId)}" target="_blank" rel="noopener" title="Open in QuickBooks">↗</a>` : '<span></span>'}
+    </div>`).join('')}</div>`;
+}
+function plCsv(){
+  const d = PL.data; if (!d) return;
+  const cmp = d.compare?.totals || null, byMonth = d.byMonth;
+  const valCols = byMonth ? d.columns : d.columns.slice(-1);
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [[ 'Account', ...valCols.map(c => byMonth ? (c.total ? 'Total' : c.title) : 'Amount'), ...(cmp ? ['Comparison', 'Change'] : []) ].map(q).join(',')];
+  const walk = (nodes, depth) => nodes.forEach(n => {
+    const vals = byMonth ? n.values : [plTotal(n)];
+    lines.push([ '  '.repeat(depth) + n.name, ...vals.map(v => v.toFixed(2)), ...(cmp ? [(cmp[n.key] ?? 0).toFixed(2), (plTotal(n) - (cmp[n.key] ?? 0)).toFixed(2)] : []) ].map(q).join(','));
+    walk(n.children, depth + 1);
+  });
+  walk(d.rows, 0);
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Profit-and-Loss_${d.start}_to_${d.end}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function wirePL(){
+  const box = $('#plBox'); if (!box) return;
+  $('#plPeriod').onchange = e => { PL.period = e.target.value; savePL(); loadPL(); };
+  const f = $('#plFrom'), t = $('#plTo');
+  if (f) f.onchange = () => { PL.custom.start = f.value; savePL(); if (f.value && (t.value || '') >= f.value) loadPL(); };
+  if (t) t.onchange = () => { PL.custom.end = t.value; savePL(); if (t.value && t.value >= (f.value || '')) loadPL(); };
+  $('#plCompare').onchange = e => { PL.compare = e.target.value; savePL(); loadPL(); };
+  $('#plView').onclick = e => { const b = e.target.closest('button'); if (!b) return; const bm = b.dataset.v === 'month'; if (bm === PL.byMonth) return; PL.byMonth = bm; savePL(); loadPL(); };
+  $('#plReload').onclick = loadPL;
+  $('#plCsv').onclick = plCsv;
+  box.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; if (PL.collapsed[k]) delete PL.collapsed[k]; else PL.collapsed[k] = true; savePL(); paintPL(); });
+  box.querySelectorAll('[data-drill]').forEach(a => a.onclick = async e => {
+    e.preventDefault();
+    const k = a.dataset.drill;
+    if (PL.detail[k]) { delete PL.detail[k]; return paintPL(); }
+    PL.detail[k] = { loading: true }; paintPL();
+    try { PL.detail[k] = { data: await qboCall('pldetail', { accountId: a.dataset.acct, start: PL.data.start, end: PL.data.end }) }; }
+    catch (err) { PL.detail[k] = { error: err.message }; }
+    paintPL();
+  });
 }
 
 /* ----- Bookkeeping: every transaction gets confirmed; categories save to QuickBooks ----- */

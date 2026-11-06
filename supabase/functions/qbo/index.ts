@@ -220,6 +220,75 @@ async function buildSnapshot() {
   };
 }
 
+/* ---------- Profit & Loss statement (any period, optional comparison, drill-down) ---------- */
+// Statement rows as a tree: sections (Income, COGS, Expenses, …), accounts and sub-accounts,
+// plus the computed lines (Gross Profit, Net Operating Income, Net Income).
+type PlNode = { key: string; name: string; id: string | null; group: string | null; kind: 'section' | 'account' | 'total'; values: number[]; children: PlNode[] };
+function plTree(rows: Row[], path = ''): PlNode[] {
+  const out: PlNode[] = [];
+  for (const r of rows || []) {
+    if (r.type === 'Data' || (r.ColData && !r.Summary)) {
+      const c0 = r.ColData?.[0] || {};
+      const name = c0.value || '';
+      out.push({ key: c0.id ? `a${c0.id}` : `${path}/${name}`, name, id: c0.id ? String(c0.id) : null, group: null, kind: 'account', values: (r.ColData || []).slice(1).map((c: any) => num(c.value)), children: [] });
+      continue;
+    }
+    const h = r.Header?.ColData?.[0] || {};
+    const name = h.value || String(r.Summary?.ColData?.[0]?.value || r.group || '').replace(/^Total\s+/i, '');
+    const values = (r.Summary?.ColData || []).slice(1).map((c: any) => num(c.value));
+    const children = plTree(r.Rows?.Row || [], `${path}/${name}`);
+    const isTop = !path;
+    out.push({
+      key: h.id ? `a${h.id}` : (r.group ? `g${r.group}` : `${path}/${name}`), name, id: h.id ? String(h.id) : null,
+      group: r.group || null, kind: children.length ? (isTop ? 'section' : 'account') : (isTop ? 'total' : 'account'), values, children,
+    });
+  }
+  return out;
+}
+function plColumns(rep: any) {
+  return (rep?.Columns?.Column || []).slice(1).map((c: any) => {
+    const md = Object.fromEntries((c.MetaData || []).map((m: any) => [m.Name, m.Value]));
+    return { title: c.ColTitle || (String(md.ColKey).toLowerCase() === 'total' ? 'Total' : ''), start: md.StartDate || null, end: md.EndDate || null, total: String(md.ColKey || '').toLowerCase() === 'total' || /^total$/i.test(c.ColTitle || '') };
+  });
+}
+function flattenTotals(nodes: PlNode[], out = new Map<string, number>()) {
+  for (const n of nodes) { out.set(n.key, n.values[n.values.length - 1] || 0); flattenTotals(n.children, out); }
+  return out;
+}
+async function plStatement(start: string, end: string, byMonth: boolean, cStart: string | null, cEnd: string | null) {
+  await accessToken();
+  const [rep, cmp] = await Promise.all([
+    qbo('reports/ProfitAndLoss', { start_date: start, end_date: end, ...(byMonth ? { summarize_column_by: 'Month' } : {}) }),
+    cStart && cEnd ? qbo('reports/ProfitAndLoss', { start_date: cStart, end_date: cEnd }) : Promise.resolve(null),
+  ]);
+  return {
+    start, end, byMonth, basis: rep?.Header?.ReportBasis || null, columns: plColumns(rep), rows: plTree(rep?.Rows?.Row || []),
+    compare: cmp ? { start: cStart, end: cEnd, totals: Object.fromEntries(flattenTotals(plTree(cmp?.Rows?.Row || []))) } : null,
+  };
+}
+// Transactions behind one account for a period (ProfitAndLossDetail filtered to that account).
+async function plDetail(accountId: string, start: string, end: string) {
+  const rep = await qbo('reports/ProfitAndLossDetail', { start_date: start, end_date: end, account: accountId, columns: 'tx_date,txn_type,doc_num,name,memo,split_acc,subt_nat_amount' });
+  const keys = (rep?.Columns?.Column || []).map((c: any) => (c.MetaData || []).find((m: any) => m.Name === 'ColKey')?.Value || c.ColTitle);
+  const at = (k: string) => keys.indexOf(k);
+  const out: any[] = [];
+  const walk = (rows: Row[]) => {
+    for (const r of rows || []) {
+      if (r.Rows?.Row) walk(r.Rows.Row);
+      if (r.type !== 'Data' && !(r.ColData && !r.Summary)) continue;
+      const cd = r.ColData || [];
+      const get = (k: string) => (at(k) >= 0 ? cd[at(k)] : null) || {};
+      const date = get('tx_date').value;
+      if (!isoDate(date)) continue; // skips "Beginning balance" style rows
+      out.push({ date, type: get('txn_type').value || '', txnId: get('txn_type').id || null, doc: get('doc_num').value || '', name: get('name').value || '',
+        memo: get('memo').value || '', split: get('split_acc').value || '', amount: num(get('subt_nat_amount').value) });
+    }
+  };
+  walk(rep?.Rows?.Row || []);
+  out.sort((a, b) => b.date.localeCompare(a.date));
+  return { accountId, start, end, items: out.slice(0, 500), total: round2(out.reduce((a, x) => a + x.amount, 0)), count: out.length };
+}
+
 /* ---------- Bookkeeping: review every transaction, recategorize ---------- */
 // Types HQ lists for review. Purchase (checks, card charges, expenses), Bill and Deposit lines can be
 // recategorized; the rest are confirm-only (their money moves through other accounts/links).
@@ -453,6 +522,18 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'refresh') return json(req, await saveSnapshot(await buildSnapshot(), uid));
+
+    if (action === 'pl') {
+      const start = isoDate(body.start), end = isoDate(body.end);
+      if (!start || !end || start > end) return json(req, { error: 'Pick a valid date range' }, 400);
+      const cStart = isoDate(body.compareStart), cEnd = isoDate(body.compareEnd);
+      return json(req, await plStatement(start, end, !!body.byMonth, cStart && cEnd && cStart <= cEnd ? cStart : null, cStart && cEnd && cStart <= cEnd ? cEnd : null));
+    }
+    if (action === 'pldetail') {
+      const start = isoDate(body.start), end = isoDate(body.end), acct = String(body.accountId || '');
+      if (!start || !end || !/^\d+$/.test(acct)) return json(req, { error: 'Pick an account and dates' }, 400);
+      return json(req, await plDetail(acct, start, end));
+    }
 
     if (action === 'books') {
       const since = isoDate(body.since);
