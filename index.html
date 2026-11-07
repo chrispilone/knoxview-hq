@@ -523,6 +523,17 @@ label.extra{margin:0}
 .viewas-list button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--border);background:var(--panel);border-radius:9px;padding:10px 12px;margin-bottom:8px}
 .viewas-list button:hover{border-color:var(--accent)}
 .viewas-list button.cur{border-color:var(--accent);background:var(--accent-soft)}
+.home-note{white-space:pre-wrap;font-size:14px;border-left:4px solid var(--accent)}
+.mini-list{display:flex;flex-direction:column;gap:6px}
+.role-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.role-tabs button{border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:6px 12px;font-weight:500;color:var(--muted)}
+.role-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.w-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border)}
+.w-row:last-child{border-bottom:none}
+.w-row input[type=checkbox]{width:18px;height:18px;flex:none}
+.w-row .t{flex:1;min-width:0}.w-row .t b{font-weight:500}.w-row .t span{display:block;font-size:12px;color:var(--muted)}
+.w-row .mv{border:1px solid var(--border);background:var(--panel);border-radius:6px;width:28px;height:28px;padding:0;color:var(--muted)}
+.w-row .mv:disabled{opacity:.35;cursor:default}
 .perm-group{margin:0 0 16px}
 .perm-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
 .perm-row{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);margin:0;font-weight:500;color:var(--text);font-size:14px;cursor:pointer}
@@ -1004,6 +1015,12 @@ const isOwner = () => S.me?.role === 'owner';
 const PERM_SECTIONS = [['tasks','Tasks'],['mail','Mail','Their own Gmail inbox inside HQ'],['calendar','Calendar','Their own Google Calendar and My Day'],['photo','Photo projects'],['video','Video projects'],['agents','Agents tab'],['chat','Chat & direct messages']];
 const PERM_ACTIONS = [['all_projects','See all projects','Off = only projects assigned to them'],['create_projects','Create new projects'],['edit_projects','Edit projects','Status, details, checklists, revisions'],['delete_projects','Delete projects'],['manage_agents','Add & edit agents'],['upload_logos','Upload & remove agent logos']];
 const roleDefault = (role, k) => !!S.roleDefaults?.[role]?.[k];
+async function loadRoleAccess(){
+  const { data, error } = await sb.from('role_access').select('*');
+  if (error) console.warn(error);
+  S.roleAccess = Object.fromEntries((data || []).map(r => [r.role, r]));
+  S.roleDefaults = Object.fromEntries((data || []).filter(r => r.role !== 'owner').map(r => [r.role, r.perms || {}]));
+}
 const permFor = (m, k) => !m ? false : m.role === 'owner' ? true : (m.permissions && k in m.permissions ? !!m.permissions[k] : roleDefault(m.role, k));
 const can = k => permFor(S.me, k);
 const viewAllowed = v => ['tasks','mail','calendar','agents','chat'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' ? isOwner() : true;
@@ -1078,8 +1095,7 @@ async function boot(session){
   loadPrefs();
   $('#userChip').textContent = `${S.me.full_name} · ${ROLE_LABEL[S.me.role]}`;
   paintPreviewChrome();
-  const rd = await sb.rpc('role_defaults');
-  S.roleDefaults = rd.data || {};
+  await loadRoleAccess();
   applyAccess();
   show('app');
   await Promise.all([loadAll(), loadTasks(), loadCalStatus()]);
@@ -1161,7 +1177,10 @@ function watchAccess(){
     const { data, error } = await sb.from('team_members').select('id, role, permissions, active').eq('id', S.me.id).maybeSingle();
     if (error) return;
     if (!data || !data.active) { clearInterval(accessTimer); if (S.preview) switchViewAs(null); else await sb.auth.signOut(); return; }
-    if (data.role !== S.me.role || JSON.stringify(data.permissions || {}) !== JSON.stringify(S.me.permissions || {})) {
+    const before = JSON.stringify(S.roleAccess?.[data.role] || null);
+    await loadRoleAccess();
+    const roleChanged = JSON.stringify(S.roleAccess?.[data.role] || null) !== before;
+    if (roleChanged || data.role !== S.me.role || JSON.stringify(data.permissions || {}) !== JSON.stringify(S.me.permissions || {})) {
       Object.assign(S.me, data); applyAccess();
       if (!viewAllowed(S.view)) location.hash = '#/home'; else render();
     }
@@ -1282,28 +1301,72 @@ function pipelineHTML(m){
     </div>
     <div class="pipe-foot">
       <span>${overdue ? `<b style="color:var(--danger)">${overdue} overdue</b>` : 'Nothing overdue'}</span><span>·</span><span>${unassigned} unassigned</span>
-      <span class="spacer"></span><button class="btn small ${m}" data-new="${m}">+ New ${m} project</button>
+      <span class="spacer"></span>${can('create_projects') ? `<button class="btn small ${m}" data-new="${m}">+ New ${m} project</button>` : ''}
     </div>
   </div>`;
 }
+/* Home is built from widgets. Each role's layout (which widgets, in what order, plus a note)
+   is set by the owner in Team → Roles and stored in role_access.home. */
+const HOME_WIDGETS = [
+  ['my_day', 'My Day at a Glance', 'Today\'s appointments from their own Google Calendar', () => can('calendar')],
+  ['my_tasks', 'My tasks', 'Their open tasks with a quick-add box', () => can('tasks')],
+  ['my_queue', 'My projects', 'Projects assigned to them that aren\'t delivered yet', () => can('photo') || can('video')],
+  ['review_queue', 'Needs review', 'Projects that are Ready for Review or Need Revision', () => can('photo') || can('video')],
+  ['pipeline', 'Project pipeline', 'Counts by status for the Photo and Video boards', () => can('photo') || can('video')],
+];
+const DEFAULT_HOME = { widgets: ['my_day', 'my_tasks'], note: '' };
+const homeLayout = role => ({ ...DEFAULT_HOME, ...(S.roleAccess?.[role]?.home || {}) });
+const WIDGET_SPAN = { my_day: 7, my_tasks: 5, my_queue: 7, review_queue: 7, pipeline: 12 };
+function widgetHTML(w, span){
+  const projList = (list, empty) => list.length ? `<div class="mini-list">${list.slice(0, 12).map(miniRow).join('')}</div>${list.length > 12 ? `<div class="more" style="margin-top:8px;font-size:13px">+ ${list.length - 12} more on the boards</div>` : ''}` : `<div class="none">${empty}</div>`;
+  const order = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));
+  if (w === 'my_day') return `<div class="panel span-${span}" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
+      ${S.cal.status?.connected && !S.preview ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
+      <div class="md-body"><div class="none">Loading your day…</div></div></div>`;
+  if (w === 'my_tasks') return `<div class="panel span-${span}" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
+      ${quickAddHTML('qHome')}
+      <div class="tlist" style="margin-top:10px"></div><div class="more"></div></div>`;
+  if (w === 'my_queue') {
+    const mine = S.projects.filter(p => p.assigned_to === S.me.id && !DONE.includes(p.status)).sort((x, y) => (order[x.status] - order[y.status]) || String(y.created_at).localeCompare(String(x.created_at)));
+    return `<div class="panel span-${span} home-proj"><h2>My projects <span class="count">${mine.length}</span></h2>${projList(mine, 'Nothing assigned to you right now.')}</div>`;
+  }
+  if (w === 'review_queue') {
+    const rv = S.projects.filter(p => ['ready_for_review', 'needs_revision'].includes(p.status)).sort((x, y) => order[x.status] - order[y.status]);
+    return `<div class="panel span-${span} home-proj"><h2>Needs review <span class="count">${rv.length}</span></h2>${projList(rv, 'Nothing waiting for review.')}</div>`;
+  }
+  if (w === 'pipeline') { const ms = ['photo', 'video'].filter(m => can(m)); return ms.map(m => ms.length === 1 ? pipelineHTML(m).replace('span-6', 'span-12') : pipelineHTML(m)).join(''); }
+  return '';
+}
 async function renderHome(){
   const now = new Date();
+  const layout = homeLayout(S.me.role);
+  const ok = Object.fromEntries(HOME_WIDGETS.map(([k, , , allow]) => [k, allow()]));
+  const widgets = (layout.widgets || []).filter(w => ok[w]);
+  // two half-width widgets side by side; a widget left on its own row goes full width
+  let row = 0;
+  const spans = widgets.map((w, i) => {
+    let sp = WIDGET_SPAN[w] || 12;
+    if (sp < 12) {
+      const next = widgets[i + 1], nsp = WIDGET_SPAN[next] || 12;
+      if (row === 0 && !(next && nsp < 12 && sp + nsp <= 12)) sp = 12;
+      else if (row > 0) sp = 12 - row;
+    }
+    row = (row + sp) % 12;
+    return sp;
+  });
   $('#homeView').innerHTML = `
     <div class="page-head"><div><h1>${greeting()}, ${esc(firstName(S.me.full_name))}</h1>
       <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
       ${can('tasks') ? `<div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div>` : ''}</div>
+    ${layout.note ? `<div class="panel home-note" style="margin-bottom:16px">${esc(layout.note).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')}</div>` : ''}
     <div class="home-grid">
-      ${!can('calendar') && !can('tasks') ? `<div class="panel span-12"><div class="none">Use the menu to open your projects and chat.</div></div>` : ''}
-      ${can('calendar') ? `<div class="panel ${can('tasks') ? 'span-7' : 'span-12'}" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
-        ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
-        <div class="md-body"><div class="none">Loading your day…</div></div></div>` : ''}
-      ${can('tasks') ? `<div class="panel ${can('calendar') ? 'span-5' : 'span-12'}" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
-        ${quickAddHTML('qHome')}
-        <div class="tlist" style="margin-top:10px"></div><div class="more"></div></div>` : ''}
+      ${widgets.length ? widgets.map((w, i) => widgetHTML(w, spans[i])).join('') : `<div class="panel span-12"><div class="none">Use the menu to open your projects and chat.</div></div>`}
     </div>`;
   if ($('#homeNewTask')) $('#homeNewTask').onclick = openQuickTask;
   if ($('#qHome')) wireQuickAdd($('#qHome'), { onSaved: () => paintHomeTasks() });
   paintHomeTasks(); paintMyDay();
+  bindOpeners($('#homeView'));
+  $('#homeView').querySelectorAll('[data-new]').forEach(b => b.onclick = () => openNewProject(b.dataset.new));
   const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
 }
 function bindOpeners(root){ root.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open)); }
@@ -4604,6 +4667,7 @@ async function renderTeam(){
     <td style="text-align:right"><button class="btn small" data-rehire="${t.id}">Rehire</button></td></tr>`).join('');
   if (S.view !== 'team') return;
   $('#teamList').innerHTML = `
+    ${owner ? `<div style="display:flex;justify-content:flex-end;margin:-6px 0 12px"><button class="btn" id="rolesBtn">⚙ Roles: default access &amp; Home screens</button></div>` : ''}
     ${pend ? `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase">Pending sign-ups</h3><div class="table-wrap"><table class="list" style="margin-bottom:24px"><tbody>${pend}</tbody></table></div>` : ''}
     <div class="table-wrap"><table class="list"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
     ${formerRows ? `<details style="margin-top:24px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase">Former team members (${former.length})</summary>
@@ -4611,7 +4675,14 @@ async function renderTeam(){
   document.querySelectorAll('[data-team-dm]').forEach(b => b.onclick = () => startDM(b.dataset.teamDm));
   if (!owner) return;
   const upd = async (id, patch) => { const { error } = await sb.from('team_members').update(patch).eq('id', id); if (error) fail(error); else { toast('Updated'); await loadAll(); renderTeam(); } };
-  document.querySelectorAll('[data-role]').forEach(s => s.onchange = () => upd(s.dataset.role, { role: s.value }));
+  $('#rolesBtn').onclick = () => openRoles();
+  document.querySelectorAll('[data-role]').forEach(s => s.onchange = () => {
+    const t = S.team.find(x => x.id === s.dataset.role);
+    const custom = Object.keys(t?.permissions || {}).filter(k => !!t.permissions[k] !== roleDefault(t.role, k)).length;
+    const patch = { role: s.value };
+    if (custom && confirm(`${t.full_name} has ${custom} custom access setting${custom === 1 ? '' : 's'}. Reset them to the ${ROLE_LABEL[s.value]} defaults?\n\nOK = use ${ROLE_LABEL[s.value]} defaults · Cancel = keep their custom settings`)) patch.permissions = {};
+    upd(s.dataset.role, patch);
+  });
   document.querySelectorAll('[data-slack]').forEach(s => s.onchange = () => upd(s.dataset.slack, { slack_user_id: s.value || null }));
   document.querySelectorAll('[data-access]').forEach(b => b.onclick = () => openAccess(b.dataset.access));
   document.querySelectorAll('[data-remove]').forEach(b => b.onclick = () => openRemove(b.dataset.remove));
@@ -4628,6 +4699,81 @@ async function renderTeam(){
 async function reloadChatMembers(){
   const { data } = await sb.from('chat_members').select('*');
   if (data) S.chat.members = data;
+}
+
+/* ----- Roles editor: default access, Home screen and chat channels per role ----- */
+let rolesTab = 'video_editor';
+function openRoles(role){
+  if (role) rolesTab = role;
+  const r = rolesTab, ra = S.roleAccess[r] || { role: r, perms: {}, home: {} };
+  const isOwnerRole = r === 'owner';
+  const home = homeLayout(r);
+  const people = S.team.filter(t => t.active && t.role === r);
+  const custom = people.filter(t => Object.keys(t.permissions || {}).some(k => !!t.permissions[k] !== roleDefault(r, k)));
+  const on = new Set(home.widgets);
+  const ordered = [...home.widgets.filter(w => HOME_WIDGETS.some(x => x[0] === w)), ...HOME_WIDGETS.map(x => x[0]).filter(w => !on.has(w))];
+  const wrow = (w, i) => { const def = HOME_WIDGETS.find(x => x[0] === w); const active = on.has(w);
+    return `<div class="w-row"><input type="checkbox" data-w="${w}" ${active ? 'checked' : ''} />
+      <div class="t"><b>${esc(def[1])}</b><span>${esc(def[2])}</span></div>
+      ${active ? `<button class="mv" data-up="${w}" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button><button class="mv" data-down="${w}" ${i === home.widgets.length - 1 ? 'disabled' : ''} title="Move down">↓</button>` : ''}</div>`; };
+  const prow = ([k, label, desc]) => `<label class="perm-row"><input type="checkbox" data-rp="${k}" ${ra.perms?.[k] ? 'checked' : ''} />
+    <span>${esc(label)}${desc ? `<span class="d">${esc(desc)}</span>` : ''}</span></label>`;
+  const chans = S.chat.channels.filter(c => c.kind === 'channel');
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><h2>Roles</h2>
+    <p class="muted" style="margin:-8px 0 12px;font-size:13px">Set what each role gets by default. New people get these the moment you pick their role. Changes also apply to everyone already in that role, except settings you've customized for one person.</p>
+    <div class="role-tabs">${ROLES.map(([k, l]) => `<button data-rt="${k}" class="${k === r ? 'active' : ''}">${esc(l)}</button>`).join('')}</div>
+    <p class="muted" style="font-size:13px;margin:0 0 14px">${people.length ? `${people.length} ${people.length === 1 ? 'person has' : 'people have'} this role${custom.length ? ` · ${custom.length} with custom access (${custom.map(t => esc(firstName(t.full_name))).join(', ')})` : ''}.` : 'Nobody has this role yet.'}
+      ${people.length && !isOwnerRole ? ` <a href="#" id="rolePreview">Preview their Home with View as →</a>` : ''}</p>
+
+    <div class="perm-group"><h3>Home screen</h3>
+      <p class="muted" style="font-size:12.5px;margin:0 0 6px">Turn panels on or off and put them in order. A panel only shows if the person also has access to that section.</p>
+      ${ordered.map(wrow).join('')}
+      <label style="margin-top:12px">Note at the top of their Home (optional)</label>
+      <textarea id="roleNote" placeholder="e.g. Reminder: export branded and unbranded, and post in #video-editing when done.">${esc(home.note || '')}</textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn small" id="noteSave">Save note</button></div>
+    </div>
+    ${isOwnerRole ? `<p class="muted" style="font-size:13px">The owner always has full access to everything.</p>` : `
+    <div class="perm-group"><h3>Default access: sections</h3>${PERM_SECTIONS.map(prow).join('')}</div>
+    <div class="perm-group"><h3>Default access: what they can do</h3>${PERM_ACTIONS.map(prow).join('')}</div>
+    <div class="perm-group"><h3>Chat channels they join automatically</h3>
+      ${chans.map(c => `<label class="perm-row"><input type="checkbox" data-rc="${c.id}" ${c.everyone || (c.default_roles || []).includes(r) ? 'checked' : ''} ${c.everyone ? 'disabled' : ''} />
+        <span># ${esc(c.name)}${c.everyone ? `<span class="d">Everyone is in this channel</span>` : `<span class="d">Applies to people approved or switched to this role from now on</span>`}</span></label>`).join('')}
+    </div>`}
+    <div class="actions"><button class="btn primary" id="rolesDone">Done</button></div>
+  </div>`;
+  const close = () => { closeLayer(); renderTeam(); };
+  $('#ov').onclick = close; $('#rolesDone').onclick = close;
+  document.querySelectorAll('[data-rt]').forEach(b => b.onclick = () => openRoles(b.dataset.rt));
+  const pv = $('#rolePreview'); if (pv) pv.onclick = e => { e.preventDefault(); switchViewAs(people[0].id); };
+  const save = async patch => {
+    const { error } = await sb.from('role_access').update(patch).eq('role', r);
+    if (error) { fail(error); return false; }
+    S.roleAccess[r] = { ...ra, ...patch };
+    if (patch.perms) S.roleDefaults[r] = patch.perms;
+    return true;
+  };
+  const saveHome = async h => { if (await save({ home: { ...home, ...h } })) openRoles(); };
+  document.querySelectorAll('[data-w]').forEach(cb => cb.onchange = () => {
+    const w = cb.dataset.w;
+    saveHome({ widgets: cb.checked ? [...home.widgets, w] : home.widgets.filter(x => x !== w) });
+  });
+  const move = (w, d) => { const list = [...home.widgets], i = list.indexOf(w), j = i + d; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; saveHome({ widgets: list }); };
+  document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => move(b.dataset.up, -1));
+  document.querySelectorAll('[data-down]').forEach(b => b.onclick = () => move(b.dataset.down, 1));
+  $('#noteSave').onclick = async () => { if (await save({ home: { ...home, note: $('#roleNote').value.trim() } })) toast('Note saved'); };
+  document.querySelectorAll('[data-rp]').forEach(cb => cb.onchange = async () => {
+    const perms = { ...(ra.perms || {}), [cb.dataset.rp]: cb.checked };
+    if (!await save({ perms })) cb.checked = !cb.checked;
+  });
+  document.querySelectorAll('[data-rc]').forEach(cb => cb.onchange = async () => {
+    const c = S.chat.channels.find(x => x.id === cb.dataset.rc); const cur = c.default_roles || [];
+    const next = cb.checked ? [...new Set([...cur, r])] : cur.filter(x => x !== r);
+    const { error } = await sb.from('chat_channels').update({ default_roles: next }).eq('id', c.id);
+    if (error) { cb.checked = !cb.checked; return fail(error); }
+    c.default_roles = next;
+  });
 }
 
 /* ----- Access panel ----- */
