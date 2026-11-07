@@ -374,7 +374,7 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .stat.alert .n{color:var(--danger)}
 
 /* Board */
-.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(165px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
 .col{background:var(--panel-2);border-radius:var(--radius);padding:10px;min-height:200px;display:flex;flex-direction:column}
 .col.drag-over{outline:2px dashed var(--accent)}
 .col-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;margin:2px 4px 10px}
@@ -900,7 +900,7 @@ label.extra{margin:0}
           <button data-l="board">Board</button>
           <button data-l="list">List</button>
         </div>
-        <label class="check"><input type="checkbox" id="showDone" /> Show delivered/archived</label>
+        <label class="check"><input type="checkbox" id="showDone" /> Show all delivered &amp; archived</label>
       </div>
       <div id="boardWrap" class="board"></div>
       <div id="listWrap" class="table-wrap hidden"></div>
@@ -963,6 +963,10 @@ const STATUSES = [
 ];
 const STATUS_LABEL = Object.fromEntries(STATUSES);
 const DONE = ['delivered','archived'];
+// The Delivered column is always on the boards and shows the last 14 days; "Show all delivered & archived" shows everything.
+const RECENT_DELIVERED_DAYS = 14;
+const recentlyDelivered = p => p.status === 'delivered' && p.delivered_at && (Date.now() - new Date(p.delivered_at).getTime()) < RECENT_DELIVERED_DAYS * 864e5;
+const onBoard = p => S.showDone || !DONE.includes(p.status) || recentlyDelivered(p);
 const DELIVERY = [['spiro','Spiro'],['text_message','Text Message'],['email','Email (template)'],['chris_delivers','Chris will deliver']];
 const TASK_KINDS = [['drone_pin','Drone Pin Photo'],['virtual_twilight','Virtual Twilight'],['virtual_staging','Virtual Staging'],
   ['object_removal','Object Removal'],['property_lines','Property Lines'],['callout_graphics','Callout Graphics'],['custom','Custom Task']];
@@ -1424,6 +1428,7 @@ function cardHTML(p){
     <div class="meta">
       ${typeName(p.project_type_id) ? `<span class="tag">${esc(typeName(p.project_type_id))}</span>` : ''}
       ${p.due_date ? `<span class="tag ${isOverdue(p) ? 'overdue' : ''}">Due ${esc(fmtShort(p.due_date))}</span>` : ''}
+      ${p.status === 'delivered' && p.delivered_at ? `<span class="tag">Delivered ${esc(fmtShort(p.delivered_at))}</span>` : ''}
     </div>
     <div class="meta" style="margin-top:6px">
       ${[agentName(p.agent_id) ? esc(agentName(p.agent_id)) : '', p.assigned_to ? esc(memberName(p.assigned_to)) : '<i>Unassigned</i>'].filter(Boolean).map(x => `<span>${x}</span>`).join('<span>·</span>')}
@@ -1434,11 +1439,12 @@ function cardHTML(p){
 }
 function renderBoard(){
   const list = filtered();
-  const cols = STATUSES.filter(([s]) => S.showDone || !DONE.includes(s));
+  const cols = STATUSES.filter(([s]) => S.showDone || s !== 'archived');
   $('#boardWrap').innerHTML = cols.map(([s,l]) => {
-    const items = list.filter(p => p.status === s).sort(byDue);
+    const items = list.filter(p => p.status === s && onBoard(p)).sort(s === 'delivered' ? (a, b) => String(b.delivered_at || '').localeCompare(String(a.delivered_at || '')) : byDue);
+    const tip = s === 'delivered' && !S.showDone ? ` title="Delivered in the last ${RECENT_DELIVERED_DAYS} days. Tick “Show all delivered & archived” to see older ones."` : '';
     return `<div class="col" data-status="${s}">
-      <div class="col-head"><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>
+      <div class="col-head"${tip}><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>
       <div class="cards">${items.map(cardHTML).join('') || '<div class="empty-col">—</div>'}</div></div>`;
   }).join('');
   document.querySelectorAll('#boardWrap .card').forEach(c => {
@@ -1460,7 +1466,7 @@ function renderBoard(){
   });
 }
 function renderList(){
-  const list = filtered().filter(p => S.showDone || !DONE.includes(p.status)).sort(byDue);
+  const list = filtered().filter(onBoard).sort(byDue);
   if (!list.length) { $('#listWrap').innerHTML = `<div class="empty">No ${S.media} projects match.</div>`; return; }
   const isPhoto = S.media === 'photo';
   $('#listWrap').innerHTML = `<table class="list"><thead><tr>
