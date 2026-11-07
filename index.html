@@ -756,6 +756,9 @@ label.extra{margin:0}
 .mail-modal .mail-read{border:none;padding:16px 18px}
 .mail-modal .mail-back{display:inline-flex}
 .mcompose{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.mc-mode{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.mc-mode .seg button{padding:5px 12px;font-size:13px}
+.mc-solo{font-size:12px}
 .mc-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding:4px 0}
 .mc-row label{width:28px;margin:0;color:var(--muted);font-size:13px}
 .mc-row input{flex:1;border:none;background:none;padding:6px 2px;box-shadow:none}
@@ -2834,6 +2837,7 @@ function mailThreadHTML(id){
       <button class="btn small" data-mail-unread title="${unreadNow ? 'Mark as read' : 'Keep it bold in your inbox'}">${unreadNow ? 'Mark read' : 'Mark unread'}</button>
       ${MAIL.ctx ? '' : '<button class="btn small" data-mail-task>+ Task</button>'}
       <a class="btn small" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener" title="Open this conversation in Gmail">Gmail ↗</a>
+      <button class="btn small mread-top-reply" data-mail-reply="all">Reply all</button>
       <button class="btn small primary mread-top-reply" data-mail-reply="1">Reply</button>
     </div>
     <h2 class="mread-subj">${esc(subject)}</h2>
@@ -3051,13 +3055,14 @@ function linkedOpenTasks(id){
 }
 function mailComposeHTML(id){
   const c = MAIL.compose[id];
-  const def = replyDefaults(id, true);
-  const canAll = def && def.cc.length > 0;
   if (!c?.open) return `<div class="mread-foot">
-      ${canAll ? `<button class="btn" data-mail-reply="all">Reply all</button>` : ''}
+      <button class="btn" data-mail-reply="all">Reply all</button>
       <button class="btn primary" data-mail-reply="1">Reply</button></div>`;
+  const others = (replyDefaults(id, true)?.cc || []).length;
   const tasks = linkedOpenTasks(id);
   return `<div class="mcompose" id="mCompose">
+    <div class="mc-mode"><div class="seg"><button type="button" data-mc-mode="1" class="${c.all ? '' : 'active'}">Reply</button><button type="button" data-mc-mode="all" class="${c.all ? 'active' : ''}">Reply all${others ? ` <span class="muted">+${others}</span>` : ''}</button></div>
+      ${c.all && !others ? '<span class="muted mc-solo">No one else is on this email</span>' : ''}</div>
     <div class="mc-row"><label>To</label><input data-mc="to" value="${esc(c.to)}" placeholder="name@example.com" /></div>
     ${c.showCc || c.cc ? `<div class="mc-row"><label>Cc</label><input data-mc="cc" value="${esc(c.cc)}" placeholder="Optional" /></div>`
       : `<button class="mc-addcc" data-mc-cc>+ Cc</button>`}
@@ -3080,6 +3085,12 @@ function wireCompose(r, id){
   });
   const box = r.querySelector('#mCompose'); if (!box) return;
   const c = MAIL.compose[id];
+  box.querySelectorAll('[data-mc-mode]').forEach(b => b.onclick = () => {
+    const all = b.dataset.mcMode === 'all'; if (all === c.all) return;
+    const def = replyDefaults(id, all); if (!def) return;
+    Object.assign(c, { all, to: def.to.join(', '), cc: def.cc.join(', '), showCc: all && def.cc.length > 0 });
+    paintMailRead(); $('#mCompose textarea')?.focus();
+  });
   box.querySelectorAll('[data-mc]').forEach(el => el.oninput = () => { c[el.dataset.mc] = el.value; });
   const ta = box.querySelector('textarea');
   ta.onkeydown = e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendReply(id); } };
