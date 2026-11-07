@@ -1,12 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-// Google bridge for Knox View HQ (Calendar + Gmail inbox: read, mark read/unread).
+// Google bridge for Knox View HQ (Calendar + Gmail: read, mark read/unread, reply).
 // Holds each team member's Google refresh token server-side and proxies Google API calls.
 const CLIENT_ID = (Deno.env.get('GOOGLE_CLIENT_ID') ?? '').trim();
 const CLIENT_SECRET = (Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '').trim();
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 const SCOPES = 'openid email https://www.googleapis.com/auth/calendar.events';
-// gmail.modify = read + mark read/unread. HQ never sends, deletes or moves mail in stage 1.
+// gmail.modify = read, mark read/unread and send replies. HQ never deletes, archives or moves mail.
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
 const MAIL_SCOPES = `${SCOPES} ${GMAIL_SCOPE}`;
 const CAL = 'https://www.googleapis.com/calendar/v3';
@@ -94,6 +94,29 @@ function msgSummary(m: Record<string, any>) {
   return { id: m.id, from: hdr(h, 'From'), to: hdr(h, 'To'), subject: hdr(h, 'Subject'), date: Number(m.internalDate) || Date.parse(hdr(h, 'Date')) || null, labels: m.labelIds || [] };
 }
 
+
+/* ---------- Sending (replies) ---------- */
+function b64(str: string) {
+  const bytes = new TextEncoder().encode(str); let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+const wrap76 = (s: string) => s.replace(/.{1,76}/g, '$&\r\n');
+const oneLine = (s: string) => String(s || '').replace(/[\r\n]+/g, ' ').trim();
+const encWord = (s: string) => /[^\x20-\x7e]/.test(s) ? `=?UTF-8?B?${b64(s)}?=` : s;
+const EMAIL_RE = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]+$/;
+function fmtAddr(v: string) {
+  const s = oneLine(v); const m = s.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  const email = (m ? m[2] : s).trim(); const name = (m ? m[1] : '').trim();
+  if (!EMAIL_RE.test(email)) throw new Error(`“${s}” isn't a valid email address`);
+  if (!name) return email;
+  return /[^\x20-\x7e]/.test(name) ? `${encWord(name)} <${email}>` : `"${name.replace(/["\\]/g, '')}" <${email}>`;
+}
+const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const textToHtml = (s: string) => escHtml(s).replace(/\bhttps?:\/\/[^\s<]+/g, u => `<a href="${u}">${u}</a>`).replace(/\r?\n/g, '<br>');
+const htmlToText = (h: string) => h.replace(/<(style|script)[\s\S]*?<\/\1>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|tr|li|h\d)>/gi, '\n')
+  .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\n{3,}/g, '\n\n').trim();
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(req) });
   try {
@@ -144,7 +167,7 @@ Deno.serve(async (req) => {
     const token = await accessTokenFor(uid);
     if (!token) return json(req, { error: 'Google is not connected', notConnected: true }, 400);
 
-    /* ---------- Mail (read + mark read/unread only) ---------- */
+    /* ---------- Mail (read, mark read/unread, reply) ---------- */
     if (action.startsWith('mail_')) {
       const { data: acct } = await admin.from('google_accounts').select('scope').eq('member_id', uid).maybeSingle();
       if (!String(acct?.scope || '').includes(GMAIL_SCOPE)) return json(req, { error: 'Gmail is not connected', needsGmail: true }, 400);
@@ -189,6 +212,75 @@ Deno.serve(async (req) => {
           return { ...msgSummary(m), cc: hdr(h, 'Cc'), replyTo: hdr(h, 'Reply-To'), snippet: m.snippet || '', text: out.text.slice(0, 200_000), html: html.slice(0, 600_000), files: out.files };
         });
         return json(req, { id, messages });
+      }
+
+
+      if (action === 'mail_signature') {
+        try {
+          const d = await gfetch(token, '/settings/sendAs', {}, GMAIL);
+          const sa = (d.sendAs || []).find((x: { isPrimary?: boolean }) => x.isPrimary) || (d.sendAs || [])[0] || {};
+          return json(req, { signature: sa.signature || '', email: sa.sendAsEmail || null, name: sa.displayName || null });
+        } catch (_) { return json(req, { signature: '' }); }
+      }
+
+      if (action === 'mail_send') {
+        const threadId = String(body.threadId || '').replace(/[^0-9a-f]/gi, '');
+        const replyId = String(body.replyToId || '').replace(/[^0-9a-f]/gi, '');
+        const text = String(body.body || '').replace(/\r\n/g, '\n').trim();
+        if (!threadId || !replyId) return json(req, { error: 'Missing email to reply to' }, 400);
+        if (!text) return json(req, { error: 'Write a message first' }, 400);
+        if (text.length > 50_000) return json(req, { error: 'That message is too long' }, 400);
+        const to = (Array.isArray(body.to) ? body.to : []).map(String).filter((x: string) => x.trim()).map(fmtAddr);
+        const cc = (Array.isArray(body.cc) ? body.cc : []).map(String).filter((x: string) => x.trim()).map(fmtAddr);
+        if (!to.length) return json(req, { error: 'Add at least one recipient' }, 400);
+        if (to.length + cc.length > 25) return json(req, { error: 'Too many recipients' }, 400);
+
+        // The message being replied to: threading headers + quoted text
+        const orig = await gfetch(token, `/messages/${replyId}?format=full`, {}, GMAIL);
+        if (orig.threadId !== threadId) return json(req, { error: 'That email is not part of this conversation' }, 400);
+        const oh = orig.payload?.headers || [];
+        const msgId = hdr(oh, 'Message-ID') || hdr(oh, 'Message-Id');
+        const refs = [hdr(oh, 'References'), msgId].filter(Boolean).join(' ').trim();
+        const osubj = hdr(oh, 'Subject');
+        const subject = /^\s*re:/i.test(osubj) ? osubj : `Re: ${osubj}`.trim();
+        const parts = { text: '', html: '', files: [] as { name: string; size: number; type: string }[], inline: {} as Record<string, string> };
+        walk(orig.payload || {}, parts);
+        const odate = new Date(Number(orig.internalDate) || Date.now()).toLocaleString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        const ofrom = hdr(oh, 'From');
+        const attr = `On ${odate}, ${ofrom} wrote:`;
+
+        let sig = '';
+        if (body.signature !== false) {
+          try {
+            const d = await gfetch(token, '/settings/sendAs', {}, GMAIL);
+            const sa = (d.sendAs || []).find((x: { isPrimary?: boolean }) => x.isPrimary) || (d.sendAs || [])[0];
+            sig = sa?.signature || '';
+          } catch (_) { /* no signature */ }
+        }
+        const quoteHtml = parts.html || textToHtml(parts.text || '');
+        const html = `<div dir="ltr">${textToHtml(text)}</div>${sig ? `<br><div dir="ltr" class="gmail_signature">${sig}</div>` : ''}`
+          + `<br><div class="gmail_quote"><div dir="ltr" class="gmail_attr">${escHtml(attr)}<br></div>`
+          + `<blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">${quoteHtml}</blockquote></div>`;
+        const otext = (parts.text || htmlToText(parts.html || '')).split('\n').map(l => '> ' + l).join('\n');
+        const plain = `${text}${sig ? `\n\n${htmlToText(sig)}` : ''}\n\n${attr}\n${otext}`;
+        const boundary = 'kvhq_' + crypto.randomUUID().replace(/-/g, '');
+        const raw = [
+          `To: ${to.join(', ')}`,
+          ...(cc.length ? [`Cc: ${cc.join(', ')}`] : []),
+          `Subject: ${encWord(oneLine(subject))}`,
+          ...(msgId ? [`In-Reply-To: ${oneLine(msgId)}`, `References: ${oneLine(refs)}`] : []),
+          'MIME-Version: 1.0',
+          `Content-Type: multipart/alternative; boundary="${boundary}"`,
+          '',
+          `--${boundary}`,
+          'Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', wrap76(b64(plain)),
+          `--${boundary}`,
+          'Content-Type: text/html; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', wrap76(b64(html)),
+          `--${boundary}--`, '',
+        ].join('\r\n');
+        const rawUrl = b64(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const sent = await gfetch(token, '/messages/send', { method: 'POST', body: JSON.stringify({ raw: rawUrl, threadId }) }, GMAIL);
+        return json(req, { ok: true, id: sent.id, threadId: sent.threadId });
       }
 
       if (action === 'mail_mark') {

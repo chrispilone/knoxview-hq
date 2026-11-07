@@ -750,6 +750,22 @@ label.extra{margin:0}
 @media (max-width:640px){ .pc-gbar .pc-pick{width:100%} .pc-gbar .spacer{display:none} .pc-row-actions{width:100%;justify-content:flex-end} }
 @media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .side{grid-column:span 12} }
 @media (max-width:640px){ .fin-bal{grid-template-columns:1fr 1fr} .kpi .n{font-size:19px} .kpi{padding:10px} .kpi-row{gap:8px} .fin-actions{width:100%} .fin-actions .btn.primary{flex:1} }
+.temail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--accent-soft)}
+.temail span{flex:1;min-width:160px;font-size:13.5px;font-weight:600;color:var(--accent)}
+.modal.mail-modal{max-width:860px;width:calc(100vw - 32px);padding:0;max-height:calc(100vh - 40px);overflow-y:auto}
+.mail-modal .mail-read{border:none;padding:16px 18px}
+.mail-modal .mail-back{display:inline-flex}
+.mcompose{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--panel)}
+.mc-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding:4px 0}
+.mc-row label{width:28px;margin:0;color:var(--muted);font-size:13px}
+.mc-row input{flex:1;border:none;background:none;padding:6px 2px;box-shadow:none}
+.mc-addcc{border:none;background:none;color:var(--accent);font-size:12.5px;padding:6px 0}
+.mcompose textarea{width:100%;margin-top:10px;min-height:130px;font-size:14px;line-height:1.5;resize:vertical}
+.mc-note{font-size:12px;margin:6px 0 0}
+.mc-done{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px;font-weight:400}
+.mc-done input{width:auto}
+.mc-acts{display:flex;gap:8px;align-items:center;margin-top:10px}
+.mread-foot{gap:8px}
 /* Mail */
 .mail-head{align-items:flex-end}
 .mail-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
@@ -1627,7 +1643,8 @@ function renderList(){
 }
 
 /* ===================== LAYER (drawer/modal) ===================== */
-function closeLayer(){ $('#layer').innerHTML = ''; document.body.style.overflow = ''; }
+function closeLayer(){ $('#layer').innerHTML = ''; document.body.style.overflow = '';
+  if (typeof MAIL !== 'undefined' && MAIL.ctx) { MAIL.ctx = null; if (S.view === 'mail') renderMail(); } }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLayer(); });
 
 /* ----- New project ----- */
@@ -2220,7 +2237,7 @@ function taskRow(t){
   return `<div class="trow ${t.status === 'done' ? 'done' : ''} ${t.priority === 'high' ? 'high' : ''}" data-task="${t.id}">
     <button class="tcheck" data-toggle-task="${t.id}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
     <div class="tmain"><div class="tt" title="${esc(t.title)}">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
-      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${from}</div></div>
+      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${taskThreadId(t) ? '<span title="Has an email">✉ Email</span>' : ''}${from}</div></div>
     ${t.status === 'doing' ? '<span class="tstate">In progress</span>' : ''}
     ${t.status === 'done' ? `<span class="due">${esc(fmtShort(t.done_at))}</span>` : dueLabel(t.due_date)}${who}
   </div>`;
@@ -2249,7 +2266,7 @@ function quickAddHTML(id){
     <div class="qchips"></div>
   </div>`;
 }
-function wireQuickAdd(root, { onSaved, autofocus, prefill, extraNotes, agentId } = {}){
+function wireQuickAdd(root, { onSaved, autofocus, prefill, extraNotes, agentId, gmailThreadId } = {}){
   const input = root.querySelector('.qinput'), chips = root.querySelector('.qchips');
   const sumBox = root.querySelector('.qsum'), sumIn = root.querySelector('.qtitle');
   let over = {};
@@ -2282,7 +2299,7 @@ function wireQuickAdd(root, { onSaved, autofocus, prefill, extraNotes, agentId }
     const title = (over.title ?? p.summary ?? '').trim() || p.summary || raw.slice(0, 90);
     const notes = [p.details, extraNotes].filter(Boolean).join('\n\n');
     const row = { title, notes, category: p.cat, due_date: p.due || null, priority: p.high ? 'high' : 'normal',
-      assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id || agentId || null, project_id: p.project_id };
+      assigned_to: over.who || S.me.id, created_by: S.me.id, agent_id: p.agent_id || agentId || null, project_id: p.project_id, ...(gmailThreadId ? { gmail_thread_id: gmailThreadId } : {}) };
     input.disabled = true;
     const { data, error } = await sb.from('tasks').insert(row).select().single();
     input.disabled = false;
@@ -2387,7 +2404,8 @@ function wireInbox(){
 async function acceptSuggestion(g){
     const notes = [g.details, '', `From: ${g.from_name || ''}${g.from_contact ? ` <${g.from_contact}>` : ''} via ${g.source === 'quo' ? 'Quo' : 'Gmail'}`, g.link ? `Link: ${g.link}` : ''].filter(x => x !== null && x !== undefined).join('\n').trim();
     const { data, error } = await sb.from('tasks').insert({ title: g.title, notes, category: g.category, priority: g.priority, due_date: g.due_date,
-      agent_id: g.agent_id, assigned_to: S.me.id, created_by: S.me.id }).select().single();
+      agent_id: g.agent_id, assigned_to: S.me.id, created_by: S.me.id,
+      gmail_thread_id: g.source === 'gmail' ? ((g.external_id || '').split(':')[1] || null) : null }).select().single();
     if (error) { fail(error); return false; }
     await sb.from('task_suggestions').update({ status: 'accepted', task_id: data.id, decided_at: new Date().toISOString() }).eq('id', g.id);
     S.tasks.unshift(data); S.suggestions = S.suggestions.filter(x => x.id !== g.id);
@@ -2481,6 +2499,9 @@ function openTask(id){
       <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
       <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
     </div>
+    ${taskThreadId(t) ? `<div class="temail"><span>✉ This task came from an email</span>${S.cal.status?.gmail && can('mail')
+        ? `<button type="button" class="btn small primary" id="tEmail">View email &amp; reply</button>`
+        : `<a class="btn small" href="${esc(gmailThreadUrl(taskThreadId(t)))}" target="_blank" rel="noopener">Open in Gmail ↗</a>`}</div>` : ''}
     <div style="margin-top:12px"><label>Details (everything you said)</label><textarea name="notes" placeholder="What needs to be done, links, phone numbers, anything you don't want to keep in your head…" style="min-height:130px">${esc(t.notes || '')}</textarea></div>
     <div style="margin-top:12px"><label>Checklist</label><div id="tChecklist"></div>
       <input id="tCheckNew" placeholder="Add a step and press Enter" /></div>
@@ -2499,6 +2520,7 @@ function openTask(id){
   $('#tCheckNew').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { checklist.push({ text: v, done: false }); e.target.value = ''; paintCL(); } } };
   $('#ov').onclick = closeLayer; $('#tCancel').onclick = closeLayer;
   const op = $('#tOpenProj'); if (op) op.onclick = () => { closeLayer(); openProject(t.project_id); };
+  const em = $('#tEmail'); if (em) em.onclick = () => openTaskEmail(t.id);
   const del = $('#tDel'); if (del) del.onclick = async () => {
     if (!confirm('Delete this task?')) return;
     const { error } = await sb.from('tasks').delete().eq('id', t.id); if (error) return fail(error);
@@ -2664,9 +2686,10 @@ function decodeEntities(s){ const t = document.createElement('textarea'); t.inne
 function mailThreadHTML(id){
   const th = MAIL.cache[id];
   const meta = (MAIL.threads || []).find(t => t.id === id);
-  if (!th) return `<div class="mread-head"><button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button></div>
+  const back = `<button class="btn small ghost mail-back" data-mail-back>${MAIL.ctx ? '‹ Back to task' : '‹ Inbox'}</button>`;
+  if (!th) return `<div class="mread-head">${back}</div>
     <h2 class="mread-subj">${esc(meta?.subject || 'Loading…')}</h2><div class="none">Loading…</div>`;
-  if (th.error) return `<div class="mread-head"><button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button></div><div class="mail-err">${esc(th.error)}</div>`;
+  if (th.error) return `<div class="mread-head">${back}</div><div class="mail-err">${esc(th.error)}</div>`;
   const msgs = th.messages;
   const subject = msgs[0]?.subject || meta?.subject || '(no subject)';
   const g = sugForThread(id);
@@ -2674,17 +2697,18 @@ function mailThreadHTML(id){
   const ag = agentForEmail(other.email);
   const unreadNow = msgs.some(m => (m.labels || []).includes('UNREAD'));
   return `<div class="mread-head">
-      <button class="btn small ghost mail-back" data-mail-back>‹ Inbox</button><span class="spacer"></span>
+      ${back}<span class="spacer"></span>
       <button class="btn small" data-mail-unread title="${unreadNow ? 'Mark as read' : 'Keep it bold in your inbox'}">${unreadNow ? 'Mark read' : 'Mark unread'}</button>
-      <button class="btn small" data-mail-task>+ Task</button>
-      <a class="btn small primary mread-top-reply" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener">Reply in Gmail ↗</a>
+      ${MAIL.ctx ? '' : '<button class="btn small" data-mail-task>+ Task</button>'}
+      <a class="btn small" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener" title="Open this conversation in Gmail">Gmail ↗</a>
+      <button class="btn small primary mread-top-reply" data-mail-reply="1">Reply</button>
     </div>
     <h2 class="mread-subj">${esc(subject)}</h2>
     ${ag ? `<div class="mread-agent">Agent: <a href="#" data-mail-agent="${ag.id}">${esc(ag.full_name)}</a></div>` : ''}
     ${g ? `<div class="mneeds"><div><b>📬 Needs a reply</b><span>${esc(g.title)}</span></div>
       <button class="btn small primary" data-sug-accept="${g.id}">Add task</button><button class="btn small ghost" data-sug-dis="${g.id}">Dismiss</button></div>` : ''}
     <div class="mmsgs">${msgs.map((m, i) => mailMsgHTML(id, m, i, msgs.length)).join('')}</div>
-    <div class="mread-foot"><a class="btn primary" href="${esc(gmailThreadUrl(id))}" target="_blank" rel="noopener">Reply in Gmail ↗</a></div>`;
+    ${mailComposeHTML(id)}`;
 }
 function mailMsgHTML(tid, m, i, n){
   const key = m.id;
@@ -2753,7 +2777,7 @@ async function openMailThread(id, force){
     try { MAIL.cache[id] = await gcal('mail_thread', { id }); }
     catch (e) { MAIL.cache[id] = { error: e.message }; }
     MAIL.busy[id] = false;
-    if (MAIL.openId !== id || S.view !== 'mail') return;
+    if (MAIL.openId !== id || (S.view !== 'mail' && !MAIL.ctx)) return;
     paintMailRead();
   } else paintFrames(id);
   // Mark read (like opening it in Gmail)
@@ -2800,7 +2824,10 @@ function wireMail(){
 function wireMailRead(){
   const r = $('#mailRead'); if (!r) return;
   const id = MAIL.openId;
-  r.querySelectorAll('[data-mail-back]').forEach(b => b.onclick = () => { location.hash = '#/mail'; });
+  r.querySelectorAll('[data-mail-back]').forEach(b => b.onclick = () => {
+    if (MAIL.ctx) { const tid = MAIL.ctx.taskId; MAIL.ctx = null; openTask(tid); } else location.hash = '#/mail';
+  });
+  wireCompose(r, id);
   r.querySelectorAll('[data-mmsg]').forEach(el => el.onclick = () => { MAIL.expanded[el.dataset.mmsg] = true; paintMailRead(); });
   r.querySelectorAll('[data-mmsg-toggle]').forEach(el => el.onclick = () => {
     const th = MAIL.cache[id]; if (!th?.messages || th.messages.length < 2) return;
@@ -2847,8 +2874,110 @@ function mailToTask(id){
     <p class="muted" style="font-size:12.5px;margin:12px 0 0">The email’s sender, subject and Gmail link are saved in the task’s details.</p>
     <div class="actions"><button class="btn" id="qClose">Close</button></div></div>`;
   $('#ov').onclick = closeLayer; $('#qClose').onclick = closeLayer;
-  wireQuickAdd($('#qMail'), { autofocus: true, prefill: `Reply to ${firstName(who.name)} about ${subject.replace(/^(re|fwd?|fw):\s*/gi, '')}`, extraNotes: extra, agentId: ag?.id,
+  wireQuickAdd($('#qMail'), { autofocus: true, prefill: `Reply to ${firstName(who.name)} about ${subject.replace(/^(re|fwd?|fw):\s*/gi, '')}`, extraNotes: extra, agentId: ag?.id, gmailThreadId: id,
     onSaved: () => closeLayer() });
+}
+
+/* ----- Email linked to a task ----- */
+// Tasks from Gmail carry gmail_thread_id; older ones only have the Gmail link in their details
+function taskThreadId(t){
+  if (!t) return null;
+  if (t.gmail_thread_id) return t.gmail_thread_id;
+  const n = t.notes || '';
+  const hex = n.match(/mail\.google\.com\/mail\/[^\s#]*#[a-z]+\/([0-9a-f]{12,20})(?![0-9a-z:])/i); if (hex) return hex[1].toLowerCase();
+  const dec = n.match(/thread-f:(\d{15,20})/); if (dec) { try { return BigInt(dec[1]).toString(16); } catch (e) {} }
+  return null;
+}
+function openTaskEmail(taskId){
+  const t = S.tasks.find(x => x.id === taskId); const id = taskThreadId(t); if (!id) return;
+  MAIL.ctx = { taskId };
+  MAIL.openId = id;
+  $('#mailView').innerHTML = ''; // one email reader on the page at a time (Mail tab redraws when this closes)
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+    <div class="modal wide mail-modal"><div class="mail-read" id="mailRead">${mailThreadHTML(id)}</div></div>`;
+  $('#ov').onclick = closeLayer;
+  wireMailRead(); openMailThread(id);
+}
+
+/* ----- Reply from HQ (sent through your Gmail; your Gmail signature is added) ----- */
+MAIL.compose = {};
+function splitAddrs(v){ return String(v || '').split(/[,;](?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => x.trim()).filter(Boolean); }
+function replyDefaults(id, all){
+  const msgs = MAIL.cache[id]?.messages || [];
+  const target = msgs.slice().reverse().find(m => !isMe(m.from)) || msgs[msgs.length - 1];
+  if (!target) return null;
+  const fromMe = isMe(target.from);
+  const to = fromMe ? splitAddrs(target.to) : [target.replyTo || target.from];
+  const seen = new Set([myEmail(), ...to.map(x => parseAddr(x).email)]);
+  const cc = all ? [...splitAddrs(target.to), ...splitAddrs(target.cc)].filter(x => { const e = parseAddr(x).email; if (seen.has(e)) return false; seen.add(e); return true; }) : [];
+  return { target, to, cc };
+}
+function linkedOpenTasks(id){
+  return S.tasks.filter(t => t.status !== 'done' && taskThreadId(t) === id && (t.assigned_to === S.me.id || t.created_by === S.me.id));
+}
+function mailComposeHTML(id){
+  const c = MAIL.compose[id];
+  const def = replyDefaults(id, true);
+  const canAll = def && def.cc.length > 0;
+  if (!c?.open) return `<div class="mread-foot">
+      ${canAll ? `<button class="btn" data-mail-reply="all">Reply all</button>` : ''}
+      <button class="btn primary" data-mail-reply="1">Reply</button></div>`;
+  const tasks = linkedOpenTasks(id);
+  return `<div class="mcompose" id="mCompose">
+    <div class="mc-row"><label>To</label><input data-mc="to" value="${esc(c.to)}" placeholder="name@example.com" /></div>
+    ${c.showCc || c.cc ? `<div class="mc-row"><label>Cc</label><input data-mc="cc" value="${esc(c.cc)}" placeholder="Optional" /></div>`
+      : `<button class="mc-addcc" data-mc-cc>+ Cc</button>`}
+    <textarea data-mc="body" rows="6" placeholder="Write your reply…">${esc(c.body)}</textarea>
+    <p class="muted mc-note">Sends from ${esc(myEmail())} with your Gmail signature, in the same conversation. It shows up in Gmail’s Sent folder.</p>
+    ${tasks.length ? tasks.map(t => `<label class="mc-done"><input type="checkbox" data-mc-done="${t.id}" ${c.done?.[t.id] !== false ? 'checked' : ''} /> Mark task done: <b>${esc(t.title)}</b></label>`).join('') : ''}
+    ${c.error ? `<div class="mail-err" style="margin:8px 0">${esc(c.error)}</div>` : ''}
+    <div class="mc-acts"><button class="btn ghost" data-mc-cancel>Discard</button><span class="spacer"></span>
+      <button class="btn primary" data-mc-send ${c.sending ? 'disabled' : ''}>${c.sending ? 'Sending…' : 'Send'}</button></div>
+  </div>`;
+}
+function wireCompose(r, id){
+  r.querySelectorAll('[data-mail-reply]').forEach(b => b.onclick = () => {
+    const all = b.dataset.mailReply === 'all';
+    const def = replyDefaults(id, all); if (!def) return;
+    const prev = MAIL.compose[id];
+    MAIL.compose[id] = { open: true, all, to: def.to.join(', '), cc: def.cc.join(', '), body: prev?.body || '', done: prev?.done || {}, showCc: all && def.cc.length > 0 };
+    paintMailRead();
+    const ta = $('#mCompose textarea'); if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  });
+  const box = r.querySelector('#mCompose'); if (!box) return;
+  const c = MAIL.compose[id];
+  box.querySelectorAll('[data-mc]').forEach(el => el.oninput = () => { c[el.dataset.mc] = el.value; });
+  const ta = box.querySelector('textarea');
+  ta.onkeydown = e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendReply(id); } };
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(Math.max(ta.scrollHeight, 130), 420) + 'px'; }; ta.addEventListener('input', grow); grow();
+  const cc = box.querySelector('[data-mc-cc]'); if (cc) cc.onclick = () => { c.showCc = true; paintMailRead(); box.ownerDocument.querySelector('[data-mc=cc]')?.focus(); };
+  box.querySelectorAll('[data-mc-done]').forEach(cb => cb.onchange = () => { c.done[cb.dataset.mcDone] = cb.checked; });
+  box.querySelector('[data-mc-cancel]').onclick = () => { if (c.body.trim() && !confirm('Discard this reply?')) return; delete MAIL.compose[id]; paintMailRead(); };
+  box.querySelector('[data-mc-send]').onclick = () => sendReply(id);
+}
+async function sendReply(id){
+  const c = MAIL.compose[id]; if (!c || c.sending) return;
+  const def = replyDefaults(id, c.all);
+  if (!c.body.trim()) { c.error = 'Write a message first.'; return paintMailRead(); }
+  if (!splitAddrs(c.to).length) { c.error = 'Add who it goes to.'; return paintMailRead(); }
+  c.sending = true; c.error = null; paintMailRead();
+  try {
+    await gcal('mail_send', { threadId: id, replyToId: def.target.id, to: splitAddrs(c.to), cc: splitAddrs(c.cc), body: c.body });
+  } catch (e) { c.sending = false; c.error = e.message || 'Could not send'; return paintMailRead(); }
+  // Close out the work tied to this email
+  const doneIds = linkedOpenTasks(id).filter(t => c.done?.[t.id] !== false).map(t => t.id);
+  for (const tid of doneIds) {
+    const t = S.tasks.find(x => x.id === tid);
+    const { error } = await sb.from('tasks').update({ status: 'done' }).eq('id', tid);
+    if (!error && t) { t.status = 'done'; t.done_at = new Date().toISOString(); }
+  }
+  const g = sugForThread(id); if (g) await dismissSuggestion(g.id);
+  delete MAIL.compose[id];
+  paintTaskBadge(); if (S.view === 'tasks') renderTasks(); else if (S.view === 'home') paintHomeTasks();
+  toast(doneIds.length ? `Reply sent · task marked done` : 'Reply sent');
+  MAIL.lastKey = ''; // inbox list refreshes next time
+  await openMailThread(id, true);
 }
 
 /* ===================== CALENDAR (Google Calendar via the gcal edge function) ===================== */
