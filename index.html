@@ -766,6 +766,42 @@ label.extra{margin:0}
 .mc-done input{width:auto}
 .mc-acts{display:flex;gap:8px;align-items:center;margin-top:10px}
 .mread-foot{gap:8px}
+/* Task view (read first, edit when needed) */
+.modal.tview{max-width:640px}
+.tv-head{display:flex;align-items:flex-start;gap:12px}
+.tv-check{flex:none;margin-top:4px;width:28px;height:28px;font-size:15px}
+.tv-check.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.tv-title{flex:1;border:none;background:none;padding:2px 0;font-family:inherit;font-size:20px;font-weight:650;line-height:1.3;color:var(--text);resize:none;overflow:hidden;box-shadow:none;min-height:0}
+.tv-title:focus{outline:none;background:var(--panel-2);border-radius:6px;padding:2px 6px;margin:0 -6px}
+.tv-x{flex:none;border:none;background:none;color:var(--muted);font-size:18px;padding:4px 6px;line-height:1}
+.tv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px 40px}
+.tv-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--text);line-height:1.3}
+.tv-chip:hover{background:var(--panel-2)}
+.tv-chip.ghost{color:var(--muted);border-style:dashed}
+.tv-chip.high{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 40%, var(--border));font-weight:600}
+.tv-chip .late{color:var(--danger)}
+.tv-chip .tcat{font-size:12.5px}
+.tview .temail{margin-top:16px}
+.tv-sec{margin-top:18px}
+.tv-lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.tv-notes{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.55;padding:8px 10px;margin:0 -10px;border-radius:8px;cursor:text;min-height:24px}
+.tv-notes:hover{background:var(--panel-2)}
+.tv-notes.empty{color:var(--muted)}
+.tv-notes a{word-break:break-all}
+.tv-addstep{border:none;background:none;box-shadow:none;padding:6px 0;color:var(--muted)}
+.tv-addstep:focus{color:var(--text);outline:none;border-bottom:1px solid var(--border)}
+.tv-props{margin-top:20px;border-top:1px solid var(--border);padding-top:10px}
+.tv-props summary{cursor:pointer;color:var(--muted);font-size:13px;padding:4px 0;list-style:none}
+.tv-props summary::-webkit-details-marker{display:none}
+.tv-props summary::before{content:"▸";display:inline-block;width:14px;transition:transform .15s}
+.tv-props[open] summary::before{transform:rotate(90deg)}
+.tv-props .grid3{margin-top:10px}
+.tv-props .flash{animation:tvflash .9s ease}
+@keyframes tvflash{0%,40%{background:var(--accent-soft);border-radius:8px}100%{background:transparent}}
+.tv-acts{margin-top:16px}
+.tview .cl-item [data-cl-rm]{opacity:.35}
+.tview .cl-item:hover [data-cl-rm]{opacity:1}
+@media (max-width:640px){ .tv-chips{margin-left:0} .tv-title{font-size:19px} }
 /* Pull to refresh */
 html,body{overscroll-behavior-y:none}
 main{will-change:auto}
@@ -2501,45 +2537,114 @@ function paintHomeTasks(){
 }
 
 /* ----- Task details ----- */
+// Task notes shown as readable text: links are clickable, long links get a short label
+function taskNotesHTML(text){
+  return esc(text || '').replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g, u => {
+    let label = u;
+    try {
+      const x = new URL(u.replace(/&amp;/g, '&'));
+      if (/mail\.google\.com$/.test(x.hostname)) label = 'Open in Gmail ↗';
+      else if (/dropbox\.com$/.test(x.hostname)) label = 'Dropbox link ↗';
+      else { const path = (x.pathname + x.search).replace(/\/$/, ''); label = x.hostname.replace(/^www\./, '') + (path.length > 28 ? path.slice(0, 26) + '…' : path); }
+    } catch (e) {}
+    return `<a href="${u}" target="_blank" rel="noopener" title="${u}">${esc(label)}</a>`;
+  });
+}
 function openTask(id){
   const t = S.tasks.find(x => x.id === id); if (!t) return toast('That task is no longer available');
   const canDelete = isOwner() || t.created_by === S.me.id;
   let checklist = JSON.parse(JSON.stringify(t.checklist || []));
   const people = S.team.filter(m => m.active || m.id === t.assigned_to);
   const projs = S.projects.filter(p => !DONE.includes(p.status) || p.id === t.project_id);
+  const tid = taskThreadId(t);
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal wide"><form id="tForm">
-    <label>Card title</label><input name="title" class="ttitle" value="${esc(t.title)}" maxlength="90" required />
-    <div class="grid3" style="margin-top:12px">
-      <div><label>Status</label><select name="status">${opt([['todo','To do'],['doing','In progress'],['done','Done']], t.status)}</select></div>
-      <div><label>Due date</label><input type="date" name="due_date" value="${esc(t.due_date || '')}" /></div>
-      <div><label>Assigned to</label><select name="assigned_to">${opt(people.map(m => [m.id, m.id === S.me.id ? `${m.full_name} (me)` : m.full_name]), t.assigned_to, 'Unassigned')}</select></div>
-      <div><label>Category</label><select name="category">${opt(TASK_CATS.map(c => [c.k, c.label]), t.category)}</select></div>
-      <div><label>Priority</label><select name="priority">${opt([['normal','Normal'],['high','High']], t.priority)}</select></div>
-      <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
-      <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
+  <div class="modal wide tview"><form id="tForm">
+    <div class="tv-head">
+      <button type="button" class="tcheck tv-check ${t.status === 'done' ? 'on' : ''}" id="tDone" title="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
+      <textarea name="title" class="tv-title" rows="1" maxlength="90" required>${esc(t.title)}</textarea>
+      <button type="button" class="tv-x" id="tX" aria-label="Close">✕</button>
     </div>
-    ${taskThreadId(t) ? `<div class="temail"><span>✉ This task came from an email</span>${S.cal.status?.gmail && can('mail')
+    <div class="tv-chips" id="tChips"></div>
+    ${tid ? `<div class="temail"><span>✉ This task came from an email</span>${S.cal.status?.gmail && can('mail')
         ? `<button type="button" class="btn small primary" id="tEmail">View email &amp; reply</button>`
-        : `<a class="btn small" href="${esc(gmailThreadUrl(taskThreadId(t)))}" target="_blank" rel="noopener">Open in Gmail ↗</a>`}</div>` : ''}
-    <div style="margin-top:12px"><label>Details (everything you said)</label><textarea name="notes" placeholder="What needs to be done, links, phone numbers, anything you don't want to keep in your head…" style="min-height:130px">${esc(t.notes || '')}</textarea></div>
-    <div style="margin-top:12px"><label>Checklist</label><div id="tChecklist"></div>
-      <input id="tCheckNew" placeholder="Add a step and press Enter" /></div>
-    <p class="muted" style="font-size:12px;margin:12px 0 0">Created ${esc(fmtDateTime(t.created_at))}${t.created_by ? ' by ' + esc(memberName(t.created_by)) : ''}${t.done_at ? ' · completed ' + esc(fmtDateTime(t.done_at)) : ''}</p>
-    <div class="actions">${canDelete ? `<button type="button" class="btn danger" id="tDel" style="margin-right:auto">Delete</button>` : ''}
-      ${t.project_id ? `<button type="button" class="btn" id="tOpenProj">Open project</button>` : ''}
-      <button type="button" class="btn" id="tCancel">Cancel</button><button class="btn primary">Save</button></div>
+        : `<a class="btn small" href="${esc(gmailThreadUrl(tid))}" target="_blank" rel="noopener">Open in Gmail ↗</a>`}</div>` : ''}
+    <div class="tv-sec"><div class="tv-lbl">Details</div>
+      <div class="tv-notes ${t.notes ? '' : 'empty'}" id="tNotesView" tabindex="0">${t.notes ? taskNotesHTML(t.notes) : 'Add details…'}</div>
+      <textarea name="notes" id="tNotes" class="hidden" placeholder="What needs to be done, links, phone numbers…">${esc(t.notes || '')}</textarea></div>
+    <div class="tv-sec"><div class="tv-lbl">Checklist <span class="muted" id="tClCount"></span></div><div id="tChecklist"></div>
+      <input id="tCheckNew" class="tv-addstep" placeholder="+ Add a step" /></div>
+    <details class="tv-props" id="tProps">
+      <summary>Edit due date, category, assignee…</summary>
+      <div class="grid3">
+        <div><label>Status</label><select name="status">${opt([['todo','To do'],['doing','In progress'],['done','Done']], t.status)}</select></div>
+        <div><label>Due date</label><input type="date" name="due_date" value="${esc(t.due_date || '')}" /></div>
+        <div><label>Assigned to</label><select name="assigned_to">${opt(people.map(m => [m.id, m.id === S.me.id ? `${m.full_name} (me)` : m.full_name]), t.assigned_to, 'Unassigned')}</select></div>
+        <div><label>Category</label><select name="category">${opt(TASK_CATS.map(c => [c.k, c.label]), t.category)}</select></div>
+        <div><label>Priority</label><select name="priority">${opt([['normal','Normal'],['high','High']], t.priority)}</select></div>
+        <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
+        <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
+      </div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Created ${esc(fmtDateTime(t.created_at))}${t.created_by ? ' by ' + esc(memberName(t.created_by)) : ''}${t.done_at ? ' · completed ' + esc(fmtDateTime(t.done_at)) : ''}</p>
+      ${canDelete ? `<button type="button" class="btn small danger" id="tDel" style="margin-top:10px">Delete task</button>` : ''}
+    </details>
+    <div class="actions tv-acts">
+      ${t.project_id ? `<button type="button" class="btn" id="tOpenProj">Open project</button>` : ''}<span class="spacer"></span>
+      <button type="button" class="btn" id="tCancel">Close</button><button class="btn primary hidden" id="tSave">Save changes</button></div>
   </form></div>`;
+  const form = $('#tForm'), f = n => form.elements[n];
+  let dirty = false;
+  const markDirty = () => { if (dirty) return; dirty = true; $('#tSave').classList.remove('hidden'); $('#tCancel').textContent = 'Cancel'; };
+  const title = f('title');
+  const growTitle = () => { title.style.height = 'auto'; title.style.height = title.scrollHeight + 'px'; };
+  title.oninput = () => { growTitle(); markDirty(); }; growTitle();
+  title.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } };
+
+  // Summary chips (read at a glance; tap one to change it)
+  const paintChips = () => {
+    const due = f('due_date').value, pr = f('priority').value, st = f('status').value, who = f('assigned_to').value;
+    const ag = f('agent_id').value, pj = f('project_id').value;
+    const chips = [];
+    if (pr === 'high') chips.push(`<button type="button" class="tv-chip high" data-edit="priority">! High priority</button>`);
+    chips.push(due ? `<button type="button" class="tv-chip" data-edit="due_date">📅 ${dueLabel(due).replace(/<[^>]+>/g, '') || fmtShort(due)}${dueLabel(due).includes('over') ? ' <b class="late">late</b>' : ''}</button>`
+                   : `<button type="button" class="tv-chip ghost" data-edit="due_date">📅 No due date</button>`);
+    if (st === 'doing') chips.push(`<button type="button" class="tv-chip" data-edit="status">In progress</button>`);
+    chips.push(`<button type="button" class="tv-chip" data-edit="category">${catTag(f('category').value)}</button>`);
+    if (who && who !== S.me.id) chips.push(`<button type="button" class="tv-chip" data-edit="assigned_to">👤 ${esc(firstName(memberName(who)))}</button>`);
+    if (!who) chips.push(`<button type="button" class="tv-chip ghost" data-edit="assigned_to">Unassigned</button>`);
+    if (ag) chips.push(`<button type="button" class="tv-chip" data-edit="agent_id">🏷 ${esc(agentName(ag))}</button>`);
+    if (pj) chips.push(`<button type="button" class="tv-chip" data-edit="project_id">🏠 ${esc(S.projects.find(p => p.id === pj)?.name || 'Project')}</button>`);
+    $('#tChips').innerHTML = chips.join('');
+    $('#tChips').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+      $('#tProps').open = true; const el = f(b.dataset.edit); el.focus();
+      el.closest('div').classList.add('flash'); setTimeout(() => el.closest('div').classList.remove('flash'), 900);
+      if (el.showPicker && el.tagName !== 'SELECT') try { el.showPicker(); } catch (e) {}
+    });
+  };
+  paintChips();
+  ['status','due_date','assigned_to','category','priority','agent_id','project_id'].forEach(n => f(n).addEventListener('change', () => { paintChips(); markDirty(); }));
+
+  // Details: read view, tap to edit
+  const nv = $('#tNotesView'), na = $('#tNotes');
+  const editNotes = () => { nv.classList.add('hidden'); na.classList.remove('hidden'); na.style.height = Math.min(Math.max(na.scrollHeight, 120), 420) + 'px'; na.focus(); };
+  nv.onclick = e => { if (!e.target.closest('a')) editNotes(); };
+  nv.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); editNotes(); } };
+  na.oninput = () => { markDirty(); na.style.height = 'auto'; na.style.height = Math.min(Math.max(na.scrollHeight, 120), 420) + 'px'; };
+
   const paintCL = () => {
+    const n = checklist.filter(c => c.done).length;
+    $('#tClCount').textContent = checklist.length ? `${n}/${checklist.length}` : '';
     $('#tChecklist').innerHTML = checklist.map((c, i) => `<div class="cl-item"><input type="checkbox" data-cl="${i}" ${c.done ? 'checked' : ''} />
-      <span class="${c.done ? 'muted' : ''}" style="${c.done ? 'text-decoration:line-through' : ''}">${esc(c.text)}</span><button type="button" class="btn small ghost" data-cl-rm="${i}">✕</button></div>`).join('');
-    document.querySelectorAll('[data-cl]').forEach(cb => cb.onchange = () => { checklist[+cb.dataset.cl].done = cb.checked; paintCL(); });
-    document.querySelectorAll('[data-cl-rm]').forEach(b => b.onclick = () => { checklist.splice(+b.dataset.clRm, 1); paintCL(); });
+      <span class="${c.done ? 'muted' : ''}" style="${c.done ? 'text-decoration:line-through' : ''}">${esc(c.text)}</span><button type="button" class="btn small ghost" data-cl-rm="${i}" aria-label="Remove step">✕</button></div>`).join('');
+    document.querySelectorAll('[data-cl]').forEach(cb => cb.onchange = () => { checklist[+cb.dataset.cl].done = cb.checked; markDirty(); paintCL(); });
+    document.querySelectorAll('[data-cl-rm]').forEach(b => b.onclick = () => { checklist.splice(+b.dataset.clRm, 1); markDirty(); paintCL(); });
   };
   paintCL();
-  $('#tCheckNew').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { checklist.push({ text: v, done: false }); e.target.value = ''; paintCL(); } } };
-  $('#ov').onclick = closeLayer; $('#tCancel').onclick = closeLayer;
+  $('#tCheckNew').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { checklist.push({ text: v, done: false }); e.target.value = ''; markDirty(); paintCL(); } } };
+  $('#tCheckNew').oninput = markDirty;
+
+  const close = () => { if (dirty && !confirm('Discard your changes to this task?')) return; closeLayer(); };
+  $('#ov').onclick = close; $('#tCancel').onclick = close; $('#tX').onclick = close;
   const op = $('#tOpenProj'); if (op) op.onclick = () => { closeLayer(); openProject(t.project_id); };
   const em = $('#tEmail'); if (em) em.onclick = () => openTaskEmail(t.id);
   const del = $('#tDel'); if (del) del.onclick = async () => {
@@ -2547,16 +2652,23 @@ function openTask(id){
     const { error } = await sb.from('tasks').delete().eq('id', t.id); if (error) return fail(error);
     S.tasks = S.tasks.filter(x => x.id !== t.id); closeLayer(); paintTaskBadge(); render(); toast('Task deleted');
   };
-  $('#tForm').onsubmit = async e => {
-    e.preventDefault();
-    const fd = Object.fromEntries(new FormData(e.target));
+  const save = async () => {
+    const fd = Object.fromEntries(new FormData(form));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    fd.title = (fd.title || '').replace(/\s*\n\s*/g, ' ').trim() || t.title;
     const pending = $('#tCheckNew').value.trim(); if (pending) checklist.push({ text: pending, done: false });
     fd.checklist = checklist;
     const { data, error } = await sb.from('tasks').update(fd).eq('id', t.id).select().single();
-    if (error) return fail(error);
-    Object.assign(t, data); closeLayer(); paintTaskBadge(); render(); toast('Task saved');
+    if (error) { fail(error); return false; }
+    Object.assign(t, data); paintTaskBadge(); render(); return true;
   };
+  // One tap to finish: saves any edits too
+  $('#tDone').onclick = async () => {
+    const done = f('status').value !== 'done';
+    f('status').value = done ? 'done' : 'todo';
+    if (await save()) { closeLayer(); toast(done ? 'Done ✓' : 'Marked not done'); }
+  };
+  form.onsubmit = async e => { e.preventDefault(); if (await save()) { closeLayer(); toast('Task saved'); } };
 }
 
 /* ===================== MAIL (Gmail Primary inbox via the gcal edge function) ===================== */
