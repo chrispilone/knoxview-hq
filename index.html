@@ -515,6 +515,14 @@ label.extra{margin:0}
 .logo-strip a{display:grid;place-items:center;width:84px;height:56px;border:1px solid var(--border);border-radius:8px;background:var(--logo-bg);padding:4px}
 .logo-strip a img{max-width:100%;max-height:100%;object-fit:contain}
 .logo-strip a .ext{font-weight:700;font-size:13px;color:var(--muted)}
+.preview-bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-18px -20px 16px;padding:10px 20px;background:#5b3fa6;color:#fff;font-size:13.5px}
+.preview-bar b{font-weight:700}
+.preview-bar .btn{margin-left:auto;background:#fff;color:#5b3fa6;border-color:#fff;font-weight:600}
+.preview-note{padding:40px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
+.side-viewas{display:block;width:100%;text-align:left;border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:7px 10px;margin:0 0 8px;font-weight:500;color:var(--text)}
+.viewas-list button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--border);background:var(--panel);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+.viewas-list button:hover{border-color:var(--accent)}
+.viewas-list button.cur{border-color:var(--accent);background:var(--accent-soft)}
 .perm-group{margin:0 0 16px}
 .perm-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
 .perm-row{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);margin:0;font-weight:500;color:var(--text);font-size:14px;cursor:pointer}
@@ -842,6 +850,7 @@ label.extra{margin:0}
       <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
     </nav>
     <div class="side-foot">
+      <button class="side-viewas lbl hidden" id="viewAsBtn">👁 View as…</button>
       <span class="user-chip lbl" id="userChip"></span>
       <button class="side-out" id="signOut" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span class="lbl">Sign out</span></button>
     </div>
@@ -855,6 +864,7 @@ label.extra{margin:0}
   <div class="app-body">
 
   <main>
+    <div id="previewBar" class="preview-bar hidden"></div>
     <!-- Home -->
     <div id="homeView"></div>
 
@@ -1058,9 +1068,16 @@ async function boot(session){
   if (!S.user) { show('auth'); return; }
   const { data: me } = await sb.from('team_members').select('*').eq('id', S.user.id).maybeSingle();
   if (!me || !me.active) { $('#pendingEmail').textContent = S.user.email; show('pending'); return; }
-  S.me = me;
+  S.me = me; S.realMe = me; S.preview = false;
+  let viewAsId = null; try { viewAsId = sessionStorage.getItem('kvhq.viewAs'); } catch (e) {}
+  if (viewAsId && me.role === 'owner' && viewAsId !== me.id) {
+    const { data: t } = await sb.from('team_members').select('*').eq('id', viewAsId).maybeSingle();
+    if (t && t.active && t.role !== 'owner') { S.me = { ...t }; S.preview = true; installPreviewGuard(); }
+    else { try { sessionStorage.removeItem('kvhq.viewAs'); } catch (e) {} }
+  }
   loadPrefs();
-  $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
+  $('#userChip').textContent = `${S.me.full_name} · ${ROLE_LABEL[S.me.role]}`;
+  paintPreviewChrome();
   const rd = await sb.rpc('role_defaults');
   S.roleDefaults = rd.data || {};
   applyAccess();
@@ -1073,6 +1090,69 @@ async function boot(session){
   watchAccess();
   setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } loadMail({ quiet:true }); }, 5 * 60 * 1000);
 }
+/* ===================== VIEW AS (owner previews a team member's HQ) =====================
+   Only in this browser tab (sessionStorage). Data is still read with the owner's login and then
+   narrowed to what that person can see. Nothing can be saved while previewing. Their private
+   DMs, Google Calendar and Gmail are never shown. */
+function switchViewAs(id){
+  try { if (id && id !== S.realMe?.id) sessionStorage.setItem('kvhq.viewAs', id); else sessionStorage.removeItem('kvhq.viewAs'); } catch (e) {}
+  location.hash = '#/home'; location.reload();
+}
+function installPreviewGuard(){
+  let last = 0;
+  const msg = 'Preview only: switch back to yourself to make changes';
+  const dead = quiet => {
+    if (!quiet && Date.now() - last > 2500) { last = Date.now(); toast(msg); }
+    const r = { data: null, error: { message: msg, preview: true } };
+    const p = new Proxy(function(){}, { get(_, k){ return k === 'then' ? (a, b) => Promise.resolve(r).then(a, b) : () => p; }, apply(){ return p; } });
+    return p;
+  };
+  const from = sb.from.bind(sb);
+  sb.from = table => {
+    const qb = from(table);
+    for (const m of ['insert','update','upsert','delete']) qb[m] = () => dead(table === 'chat_reads');
+    return qb;
+  };
+  const rpc = sb.rpc.bind(sb), readOnly = ['chat_unread','role_defaults','pending_signups'];
+  sb.rpc = (fn, args) => readOnly.includes(fn) ? rpc(fn, args) : dead(false);
+  const sfrom = sb.storage.from.bind(sb.storage);
+  sb.storage.from = b => { const o = sfrom(b); o.upload = () => dead(false); o.remove = () => dead(false); return o; };
+}
+const previewName = () => firstName(S.me.full_name);
+function previewFilterProjects(list){
+  if (!S.preview) return list;
+  return list.filter(p => permFor(S.me, p.media) && (permFor(S.me, 'all_projects') || p.assigned_to === S.me.id));
+}
+function paintPreviewChrome(){
+  const bar = $('#previewBar');
+  bar.classList.toggle('hidden', !S.preview);
+  if (S.preview) {
+    bar.innerHTML = `<span>👁 Viewing HQ as <b>${esc(S.me.full_name)}</b> · ${esc(ROLE_LABEL[S.me.role])}. Preview only: nothing you do here is saved.</span>
+      <button class="btn small" id="pvOther">View as someone else</button><button class="btn small" id="pvBack" style="margin-left:0">Switch back to ${esc(firstName(S.realMe.full_name))}</button>`;
+    $('#pvBack').onclick = () => switchViewAs(null);
+    $('#pvOther').onclick = openViewAs;
+  }
+  const vb = $('#viewAsBtn');
+  vb.classList.toggle('hidden', S.realMe?.role !== 'owner');
+  vb.textContent = S.preview ? `👁 Viewing as ${previewName()}` : '👁 View as…';
+  vb.onclick = openViewAs;
+}
+function openViewAs(){
+  const people = S.team.filter(t => t.active && t.role !== 'owner');
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>View HQ as…</h2>
+    <p class="muted" style="margin:-8px 0 14px;font-size:13px">See exactly what a team member sees: their menu, Home, projects, tasks and chat channels. Preview only (nothing is saved), and their private messages, calendar and Gmail stay private. Only this browser tab switches.</p>
+    <div class="viewas-list">
+      <button data-va="" class="${!S.preview ? 'cur' : ''}"><b style="flex:1">${esc(S.realMe.full_name)} (you)</b><span class="role-badge">Owner</span></button>
+      ${people.map(t => `<button data-va="${t.id}" class="${S.preview && S.me.id === t.id ? 'cur' : ''}"><b style="flex:1">${esc(t.full_name)}</b><span class="role-badge">${esc(ROLE_LABEL[t.role])}</span></button>`).join('')
+        || '<div class="none">No team members yet. Once someone is approved, you can preview HQ as them here.</div>'}
+    </div>
+    <div class="actions"><button class="btn" id="vaClose">Close</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#vaClose').onclick = closeLayer;
+  document.querySelectorAll('[data-va]').forEach(b => b.onclick = () => switchViewAs(b.dataset.va || null));
+}
+
 // If Chris removes someone while HQ is open, sign them out within a minute or two.
 let accessTimer = null;
 function watchAccess(){
@@ -1080,7 +1160,7 @@ function watchAccess(){
     if (!S.me) return;
     const { data, error } = await sb.from('team_members').select('id, role, permissions, active').eq('id', S.me.id).maybeSingle();
     if (error) return;
-    if (!data || !data.active) { clearInterval(accessTimer); await sb.auth.signOut(); return; }
+    if (!data || !data.active) { clearInterval(accessTimer); if (S.preview) switchViewAs(null); else await sb.auth.signOut(); return; }
     if (data.role !== S.me.role || JSON.stringify(data.permissions || {}) !== JSON.stringify(S.me.permissions || {})) {
       Object.assign(S.me, data); applyAccess();
       if (!viewAllowed(S.view)) location.hash = '#/home'; else render();
@@ -1108,7 +1188,7 @@ async function loadAll(){
     sb.from('agent_logos').select('*').order('created_at'),
   ]);
   for (const r of [p,t,a,m,l]) if (r.error) fail(r.error);
-  S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
+  S.projects = previewFilterProjects(p.data || []); S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
   fillAssignee();
 }
 function fillAssignee(){
@@ -1121,7 +1201,7 @@ function fillAssignee(){
 async function reloadProjects(){
   const { data, error } = await sb.from('projects').select('*, project_tasks(id, completed)').order('created_at', { ascending:false });
   if (error) return fail(error);
-  S.projects = data; render();
+  S.projects = previewFilterProjects(data); render();
 }
 
 /* ===================== ROUTING ===================== */
@@ -1909,7 +1989,7 @@ function paintTaskBadge(){
 async function loadTasks(){
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending:false }).limit(1000);
   if (error) return fail(error);
-  S.tasks = data || []; paintTaskBadge();
+  S.tasks = (data || []).filter(x => !S.preview || x.assigned_to === S.me.id || x.created_by === S.me.id); paintTaskBadge();
 }
 let taskSub = null, taskReloadTimer = null;
 function subscribeTasks(){
@@ -2260,7 +2340,7 @@ function agentForEmail(addr){
 const sugForThread = id => (S.suggestions || []).find(g => g.source === 'gmail' && (g.external_id || '').split(':')[1] === id);
 
 async function loadMail({ quiet = false, more = false } = {}){
-  if (!can('mail')) return;
+  if (!can('mail') || S.preview) return;
   if (!S.cal.status?.gmail) { MAIL.needsGmail = !!S.cal.status; paintMailBadge(); return; }
   if (MAIL.loading) return;
   const key = MAIL.box + '|' + MAIL.q;
@@ -2307,6 +2387,7 @@ async function connectMail(){
 }
 
 function renderMail(){
+  if (S.preview) { $('#mailView').innerHTML = `<div class="preview-note"><b>${esc(previewName())}'s Mail</b><br>When they connect their Gmail, their inbox shows here. It's private to them, so it isn't shown in preview.</div>`; return; }
   const v = $('#mailView');
   const st = S.cal.status;
   if (!st) { v.innerHTML = `<div class="page-head"><div><h1>Mail</h1></div></div><div class="empty">Loading…</div>`; return; }
@@ -2571,6 +2652,7 @@ const mapsUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encode
 const dirUrl = list => 'https://www.google.com/maps/dir/' + list.map(a => encodeURIComponent(a)).join('/');
 
 async function gcal(action, payload = {}){
+  if (S.preview) throw Object.assign(new Error('Preview'), { preview: true });
   const { data: { session } } = await sb.auth.getSession();
   const r = await fetch(`${SUPABASE_URL}/functions/v1/gcal`, { method:'POST',
     headers: { Authorization: 'Bearer ' + session?.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -2660,6 +2742,7 @@ async function paintMyDay(){
   const box = $('#myDay'); if (!box) return;
   const body = box.querySelector('.md-body'), meta = box.querySelector('.md-meta');
   const st = S.cal.status;
+  if (S.preview) { body.innerHTML = `<div class="none">${esc(previewName())}'s appointments from their own Google Calendar show here (private, not shown in preview).</div>`; meta.textContent = ''; return; }
   if (!st?.connected) { body.innerHTML = calConnectHTML(true); meta.textContent = ''; box.querySelectorAll('[data-cal-connect]').forEach(b => b.onclick = connectCalendar); return; }
   const t0 = startOfDay(new Date()), t2 = addDays(t0, 2);
   let items;
@@ -2701,6 +2784,7 @@ function dayItemHTML(e, now, next){
 
 /* ----- Calendar tab: My Week at a Glance ----- */
 async function renderCalendar(){
+  if (S.preview) { $('#calendarView').innerHTML = `<div class="preview-note"><b>${esc(previewName())}'s Calendar</b><br>When they connect their Google Calendar, their week shows here. It's private to them, so it isn't shown in preview.</div>`; return; }
   const box = $('#calendarView');
   const st = S.cal.status;
   if (!S.cal.week) S.cal.week = weekStartOf(new Date());
@@ -4123,6 +4207,10 @@ async function loadChatMeta(){
   ]);
   if (c.error) { fail(c.error); return false; }
   S.chat.channels = c.data || []; S.chat.members = m.data || [];
+  if (S.preview) {
+    const mine = new Set(S.chat.members.filter(x => x.member_id === S.me.id).map(x => x.channel_id));
+    S.chat.channels = permFor(S.me, 'chat') ? S.chat.channels.filter(x => x.kind === 'channel' && (x.everyone || mine.has(x.id))) : [];
+  }
   return true;
 }
 async function initChat(){
@@ -4147,6 +4235,7 @@ async function refreshUnread(){
   paintUnread();
 }
 function paintUnread(){
+  if (S.preview) S.chat.unread = {};
   const total = Object.entries(S.chat.unread).reduce((a, [id, n]) => a + (S.view === 'chat' && id === activeChannel()?.id && document.hasFocus() ? 0 : n), 0);
   const b = $('#chatBadge'); b.textContent = total > 99 ? '99+' : total; b.classList.toggle('hidden', !total);
   document.title = (total ? `(${total}) ` : '') + 'Knox View HQ';
@@ -4497,7 +4586,7 @@ async function renderTeam(){
     <td style="white-space:nowrap">${t.role === 'owner' ? `<span class="muted">Full access</span>` : `<button class="btn small" data-access="${t.id}">Access</button> <span class="muted" style="font-size:12.5px">${esc(accessSummary(t))}</span>`}</td>
     <td style="white-space:nowrap">${wl(t.id)}</td>
     <td><input data-slack="${t.id}" value="${esc(t.slack_user_id || '')}" placeholder="Slack member ID" /></td>
-    <td style="text-align:right">${t.role === 'owner' ? '' : `<button class="btn small danger" data-remove="${t.id}">Remove from team</button>`}</td></tr>`
+    <td style="text-align:right;white-space:nowrap">${t.role === 'owner' ? '' : `<button class="btn small" data-viewas="${t.id}">View as</button> <button class="btn small danger" data-remove="${t.id}">Remove from team</button>`}</td></tr>`
     : `<tr><td><b>${esc(t.full_name)}</b>${dmBtn(t)}</td><td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
     <td>${t.email ? `<a href="mailto:${esc(t.email)}">${esc(t.email)}</a>` : ''}</td><td style="white-space:nowrap">${wl(t.id)}</td></tr>`).join('');
   const head = owner ? '<th>Name</th><th>Role</th><th>Access</th><th>Active work</th><th>Slack ID</th><th></th>' : '<th>Name</th><th>Role</th><th>Email</th><th>Active work</th>';
@@ -4526,6 +4615,7 @@ async function renderTeam(){
   document.querySelectorAll('[data-slack]').forEach(s => s.onchange = () => upd(s.dataset.slack, { slack_user_id: s.value || null }));
   document.querySelectorAll('[data-access]').forEach(b => b.onclick = () => openAccess(b.dataset.access));
   document.querySelectorAll('[data-remove]').forEach(b => b.onclick = () => openRemove(b.dataset.remove));
+  document.querySelectorAll('[data-viewas]').forEach(b => b.onclick = () => switchViewAs(b.dataset.viewas));
   document.querySelectorAll('[data-rehire]').forEach(b => b.onclick = () => openRehire(b.dataset.rehire));
   document.querySelectorAll('[data-approve]').forEach(b => b.onclick = async () => {
     const role = document.querySelector(`[data-new-role="${b.dataset.approve}"]`).value;
