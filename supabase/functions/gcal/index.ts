@@ -109,6 +109,12 @@ Deno.serve(async (req) => {
     const uid = u.user.id;
     const { data: me } = await admin.from('team_members').select('id, active').eq('id', uid).maybeSingle();
     if (!me?.active) return json(req, { error: 'Not an active team member' }, 403);
+    // Per-person access set on the Team page (Mail / Calendar sections)
+    const section = (action || '').startsWith('mail_') ? 'mail' : ['list', 'create', 'update', 'delete'].includes(action) ? 'calendar' : null;
+    if (section) {
+      const { data: allowed } = await admin.rpc('member_can', { member: uid, k: section });
+      if (!allowed) return json(req, { error: `You don't have access to ${section === 'mail' ? 'Mail' : 'Calendar'} in HQ`, noAccess: true }, 403);
+    }
 
     if (action === 'status') {
       const { data: acct } = await admin.from('google_accounts').select('email, connected_at, scope').eq('member_id', uid).maybeSingle();

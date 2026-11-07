@@ -515,6 +515,15 @@ label.extra{margin:0}
 .logo-strip a{display:grid;place-items:center;width:84px;height:56px;border:1px solid var(--border);border-radius:8px;background:var(--logo-bg);padding:4px}
 .logo-strip a img{max-width:100%;max-height:100%;object-fit:contain}
 .logo-strip a .ext{font-weight:700;font-size:13px;color:var(--muted)}
+.perm-group{margin:0 0 16px}
+.perm-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
+.perm-row{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);margin:0;font-weight:500;color:var(--text);font-size:14px;cursor:pointer}
+.perm-row:last-child{border-bottom:none}
+.perm-row input{width:18px;height:18px;flex:none;margin-top:1px}
+.perm-row .d{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.perm-row .chg{margin-left:auto;font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap}
+.status-on{color:var(--ok);font-weight:600;font-size:13px}
+.danger-note{background:var(--panel-2);border-radius:8px;padding:10px 12px;font-size:13px;margin:12px 0}
 .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
 @media (max-width:720px){
   main{padding:14px 16px 40px}
@@ -981,6 +990,20 @@ const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
 function toast(msg){ const t = document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
 function fail(err){ console.error(err); toast(err?.message || 'Something went wrong'); }
 const isOwner = () => S.me?.role === 'owner';
+/* ----- Per-person access (role defaults come from the database: public.role_defaults()) ----- */
+const PERM_SECTIONS = [['tasks','Tasks'],['mail','Mail','Their own Gmail inbox inside HQ'],['calendar','Calendar','Their own Google Calendar and My Day'],['photo','Photo projects'],['video','Video projects'],['agents','Agents tab'],['chat','Chat & direct messages']];
+const PERM_ACTIONS = [['all_projects','See all projects','Off = only projects assigned to them'],['create_projects','Create new projects'],['edit_projects','Edit projects','Status, details, checklists, revisions'],['delete_projects','Delete projects'],['manage_agents','Add & edit agents'],['upload_logos','Upload & remove agent logos']];
+const roleDefault = (role, k) => !!S.roleDefaults?.[role]?.[k];
+const permFor = (m, k) => !m ? false : m.role === 'owner' ? true : (m.permissions && k in m.permissions ? !!m.permissions[k] : roleDefault(m.role, k));
+const can = k => permFor(S.me, k);
+const viewAllowed = v => ['tasks','mail','calendar','agents','chat'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' ? isOwner() : true;
+function applyAccess(){
+  ['tasks','mail','calendar','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
+  if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
+  $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
+  $('#newAgentBtn').classList.toggle('hidden', !can('manage_agents'));
+}
 const isReviewer = () => REVIEWERS.includes(S.me?.role);
 const memberName = id => S.team.find(t => t.id === id)?.full_name || '';
 const firstName = n => (n || '').split(' ')[0];
@@ -1014,7 +1037,7 @@ $('#authForm').onsubmit = async e => {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
     }
-  } catch (err) { $('#authMsg').textContent = err.message; }
+  } catch (err) { $('#authMsg').textContent = /banned/i.test(err.message || '') ? 'Your access to Knox View HQ has been turned off. Contact Chris if you think this is a mistake.' : err.message; }
   $('#authBtn').disabled = false;
 };
 const doSignOut = async () => { await sb.auth.signOut(); };
@@ -1038,14 +1061,33 @@ async function boot(session){
   S.me = me;
   loadPrefs();
   $('#userChip').textContent = `${me.full_name} · ${ROLE_LABEL[me.role]}`;
-  $('#financeTab').classList.toggle('hidden', !isOwner());
+  const rd = await sb.rpc('role_defaults');
+  S.roleDefaults = rd.data || {};
+  applyAccess();
   show('app');
   await Promise.all([loadAll(), loadTasks(), loadCalStatus()]);
   await loadInbox();
   route();
   if (QBO_RETURN && isOwner()) finishQboConnect(QBO_RETURN);
   initChat(); subscribeTasks(); subscribeInbox(); loadMail({ quiet:true });
+  watchAccess();
   setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } loadMail({ quiet:true }); }, 5 * 60 * 1000);
+}
+// If Chris removes someone while HQ is open, sign them out within a minute or two.
+let accessTimer = null;
+function watchAccess(){
+  const check = async () => {
+    if (!S.me) return;
+    const { data, error } = await sb.from('team_members').select('id, role, permissions, active').eq('id', S.me.id).maybeSingle();
+    if (error) return;
+    if (!data || !data.active) { clearInterval(accessTimer); await sb.auth.signOut(); return; }
+    if (data.role !== S.me.role || JSON.stringify(data.permissions || {}) !== JSON.stringify(S.me.permissions || {})) {
+      Object.assign(S.me, data); applyAccess();
+      if (!viewAllowed(S.view)) location.hash = '#/home'; else render();
+    }
+  };
+  clearInterval(accessTimer); accessTimer = setInterval(check, 90 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
 }
 let booted = false;
 sb.auth.onAuthStateChange((evt, session) => {
@@ -1087,9 +1129,9 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   let view = ['home','tasks','mail','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
-  if (view === 'finance' && !isOwner()) { view = 'home'; history.replaceState(null, '', '#/home'); }
+  if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
-    if (parts[1] === 'photo' || parts[1] === 'video') { S.media = parts[1]; savePrefs(); }
+    if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
@@ -1169,17 +1211,18 @@ async function renderHome(){
   $('#homeView').innerHTML = `
     <div class="page-head"><div><h1>${greeting()}, ${esc(firstName(S.me.full_name))}</h1>
       <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
-      <div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div></div>
+      ${can('tasks') ? `<div class="home-actions"><button class="btn primary" id="homeNewTask">+ Create new task</button></div>` : ''}</div>
     <div class="home-grid">
-      <div class="panel span-7" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
+      ${!can('calendar') && !can('tasks') ? `<div class="panel span-12"><div class="none">Use the menu to open your projects and chat.</div></div>` : ''}
+      ${can('calendar') ? `<div class="panel ${can('tasks') ? 'span-7' : 'span-12'}" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
         ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
-        <div class="md-body"><div class="none">Loading your day…</div></div></div>
-      <div class="panel span-5" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
+        <div class="md-body"><div class="none">Loading your day…</div></div></div>` : ''}
+      ${can('tasks') ? `<div class="panel ${can('calendar') ? 'span-5' : 'span-12'}" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
         ${quickAddHTML('qHome')}
-        <div class="tlist" style="margin-top:10px"></div><div class="more"></div></div>
+        <div class="tlist" style="margin-top:10px"></div><div class="more"></div></div>` : ''}
     </div>`;
-  $('#homeNewTask').onclick = openQuickTask;
-  wireQuickAdd($('#qHome'), { onSaved: () => paintHomeTasks() });
+  if ($('#homeNewTask')) $('#homeNewTask').onclick = openQuickTask;
+  if ($('#qHome')) wireQuickAdd($('#qHome'), { onSaved: () => paintHomeTasks() });
   paintHomeTasks(); paintMyDay();
   const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
 }
@@ -1206,7 +1249,7 @@ function renderProjects(){
   $('#videoCount').textContent = `${activeOf('video')} active`;
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('active', b.dataset.m === m));
   document.querySelectorAll('#layoutSeg button').forEach(b => b.classList.toggle('active', b.dataset.l === S.layout));
-  const nb = $('#newProjectBtn'); nb.textContent = `+ New ${m} project`; nb.className = `btn ${m}`;
+  const nb = $('#newProjectBtn'); nb.textContent = `+ New ${m} project`; nb.className = `btn ${m}`; nb.classList.toggle('hidden', !can('create_projects'));
   $('#search').placeholder = `Search ${m} projects…`;
   $('#showDone').checked = S.showDone;
   if ($('#assigneeFilter').value !== S.assignee) $('#assigneeFilter').value = S.assignee;
@@ -1531,19 +1574,19 @@ async function openProject(id){
         <p class="muted" style="font-size:12.5px">Created ${esc(fmtDateTime(p.created_at))}${p.submitted_by ? ' by ' + esc(memberName(p.submitted_by)) : ''}${p.delivered_at ? ' · Delivered ' + esc(fmtDate(p.delivered_at)) : ''}</p>
       </div>
       <div class="section" style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn small" data-related="photo">+ Related photo project</button>
-        <button class="btn small" data-related="video">+ Related video project</button>
-        ${isOwner() ? `<button class="btn small danger" id="deleteBtn">Delete project</button>` : ''}
+        ${can('create_projects') && can('photo') ? `<button class="btn small" data-related="photo">+ Related photo project</button>` : ''}
+        ${can('create_projects') && can('video') ? `<button class="btn small" data-related="video">+ Related video project</button>` : ''}
+        ${can('delete_projects') ? `<button class="btn small danger" id="deleteBtn">Delete project</button>` : ''}
       </div>
     </div>
-    <div class="save-bar"><span class="status" id="saveStatus"></span><button class="btn" id="dCancel">Close</button><button class="btn primary" id="saveBtn">Save changes</button></div>
+    <div class="save-bar"><span class="status" id="saveStatus"></span><button class="btn" id="dCancel">Close</button>${can('edit_projects') ? `<button class="btn primary" id="saveBtn">Save changes</button>` : `<span class="muted" style="font-size:13px">View only</span>`}</div>
   </aside>`;
 
   $('#ov').onclick = closeLayer; $('#dClose').onclick = closeLayer; $('#dCancel').onclick = closeLayer;
   const dl = $('#dLogos'); if (dl) { hydrateLogoImgs(dl); dl.querySelectorAll('[data-dl-logo]').forEach(b => b.onclick = e => { e.preventDefault(); downloadLogo(S.logos.find(l => l.id === b.dataset.dlLogo)); }); }
   const form = $('#pForm');
   form.oninput = () => $('#saveStatus').textContent = 'Unsaved changes';
-  $('#saveBtn').onclick = async () => {
+  if ($('#saveBtn')) $('#saveBtn').onclick = async () => {
     if (!form.reportValidity()) return;
     const fd = Object.fromEntries(new FormData(form));
     for (const k of Object.keys(fd)) {
@@ -1718,7 +1761,7 @@ async function uploadLogos(agentId, files){
 }
 function renderAgentLogos(agentId){
   const box = $('#agentLogos'); if (!box) return;
-  const owner = isOwner(), logos = logosFor(agentId);
+  const owner = can('upload_logos'), logos = logosFor(agentId);
   const dark = box.dataset.dark === '1';
   box.innerHTML = `<div class="logo-head"><h3>Logos ${logos.length ? `(${logos.length})` : ''}</h3><span class="spacer" style="flex:1"></span>
       ${logos.length ? `<button type="button" class="btn small ghost" id="logoBg">${dark ? 'Light background' : 'Dark background'}</button>` : ''}
@@ -1755,7 +1798,7 @@ function openAgent(id){
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
       <div class="full"><label>Preferences (shown on every project for this agent)</label><textarea name="preferences" placeholder="Name/brokerage at end of reels, music style, export needs…">${esc(a.preferences || '')}</textarea></div>
     </div>
-    <div class="actions"><button type="button" class="btn" id="aCancel">Cancel</button><button class="btn primary">${id ? 'Save' : 'Add agent'}</button></div></form></div>`;
+    <div class="actions"><button type="button" class="btn" id="aCancel">${can('manage_agents') ? 'Cancel' : 'Close'}</button>${can('manage_agents') ? `<button class="btn primary">${id ? 'Save' : 'Add agent'}</button>` : ''}</div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
   $('#aForm').onsubmit = async e => {
@@ -2217,6 +2260,7 @@ function agentForEmail(addr){
 const sugForThread = id => (S.suggestions || []).find(g => g.source === 'gmail' && (g.external_id || '').split(':')[1] === id);
 
 async function loadMail({ quiet = false, more = false } = {}){
+  if (!can('mail')) return;
   if (!S.cal.status?.gmail) { MAIL.needsGmail = !!S.cal.status; paintMailBadge(); return; }
   if (MAIL.loading) return;
   const key = MAIL.box + '|' + MAIL.q;
@@ -4432,47 +4476,155 @@ function openChannelMembers(ch){
 }
 
 /* ===================== TEAM ===================== */
+const accessSummary = t => {
+  if (t.role === 'owner') return 'Full access';
+  const n = Object.keys(t.permissions || {}).filter(k => !!t.permissions[k] !== roleDefault(t.role, k)).length;
+  return n ? `${n} custom setting${n === 1 ? '' : 's'}` : 'Role defaults';
+};
 async function renderTeam(){
   const owner = isOwner();
   $('#teamSub').textContent = owner
-    ? 'New team members create an account on the sign-in page, then show up here as pending so you can approve them and set their role.'
+    ? 'New team members create an account on the sign-in page, then show up here as pending. Approve them, pick a role, and fine-tune what they can see with Access.'
     : 'Everyone on the Knox View team.';
   const workload = id => S.projects.filter(p => p.assigned_to === id && !DONE.includes(p.status));
   const wl = id => { const w = workload(id); const ph = w.filter(p => p.media === 'photo').length, vi = w.length - ph;
     return `<span class="tag photo">${ph} photo</span> <span class="tag video">${vi} video</span>`; };
-  const members = S.team.filter(t => owner || t.active);
-  const rows = members.map(t => owner ? `<tr><td><b>${esc(t.full_name)}</b>${t.active && t.id !== S.me.id ? `<button class="btn small" style="margin-left:8px" data-team-dm="${t.id}">Message</button>` : ''}<div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
-    <td><select data-role="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt(ROLES, t.role)}</select></td>
-    <td><select data-active="${t.id}" ${t.id === S.me.id ? 'disabled' : ''}>${opt([['true','Active'],['false','Disabled']], String(t.active))}</select></td>
+  const dmBtn = t => t.active && t.id !== S.me.id && can('chat') ? `<button class="btn small" style="margin-left:8px" data-team-dm="${t.id}">Message</button>` : '';
+  const current = S.team.filter(t => t.active);
+  const former = owner ? S.team.filter(t => !t.active) : [];
+  const rows = current.map(t => owner ? `<tr><td><b>${esc(t.full_name)}</b>${dmBtn(t)}<div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
+    <td>${t.role === 'owner' ? `<span class="role-badge">Owner</span>` : `<select data-role="${t.id}">${opt(ROLES.filter(r => r[0] !== 'owner'), t.role)}</select>`}</td>
+    <td style="white-space:nowrap">${t.role === 'owner' ? `<span class="muted">Full access</span>` : `<button class="btn small" data-access="${t.id}">Access</button> <span class="muted" style="font-size:12.5px">${esc(accessSummary(t))}</span>`}</td>
     <td style="white-space:nowrap">${wl(t.id)}</td>
-    <td><input data-slack="${t.id}" value="${esc(t.slack_user_id || '')}" placeholder="Slack member ID" /></td></tr>`
-    : `<tr><td><b>${esc(t.full_name)}</b>${t.active && t.id !== S.me.id ? `<button class="btn small" style="margin-left:8px" data-team-dm="${t.id}">Message</button>` : ''}</td><td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
+    <td><input data-slack="${t.id}" value="${esc(t.slack_user_id || '')}" placeholder="Slack member ID" /></td>
+    <td style="text-align:right">${t.role === 'owner' ? '' : `<button class="btn small danger" data-remove="${t.id}">Remove from team</button>`}</td></tr>`
+    : `<tr><td><b>${esc(t.full_name)}</b>${dmBtn(t)}</td><td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
     <td>${t.email ? `<a href="mailto:${esc(t.email)}">${esc(t.email)}</a>` : ''}</td><td style="white-space:nowrap">${wl(t.id)}</td></tr>`).join('');
-  const head = owner ? '<th>Name</th><th>Role</th><th>Access</th><th>Active work</th><th>Slack ID</th>' : '<th>Name</th><th>Role</th><th>Email</th><th>Active work</th>';
+  const head = owner ? '<th>Name</th><th>Role</th><th>Access</th><th>Active work</th><th>Slack ID</th><th></th>' : '<th>Name</th><th>Role</th><th>Email</th><th>Active work</th>';
   let pend = '';
   if (owner) {
     const { data: pending, error } = await sb.rpc('pending_signups');
     if (error) console.warn(error);
-    pend = (pending || []).map(u => `<tr><td><b>${esc(u.full_name || u.email)}</b><div class="muted" style="font-size:12.5px">${esc(u.email)}</div></td>
+    pend = (pending || []).map(u => `<tr><td><b>${esc(u.full_name || u.email)}</b><div class="muted" style="font-size:12.5px">${esc(u.email)} · signed up ${esc(fmtDate(u.created_at))}</div></td>
       <td><select data-new-role="${u.id}">${opt(ROLES.filter(r => r[0] !== 'owner'), 'contractor')}</select></td>
       <td><button class="btn small primary" data-approve="${u.id}" data-name="${esc(u.full_name || u.email)}" data-email="${esc(u.email)}">Approve</button></td></tr>`).join('');
   }
+  const formerRows = former.map(t => `<tr><td><b>${esc(t.full_name)}</b><div class="muted" style="font-size:12.5px">${esc(t.email || '')}</div></td>
+    <td><span class="role-badge">${ROLE_LABEL[t.role]}</span></td>
+    <td class="muted" style="font-size:13px">${t.removed_at ? `Removed ${esc(fmtDate(t.removed_at))}` : 'Disabled'}</td>
+    <td style="text-align:right"><button class="btn small" data-rehire="${t.id}">Rehire</button></td></tr>`).join('');
   if (S.view !== 'team') return;
   $('#teamList').innerHTML = `
     ${pend ? `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase">Pending sign-ups</h3><div class="table-wrap"><table class="list" style="margin-bottom:24px"><tbody>${pend}</tbody></table></div>` : ''}
-    <div class="table-wrap"><table class="list"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  if (!owner) return;
-  const upd = async (id, patch) => { const { error } = await sb.from('team_members').update(patch).eq('id', id); if (error) fail(error); else { toast('Updated'); await loadAll(); } };
+    <div class="table-wrap"><table class="list"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+    ${formerRows ? `<details style="margin-top:24px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase">Former team members (${former.length})</summary>
+      <div class="table-wrap" style="margin-top:10px"><table class="list"><tbody>${formerRows}</tbody></table></div></details>` : ''}`;
   document.querySelectorAll('[data-team-dm]').forEach(b => b.onclick = () => startDM(b.dataset.teamDm));
+  if (!owner) return;
+  const upd = async (id, patch) => { const { error } = await sb.from('team_members').update(patch).eq('id', id); if (error) fail(error); else { toast('Updated'); await loadAll(); renderTeam(); } };
   document.querySelectorAll('[data-role]').forEach(s => s.onchange = () => upd(s.dataset.role, { role: s.value }));
-  document.querySelectorAll('[data-active]').forEach(s => s.onchange = () => upd(s.dataset.active, { active: s.value === 'true' }));
   document.querySelectorAll('[data-slack]').forEach(s => s.onchange = () => upd(s.dataset.slack, { slack_user_id: s.value || null }));
+  document.querySelectorAll('[data-access]').forEach(b => b.onclick = () => openAccess(b.dataset.access));
+  document.querySelectorAll('[data-remove]').forEach(b => b.onclick = () => openRemove(b.dataset.remove));
+  document.querySelectorAll('[data-rehire]').forEach(b => b.onclick = () => openRehire(b.dataset.rehire));
   document.querySelectorAll('[data-approve]').forEach(b => b.onclick = async () => {
     const role = document.querySelector(`[data-new-role="${b.dataset.approve}"]`).value;
     const { error } = await sb.from('team_members').insert({ id: b.dataset.approve, full_name: b.dataset.name, email: b.dataset.email, role });
     if (error) return fail(error);
-    toast('Approved'); await loadAll(); renderTeam();
+    toast('Approved'); await loadAll(); await reloadChatMembers(); renderTeam();
+    openAccess(b.dataset.approve);
   });
+}
+async function reloadChatMembers(){
+  const { data } = await sb.from('chat_members').select('*');
+  if (data) S.chat.members = data;
+}
+
+/* ----- Access panel ----- */
+function openAccess(id){
+  const t = S.team.find(x => x.id === id); if (!t || t.role === 'owner') return;
+  document.body.style.overflow = 'hidden';
+  const row = ([k, label, desc]) => {
+    const on = permFor(t, k), changed = on !== roleDefault(t.role, k);
+    return `<label class="perm-row"><input type="checkbox" data-perm="${k}" ${on ? 'checked' : ''} />
+      <span>${esc(label)}${desc ? `<span class="d">${esc(desc)}</span>` : ''}</span>${changed ? `<span class="chg">Changed from ${esc(ROLE_LABEL[t.role])} default</span>` : ''}</label>`;
+  };
+  const chans = S.chat.channels.filter(c => c.kind === 'channel');
+  const inChan = c => c.everyone || S.chat.members.some(m => m.channel_id === c.id && m.member_id === t.id);
+  const chatOn = permFor(t, 'chat');
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>Access · ${esc(t.full_name)}</h2>
+    <p class="muted" style="margin:-8px 0 16px;font-size:13px">Starts from the <b>${esc(ROLE_LABEL[t.role])}</b> defaults. Changes save right away and apply within a couple of minutes, even if they're signed in.</p>
+    <div class="perm-group"><h3>Sections they can open</h3>${PERM_SECTIONS.map(row).join('')}</div>
+    <div class="perm-group"><h3>What they can do</h3>${PERM_ACTIONS.map(row).join('')}</div>
+    <div class="perm-group"><h3>Chat channels</h3>
+      ${!chatOn ? `<p class="muted" style="font-size:13px;margin:4px 0">Chat is turned off for them, so they can't see any channel or direct message.</p>` : ''}
+      ${chans.map(c => `<label class="perm-row" ${chatOn ? '' : 'style="opacity:.5"'}><input type="checkbox" data-chan="${c.id}" ${inChan(c) ? 'checked' : ''} ${c.everyone || !chatOn ? 'disabled' : ''} />
+        <span># ${esc(c.name)}${c.everyone ? `<span class="d">Everyone on the team is in this channel</span>` : ''}</span></label>`).join('')}
+    </div>
+    <div class="actions" style="justify-content:space-between"><button class="btn ghost" id="accReset">Reset to ${esc(ROLE_LABEL[t.role])} defaults</button><button class="btn primary" id="accDone">Done</button></div>
+  </div>`;
+  const close = () => { closeLayer(); renderTeam(); };
+  $('#ov').onclick = close; $('#accDone').onclick = close;
+  const save = async perms => {
+    const { error } = await sb.from('team_members').update({ permissions: perms }).eq('id', t.id);
+    if (error) { fail(error); return false; }
+    t.permissions = perms; return true;
+  };
+  document.querySelectorAll('[data-perm]').forEach(cb => cb.onchange = async () => {
+    const k = cb.dataset.perm, perms = { ...(t.permissions || {}) };
+    if (cb.checked === roleDefault(t.role, k)) delete perms[k]; else perms[k] = cb.checked;
+    if (await save(perms)) openAccess(t.id); else cb.checked = !cb.checked;
+  });
+  $('#accReset').onclick = async () => { if (await save({})) { toast('Back to role defaults'); openAccess(t.id); } };
+  document.querySelectorAll('[data-chan]').forEach(cb => cb.onchange = async () => {
+    const cid = cb.dataset.chan;
+    const r = cb.checked
+      ? await sb.from('chat_members').insert({ channel_id: cid, member_id: t.id })
+      : await sb.from('chat_members').delete().eq('channel_id', cid).eq('member_id', t.id);
+    if (r.error) { cb.checked = !cb.checked; return fail(r.error); }
+    if (cb.checked) S.chat.members.push({ channel_id: cid, member_id: t.id });
+    else S.chat.members = S.chat.members.filter(m => !(m.channel_id === cid && m.member_id === t.id));
+  });
+}
+
+/* ----- Remove from team / Rehire ----- */
+function openRemove(id){
+  const t = S.team.find(x => x.id === id); if (!t) return;
+  const open = S.projects.filter(p => p.assigned_to === id && !DONE.includes(p.status));
+  const tasks = (S.tasks || []).filter(x => x.assigned_to === id && x.status !== 'done');
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>Remove ${esc(t.full_name)} from the team?</h2>
+    <p style="margin:0 0 8px">They'll be signed out on every device right away and won't be able to sign in again. Any Google Calendar or Gmail connection they made in HQ is disconnected.</p>
+    <p class="muted" style="margin:0;font-size:13px">Their messages, completed work and history stay in HQ. You can rehire them later from <b>Former team members</b> and everything comes back.</p>
+    ${open.length || tasks.length ? `<div class="danger-note">Still assigned to them: ${[open.length ? `${open.length} open project${open.length === 1 ? '' : 's'}` : '', tasks.length ? `${tasks.length} open task${tasks.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ')}. These stay assigned to them until you reassign them.
+      ${open.length ? `<div style="margin-top:6px">${open.slice(0, 8).map(p => `<div>• ${esc(p.name)} <span class="muted">(${MEDIA_LABEL[p.media]})</span></div>`).join('')}${open.length > 8 ? `<div class="muted">…and ${open.length - 8} more</div>` : ''}</div>` : ''}</div>` : ''}
+    <div class="actions"><button class="btn" id="rmCancel">Cancel</button><button class="btn primary" style="background:var(--danger);border-color:var(--danger)" id="rmGo">Remove from team</button></div>
+  </div>`;
+  $('#ov').onclick = closeLayer; $('#rmCancel').onclick = closeLayer;
+  $('#rmGo').onclick = async () => {
+    $('#rmGo').disabled = true;
+    const { error } = await sb.rpc('remove_member', { member: id });
+    if (error) { $('#rmGo').disabled = false; return fail(error); }
+    closeLayer(); toast(`${t.full_name} was removed from the team`); await loadAll(); fillAssignee(); renderTeam();
+  };
+}
+function openRehire(id){
+  const t = S.team.find(x => x.id === id); if (!t) return;
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>Rehire ${esc(t.full_name)}?</h2>
+    <p style="margin:0 0 8px">They can sign in again with the same email and password (${esc(t.email || '')}). They come back as <b>${esc(ROLE_LABEL[t.role])}</b> with the access settings they had before, and rejoin their role's chat channels.</p>
+    <div class="actions"><button class="btn" id="rhCancel">Cancel</button><button class="btn primary" id="rhGo">Rehire</button></div>
+  </div>`;
+  $('#ov').onclick = closeLayer; $('#rhCancel').onclick = closeLayer;
+  $('#rhGo').onclick = async () => {
+    $('#rhGo').disabled = true;
+    const { error } = await sb.rpc('rehire_member', { member: id });
+    if (error) { $('#rhGo').disabled = false; return fail(error); }
+    closeLayer(); toast(`${t.full_name} is back on the team`); await loadAll(); await reloadChatMembers(); fillAssignee(); renderTeam();
+  };
 }
 </script>
 </body>
