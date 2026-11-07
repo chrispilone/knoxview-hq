@@ -813,10 +813,9 @@ label.extra{margin:0}
 .ql-toggle svg{width:20px;height:20px;flex:none}
 .ql-toggle .ql-chev{width:15px;height:15px;margin-left:auto;transition:transform .2s ease;opacity:.7}
 .qlinks.open .ql-chev{transform:rotate(90deg)}
-.ql-list{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
-.qlinks.open .ql-list{grid-template-rows:1fr}
-.ql-list>*{min-height:0}
-.ql-list{overflow:hidden}
+.ql-list{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease,opacity .22s ease;opacity:0;visibility:hidden}
+.qlinks.open .ql-list{grid-template-rows:1fr;opacity:1;visibility:visible}
+.ql-inner{min-height:0;overflow:hidden}
 .ql-list a{display:flex;align-items:center;gap:12px;min-height:40px;padding:8px 14px 8px 26px;border-radius:9px;color:var(--muted);text-decoration:none;font-size:14px;white-space:nowrap}
 .ql-list a:hover{background:var(--panel-2);color:var(--text)}
 .ql-list a svg{width:18px;height:18px;flex:none}
@@ -983,10 +982,10 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <button type="button" class="ql-toggle" id="qlToggle" title="Quick links" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1-1"/></svg>
         <span class="lbl">Quick links</span><svg class="ql-chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
-      <div class="ql-list" id="qlList">
+      <div class="ql-list" id="qlList"><div class="ql-inner">
         <a href="https://book.knoxview.com" target="_blank" rel="noopener" title="Order form (book.knoxview.com)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="lbl">Order form</span><span class="ql-ext lbl">↗</span></a>
         <a href="https://knoxview.com" target="_blank" rel="noopener" title="Website (knoxview.com)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5s1.1-6.1 3.4-8.5z"/></svg><span class="lbl">Website</span><span class="ql-ext lbl">↗</span></a>
-      </div>
+      </div></div>
     </div>
     <div class="side-foot">
       <button class="side-viewas lbl hidden" id="viewAsBtn">👁 View as…</button>
