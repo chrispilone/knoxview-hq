@@ -508,6 +508,125 @@ async function recategorizeBatch(list: { type: string; id: string; changes: { li
   return { items, errors };
 }
 
+/* ---------- Personal cards: business purchases paid with a personal card ---------- */
+// Each one becomes a journal entry: debit the expense category (with the vendor on the line), credit the
+// "Owner's Contribution" equity account. The expense lands on the P&L without touching business bank or
+// card balances, and the equity line records that the owner put that money into the business.
+// A refund (negative amount) is the same entry reversed.
+const qq = (s: string) => s.replace(/'/g, "\\'");
+async function ownerContributionAccount() {
+  const d = await qbo('query', { query: "select * from Account where AccountType = 'Equity' maxresults 200" });
+  const list = d?.QueryResponse?.Account || [];
+  const hit = list.find((a: any) => a.Active && /owner'?s?\s*(contribution|investment)/i.test(a.Name))
+    || list.find((a: any) => a.Active && /^(owner|member)'?s?\s*(capital|equity)$/i.test(a.Name));
+  if (hit) return { id: String(hit.Id), name: hit.Name };
+  const a = (await qbo('account', {}, { Name: "Owner's Contribution", AccountType: 'Equity', AccountSubType: 'OwnersEquity',
+    Description: 'Business expenses paid with personal money (created by Knox View HQ)' }))?.Account;
+  return { id: String(a.Id), name: a.Name };
+}
+async function vendorFor(name: string, cache: Map<string, string | null>) {
+  const n = name.trim().slice(0, 100).replace(/[:"]/g, '');
+  if (!n) return null;
+  if (cache.has(n.toLowerCase())) return cache.get(n.toLowerCase())!;
+  let id: string | null = null;
+  try {
+    const d = await qbo('query', { query: `select Id from Vendor where DisplayName = '${qq(n)}'` });
+    id = d?.QueryResponse?.Vendor?.[0]?.Id ? String(d.QueryResponse.Vendor[0].Id) : null;
+    if (!id) id = String((await qbo('vendor', {}, { DisplayName: n }))?.Vendor?.Id || '') || null;
+  } catch (_) { id = null; } // a customer with the same name, etc.: post without a vendor
+  cache.set(n.toLowerCase(), id);
+  return id;
+}
+const shiftDay = (iso: string, n: number) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+// Anything already in QuickBooks within 4 days with the same amount: an expense, a bill or a journal entry.
+async function possibleDuplicates(date: string, amount: number) {
+  const where = `TxnDate >= '${shiftDay(date, -4)}' and TxnDate <= '${shiftDay(date, 4)}'`;
+  const [p, b, j] = await Promise.all([
+    qbo('query', { query: `select * from Purchase where ${where} maxresults 500` }),
+    qbo('query', { query: `select * from Bill where ${where} maxresults 500` }),
+    qbo('query', { query: `select * from JournalEntry where ${where} maxresults 500` }),
+  ]);
+  const abs = Math.abs(amount), out: any[] = [];
+  for (const t of p?.QueryResponse?.Purchase || []) if (Math.abs(num(t.TotalAmt) - abs) < 0.005) out.push({ type: 'Purchase', id: String(t.Id), date: t.TxnDate, amount: num(t.TotalAmt), payee: t.EntityRef?.name || t.PrivateNote || '', account: t.AccountRef?.name || '' });
+  for (const t of b?.QueryResponse?.Bill || []) if (Math.abs(num(t.TotalAmt) - abs) < 0.005) out.push({ type: 'Bill', id: String(t.Id), date: t.TxnDate, amount: num(t.TotalAmt), payee: t.VendorRef?.name || '', account: 'Bill' });
+  for (const t of j?.QueryResponse?.JournalEntry || []) {
+    const debit = (t.Line || []).filter((l: any) => l.JournalEntryLineDetail?.PostingType === 'Debit').reduce((a: number, l: any) => a + num(l.Amount), 0);
+    if (Math.abs(debit - abs) < 0.005) out.push({ type: 'JournalEntry', id: String(t.Id), date: t.TxnDate, amount: debit, payee: t.PrivateNote || '', account: 'Journal entry' });
+  }
+  return out;
+}
+async function postPersonal(ids: string[], force: boolean, uid: string) {
+  const { data: rows, error } = await admin.from('personal_card_txns').select('*').in('id', ids);
+  if (error) throw new Error(error.message);
+  await accessToken();
+  const accounts = await chartOfAccounts();
+  const accts = new Map<string, any>(accounts.map((a: any) => [a.id, a]));
+  const equity = await ownerContributionAccount();
+  const vendors = new Map<string, string | null>();
+  const results: any[] = [];
+  for (const r of rows || []) {
+    const res: any = { id: r.id };
+    try {
+      if (r.qbo_txn_id) { res.posted = true; res.qboId = r.qbo_txn_id; results.push(res); continue; }
+      if (r.decision !== 'business') throw new Error('Mark it as business first');
+      const acct = accts.get(String(r.account_id || ''));
+      if (!acct || !['Expense', 'Other Expense', 'Cost of Goods Sold'].includes(acct.type)) throw new Error('Pick an expense category');
+      const amount = num(r.amount), date = String(r.txn_date);
+      if (!amount) throw new Error('Amount is zero');
+      if (!force) {
+        const dups = await possibleDuplicates(date, amount);
+        if (dups.length) { res.duplicates = dups; results.push(res); continue; }
+      }
+      const vendorName = String(r.note || '').trim() || cleanMerchant(r.name);
+      const vendorId = await vendorFor(vendorName, vendors);
+      const out = amount > 0, abs = Math.round(Math.abs(amount) * 100) / 100;
+      const desc = `${out ? '' : 'Refund: '}${r.name} (paid with personal card ••${r.card})`.slice(0, 4000);
+      const je = {
+        TxnDate: date,
+        PrivateNote: `Personal card ••${r.card}: ${r.name}. Added by Knox View HQ.`.slice(0, 4000),
+        Line: [
+          { DetailType: 'JournalEntryLineDetail', Amount: abs, Description: desc,
+            JournalEntryLineDetail: { PostingType: out ? 'Debit' : 'Credit', AccountRef: { value: acct.id }, ...(vendorId ? { Entity: { Type: 'Vendor', EntityRef: { value: vendorId } } } : {}) } },
+          { DetailType: 'JournalEntryLineDetail', Amount: abs, Description: desc,
+            JournalEntryLineDetail: { PostingType: out ? 'Credit' : 'Debit', AccountRef: { value: equity.id } } },
+        ],
+      };
+      const made = (await qbo('journalentry', {}, je))?.JournalEntry;
+      if (!made?.Id) throw new Error('QuickBooks didn’t confirm the entry');
+      const now = new Date().toISOString();
+      await admin.from('personal_card_txns').update({ qbo_txn_id: String(made.Id), posted_at: now, posted_by: uid, account_name: acct.full }).eq('id', r.id);
+      // Mark it confirmed in the Bookkeeping review too: it was just reviewed.
+      await markReviewed([{ type: 'JournalEntry', id: String(made.Id), updated: made.MetaData?.LastUpdatedTime || null }], uid);
+      Object.assign(res, { posted: true, qboId: String(made.Id), postedAt: now, account: acct.full, equity: equity.name, vendor: vendorId ? vendorName : null });
+    } catch (e) { res.error = String((e as Error)?.message || e); }
+    results.push(res);
+  }
+  return { results, equity };
+}
+async function unpostPersonal(id: string) {
+  const { data: r } = await admin.from('personal_card_txns').select('*').eq('id', id).maybeSingle();
+  if (!r?.qbo_txn_id) throw new Error('That one isn’t in QuickBooks');
+  const cur = (await qbo(`journalentry/${r.qbo_txn_id}`).catch(() => null))?.JournalEntry;
+  if (cur) await qbo('journalentry', { operation: 'delete' }, { Id: cur.Id, SyncToken: cur.SyncToken });
+  await admin.from('txn_reviews').delete().eq('txn_type', 'JournalEntry').eq('txn_id', String(r.qbo_txn_id));
+  await admin.from('personal_card_txns').update({ qbo_txn_id: null, posted_at: null, posted_by: null }).eq('id', id);
+  return { ok: true };
+}
+// Card statement name → a vendor name ("SP TOOLSONS  BUCURESTI RO" → "Toolsons"). Same idea as the app's.
+function cleanMerchant(name: string) {
+  let s = String(name || '').split(/\s{2,}/)[0].trim();
+  if (/amazon|amzn/i.test(s)) return 'Amazon';
+  if (/apple\.com/i.test(s)) return 'Apple';
+  if (/google.*(workspace|gsuite)/i.test(s)) return 'Google Workspace';
+  s = s.replace(/^(SQ|TST|SP|FSP|GLF|CTLP|PAR|DK)\s*\*\s*/i, '').replace(/^SP\s+/i, '').replace(/^www\./i, '').replace(/\.com\b.*$/i, '');
+  s = s.replace(/[#*].*$/, '').replace(/\s\d.*$/, '').trim();
+  return s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\bDji\b/, 'DJI') || String(name).slice(0, 40);
+}
+async function sha256(s: string) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
 async function saveSnapshot(data: unknown, uid: string) {
   const refreshed_at = new Date().toISOString();
   await admin.from('finance_snapshots').upsert({ id: 1, data, refreshed_at, refreshed_by: uid });
@@ -523,12 +642,25 @@ Deno.serve(async (req) => {
     // Setup check (reveals nothing secret)
     if (action === 'ping') return json(req, { configured, env: ENV, clientIdLength: CLIENT_ID.length, secretLength: CLIENT_SECRET.length });
 
-    const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-    const { data: u, error: ue } = await admin.auth.getUser(jwt);
-    if (ue || !u?.user) return json(req, { error: 'Not signed in' }, 401);
-    const uid = u.user.id;
-    const { data: me } = await admin.from('team_members').select('id, active, role').eq('id', uid).maybeSingle();
-    if (!me?.active || me.role !== 'owner') return json(req, { error: 'Finance is only available to the owner' }, 403);
+    let uid: string;
+    const job = req.headers.get('x-hq-job') || '';
+    if (job) {
+      // Server-side job (started from the database with a one-time token). Limited to a few actions.
+      if (!['accounts', 'pc_post'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
+      const { data: tok } = await admin.from('qbo_job_tokens').select('expires_at').eq('token_hash', await sha256(job)).maybeSingle();
+      if (!tok || new Date(tok.expires_at).getTime() < Date.now()) return json(req, { error: 'Not signed in' }, 401);
+      const { data: owner } = await admin.from('team_members').select('id').eq('role', 'owner').eq('active', true).limit(1).maybeSingle();
+      if (!owner) return json(req, { error: 'No owner' }, 403);
+      uid = owner.id;
+    } else {
+      // The function checks the signed-in user itself (verify_jwt is off so database jobs can reach it).
+      const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      const { data: u, error: ue } = await admin.auth.getUser(jwt);
+      if (ue || !u?.user) return json(req, { error: 'Not signed in' }, 401);
+      uid = u.user.id;
+      const { data: me } = await admin.from('team_members').select('id, active, role').eq('id', uid).maybeSingle();
+      if (!me?.active || me.role !== 'owner') return json(req, { error: 'Finance is only available to the owner' }, 403);
+    }
 
     if (action === 'status') {
       const [{ data: c }, { data: snap }] = await Promise.all([
@@ -621,6 +753,13 @@ Deno.serve(async (req) => {
       const a = await setAccountActive(String(body.id || ''), !!body.active);
       return json(req, { account: a ? { id: String(a.Id), name: a.Name, active: !!a.Active } : null });
     }
+
+    if (action === 'pc_post') {
+      const ids = Array.isArray(body.ids) ? body.ids.slice(0, 25).map(String).filter((s: string) => /^[0-9a-f-]{36}$/i.test(s)) : [];
+      if (!ids.length) return json(req, { error: 'Nothing to post' }, 400);
+      return json(req, await postPersonal(ids, !!body.force, uid));
+    }
+    if (action === 'pc_unpost') return json(req, await unpostPersonal(String(body.id || '')));
 
     return json(req, { error: 'Unknown action' }, 400);
   } catch (e) {
