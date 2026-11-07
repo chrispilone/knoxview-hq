@@ -306,6 +306,7 @@ nav.tabs a.hidden{display:none}
 .side-out:hover{background:var(--panel-2);color:var(--text)}
 .side-out svg{width:21px;height:21px;flex:none}
 .side-scrim{display:none}
+.side-scrim.dragging{display:block;position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:39}
 .app-body{margin-left:252px;transition:margin-left .15s ease;min-width:0}
 header.top{display:none}
 @media (min-width:901px){
@@ -1210,6 +1211,61 @@ $('#sideCollapse').onclick = () => { const on = document.body.classList.toggle('
 $('#menuBtn').onclick = () => document.body.classList.add('menu-open');
 $('#sideClose').onclick = $('#sideScrim').onclick = () => document.body.classList.remove('menu-open');
 $('#tabs').addEventListener('click', () => document.body.classList.remove('menu-open'));
+/* Phones: swipe in from the left edge to open the menu, swipe it back to close (follows the finger) */
+(() => {
+  if (!('ontouchstart' in window)) return;
+  const side = document.querySelector('.side'), scrim = $('#sideScrim'), mq = matchMedia('(max-width:900px)');
+  const EDGE = 28;
+  let g = null; // { mode:'open'|'close', x0, y0, t0, dx, active, w }
+  const isOpen = () => document.body.classList.contains('menu-open');
+  const place = x => { // x: 0 = fully open, -w = fully closed
+    side.style.transform = `translateX(${x}px)`;
+    const p = 1 + x / g.w;
+    scrim.classList.add('dragging'); scrim.style.opacity = Math.max(0, Math.min(1, p));
+    side.style.boxShadow = p > 0 ? '8px 0 30px rgba(0,0,0,.18)' : 'none';
+  };
+  const finish = open => {
+    side.style.transition = 'transform .24s cubic-bezier(.2,.8,.25,1)';
+    scrim.style.transition = 'opacity .24s';
+    requestAnimationFrame(() => {
+      side.style.transform = open ? 'translateX(0px)' : `translateX(${-g.w}px)`;
+      scrim.style.opacity = open ? 1 : 0;
+      const w = g.w;
+      setTimeout(() => {
+        document.body.classList.toggle('menu-open', open);
+        side.style.transition = side.style.transform = side.style.boxShadow = '';
+        scrim.style.transition = scrim.style.opacity = ''; scrim.classList.remove('dragging');
+      }, 250);
+    });
+  };
+  document.addEventListener('touchstart', e => {
+    g = null;
+    if (!mq.matches || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML) return;
+    const t = e.touches[0];
+    if (isOpen()) g = { mode: 'close', x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, active: false, w: side.offsetWidth };
+    else if (t.clientX <= EDGE) g = { mode: 'open', x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, active: false, w: side.offsetWidth };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!g) return;
+    const t = e.touches[0], dx = t.clientX - g.x0, dy = t.clientY - g.y0;
+    if (!g.active) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      const ok = Math.abs(dx) > Math.abs(dy) * 1.2 && (g.mode === 'open' ? dx > 0 : dx < 0);
+      if (!ok) { g = null; return; }
+      g.active = true; side.style.transition = 'none';
+    }
+    e.preventDefault();
+    g.dx = dx;
+    place(g.mode === 'open' ? Math.min(0, -g.w + dx) : Math.max(-g.w, Math.min(0, dx)));
+  }, { passive: false });
+  const end = () => {
+    if (!g || !g.active) { g = null; return; }
+    const v = g.dx / Math.max(1, Date.now() - g.t0); // px per ms
+    const open = g.mode === 'open' ? (g.dx > g.w * 0.35 || v > 0.45) : !(-g.dx > g.w * 0.3 || v < -0.45);
+    finish(open); g.active = false;
+  };
+  document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
+})();
 /* Quick links (owner): collapsible group; open/closed is remembered in this browser */
 (() => {
   const box = $('#quickLinks'), tg = $('#qlToggle');
@@ -3219,7 +3275,7 @@ async function refreshCurrentView(){
   const animated = on => { main.classList.toggle('ptr-anim', on); el.classList.toggle('ptr-anim', on); };
   const settle = (to, then) => { animated(true); dist = to; paint(); setTimeout(() => { animated(false); then && then(); }, 380); };
   document.addEventListener('touchstart', e => {
-    if (busy || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML || window.scrollY > 0) return;
+    if (busy || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML || window.scrollY > 0 || document.body.classList.contains('menu-open') || e.touches[0].clientX <= 28) return;
     if (e.target.closest('input, textarea, select, [contenteditable], iframe, .no-ptr') || scrolledParent(e.target)) return;
     startY = e.touches[0].clientY; startX = e.touches[0].clientX; pulling = false;
   }, { passive: true });
