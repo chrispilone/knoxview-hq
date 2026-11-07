@@ -389,11 +389,10 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .card .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted)}
 /* Delivered and Archived columns: one-line cards */
 .card.compact{display:flex;align-items:center;gap:6px;padding:5px 8px;box-shadow:none;border-radius:7px}
-.card.compact .t{flex:1;min-width:0;margin:0;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.compact .t{flex:1;min-width:0;margin:0;font-weight:500;font-size:13px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .card.compact .d{font-size:11px;color:var(--muted);white-space:nowrap}
-.card.compact .arch{display:none;border:none;background:none;padding:0 2px;color:var(--muted);font-size:12px;line-height:1}
-.card.compact:hover .arch{display:inline}
-.card.compact .arch:hover{color:var(--text)}
+.card.compact .arch{flex:none;border:1px solid var(--border);background:var(--panel-2);border-radius:5px;padding:1px 6px;color:var(--muted);font-size:11px;font-weight:500;line-height:1.4}
+.card.compact .arch:hover{color:var(--text);border-color:var(--accent)}
 .col.compact-col .cards{gap:4px}
 .col-tools{display:flex;justify-content:flex-end;margin:-4px 2px 6px}
 .col-tools button{border:none;background:none;color:var(--muted);font-size:12px;padding:0}
@@ -911,7 +910,7 @@ label.extra{margin:0}
           <button data-l="board">Board</button>
           <button data-l="list">List</button>
         </div>
-        <label class="check"><input type="checkbox" id="showDone" /> Show all delivered &amp; archived</label>
+        <label class="check"><input type="checkbox" id="showDone" /> Show archived</label>
       </div>
       <div id="boardWrap" class="board"></div>
       <div id="listWrap" class="table-wrap hidden"></div>
@@ -974,10 +973,8 @@ const STATUSES = [
 ];
 const STATUS_LABEL = Object.fromEntries(STATUSES);
 const DONE = ['delivered','archived'];
-// The Delivered column is always on the boards and shows the last 14 days; "Show all delivered & archived" shows everything.
-const RECENT_DELIVERED_DAYS = 14;
-const recentlyDelivered = p => p.status === 'delivered' && p.delivered_at && (Date.now() - new Date(p.delivered_at).getTime()) < RECENT_DELIVERED_DAYS * 864e5;
-const onBoard = p => S.showDone || !DONE.includes(p.status) || recentlyDelivered(p);
+// Delivered projects stay on the board (one-line cards) until someone archives them; "Show archived" shows the rest.
+const onBoard = p => S.showDone || p.status !== 'archived';
 const DELIVERY = [['spiro','Spiro'],['text_message','Text Message'],['email','Email (template)'],['chris_delivers','Chris will deliver']];
 const TASK_KINDS = [['drone_pin','Drone Pin Photo'],['virtual_twilight','Virtual Twilight'],['virtual_staging','Virtual Staging'],
   ['object_removal','Object Removal'],['property_lines','Property Lines'],['callout_graphics','Callout Graphics'],['custom','Custom Task']];
@@ -1430,10 +1427,9 @@ function renderStats(){
   $('#stats').innerHTML = items.map(([l,n,alert]) => `<div class="stat ${alert && n ? 'alert' : ''}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 }
 function cardHTML(p){
-  if (DONE.includes(p.status)) return `<div class="card compact ${p.media}" draggable="true" data-id="${p.id}" title="${esc(p.name)}${agentName(p.agent_id) ? ' · ' + esc(agentName(p.agent_id)) : ''}">
+  if (DONE.includes(p.status)) return `<div class="card compact ${p.media}" draggable="true" data-id="${p.id}" title="${esc(p.name)}${agentName(p.agent_id) ? ' · ' + esc(agentName(p.agent_id)) : ''}${p.delivered_at ? ' · delivered ' + esc(fmtShort(p.delivered_at)) : ''}">
     <span class="t">${esc(p.name)}</span>
-    ${p.delivered_at ? `<span class="d">${esc(fmtShort(p.delivered_at))}</span>` : ''}
-    ${p.status === 'delivered' && can('edit_projects') ? `<button class="arch" data-archive="${p.id}" title="Archive (hide from the board)">✕</button>` : ''}
+    ${p.status === 'delivered' && can('edit_projects') ? `<button class="arch" data-archive="${p.id}" title="Archive: removes it from the Delivered column">Archive</button>` : ''}
   </div>`;
   const tasks = p.project_tasks || []; const done = tasks.filter(t => t.completed).length;
   const extra = p.media === 'photo'
@@ -1458,10 +1454,9 @@ function renderBoard(){
   const cols = STATUSES.filter(([s]) => S.showDone || s !== 'archived');
   $('#boardWrap').innerHTML = cols.map(([s,l]) => {
     const items = list.filter(p => p.status === s && onBoard(p)).sort(s === 'delivered' ? (a, b) => String(b.delivered_at || '').localeCompare(String(a.delivered_at || '')) : byDue);
-    const tip = s === 'delivered' && !S.showDone ? ` title="Delivered in the last ${RECENT_DELIVERED_DAYS} days. Tick “Show all delivered & archived” to see older ones."` : '';
     const tools = s === 'delivered' && items.length && can('edit_projects') ? `<div class="col-tools"><button data-archive-all title="Archive every project in this column">Archive all ${items.length}</button></div>` : '';
     return `<div class="col ${DONE.includes(s) ? 'compact-col' : ''}" data-status="${s}">
-      <div class="col-head"${tip}><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>${tools}
+      <div class="col-head"><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>${tools}
       <div class="cards">${items.map(cardHTML).join('') || '<div class="empty-col">—</div>'}</div></div>`;
   }).join('');
   const archive = async ids => {
@@ -1473,7 +1468,7 @@ function renderBoard(){
   const aa = document.querySelector('#boardWrap [data-archive-all]');
   if (aa) aa.onclick = () => {
     const ids = [...document.querySelectorAll('#boardWrap .col[data-status=delivered] .card')].map(c => c.dataset.id);
-    if (ids.length && confirm(`Archive ${ids.length} delivered project${ids.length === 1 ? '' : 's'}? They'll be hidden from the board (you can still see them with Show all delivered & archived).`)) archive(ids);
+    if (ids.length && confirm(`Archive ${ids.length} delivered project${ids.length === 1 ? '' : 's'}? They'll be hidden from the board (you can still see them with Show archived).`)) archive(ids);
   };
   document.querySelectorAll('#boardWrap .card').forEach(c => {
     c.onclick = () => openProject(c.dataset.id);
