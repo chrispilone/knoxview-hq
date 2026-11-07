@@ -805,6 +805,25 @@ label.extra{margin:0}
 .tview .cl-item [data-cl-rm]{opacity:.35}
 .tview .cl-item:hover [data-cl-rm]{opacity:1}
 @media (max-width:640px){ .tv-chips{margin-left:0} .tv-title{font-size:19px} }
+/* Quick links (owner) */
+.qlinks{padding:4px 12px 8px}
+.ql-toggle{display:flex;align-items:center;gap:14px;width:100%;min-height:42px;padding:9px 14px;border:none;background:none;border-radius:10px;color:var(--muted);font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ql-toggle:hover{background:var(--panel-2)}
+.ql-toggle svg{width:20px;height:20px;flex:none}
+.ql-toggle .ql-chev{width:15px;height:15px;margin-left:auto;transition:transform .2s ease;opacity:.7}
+.qlinks.open .ql-chev{transform:rotate(90deg)}
+.ql-list{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+.qlinks.open .ql-list{grid-template-rows:1fr}
+.ql-list>*{min-height:0}
+.ql-list{overflow:hidden}
+.ql-list a{display:flex;align-items:center;gap:12px;min-height:40px;padding:8px 14px 8px 26px;border-radius:9px;color:var(--muted);text-decoration:none;font-size:14px;white-space:nowrap}
+.ql-list a:hover{background:var(--panel-2);color:var(--text)}
+.ql-list a svg{width:18px;height:18px;flex:none}
+.ql-ext{margin-left:auto;font-size:12px;opacity:.6}
+@media (min-width:901px){
+  body.side-mini .qlinks{padding:4px 8px 8px}
+  body.side-mini .ql-toggle,body.side-mini .ql-list a{justify-content:center;padding-left:0;padding-right:0;gap:0}
+}
 /* Pull to refresh */
 html,body{overscroll-behavior-y:none}
 main{will-change:auto}
@@ -959,6 +978,15 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <a href="#/chat" data-view="chat" title="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="lbl">Chat</span><span class="badge hidden" id="chatBadge"></span></a>
       <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
     </nav>
+    <div class="qlinks hidden" id="quickLinks">
+      <button type="button" class="ql-toggle" id="qlToggle" title="Quick links" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1-1"/></svg>
+        <span class="lbl">Quick links</span><svg class="ql-chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="ql-list" id="qlList">
+        <a href="https://book.knoxview.com" target="_blank" rel="noopener" title="Order form (book.knoxview.com)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="lbl">Order form</span><span class="ql-ext lbl">↗</span></a>
+        <a href="https://knoxview.com" target="_blank" rel="noopener" title="Website (knoxview.com)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5s1.1-6.1 3.4-8.5z"/></svg><span class="lbl">Website</span><span class="ql-ext lbl">↗</span></a>
+      </div>
+    </div>
     <div class="side-foot">
       <button class="side-viewas lbl hidden" id="viewAsBtn">👁 View as…</button>
       <span class="user-chip lbl" id="userChip"></span>
@@ -1132,6 +1160,7 @@ const can = k => permFor(S.me, k);
 const viewAllowed = v => ['tasks','mail','calendar','agents','chat'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' ? isOwner() : true;
 function applyAccess(){
   ['tasks','mail','calendar','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
   $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
@@ -1181,6 +1210,14 @@ $('#sideCollapse').onclick = () => { const on = document.body.classList.toggle('
 $('#menuBtn').onclick = () => document.body.classList.add('menu-open');
 $('#sideClose').onclick = $('#sideScrim').onclick = () => document.body.classList.remove('menu-open');
 $('#tabs').addEventListener('click', () => document.body.classList.remove('menu-open'));
+/* Quick links (owner): collapsible group; open/closed is remembered in this browser */
+(() => {
+  const box = $('#quickLinks'), tg = $('#qlToggle');
+  const set = on => { box.classList.toggle('open', on); tg.setAttribute('aria-expanded', on); };
+  try { set(localStorage.getItem('kvhq.qlinks') === '1'); } catch (e) {}
+  tg.onclick = () => { const on = !box.classList.contains('open'); set(on); try { localStorage.setItem('kvhq.qlinks', on ? '1' : '0'); } catch (e) {} };
+  $('#qlList').addEventListener('click', () => document.body.classList.remove('menu-open'));
+})();
 const paintMenuDot = () => $('#menuDot').classList.toggle('hidden', !document.querySelector('#tabs .badge:not(.hidden)'));
 new MutationObserver(paintMenuDot).observe($('#tabs'), { subtree: true, attributes: true, attributeFilter: ['class'] }); $('#pendingSignOut').onclick = doSignOut;
 
