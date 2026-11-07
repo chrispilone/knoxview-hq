@@ -3437,19 +3437,26 @@ const PC_GUESS = [
   [/kaplan|udemy|skillshare|masterclass/i, 'maybe', 'Education & Coaching', 'Course or licensing'],
   [/realtor|association of|chamber of commerce/i, 'maybe', 'Dues & Memberships'],
   [/amazon|amzn/i, 'maybe', 'Supplies', 'Check your Amazon order history for what this was'],
-  [/apple\.com\/bill/i, 'maybe', 'Software & Subscriptions', 'App Store or iCloud: check your Apple purchase history'],
+  [/next insur/i, 'business', 'Insurance', 'NEXT general liability insurance'],
+  [/gdit faa|faa ?drone/i, 'business', 'Taxes, Licenses & Fees', 'FAA drone registration'],
+  [/apple store|apple\.com\/us/i, 'maybe', 'Gear & Equipment', 'Apple hardware: business if it’s your work computer, phone or iPad'],
+  [/apple\.com\/bill|apple services/i, 'maybe', 'Software & Subscriptions', 'App Store or iCloud: check your Apple purchase history'],
+  [/reelme/i, 'maybe', 'Software & Subscriptions', 'Reel app: business if you use it for client videos'],
   [/^sp\s/i, 'maybe', 'Gear & Equipment', 'Online store: was this for the business?'],
   [/allegiant|allegnt|delta air|united air|southwest|american air|frontier w|spirit air|marriott|hilton|hyatt|airbnb|hotel|metropolis|parkmobile|parking/i, 'maybe', 'Travel', 'Travel or parking: business if it was for work'],
+  [/\| (airlines|hotels|transportation|govt-services-parking)$/i, 'maybe', 'Travel', 'Travel: business if it was for work'],
+  [/\| gas$/i, 'maybe', 'Vehicle & Fuel', 'Gas: if you claim mileage instead, leave these personal'],
   [/shell oil|kroger fuel|weigel|marathon|exxon|\bbp#|circle k|casey|goodstop|buc-ee|\bpilot\b|love's|amoco|wawa|speedway|citgo|racetrac|gulf oil|phillips 66|flying j|speed mart|rite stop|kgp mart|sunspot|top fuels|costco gas|gas-n-go|7-eleven/i, 'maybe', 'Vehicle & Fuel', 'Gas: if you claim mileage instead, leave these personal'],
 ];
 function pcMerchant(name){
   const s0 = String(name || '').replace(/\s+/g, ' ').trim();
   if (/amazon|amzn/i.test(s0) && !/blink|audible|prime/i.test(s0)) return 'Amazon';
+  if (/apple store|apple\.com\/us/i.test(s0)) return 'Apple Store';
   if (/apple\.com/i.test(s0)) return 'Apple (App Store / iCloud)';
   if (/google.*(workspace|gsuite)/i.test(s0)) return 'Google Workspace';
   if (/collectivesutherl/i.test(s0)) return 'Collective Sutherland (rent)';
   if (/chick-fil-a/i.test(s0)) return 'Chick-fil-A';
-  for (const [re, label] of [[/dji\.com|\bdji\b/i, 'DJI'], [/^spiro/i, 'Spiro'], [/^shell oil/i, 'Shell'], [/^exxon/i, 'Exxon'], [/citgo/i, 'Citgo'], [/^circle medical/i, 'Circle Medical'], [/^weigel/i, "Weigel's"], [/^kroger fuel/i, 'Kroger Fuel'], [/^kroger/i, 'Kroger'], [/^cook out/i, 'Cook Out'], [/great clips/i, 'Great Clips'], [/^costco whse/i, 'Costco'], [/^marathon/i, 'Marathon'], [/^dunkin/i, "Dunkin'"], [/^spotify/i, 'Spotify'], [/^geico/i, 'Geico']])
+  for (const [re, label] of [[/next insur/i, 'NEXT Insurance'], [/godaddy/i, 'GoDaddy'], [/reelme/i, 'Reelme'], [/gdit faa|faa ?drone/i, 'FAA (drone registration)'], [/dji\.com|\bdji\b/i, 'DJI'], [/^spiro/i, 'Spiro'], [/^shell oil/i, 'Shell'], [/^exxon/i, 'Exxon'], [/citgo/i, 'Citgo'], [/^circle medical/i, 'Circle Medical'], [/^weigel/i, "Weigel's"], [/^kroger fuel/i, 'Kroger Fuel'], [/^kroger/i, 'Kroger'], [/^cook out/i, 'Cook Out'], [/great clips/i, 'Great Clips'], [/^costco whse/i, 'Costco'], [/^marathon/i, 'Marathon'], [/^dunkin/i, "Dunkin'"], [/^spotify/i, 'Spotify'], [/^geico/i, 'Geico']])
     if (re.test(s0)) return label;
   let s = s0.replace(/^(SQ|TST|SP|FSP|GLF|CTLP|PAR|DK|FI)\s*[*-]\s*/i, '').replace(/^SP\s+/i, '').replace(/^www\./i, '').replace(/^\d+\s+/, '');
   s = s.replace(/[#*].*$/, '').replace(/\b[\w'-]*\d[\w'-]*\b.*$/, '').replace(/\s[A-Z]{2}$/, '').trim();
@@ -3464,6 +3471,7 @@ function pcMerchant(name){
   s = words.slice(0, 4).join(' ') || s0.split(' ')[0];
   return s.toLowerCase().replace(/(^|[\s(/-])([a-z])/g, (m, a, b) => a + b.toUpperCase()).replace(/\bDji\b/, 'DJI').replace(/\bBp\b/, 'BP').replace(/\bLlc\b/, 'LLC').slice(0, 60);
 }
+const pcCardLabel = c => /^\d{4}$/.test(c) ? '••' + c : c;
 const pcKey = name => pcMerchant(name).toLowerCase().replace(/['’]/g, '');
 function pcGuess(name){
   const g = PC_GUESS.find(([re]) => re.test(name));
@@ -3494,7 +3502,7 @@ function pcGroups(rows){
   const m = new Map();
   for (const r of rows) {
     const k = pcKey(r.name);
-    if (!m.has(k)) m.set(k, { key: k, label: pcMerchant(r.name), rows: [], total: 0, ...pcGuess(r.name) });
+    if (!m.has(k)) m.set(k, { key: k, label: pcMerchant(r.name), rows: [], total: 0, ...pcGuess(`${r.name} | ${r.memo || ''}`) });
     const g = m.get(k); g.rows.push(r); g.total += Number(r.amount);
   }
   for (const g of m.values()) {
@@ -3533,7 +3541,7 @@ function pcHTML(){
         <div class="stat"><div class="l">To decide</div><div class="n">${undecided.length}</div><div class="l">${usd(sum(undecided))}</div></div>
         <div class="stat"><div class="l">Business, not posted</div><div class="n">${ready.length}</div><div class="l">${usd(sum(ready), true)}</div></div>
         <div class="stat"><div class="l">In QuickBooks</div><div class="n">${posted.length}</div><div class="l">${usd(sum(posted), true)}</div></div>
-        <div class="stat"><div class="l">Cards</div><div class="n">${cards.length}</div><div class="l">${cards.map(c => '••' + esc(c)).join(', ') || 'None yet'}</div></div>
+        <div class="stat"><div class="l">Cards</div><div class="n">${cards.length}</div><div class="l">${cards.map(c => esc(pcCardLabel(c))).join(', ') || 'None yet'}</div></div>
       </div>
       <div class="pc-actions"><label class="btn small" for="pcFile">⬆ Upload card CSV</label><input type="file" id="pcFile" accept=".csv,text/csv" class="hidden" multiple /></div>
     </div>
@@ -3570,7 +3578,7 @@ function pcRowHTML(r, mode){
   else right = `${r.decision === 'already' ? '<span class="pill ok">Already in QuickBooks</span>' : ''}<button class="btn small ghost" data-pcundo="${r.id}">↩ Undo</button>`;
   return `<div class="cl-row ${dups ? 'decide' : ''}">
     <div class="cl-main"><div class="cl-payee" title="${esc(r.name)}">${esc(r.name)}</div>
-      <div class="cl-meta">${esc(fmtShort(r.txn_date))} · ••${esc(r.card)}${r.memo ? ` · ${esc(r.memo)}` : ''}</div>
+      <div class="cl-meta">${esc(fmtShort(r.txn_date))} · ${esc(pcCardLabel(r.card))}${r.memo ? ` · ${esc(r.memo)}` : ''}</div>
       ${dups ? `<div class="pc-dup">Possible duplicate already in QuickBooks: ${dups.map(d => `${esc(TXN_LABEL[d.type] || d.type)} ${esc(fmtShort(d.date))} ${usd(d.amount, true)}${d.payee ? ` · ${esc(d.payee)}` : ''}${d.account ? ` (${esc(d.account)})` : ''}`).join('; ')}
         <div class="pc-dup-actions"><button class="btn small" data-pcalready="${r.id}">It’s already there, skip it</button><button class="btn small primary" data-pcforce="${r.id}">Different charge, post it</button></div></div>` : ''}
     </div>
@@ -3669,8 +3677,8 @@ function pcFromCSV(text, card){
   if (hi < 0) throw new Error('Couldn’t find Date and Amount columns in that file');
   const H = rows[hi].map(h => h.trim().toLowerCase());
   const col = (...res) => { for (const re of res) { const i = H.findIndex(h => re.test(h)); if (i >= 0) return i; } return -1; };
-  const iDate = col(/^transaction date$/, /^trans\.? date$/, /^date$/, /date/), iDesc = col(/^name$/, /description/, /merchant/, /payee/, /^transaction$/, /details/),
-    iMemo = col(/^memo$/), iAmt = col(/^amount$/, /amount/), iDebit = col(/debit|charge/), iCredit = col(/credit|payment/), iType = col(/^transaction$/, /^type$/);
+  const iDate = col(/^transaction date$/, /^trans\.? date$/, /^date$/, /date/), iDesc = col(/^merchant$/, /^name$/, /description/, /merchant/, /payee/, /^transaction$/, /details/),
+    iMemo = col(/^memo$/, /^category$/), iAmt = col(/^amount$/, /amount/), iDebit = col(/debit|charge/), iCredit = col(/credit|payment/), iType = col(/^transaction$/, /^type$/);
   if (iDate < 0 || iDesc < 0 || (iAmt < 0 && iDebit < 0)) throw new Error('Couldn’t find the date, description and amount columns');
   const num = v => { const n = parseFloat(String(v || '').replace(/[$,\s]/g, '').replace(/^\((.*)\)$/, '-$1')); return Number.isFinite(n) ? n : 0; };
   const dateOf = v => { const s = String(v || '').trim(); let m;
@@ -3685,6 +3693,7 @@ function pcFromCSV(text, card){
   for (const x of data) {
     const amount = Math.round((chargeNegative ? -x.raw : x.raw) * 100) / 100;
     if (amount < 0 && /payment|thank you|autopay|reversal/i.test(x.name)) continue; // paying the card isn't a purchase
+    if (/^payment$/i.test(x.type) || /internet transfer from account|reversal - insufficient/i.test(x.name)) continue; // card payments and their bounces
     const base = `${card}|${x.date}|${amount.toFixed(2)}|${x.name.toUpperCase()}`;
     const n = seen[base] = (seen[base] ?? -1) + 1;
     const memo = /[a-z]{3}/i.test(x.memo.replace(/[\d;*\s]+/g, ' ')) ? x.memo.split(';').slice(2).join(';').replace(/^[;\s]+|[;\s]+$/g, '') || x.memo : null;
@@ -3695,9 +3704,9 @@ function pcFromCSV(text, card){
 async function pcUpload(files){
   let added = 0, total = 0;
   for (const file of files) {
-    const guess = (file.name.match(/(?:^|\D)(\d{4})(?:\D|$)/) || [])[1] || '';
-    const card = (prompt(`Last 4 digits of the card in “${file.name}”:`, guess) || '').trim();
-    if (!/^\d{4}$/.test(card)) { toast('Skipped: card number should be 4 digits'); continue; }
+    const guess = (file.name.match(/(?:^|\D)(\d{4})(?:\D|$)/) || [])[1] || (/apple card/i.test(file.name) ? 'Apple' : '');
+    const card = (prompt(`Last 4 digits of the card in “${file.name}” (or a short name like Apple):`, guess) || '').trim();
+    if (!/^[A-Za-z0-9]{2,12}$/.test(card)) { toast('Skipped: use the last 4 digits or a short name'); continue; }
     try {
       const rows = pcFromCSV(await file.text(), card);
       total += rows.length;
@@ -3716,6 +3725,7 @@ function wirePC(){
   const box = $('#pcBox'); if (!box) return;
   if (!PC.rows && !PC.loading && !PC.error) { loadPC(); return; }
   if (!PC.rows) return;
+  if (BOOKS.data?.accounts?.length && PC.accounts !== BOOKS.data.accounts) { PC.accounts = BOOKS.data.accounts; paintBooks(); return; } // categories made in Cleanup show up here
   box.querySelector('#pcTabs')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; PC.view = b.dataset.v; paintBooks(); });
   const file = box.querySelector('#pcFile'); if (file) file.onchange = () => { const fs = [...file.files]; file.value = ''; if (fs.length) pcUpload(fs); };
   const mx = box.querySelector('#pcMsgX'); if (mx) mx.onclick = () => { PC.msg = ''; paintBooks(); };
@@ -3789,6 +3799,7 @@ const COA = {
     { key:'meals',    name:'Meals',                   section:'Operating expenses', type:'Expense', sub:'EntertainmentMeals', parent:'opex' },
     { key:'taxes',    name:'Taxes, Licenses & Fees',  section:'Operating expenses', type:'Expense', sub:'TaxesPaid', parent:'opex' },
     { key:'bank',     name:'Bank Fees & Interest',    section:'Operating expenses', type:'Expense', sub:'BankCharges', parent:'opex' },
+    { key:'insurance',name:'Insurance',               section:'Operating expenses', type:'Expense', sub:'Insurance', parent:'opex' },
   ],
   // Old category (QuickBooks account id) → where its transactions go by default.
   moves: {
