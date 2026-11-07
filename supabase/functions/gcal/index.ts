@@ -56,7 +56,10 @@ async function gfetch(token: string, path: string, init: RequestInit = {}, base 
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
     const msg = data?.error?.message || `Google error ${r.status}`;
-    if (base === GMAIL && /has not been used|is disabled/i.test(msg)) throw new Error('The Gmail API is not turned on in Google Cloud yet.');
+    if (base === GMAIL && /has not been used|is disabled/i.test(msg)) {
+      const proj = (msg.match(/project (\d+)/) || [])[1];
+      throw new Error(`The Gmail API is not turned on in Google Cloud yet${proj ? ` (Google project number ${proj})` : ''}.`);
+    }
     throw new Error(msg);
   }
   return data;
