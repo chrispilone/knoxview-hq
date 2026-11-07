@@ -543,6 +543,19 @@ label.extra{margin:0}
 .w-row .t{flex:1;min-width:0}.w-row .t b{font-weight:500}.w-row .t span{display:block;font-size:12px;color:var(--muted)}
 .w-row .mv{border:1px solid var(--border);background:var(--panel);border-radius:6px;width:28px;height:28px;padding:0;color:var(--muted)}
 .w-row .mv:disabled{opacity:.35;cursor:default}
+.notes-list{display:flex;flex-direction:column;gap:8px;max-width:820px}
+.note{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.note.unread{border-left:4px solid var(--accent)}
+.note .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);flex:none;font-size:15px}
+.note .bd{flex:1;min-width:0}
+.note .tt{font-weight:600;word-break:break-word;white-space:normal;overflow:visible;text-overflow:clip}
+@media (max-width:560px){.note{flex-wrap:wrap}.note .bd{flex-basis:calc(100% - 44px)}.note .acts{width:100%;justify-content:flex-end}}
+.note.read .tt{font-weight:500}
+.note .tx{font-size:13px;color:var(--text);margin-top:3px;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.note .mt{font-size:12px;color:var(--muted);margin-top:4px}
+.note .acts{display:flex;gap:6px;flex:none;align-items:center}
+.note.cleared{opacity:.6}
+.notes-empty{max-width:820px;padding:40px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
 .perm-group{margin:0 0 16px}
 .perm-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
 .perm-row{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);margin:0;font-weight:500;color:var(--text);font-size:14px;cursor:pointer}
@@ -860,6 +873,7 @@ label.extra{margin:0}
     </div>
     <nav class="tabs" id="tabs">
       <a href="#/home" data-view="home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">Home</span></a>
+      <a href="#/notifications" data-view="notifications" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="lbl">Notifications</span><span class="badge hidden" id="notifBadge"></span></a>
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
@@ -933,6 +947,7 @@ label.extra{margin:0}
 
     <!-- Calendar -->
     <div id="calendarView" class="hidden"></div>
+    <div id="notificationsView" class="hidden"></div>
 
     <!-- Finance (owner only) -->
     <div id="financeView" class="hidden"></div>
@@ -1113,9 +1128,112 @@ async function boot(session){
   route();
   if (QBO_RETURN && isOwner()) finishQboConnect(QBO_RETURN);
   initChat(); subscribeTasks(); subscribeInbox(); loadMail({ quiet:true });
+  loadNotes().then(subscribeNotes);
   watchAccess();
   setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } loadMail({ quiet:true }); }, 5 * 60 * 1000);
 }
+/* ===================== NOTIFICATIONS =====================
+   Rows are created by database triggers when something lands on someone's plate:
+   a task assigned to them, a project assigned to them, a revision on their project,
+   a project ready for review (QC admins), or an @mention in chat. Done = cleared from the list. */
+const NOTE = { list: [], showCleared: false, sub: null };
+const NOTE_ICON = { task_assigned: '✅', project_assigned: '📁', revision: '✏️', review: '👀', mention: '💬' };
+const activeNotes = () => NOTE.list.filter(n => !n.dismissed_at);
+function noteAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return 'just now'; if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60); if (h < 24) return `${h} hr ago`;
+  const d = Math.round(h / 24); return d < 7 ? `${d} day${d === 1 ? '' : 's'} ago` : fmtShort(ts);
+}
+async function loadNotes(){
+  const { data, error } = await sb.from('notifications').select('*').eq('member_id', S.me.id).order('created_at', { ascending: false }).limit(200);
+  if (error) return console.warn(error);
+  NOTE.list = data || []; paintNoteBadge();
+  if (S.view === 'notifications') renderNotes();
+}
+function paintNoteBadge(){
+  const n = activeNotes().length, b = $('#notifBadge');
+  b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n);
+}
+function subscribeNotes(){
+  if (NOTE.sub) return;
+  NOTE.sub = sb.channel('hq-notes').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `member_id=eq.${S.me.id}` }, p => {
+    if (p.eventType === 'INSERT') {
+      if (!NOTE.list.some(n => n.id === p.new.id)) NOTE.list.unshift(p.new);
+      toast('🔔 ' + p.new.title);
+      try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) { const dn = new Notification(p.new.title, { body: p.new.body || '', tag: p.new.id }); dn.onclick = () => { window.focus(); openNote(p.new.id); dn.close(); }; } } catch (e) {}
+    } else if (p.eventType === 'UPDATE') {
+      NOTE.list = NOTE.list.map(n => n.id === p.new.id ? p.new : n);
+    } else if (p.eventType === 'DELETE') {
+      NOTE.list = NOTE.list.filter(n => n.id !== p.old.id);
+    }
+    paintNoteBadge();
+    if (S.view === 'notifications') renderNotes();
+  }).subscribe();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadNotes(); });
+}
+async function clearNotes(ids){
+  if (!ids.length) return;
+  const now = new Date().toISOString();
+  NOTE.list = NOTE.list.map(n => ids.includes(n.id) ? { ...n, dismissed_at: now, read_at: n.read_at || now } : n);
+  paintNoteBadge(); if (S.view === 'notifications') renderNotes();
+  const { error } = await sb.from('notifications').update({ dismissed_at: now, read_at: now }).in('id', ids);
+  if (error) { fail(error); loadNotes(); }
+}
+async function restoreNote(id){
+  NOTE.list = NOTE.list.map(n => n.id === id ? { ...n, dismissed_at: null } : n);
+  paintNoteBadge(); renderNotes();
+  const { error } = await sb.from('notifications').update({ dismissed_at: null }).eq('id', id);
+  if (error) { fail(error); loadNotes(); }
+}
+async function openNote(id){
+  const n = NOTE.list.find(x => x.id === id); if (!n) return;
+  if (!n.read_at) { n.read_at = new Date().toISOString(); sb.from('notifications').update({ read_at: n.read_at }).eq('id', id).then(() => {}); }
+  if (n.task_id) {
+    if (!S.tasks.some(t => t.id === n.task_id)) await loadTasks();
+    if (!S.tasks.some(t => t.id === n.task_id)) return toast('That task is no longer available');
+    if (S.view !== 'tasks' && can('tasks')) location.hash = '#/tasks';
+    return openTask(n.task_id);
+  }
+  if (n.project_id) {
+    if (!S.projects.some(p => p.id === n.project_id)) await reloadProjects();
+    if (!S.projects.some(p => p.id === n.project_id)) return toast('That project is no longer available to you');
+    return openProject(n.project_id);
+  }
+  if (n.channel_id) { location.hash = `#/chat/${n.channel_id}`; return; }
+}
+function noteHTML(n){
+  const cleared = !!n.dismissed_at, link = n.task_id || n.project_id || n.channel_id;
+  const who = n.actor_id && memberName(n.actor_id) ? `from ${esc(firstName(memberName(n.actor_id)))} · ` : '';
+  return `<div class="note ${cleared ? 'cleared' : n.read_at ? 'read' : 'unread'}" data-note="${n.id}">
+    <span class="ic">${NOTE_ICON[n.kind] || '🔔'}</span>
+    <div class="bd"><div class="tt">${esc(n.title)}</div>${n.body ? `<div class="tx">${esc(n.body)}</div>` : ''}<div class="mt">${who}${esc(noteAgo(n.created_at))}</div></div>
+    <div class="acts">
+      ${link ? `<button class="btn small" data-note-open="${n.id}">Open</button>` : ''}
+      ${cleared ? `<button class="btn small ghost" data-note-restore="${n.id}" title="Put it back in your notifications">Restore</button>`
+        : `<button class="btn small primary" data-note-done="${n.id}" title="Acknowledge and remove it from your notifications">✓ Got it</button>`}
+    </div></div>`;
+}
+function renderNotes(){
+  const act = activeNotes();
+  const cleared = NOTE.list.filter(n => n.dismissed_at && Date.now() - new Date(n.dismissed_at).getTime() < 30 * 864e5);
+  const today = startOfDay(new Date()).getTime();
+  const group = (title, items) => items.length ? `<h3 style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:18px 0 8px">${title}</h3><div class="notes-list">${items.map(noteHTML).join('')}</div>` : '';
+  $('#notificationsView').innerHTML = `
+    <div class="page-head"><div><h1>Notifications</h1><p>Things that need your attention: new tasks and projects, revisions, reviews and @mentions.</p></div>
+      ${act.length > 1 ? `<div class="home-actions"><button class="btn" id="notesClearAll">✓ Clear all ${act.length}</button></div>` : ''}</div>
+    ${act.length ? group('New today', act.filter(n => new Date(n.created_at).getTime() >= today)) + group('Earlier', act.filter(n => new Date(n.created_at).getTime() < today))
+      : `<div class="notes-empty">🎉 You're all caught up.<br><span style="font-size:13px">When a task, project, revision or mention comes your way, it shows up here.</span></div>`}
+    ${cleared.length ? `<div style="margin-top:24px"><button class="btn small ghost" id="notesShowCleared">${NOTE.showCleared ? '▾' : '▸'} Cleared in the last 30 days (${cleared.length})</button>
+      ${NOTE.showCleared ? `<div class="notes-list" style="margin-top:8px">${cleared.map(noteHTML).join('')}</div>` : ''}</div>` : ''}`;
+  const v = $('#notificationsView');
+  v.querySelectorAll('[data-note-done]').forEach(b => b.onclick = () => clearNotes([b.dataset.noteDone]));
+  v.querySelectorAll('[data-note-open]').forEach(b => b.onclick = () => openNote(b.dataset.noteOpen));
+  v.querySelectorAll('[data-note-restore]').forEach(b => b.onclick = () => restoreNote(b.dataset.noteRestore));
+  const ca = $('#notesClearAll'); if (ca) ca.onclick = () => clearNotes(act.map(n => n.id));
+  const sc = $('#notesShowCleared'); if (sc) sc.onclick = () => { NOTE.showCleared = !NOTE.showCleared; renderNotes(); };
+}
+
 /* ===================== VIEW AS (owner signs this tab in as a team member) =====================
    Full access as that person: same data, same permissions, and anything done is saved as them.
    Each start is recorded in impersonation_log. The owner's own session in other tabs is untouched. */
@@ -1239,7 +1357,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  let view = ['home','tasks','mail','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
@@ -1277,6 +1395,8 @@ function render(){
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
   $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
   $('#calendarView').classList.toggle('hidden', S.view !== 'calendar');
+  $('#notificationsView').classList.toggle('hidden', S.view !== 'notifications');
+  if (S.view === 'notifications') renderNotes();
   $('#mailView').classList.toggle('hidden', S.view !== 'mail');
   if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
