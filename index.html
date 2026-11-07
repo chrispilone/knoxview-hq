@@ -528,7 +528,6 @@ label.extra{margin:0}
 .preview-bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-18px -20px 16px;padding:10px 20px;background:#5b3fa6;color:#fff;font-size:13.5px}
 .preview-bar b{font-weight:700}
 .preview-bar .btn{margin-left:auto;background:#fff;color:#5b3fa6;border-color:#fff;font-weight:600}
-.preview-note{padding:40px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
 .side-viewas{display:block;width:100%;text-align:left;border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:7px 10px;margin:0 0 8px;font-weight:500;color:var(--text)}
 .viewas-list button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--border);background:var(--panel);border-radius:9px;padding:10px 12px;margin-bottom:8px}
 .viewas-list button:hover{border-color:var(--accent)}
@@ -965,7 +964,11 @@ const QBO_RETURN = (() => {
   history.replaceState(null, '', location.pathname + '#/finance');
   return r;
 })();
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// View as: the owner can sign a browser tab in as a team member. That session is kept in this tab's
+// sessionStorage, so other tabs stay signed in as the owner; closing the tab ends it.
+const IMP = (() => { try { return JSON.parse(sessionStorage.getItem('kvhq.imp') || 'null'); } catch (e) { return null; } })();
+const IMP_AUTH = { storage: window.sessionStorage, storageKey: 'kvhq-imp-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false };
+const sb = IMP ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: IMP_AUTH }) : supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const STATUSES = [
   ['not_started','Not Started'],['in_progress','In Progress'],['ready_for_review','Ready for Review'],
@@ -1079,7 +1082,7 @@ $('#authForm').onsubmit = async e => {
   } catch (err) { $('#authMsg').textContent = /banned/i.test(err.message || '') ? 'Your access to Knox View HQ has been turned off. Contact Chris if you think this is a mistake.' : err.message; }
   $('#authBtn').disabled = false;
 };
-const doSignOut = async () => { await sb.auth.signOut(); };
+const doSignOut = async () => { if (IMP) return endViewAs(); await sb.auth.signOut(); };
 $('#signOut').onclick = doSignOut;
 /* Left menu: always shown on computers (collapsible to icons), slide-out drawer on phones */
 try { if (localStorage.getItem('kvhq.sideMini') === '1') document.body.classList.add('side-mini'); } catch (e) {}
@@ -1097,13 +1100,8 @@ async function boot(session){
   if (!S.user) { show('auth'); return; }
   const { data: me } = await sb.from('team_members').select('*').eq('id', S.user.id).maybeSingle();
   if (!me || !me.active) { $('#pendingEmail').textContent = S.user.email; show('pending'); return; }
-  S.me = me; S.realMe = me; S.preview = false;
-  let viewAsId = null; try { viewAsId = sessionStorage.getItem('kvhq.viewAs'); } catch (e) {}
-  if (viewAsId && me.role === 'owner' && viewAsId !== me.id) {
-    const { data: t } = await sb.from('team_members').select('*').eq('id', viewAsId).maybeSingle();
-    if (t && t.active && t.role !== 'owner') { S.me = { ...t }; S.preview = true; installPreviewGuard(); }
-    else { try { sessionStorage.removeItem('kvhq.viewAs'); } catch (e) {} }
-  }
+  S.me = me; S.realMe = me;
+  if (IMP && (me.role === 'owner' || me.id !== IMP.id)) return endViewAs();
   loadPrefs();
   $('#userChip').textContent = `${S.me.full_name} · ${ROLE_LABEL[S.me.role]}`;
   paintPreviewChrome();
@@ -1118,67 +1116,69 @@ async function boot(session){
   watchAccess();
   setInterval(() => { if (document.hidden || $('#layer').innerHTML) return; if (S.view === 'home') { clearCalCache(); paintMyDay(); } if (S.view === 'calendar') { clearCalCache(); renderCalendar(); } loadMail({ quiet:true }); }, 5 * 60 * 1000);
 }
-/* ===================== VIEW AS (owner previews a team member's HQ) =====================
-   Only in this browser tab (sessionStorage). Data is still read with the owner's login and then
-   narrowed to what that person can see. Nothing can be saved while previewing. Their private
-   DMs, Google Calendar and Gmail are never shown. */
-function switchViewAs(id){
-  try { if (id && id !== S.realMe?.id) sessionStorage.setItem('kvhq.viewAs', id); else sessionStorage.removeItem('kvhq.viewAs'); } catch (e) {}
+/* ===================== VIEW AS (owner signs this tab in as a team member) =====================
+   Full access as that person: same data, same permissions, and anything done is saved as them.
+   Each start is recorded in impersonation_log. The owner's own session in other tabs is untouched. */
+function switchViewAs(id){ return id ? startViewAs(id) : endViewAs(); }
+async function startViewAs(id){
+  try {
+    const ownerName = IMP ? IMP.owner : firstName(S.me.full_name);
+    const ownerClient = IMP ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : sb; // owner's session lives in normal storage
+    const { data: { session } } = await ownerClient.auth.getSession();
+    if (!session) throw new Error('Switch back to your own account first');
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/impersonate`, { method:'POST',
+      headers: { Authorization: 'Bearer ' + session.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ member: id }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Couldn’t open that account');
+    if (IMP) await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    try { sessionStorage.removeItem('kvhq-imp-auth'); } catch (e) {}
+    const imp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: IMP_AUTH });
+    const { error } = await imp.auth.verifyOtp({ token_hash: d.token_hash, type: 'magiclink' });
+    if (error) throw error;
+    sessionStorage.setItem('kvhq.imp', JSON.stringify({ id, name: d.name, owner: ownerName }));
+    location.hash = '#/home'; location.reload();
+  } catch (e) { fail(e); }
+}
+async function endViewAs(){
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {}); // ends only this tab's session, not theirs elsewhere
+  try { sessionStorage.removeItem('kvhq.imp'); sessionStorage.removeItem('kvhq-imp-auth'); } catch (e) {}
   location.hash = '#/home'; location.reload();
-}
-function installPreviewGuard(){
-  let last = 0;
-  const msg = 'Preview only: switch back to yourself to make changes';
-  const dead = quiet => {
-    if (!quiet && Date.now() - last > 2500) { last = Date.now(); toast(msg); }
-    const r = { data: null, error: { message: msg, preview: true } };
-    const p = new Proxy(function(){}, { get(_, k){ return k === 'then' ? (a, b) => Promise.resolve(r).then(a, b) : () => p; }, apply(){ return p; } });
-    return p;
-  };
-  const from = sb.from.bind(sb);
-  sb.from = table => {
-    const qb = from(table);
-    for (const m of ['insert','update','upsert','delete']) qb[m] = () => dead(table === 'chat_reads');
-    return qb;
-  };
-  const rpc = sb.rpc.bind(sb), readOnly = ['chat_unread','role_defaults','pending_signups'];
-  sb.rpc = (fn, args) => readOnly.includes(fn) ? rpc(fn, args) : dead(false);
-  const sfrom = sb.storage.from.bind(sb.storage);
-  sb.storage.from = b => { const o = sfrom(b); o.upload = () => dead(false); o.remove = () => dead(false); return o; };
-}
-const previewName = () => firstName(S.me.full_name);
-function previewFilterProjects(list){
-  if (!S.preview) return list;
-  return list.filter(p => permFor(S.me, p.media) && (permFor(S.me, 'all_projects') || p.assigned_to === S.me.id));
 }
 function paintPreviewChrome(){
   const bar = $('#previewBar');
-  bar.classList.toggle('hidden', !S.preview);
-  if (S.preview) {
-    bar.innerHTML = `<span>👁 Viewing HQ as <b>${esc(S.me.full_name)}</b> · ${esc(ROLE_LABEL[S.me.role])}. Preview only: nothing you do here is saved.</span>
-      <button class="btn small" id="pvOther">View as someone else</button><button class="btn small" id="pvBack" style="margin-left:0">Switch back to ${esc(firstName(S.realMe.full_name))}</button>`;
-    $('#pvBack').onclick = () => switchViewAs(null);
+  bar.classList.toggle('hidden', !IMP);
+  if (IMP) {
+    bar.innerHTML = `<span>👁 You're signed in as <b>${esc(S.me.full_name)}</b> · ${esc(ROLE_LABEL[S.me.role])}. Anything you do here is saved as ${esc(firstName(S.me.full_name))}.</span>
+      <button class="btn small" id="pvOther">View as someone else</button><button class="btn small" id="pvBack" style="margin-left:0">Switch back to ${esc(IMP.owner)}</button>`;
+    $('#pvBack').onclick = () => endViewAs();
     $('#pvOther').onclick = openViewAs;
   }
   const vb = $('#viewAsBtn');
-  vb.classList.toggle('hidden', S.realMe?.role !== 'owner');
-  vb.textContent = S.preview ? `👁 Viewing as ${previewName()}` : '👁 View as…';
+  vb.classList.toggle('hidden', !IMP && S.me?.role !== 'owner');
+  vb.textContent = IMP ? `👁 Viewing as ${firstName(S.me.full_name)}` : '👁 View as…';
   vb.onclick = openViewAs;
 }
 function openViewAs(){
   const people = S.team.filter(t => t.active && t.role !== 'owner');
+  const ownerName = IMP ? IMP.owner : S.me.full_name;
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal"><h2>View HQ as…</h2>
-    <p class="muted" style="margin:-8px 0 14px;font-size:13px">See exactly what a team member sees: their menu, Home, projects, tasks and chat channels. Preview only (nothing is saved), and their private messages, calendar and Gmail stay private. Only this browser tab switches.</p>
+    <p class="muted" style="margin:-8px 0 14px;font-size:13px">Opens HQ in this tab fully signed in as that person, with exactly their access. Anything you do (messages, tasks, project changes) is saved as them. Your own account stays open in your other tabs.</p>
     <div class="viewas-list">
-      <button data-va="" class="${!S.preview ? 'cur' : ''}"><b style="flex:1">${esc(S.realMe.full_name)} (you)</b><span class="role-badge">Owner</span></button>
-      ${people.map(t => `<button data-va="${t.id}" class="${S.preview && S.me.id === t.id ? 'cur' : ''}"><b style="flex:1">${esc(t.full_name)}</b><span class="role-badge">${esc(ROLE_LABEL[t.role])}</span></button>`).join('')
-        || '<div class="none">No team members yet. Once someone is approved, you can preview HQ as them here.</div>'}
+      <button data-va="" class="${!IMP ? 'cur' : ''}"><b style="flex:1">${esc(ownerName)} (you)</b><span class="role-badge">Owner</span></button>
+      ${people.map(t => `<button data-va="${t.id}" class="${IMP?.id === t.id ? 'cur' : ''}"><b style="flex:1">${esc(t.full_name)}</b><span class="role-badge">${esc(ROLE_LABEL[t.role])}</span></button>`).join('')
+        || '<div class="none">No team members yet. Once someone is approved, you can view HQ as them here.</div>'}
     </div>
     <div class="actions"><button class="btn" id="vaClose">Close</button></div></div>`;
   $('#ov').onclick = closeLayer; $('#vaClose').onclick = closeLayer;
-  document.querySelectorAll('[data-va]').forEach(b => b.onclick = () => switchViewAs(b.dataset.va || null));
+  document.querySelectorAll('[data-va]').forEach(b => b.onclick = () => {
+    const id = b.dataset.va || null;
+    if ((id || null) === (IMP?.id || null)) return closeLayer();
+    b.disabled = true; b.querySelector('b').textContent += ' · opening…';
+    switchViewAs(id);
+  });
 }
 
 // If Chris removes someone while HQ is open, sign them out within a minute or two.
@@ -1188,7 +1188,7 @@ function watchAccess(){
     if (!S.me) return;
     const { data, error } = await sb.from('team_members').select('id, role, permissions, active').eq('id', S.me.id).maybeSingle();
     if (error) return;
-    if (!data || !data.active) { clearInterval(accessTimer); if (S.preview) switchViewAs(null); else await sb.auth.signOut(); return; }
+    if (!data || !data.active) { clearInterval(accessTimer); if (IMP) endViewAs(); else await sb.auth.signOut(); return; }
     const before = JSON.stringify(S.roleAccess?.[data.role] || null);
     await loadRoleAccess();
     const roleChanged = JSON.stringify(S.roleAccess?.[data.role] || null) !== before;
@@ -1219,7 +1219,7 @@ async function loadAll(){
     sb.from('agent_logos').select('*').order('created_at'),
   ]);
   for (const r of [p,t,a,m,l]) if (r.error) fail(r.error);
-  S.projects = previewFilterProjects(p.data || []); S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
+  S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
   fillAssignee();
 }
 function fillAssignee(){
@@ -1232,7 +1232,7 @@ function fillAssignee(){
 async function reloadProjects(){
   const { data, error } = await sb.from('projects').select('*, project_tasks(id, completed)').order('created_at', { ascending:false });
   if (error) return fail(error);
-  S.projects = previewFilterProjects(data); render();
+  S.projects = data; render();
 }
 
 /* ===================== ROUTING ===================== */
@@ -1333,7 +1333,7 @@ function widgetHTML(w, span){
   const projList = (list, empty) => list.length ? `<div class="mini-list">${list.slice(0, 12).map(miniRow).join('')}</div>${list.length > 12 ? `<div class="more" style="margin-top:8px;font-size:13px">+ ${list.length - 12} more on the boards</div>` : ''}` : `<div class="none">${empty}</div>`;
   const order = Object.fromEntries(STATUSES.map(([k], i) => [k, i]));
   if (w === 'my_day') return `<div class="panel span-${span}" id="myDay"><h2>My Day at a Glance <span class="md-meta"></span><span class="spacer"></span>
-      ${S.cal.status?.connected && !S.preview ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
+      ${S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : ''}</h2>
       <div class="md-body"><div class="none">Loading your day…</div></div></div>`;
   if (w === 'my_tasks') return `<div class="panel span-${span}" id="homeTasks"><h2>My tasks <span class="count"></span><a href="#/tasks" class="inbox-chip hidden"></a><span class="spacer"></span><a href="#/tasks" style="font-size:13px;font-weight:500">All tasks</a></h2>
       ${quickAddHTML('qHome')}
@@ -2081,7 +2081,7 @@ function paintTaskBadge(){
 async function loadTasks(){
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending:false }).limit(1000);
   if (error) return fail(error);
-  S.tasks = (data || []).filter(x => !S.preview || x.assigned_to === S.me.id || x.created_by === S.me.id); paintTaskBadge();
+  S.tasks = data || []; paintTaskBadge();
 }
 let taskSub = null, taskReloadTimer = null;
 function subscribeTasks(){
@@ -2432,7 +2432,7 @@ function agentForEmail(addr){
 const sugForThread = id => (S.suggestions || []).find(g => g.source === 'gmail' && (g.external_id || '').split(':')[1] === id);
 
 async function loadMail({ quiet = false, more = false } = {}){
-  if (!can('mail') || S.preview) return;
+  if (!can('mail')) return;
   if (!S.cal.status?.gmail) { MAIL.needsGmail = !!S.cal.status; paintMailBadge(); return; }
   if (MAIL.loading) return;
   const key = MAIL.box + '|' + MAIL.q;
@@ -2479,7 +2479,6 @@ async function connectMail(){
 }
 
 function renderMail(){
-  if (S.preview) { $('#mailView').innerHTML = `<div class="preview-note"><b>${esc(previewName())}'s Mail</b><br>When they connect their Gmail, their inbox shows here. It's private to them, so it isn't shown in preview.</div>`; return; }
   const v = $('#mailView');
   const st = S.cal.status;
   if (!st) { v.innerHTML = `<div class="page-head"><div><h1>Mail</h1></div></div><div class="empty">Loading…</div>`; return; }
@@ -2744,7 +2743,6 @@ const mapsUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encode
 const dirUrl = list => 'https://www.google.com/maps/dir/' + list.map(a => encodeURIComponent(a)).join('/');
 
 async function gcal(action, payload = {}){
-  if (S.preview) throw Object.assign(new Error('Preview'), { preview: true });
   const { data: { session } } = await sb.auth.getSession();
   const r = await fetch(`${SUPABASE_URL}/functions/v1/gcal`, { method:'POST',
     headers: { Authorization: 'Bearer ' + session?.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -2834,7 +2832,6 @@ async function paintMyDay(){
   const box = $('#myDay'); if (!box) return;
   const body = box.querySelector('.md-body'), meta = box.querySelector('.md-meta');
   const st = S.cal.status;
-  if (S.preview) { body.innerHTML = `<div class="none">${esc(previewName())}'s appointments from their own Google Calendar show here (private, not shown in preview).</div>`; meta.textContent = ''; return; }
   if (!st?.connected) { body.innerHTML = calConnectHTML(true); meta.textContent = ''; box.querySelectorAll('[data-cal-connect]').forEach(b => b.onclick = connectCalendar); return; }
   const t0 = startOfDay(new Date()), t2 = addDays(t0, 2);
   let items;
@@ -2876,7 +2873,6 @@ function dayItemHTML(e, now, next){
 
 /* ----- Calendar tab: My Week at a Glance ----- */
 async function renderCalendar(){
-  if (S.preview) { $('#calendarView').innerHTML = `<div class="preview-note"><b>${esc(previewName())}'s Calendar</b><br>When they connect their Google Calendar, their week shows here. It's private to them, so it isn't shown in preview.</div>`; return; }
   const box = $('#calendarView');
   const st = S.cal.status;
   if (!S.cal.week) S.cal.week = weekStartOf(new Date());
@@ -4299,10 +4295,6 @@ async function loadChatMeta(){
   ]);
   if (c.error) { fail(c.error); return false; }
   S.chat.channels = c.data || []; S.chat.members = m.data || [];
-  if (S.preview) {
-    const mine = new Set(S.chat.members.filter(x => x.member_id === S.me.id).map(x => x.channel_id));
-    S.chat.channels = permFor(S.me, 'chat') ? S.chat.channels.filter(x => x.kind === 'channel' && (x.everyone || mine.has(x.id))) : [];
-  }
   return true;
 }
 async function initChat(){
@@ -4327,7 +4319,6 @@ async function refreshUnread(){
   paintUnread();
 }
 function paintUnread(){
-  if (S.preview) S.chat.unread = {};
   const total = Object.entries(S.chat.unread).reduce((a, [id, n]) => a + (S.view === 'chat' && id === activeChannel()?.id && document.hasFocus() ? 0 : n), 0);
   const b = $('#chatBadge'); b.textContent = total > 99 ? '99+' : total; b.classList.toggle('hidden', !total);
   document.title = (total ? `(${total}) ` : '') + 'Knox View HQ';
@@ -4754,7 +4745,7 @@ function openRoles(role){
     <p class="muted" style="margin:-8px 0 12px;font-size:13px">Set what each role gets by default. New people get these the moment you pick their role. Changes also apply to everyone already in that role, except settings you've customized for one person.</p>
     <div class="role-tabs">${ROLES.map(([k, l]) => `<button data-rt="${k}" class="${k === r ? 'active' : ''}">${esc(l)}</button>`).join('')}</div>
     <p class="muted" style="font-size:13px;margin:0 0 14px">${people.length ? `${people.length} ${people.length === 1 ? 'person has' : 'people have'} this role${custom.length ? ` · ${custom.length} with custom access (${custom.map(t => esc(firstName(t.full_name))).join(', ')})` : ''}.` : 'Nobody has this role yet.'}
-      ${people.length && !isOwnerRole ? ` <a href="#" id="rolePreview">Preview their Home with View as →</a>` : ''}</p>
+      ${people.length && !isOwnerRole ? ` <a href="#" id="rolePreview">See their Home with View as →</a>` : ''}</p>
 
     <div class="perm-group"><h3>Home screen</h3>
       <p class="muted" style="font-size:12.5px;margin:0 0 6px">Turn panels on or off and put them in order. A panel only shows if the person also has access to that section.</p>
