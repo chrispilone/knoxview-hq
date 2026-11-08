@@ -261,13 +261,27 @@ async function plStatement(start: string, end: string, byMonth: boolean, cStart:
     qbo('reports/ProfitAndLoss', { start_date: start, end_date: end, ...(byMonth ? { summarize_column_by: 'Month' } : {}) }),
     cStart && cEnd ? qbo('reports/ProfitAndLoss', { start_date: cStart, end_date: cEnd }) : Promise.resolve(null),
   ]);
+  const columns = plColumns(rep);
+  const rows = plTree(rep?.Rows?.Row || []);
+  const cmpRows = cmp ? plTree(cmp?.Rows?.Row || []) : [];
+  // Accounts used only in the comparison period still get a (zero) row, so the comparison adds up.
+  const addMissing = (into: PlNode[], from: PlNode[]) => {
+    for (const c of from) {
+      const n = into.find(x => x.key === c.key);
+      if (n) { addMissing(n.children, c.children); continue; }
+      const zero = (x: PlNode): PlNode => ({ ...x, values: columns.map(() => 0), children: x.children.map(zero) });
+      const at = c.kind === 'total' ? into.length : into.findIndex(x => x.kind === 'total');
+      into.splice(at < 0 ? into.length : at, 0, zero(c));
+    }
+  };
+  if (cmp) addMissing(rows, cmpRows);
   return {
-    start, end, byMonth, basis: rep?.Header?.ReportBasis || null, columns: plColumns(rep), rows: plTree(rep?.Rows?.Row || []),
-    compare: cmp ? { start: cStart, end: cEnd, totals: Object.fromEntries(flattenTotals(plTree(cmp?.Rows?.Row || []))) } : null,
+    start, end, byMonth, basis: rep?.Header?.ReportBasis || null, columns, rows,
+    compare: cmp ? { start: cStart, end: cEnd, totals: Object.fromEntries(flattenTotals(cmpRows)) } : null,
   };
 }
 // Transactions behind one account for a period (ProfitAndLossDetail filtered to that account).
-async function plDetail(accountId: string, start: string, end: string) {
+async function plDetail(accountId: string, start: string, end: string, limit = 500) {
   const rep = await qbo('reports/ProfitAndLossDetail', { start_date: start, end_date: end, account: accountId, columns: 'tx_date,txn_type,doc_num,name,memo,split_acc,subt_nat_amount' });
   const keys = (rep?.Columns?.Column || []).map((c: any) => (c.MetaData || []).find((m: any) => m.Name === 'ColKey')?.Value || c.ColTitle);
   const at = (k: string) => keys.indexOf(k);
@@ -286,7 +300,7 @@ async function plDetail(accountId: string, start: string, end: string) {
   };
   walk(rep?.Rows?.Row || []);
   out.sort((a, b) => b.date.localeCompare(a.date));
-  return { accountId, start, end, items: out.slice(0, 500), total: round2(out.reduce((a, x) => a + x.amount, 0)), count: out.length };
+  return { accountId, start, end, items: out.slice(0, limit), total: round2(out.reduce((a, x) => a + x.amount, 0)), count: out.length };
 }
 
 /* ---------- Bookkeeping: review every transaction, recategorize ---------- */
@@ -476,6 +490,12 @@ async function saveAccount(body: any) {
     if (!cur) throw new Error('Category not found in QuickBooks');
     if (!ACCOUNT_TYPES.has(cur.AccountType)) throw new Error('Only Profit & Loss categories can be changed here');
     const upd: any = { ...cur, Name: name };
+    // Optional type change (e.g. Cost of Goods Sold → Expense); history moves with the account.
+    if (body.type) {
+      if (!ACCOUNT_TYPES.has(String(body.type))) throw new Error('Pick a category type');
+      upd.AccountType = String(body.type);
+      if (body.subType) upd.AccountSubType = String(body.subType);
+    }
     if ('parentId' in body) { if (parentId) { upd.SubAccount = true; upd.ParentRef = { value: parentId }; } else { upd.SubAccount = false; delete upd.ParentRef; } }
     delete upd.FullyQualifiedName; delete upd.CurrentBalance; delete upd.CurrentBalanceWithSubAccounts;
     return (await qbo('account', {}, upd))?.Account;
@@ -506,6 +526,42 @@ async function recategorizeBatch(list: { type: string; id: string; changes: { li
     catch (e) { errors.push({ type: x.type, id: x.id, error: String((e as Error)?.message || e) }); }
   }
   return { items, errors };
+}
+
+/* ---------- Every posting to an account, and moving lines of any transaction type ---------- */
+// The P&L detail report names a transaction type in words; the API needs the entity name.
+const TXN_ENTITY: Record<string, string> = {
+  'Expense': 'Purchase', 'Check': 'Purchase', 'Credit Card Credit': 'Purchase', 'Cash Expense': 'Purchase', 'Credit Card Expense': 'Purchase',
+  'Bill': 'Bill', 'Vendor Credit': 'VendorCredit', 'Deposit': 'Deposit', 'Journal Entry': 'JournalEntry',
+  'Sales Receipt': 'SalesReceipt', 'Refund': 'RefundReceipt', 'Credit Memo': 'CreditMemo',
+};
+async function acctTxns(accountId: string, start: string, end: string) {
+  const d = await plDetail(accountId, start, end, 5000);
+  return { ...d, items: d.items.map((x: any) => ({ ...x, entity: TXN_ENTITY[x.type] || null })) };
+}
+// Point every line of one transaction that uses account `from` at account `to` (full update).
+async function moveLines(entity: string, id: string, from: string, to: string) {
+  if (!/^\d+$/.test(id) || !/^\d+$/.test(from) || !/^\d+$/.test(to)) throw new Error('Bad ids');
+  if (!Object.values(TXN_ENTITY).includes(entity)) throw new Error(`Can’t edit ${entity} transactions`);
+  const path = entity.toLowerCase();
+  const cur = (await qbo(`${path}/${id}`))?.[entity];
+  if (!cur) throw new Error(`${entity} ${id} not found`);
+  let moved = 0, stuck = 0;
+  const Line = (cur.Line || []).map((l: any) => {
+    for (const k of ['AccountBasedExpenseLineDetail', 'DepositLineDetail', 'JournalEntryLineDetail']) {
+      if (l[k]?.AccountRef) {
+        if (String(l[k].AccountRef.value) !== from) return l;
+        moved++; return { ...l, [k]: { ...l[k], AccountRef: { value: to } } };
+      }
+    }
+    if (l.ItemBasedExpenseLineDetail || l.SalesItemLineDetail) stuck++;
+    return l;
+  });
+  if (!moved) return { entity, id, moved: 0, stuck, skipped: true };
+  const full: any = { ...cur, Line }; delete full.sparse;
+  const upd = (await qbo(path, { operation: 'update' }, full))?.[entity];
+  if (!upd) throw new Error('QuickBooks didn’t confirm the change');
+  return { entity, id, moved, stuck };
 }
 
 /* ---------- Personal cards: business purchases paid with a personal card ---------- */
@@ -753,6 +809,13 @@ Deno.serve(async (req) => {
       const a = await setAccountActive(String(body.id || ''), !!body.active);
       return json(req, { account: a ? { id: String(a.Id), name: a.Name, active: !!a.Active } : null });
     }
+
+    if (action === 'acct_txns') {
+      const start = isoDate(body.start) || '2015-01-01', end = isoDate(body.end) || todayET().iso, acct = String(body.accountId || '');
+      if (!/^\d+$/.test(acct)) return json(req, { error: 'Pick an account' }, 400);
+      return json(req, await acctTxns(acct, start, end));
+    }
+    if (action === 'move_lines') return json(req, await moveLines(String(body.entity), String(body.id), String(body.from), String(body.to)));
 
     if (action === 'pc_post') {
       const ids = Array.isArray(body.ids) ? body.ids.slice(0, 25).map(String).filter((s: string) => /^[0-9a-f-]{36}$/i.test(s)) : [];
