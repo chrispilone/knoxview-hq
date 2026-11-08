@@ -3899,10 +3899,16 @@ function paintPL(){
   const cmpOf = k => cmp ? (cmp[k] || 0) : null;
   const expenses = key('gCOGS') + key('gExpenses') + key('gOtherExpenses');
   const cExpenses = cmp ? (cmpOf('gCOGS') + cmpOf('gExpenses') + cmpOf('gOtherExpenses')) : null;
+  // Without a Cost of Goods Sold section QuickBooks' "Gross Profit" just equals income, so show Cost of Services instead.
+  const hasCogs = !!(d && plFind(d.rows, 'gCOGS'));
+  const findName = (ns, name) => { for (const n of ns || []) { if (n.name === name) return n; const f = findName(n.children, name); if (f) return f; } return null; };
+  const cos = d ? findName(d.rows, 'Cost of Services') : null;
   const summary = d ? [
     ['Income', income, cmpOf('gIncome'), true, null],
-    ['Gross profit', key('gGrossProfit'), cmpOf('gGrossProfit'), true, income ? `${Math.round(key('gGrossProfit') / income * 100)}% margin` : null],
-    ['Expenses', expenses, cExpenses, false, 'incl. cost of goods sold'],
+    hasCogs || !cos
+      ? ['Gross profit', key('gGrossProfit'), cmpOf('gGrossProfit'), true, income ? `${Math.round(key('gGrossProfit') / income * 100)}% margin` : null]
+      : ['Cost of services', plTotal(cos), cmp ? (cmp[cos.key] || 0) : null, false, income ? `${Math.round(plTotal(cos) / income * 100)}% of income` : null],
+    ['Expenses', expenses, cExpenses, false, hasCogs ? 'incl. cost of goods sold' : null],
     ['Net income', key('gNetIncome'), cmpOf('gNetIncome'), true, income ? `${Math.round(key('gNetIncome') / income * 100)}% margin` : null],
   ] : [];
   box.innerHTML = `
@@ -3930,6 +3936,7 @@ function plTableHTML(d, income){
   const rows = [];
   const walk = (nodes, depth, cost) => {
     for (const n of nodes) {
+      if (n.key === 'gGrossProfit' && !plFind(d.rows, 'gCOGS')) continue;
       const isCost = cost || COST_GROUPS.has(n.key);
       const hasKids = n.children.length > 0, closed = PL.collapsed[n.key];
       const vals = byMonth ? n.values : [plTotal(n)];
