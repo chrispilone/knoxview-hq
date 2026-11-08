@@ -3821,6 +3821,7 @@ function balHTML(label, val, sub, colorNet){
 }
 function catBarsHTML(list, total, color){
   if (!list?.length) return `<div class="none">Nothing recorded yet this year.</div>`;
+  list = list.map(x => ({ ...x, name: String(x.name || '').replace(/^\d+\s+/, '') })); // hide QuickBooks account numbers
   const top = list.slice(0, 7), rest = list.slice(7);
   if (rest.length) top.push({ name: `Everything else (${rest.length})`, ytd: rest.reduce((a, x) => a + x.ytd, 0) });
   const max = Math.max(...top.map(x => x.ytd), 1);
@@ -3882,7 +3883,12 @@ function savePL(){ try { localStorage.setItem('kvhq.pl', JSON.stringify({ period
 async function loadPL(){
   const r = plRange();
   PL.loading = true; PL.error = null; PL.detail = {}; paintPL();
-  try { PL.data = await qboCall('pl', { start: r.start, end: r.end, byMonth: PL.byMonth, compareStart: PL.byMonth ? null : r.cStart, compareEnd: PL.byMonth ? null : r.cEnd }); }
+  try {
+    PL.data = await qboCall('pl', { start: r.start, end: r.end, byMonth: PL.byMonth, compareStart: PL.byMonth ? null : r.cStart, compareEnd: PL.byMonth ? null : r.cEnd });
+    // QuickBooks account numbers only set the order ("5000 Cost of Services"); hide them, as QuickBooks' own reports do.
+    const strip = ns => { for (const n of ns || []) { n.name = String(n.name || '').replace(/^\d+\s+/, ''); strip(n.children); } };
+    strip(PL.data?.rows);
+  }
   catch (e) { PL.error = e.message; if (e.notConnected) { await loadFinStatus(); PL.loading = false; return renderFinance(); } }
   PL.loading = false; paintPL();
 }
