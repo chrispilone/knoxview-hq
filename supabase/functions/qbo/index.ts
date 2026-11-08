@@ -702,7 +702,7 @@ Deno.serve(async (req) => {
     const job = req.headers.get('x-hq-job') || '';
     if (job) {
       // Server-side job (started from the database with a one-time token). Limited to a few actions.
-      if (!['accounts', 'pc_post'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
+      if (!['accounts', 'pc_post', 'pl', 'acct_txns', 'account_save', 'account_active', 'move_many'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
       const { data: tok } = await admin.from('qbo_job_tokens').select('expires_at').eq('token_hash', await sha256(job)).maybeSingle();
       if (!tok || new Date(tok.expires_at).getTime() < Date.now()) return json(req, { error: 'Not signed in' }, 401);
       const { data: owner } = await admin.from('team_members').select('id').eq('role', 'owner').eq('active', true).limit(1).maybeSingle();
@@ -816,6 +816,17 @@ Deno.serve(async (req) => {
       return json(req, await acctTxns(acct, start, end));
     }
     if (action === 'move_lines') return json(req, await moveLines(String(body.entity), String(body.id), String(body.from), String(body.to)));
+    if (action === 'move_many') {
+      // Up to 60 line moves per call: [{ entity, id, from, to }]. Each one stands alone; errors are reported, not thrown.
+      await accessToken();
+      const list = Array.isArray(body.moves) ? body.moves.slice(0, 60) : [];
+      const done: any[] = [], errors: any[] = [];
+      for (const m of list) {
+        try { done.push(await moveLines(String(m.entity), String(m.id), String(m.from), String(m.to))); }
+        catch (e) { errors.push({ ...m, error: String((e as Error)?.message || e) }); }
+      }
+      return json(req, { done, errors });
+    }
 
     if (action === 'pc_post') {
       const ids = Array.isArray(body.ids) ? body.ids.slice(0, 25).map(String).filter((s: string) => /^[0-9a-f-]{36}$/i.test(s)) : [];
