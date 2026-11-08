@@ -644,6 +644,10 @@ label.extra{margin:0}
 .pl-row td.pl-pct,.pl-row td.pl-cmp{color:var(--muted)}
 .pl-row td.up{color:var(--ok)} .pl-row td.down{color:var(--danger)}
 .pl-caret{border:none;background:none;padding:0;width:18px;color:var(--muted);font-size:12px}
+.pl-move{display:inline-flex;gap:2px;margin-left:8px;vertical-align:middle}
+.pl-move button{border:1px solid var(--border);background:var(--panel);color:inherit;border-radius:6px;width:24px;height:22px;padding:0;font-size:12px;line-height:1;cursor:pointer}
+.pl-move button:disabled{opacity:.3;cursor:default}
+.pl-arrange-note{font-size:13px;color:var(--muted);margin:2px 0 8px}
 .pl-caret-sp{display:inline-block;width:18px}
 .pl-drill{color:inherit;text-decoration:none;border-bottom:1px dashed var(--border)}
 .pl-drill:hover{color:var(--accent);border-bottom-color:var(--accent)}
@@ -3888,11 +3892,75 @@ async function loadPL(){
     // QuickBooks account numbers only set the order ("5000 Cost of Services"); hide them, as QuickBooks' own reports do.
     const strip = ns => { for (const n of ns || []) { n.name = String(n.name || '').replace(/^\d+\s+/, ''); strip(n.children); } };
     strip(PL.data?.rows);
+    if (!PL.order) await loadPlOrder();
+    plApplyOrder(PL.data?.rows);
   }
   catch (e) { PL.error = e.message; if (e.notConnected) { await loadFinStatus(); PL.loading = false; return renderFinance(); } }
   PL.loading = false; paintPL();
 }
 function renderPL(){ if (!PL.data && !PL.loading) loadPL(); else paintPL(); }
+// Custom P&L order (HQ only; QuickBooks stays alphabetical). Stored per parent row: { parentKey: [childKey, …] }.
+// Rows not in a saved list keep QuickBooks' order, after the listed ones.
+async function loadPlOrder(){
+  try { const { data } = await sb.from('finance_prefs').select('pl_order').eq('id', 1).maybeSingle(); PL.order = data?.pl_order || {}; }
+  catch (e) { PL.order = {}; }
+}
+function plApplyOrder(nodes){
+  for (const n of nodes || []) {
+    const want = PL.order?.[n.key];
+    if (want?.length && n.children.length > 1) {
+      const pos = new Map(want.map((k, i) => [k, i])), orig = new Map(n.children.map((c, i) => [c.key, i]));
+      n.children.sort((a, b) => (pos.has(a.key) ? pos.get(a.key) : 1e6 + orig.get(a.key)) - (pos.has(b.key) ? pos.get(b.key) : 1e6 + orig.get(b.key)));
+    }
+    plApplyOrder(n.children);
+  }
+}
+async function plMove(parentKey, key, dir){
+  const parent = plFind(PL.data?.rows, parentKey); if (!parent) return;
+  const keys = parent.children.map(c => c.key), i = keys.indexOf(key), j = i + dir;
+  if (i < 0 || j < 0 || j >= keys.length) return;
+  [keys[i], keys[j]] = [keys[j], keys[i]];
+  PL.order = { ...(PL.order || {}), [parentKey]: keys };
+  plApplyOrder(PL.data.rows); paintPL();
+  const { error } = await sb.from('finance_prefs').upsert({ id: 1, pl_order: PL.order, updated_at: new Date().toISOString() });
+  if (error) toast('Couldn’t save the order: ' + error.message);
+}
+async function plResetOrder(){
+  if (!confirm('Go back to QuickBooks’ alphabetical order?')) return;
+  PL.order = {};
+  const { error } = await sb.from('finance_prefs').upsert({ id: 1, pl_order: {}, updated_at: new Date().toISOString() });
+  if (error) toast('Couldn’t save the order: ' + error.message);
+  loadPL();
+}
+// Print / Save as PDF: a clean copy of the statement in the current order, everything expanded.
+function plPrint(){
+  const d = PL.data; if (!d) return;
+  const cmp = d.compare?.totals || null, byMonth = d.byMonth;
+  const valCols = byMonth ? d.columns : d.columns.slice(-1);
+  const hasCogs = !!plFind(d.rows, 'gCOGS');
+  const money = v => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const head = `<tr><th></th>${valCols.map(c => `<th>${esc(byMonth ? (c.total ? 'Total' : c.title) : 'Amount')}</th>`).join('')}${cmp ? `<th>${PL.compare === 'ly' ? 'Last year' : 'Prior period'}</th><th>Change</th>` : ''}</tr>`;
+  const rows = [];
+  const walk = (nodes, depth) => nodes.forEach(n => {
+    if (n.key === 'gGrossProfit' && !hasCogs) return;
+    const vals = byMonth ? n.values : [plTotal(n)], c = cmp ? (cmp[n.key] ?? 0) : null;
+    const pad = `padding-left:${6 + depth * 16}px`, nums = `${vals.map(v => `<td>${money(v)}</td>`).join('')}${cmp ? `<td>${money(c)}</td><td>${money(plTotal(n) - c)}</td>` : ''}`;
+    if (!n.children.length) { rows.push(`<tr class="${n.kind === 'total' ? 'b total' : ''}"><td style="${pad}">${esc(n.name)}</td>${nums}</tr>`); return; }
+    rows.push(`<tr class="b ${depth ? '' : 'section'}"><td style="${pad}" colspan="${1 + vals.length + (cmp ? 2 : 0)}">${esc(n.name)}</td></tr>`);
+    walk(n.children, depth + 1);
+    rows.push(`<tr class="b sub"><td style="${pad}">Total ${esc(n.name)}</td>${nums}</tr>`);
+  });
+  walk(d.rows, 0);
+  const co = FIN.status?.company || 'Knox View Media LLC';
+  const w = window.open('', '_blank'); if (!w) return toast('Allow pop-ups to print');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Profit and Loss ${esc(d.start)} to ${esc(d.end)}</title><style>
+    body{font-family:Inter,system-ui,sans-serif;color:#111;margin:32px}h1{font-size:18px;margin:0;text-align:center}.sub-h{text-align:center;color:#555;font-size:12px;margin:4px 0 18px}
+    table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:right;border-bottom:1px solid #999;padding:4px 6px}td{padding:3px 6px;text-align:right;white-space:nowrap}td:first-child{text-align:left;white-space:normal}
+    tr.b td{font-weight:600}tr.section td{padding-top:10px}tr.total td{border-top:1px solid #999}tr.sub td{border-top:1px solid #ddd}.foot{margin-top:18px;color:#777;font-size:11px;text-align:center}
+  </style></head><body><h1>${esc(co)}</h1><div class="sub-h">Profit and Loss · ${esc(rangeLabel(d.start, d.end))}${d.basis ? ` · ${esc(String(d.basis))} basis` : ''}</div>
+  <table><thead>${head}</thead><tbody>${rows.join('')}</tbody></table><div class="foot">From QuickBooks via Knox View HQ · ${esc(new Date().toLocaleString())}</div></body></html>`);
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
+}
 const rangeLabel = (a, b) => `${fmtDate(a)} – ${fmtDate(b)}`;
 function plFind(rows, key){ for (const n of rows || []) { if (n.key === key) return n; const f = plFind(n.children, key); if (f) return f; } return null; }
 const plTotal = n => n ? (n.values[n.values.length - 1] || 0) : 0;
@@ -3924,9 +3992,12 @@ function paintPL(){
       <select id="plCompare" ${PL.byMonth ? 'disabled title="Comparison is shown in the Total view"' : ''}>${opt(PL_COMPARE, PL.compare)}</select>
       <div class="seg" id="plView"><button data-v="total" class="${!PL.byMonth ? 'active' : ''}">Total</button><button data-v="month" class="${PL.byMonth ? 'active' : ''}">By month</button></div>
       <span class="spacer"></span>
+      <button class="btn small ${PL.arrange ? 'primary' : ''}" id="plArrange" ${d ? '' : 'disabled'} title="Set the order of categories in HQ">${PL.arrange ? '✓ Done' : '⇅ Arrange'}</button>
+      <button class="btn small" id="plPrint" ${d ? '' : 'disabled'}>🖨 Print / PDF</button>
       <button class="btn small" id="plCsv" ${d ? '' : 'disabled'}>⬇ CSV</button>
       <button class="btn small" id="plReload" ${PL.loading ? 'disabled' : ''}>${PL.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
     </div>
+    ${PL.arrange ? `<div class="pl-arrange-note">Use ↑ ↓ to move categories within their group. The order saves right away and applies to this page, Print and CSV. QuickBooks stays alphabetical. <a href="#" id="plResetOrder">Reset to QuickBooks order</a></div>` : ''}
     <div class="pl-range">${esc(rangeLabel(r.start, r.end))}${!PL.byMonth && r.cStart ? ` <span class="muted">compared with ${esc(rangeLabel(r.cStart, r.cEnd))}</span>` : ''}</div>
     ${PL.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load the Profit &amp; Loss: ${esc(PL.error)}</div></div>` : ''}
     ${!d && PL.loading ? `<div class="panel fin-loading"><span class="spin"></span>Building your Profit &amp; Loss from QuickBooks…</div>` : ''}
@@ -3940,9 +4011,11 @@ function plTableHTML(d, income){
   const valCols = byMonth ? cols : cols.slice(-1);
   const head = `<tr><th class="pl-name">Account</th>${valCols.map(c => `<th>${esc(byMonth ? (c.total ? 'Total' : (c.start ? new Date(c.start + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', year: '2-digit' }) : c.title)) : 'Amount')}</th>`).join('')}${!byMonth ? `<th class="pl-pct">% of income</th>` : ''}${cmp ? `<th class="pl-cmp">${PL.compare === 'ly' ? 'Last year' : 'Prior period'}</th><th class="pl-chg">Change</th><th class="pl-chgp">%</th>` : ''}</tr>`;
   const rows = [];
-  const walk = (nodes, depth, cost) => {
-    for (const n of nodes) {
+  const walk = (nodes, depth, cost, parent) => {
+    const movable = PL.arrange && parent && nodes.length > 1;
+    for (const [idx, n] of nodes.entries()) {
       if (n.key === 'gGrossProfit' && !plFind(d.rows, 'gCOGS')) continue;
+      const arrows = movable ? `<span class="pl-move"><button data-move="${esc(n.key)}" data-parent="${esc(parent)}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="Move up">↑</button><button data-move="${esc(n.key)}" data-parent="${esc(parent)}" data-dir="1" ${idx === nodes.length - 1 ? 'disabled' : ''} title="Move down">↓</button></span>` : '';
       const isCost = cost || COST_GROUPS.has(n.key);
       const hasKids = n.children.length > 0, closed = PL.collapsed[n.key];
       const vals = byMonth ? n.values : [plTotal(n)];
@@ -3952,17 +4025,17 @@ function plTableHTML(d, income){
       const good = chg === null || Math.abs(chg) < 0.5 ? '' : (chg > 0) !== isCost ? 'up' : 'down';
       const pctOfIncome = income ? (n.key === 'gGrossProfit' || n.key === 'gNetIncome' || n.key === 'gNetOperatingIncome' ? `${(tot / income * 100).toFixed(1)}%` : `${(Math.abs(tot) / Math.abs(income) * 100).toFixed(1)}%`) : '';
       const cls = `pl-row ${n.kind} d${Math.min(depth, 4)}`;
-      const nameCell = `<td class="pl-name" style="padding-left:${10 + depth * 18}px">${hasKids ? `<button class="pl-caret" data-toggle="${esc(n.key)}">${closed ? '▸' : '▾'}</button>` : '<span class="pl-caret-sp"></span>'}${n.id && !hasKids || n.id && closed ? `<a href="#" class="pl-drill" data-drill="${esc(n.key)}" data-acct="${esc(n.id)}">${esc(n.name)}</a>` : esc(n.name)}${hasKids && !closed && n.kind !== 'total' ? '' : ''}</td>`;
+      const nameCell = `<td class="pl-name" style="padding-left:${10 + depth * 18}px">${hasKids ? `<button class="pl-caret" data-toggle="${esc(n.key)}">${closed ? '▸' : '▾'}</button>` : '<span class="pl-caret-sp"></span>'}${n.id && !hasKids || n.id && closed ? `<a href="#" class="pl-drill" data-drill="${esc(n.key)}" data-acct="${esc(n.id)}">${esc(n.name)}</a>` : esc(n.name)}${arrows}</td>`;
       rows.push(`<tr class="${cls}">${nameCell}${vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${usd(v, true)}</td>`).join('')}${!byMonth ? `<td class="pl-pct">${pctOfIncome}</td>` : ''}${cmp ? `<td class="pl-cmp">${usd(c, true)}</td><td class="pl-chg ${good}">${chg >= 0 ? '+' : ''}${usd(chg, true)}</td><td class="pl-chgp ${good}">${c ? `${chg >= 0 ? '+' : ''}${Math.round(chg / Math.abs(c) * 100)}%` : (tot ? 'new' : '')}</td>` : ''}</tr>`);
       const det = PL.detail[n.key];
       if (det) {
         const span = 1 + vals.length + (!byMonth ? 1 : 0) + (cmp ? 3 : 0);
         rows.push(`<tr class="pl-detail"><td colspan="${span}">${det.loading ? '<div class="fin-loading"><span class="spin"></span>Loading transactions…</div>' : det.error ? `<div class="none">${esc(det.error)}</div>` : plDetailHTML(det.data)}</td></tr>`);
       }
-      if (hasKids && !closed) walk(n.children, depth + 1, isCost);
+      if (hasKids && !closed) walk(n.children, depth + 1, isCost, n.key);
     }
   };
-  walk(d.rows, 0, false);
+  walk(d.rows, 0, false, null);
   return `<table class="pl-table"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table>`;
 }
 function plDetailHTML(dt){
@@ -4001,6 +4074,10 @@ function wirePL(){
   $('#plView').onclick = e => { const b = e.target.closest('button'); if (!b) return; const bm = b.dataset.v === 'month'; if (bm === PL.byMonth) return; PL.byMonth = bm; savePL(); loadPL(); };
   $('#plReload').onclick = loadPL;
   $('#plCsv').onclick = plCsv;
+  $('#plPrint').onclick = plPrint;
+  $('#plArrange').onclick = () => { PL.arrange = !PL.arrange; paintPL(); };
+  const ro = $('#plResetOrder'); if (ro) ro.onclick = e => { e.preventDefault(); plResetOrder(); };
+  box.querySelectorAll('[data-move]').forEach(b => b.onclick = () => plMove(b.dataset.parent, b.dataset.move, Number(b.dataset.dir)));
   box.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; if (PL.collapsed[k]) delete PL.collapsed[k]; else PL.collapsed[k] = true; savePL(); paintPL(); });
   box.querySelectorAll('[data-drill]').forEach(a => a.onclick = async e => {
     e.preventDefault();
