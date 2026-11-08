@@ -564,6 +564,31 @@ async function moveLines(entity: string, id: string, from: string, to: string) {
   return { entity, id, moved, stuck };
 }
 
+// Turn a card charge that was really a return into a card credit (refund). Guarded: must be a credit-card
+// Purchase that isn't a credit yet, with the expected amount. If QuickBooks won't flip the flag in place,
+// a matching credit is created and the wrong charge is deleted.
+async function cardChargeToCredit(id: string, expectAmount: number) {
+  if (!/^\d+$/.test(id)) throw new Error('Bad id');
+  const cur = (await qbo(`purchase/${id}`))?.Purchase;
+  if (!cur) throw new Error('Transaction not found');
+  if (cur.PaymentType !== 'CreditCard') throw new Error('Not a credit card transaction');
+  if (cur.Credit) throw new Error('Already a credit');
+  if (Math.abs(num(cur.TotalAmt) - expectAmount) > 0.005) throw new Error(`Amount is ${cur.TotalAmt}, expected ${expectAmount}`);
+  try {
+    const full: any = { ...cur, Credit: true }; delete full.sparse;
+    const upd = (await qbo('purchase', { operation: 'update' }, full))?.Purchase;
+    if (upd?.Credit) return { id: String(upd.Id), how: 'updated', credit: true, amount: num(upd.TotalAmt) };
+  } catch (_) { /* fall through to recreate */ }
+  const copy: any = { ...cur, Credit: true };
+  for (const k of ['Id', 'SyncToken', 'MetaData', 'sparse', 'domain', 'status']) delete copy[k];
+  copy.Line = (cur.Line || []).map((l: any) => { const x = { ...l }; delete x.Id; return x; });
+  copy.PrivateNote = `${cur.PrivateNote || ''} (return; re-entered by Knox View HQ, replaced charge #${cur.Id})`.trim().slice(0, 4000);
+  const made = (await qbo('purchase', {}, copy))?.Purchase;
+  if (!made?.Id || !made.Credit) throw new Error('QuickBooks didn’t create the credit');
+  await qbo('purchase', { operation: 'delete' }, { Id: cur.Id, SyncToken: cur.SyncToken });
+  return { id: String(made.Id), replaced: String(cur.Id), how: 'recreated', credit: true, amount: num(made.TotalAmt) };
+}
+
 /* ---------- Personal cards: business purchases paid with a personal card ---------- */
 // Each one becomes a journal entry: debit the expense category (with the vendor on the line), credit the
 // "Owner's Contribution" equity account. The expense lands on the P&L without touching business bank or
@@ -702,7 +727,7 @@ Deno.serve(async (req) => {
     const job = req.headers.get('x-hq-job') || '';
     if (job) {
       // Server-side job (started from the database with a one-time token). Limited to a few actions.
-      if (!['accounts', 'pc_post', 'pl', 'acct_txns', 'account_save', 'account_active', 'move_many'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
+      if (!['accounts', 'pc_post', 'pl', 'acct_txns', 'account_save', 'account_active', 'move_many', 'card_credit'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
       const { data: tok } = await admin.from('qbo_job_tokens').select('expires_at').eq('token_hash', await sha256(job)).maybeSingle();
       if (!tok || new Date(tok.expires_at).getTime() < Date.now()) return json(req, { error: 'Not signed in' }, 401);
       const { data: owner } = await admin.from('team_members').select('id').eq('role', 'owner').eq('active', true).limit(1).maybeSingle();
@@ -827,6 +852,8 @@ Deno.serve(async (req) => {
       }
       return json(req, { done, errors });
     }
+
+    if (action === 'card_credit') return json(req, await cardChargeToCredit(String(body.id || ''), num(body.expectAmount)));
 
     if (action === 'pc_post') {
       const ids = Array.isArray(body.ids) ? body.ids.slice(0, 25).map(String).filter((s: string) => /^[0-9a-f-]{36}$/i.test(s)) : [];
