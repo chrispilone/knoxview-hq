@@ -589,6 +589,28 @@ async function cardChargeToCredit(id: string, expectAmount: number) {
   return { id: String(made.Id), replaced: String(cur.Id), how: 'recreated', credit: true, amount: num(made.TotalAmt) };
 }
 
+/* ---------- Bank and card balances (QuickBooks' own balances), read-only lookups ---------- */
+async function accountBalances() {
+  const d = await qbo('query', { query: "select * from Account where AccountType in ('Bank', 'Credit Card') and Active = true maxresults 100" });
+  return (d?.QueryResponse?.Account || []).map((a: any) => ({
+    id: String(a.Id), name: a.Name, type: a.AccountType, sub: a.AccountSubType || null, balance: round2(num(a.CurrentBalance)),
+  })).sort((a: any, b: any) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+}
+// Read-only query against a fixed list of entities (no writes are possible through this).
+const LOOKUP_ENTITIES = /^select \* from (Purchase|Deposit|Transfer|JournalEntry|Payment|SalesReceipt|BillPayment|Bill|Account|CreditCardPayment|VendorCredit|RefundReceipt|CreditMemo|Invoice)\b/i;
+async function lookup(query: string) {
+  const q = String(query || '').trim();
+  if (!LOOKUP_ENTITIES.test(q) || q.length > 600 || /[;]/.test(q)) throw new Error('Not an allowed lookup');
+  return (await qbo('query', { query: q }))?.QueryResponse || {};
+}
+const LOOKUP_REPORTS = new Set(['TransactionList', 'GeneralLedger', 'AccountList', 'BalanceSheet', 'ProfitAndLoss', 'ProfitAndLossDetail', 'TrialBalance']);
+async function report(name: string, params: Record<string, unknown>) {
+  if (!LOOKUP_REPORTS.has(name)) throw new Error('Not an allowed report');
+  const p: Record<string, string> = {};
+  for (const [k, v] of Object.entries(params || {})) if (/^[a-z_]{2,40}$/.test(k) && v !== null && v !== undefined) p[k] = String(v).slice(0, 300);
+  return await qbo(`reports/${name}`, p);
+}
+
 /* ---------- Personal cards: business purchases paid with a personal card ---------- */
 // Each one becomes a journal entry: debit the expense category (with the vendor on the line), credit the
 // "Owner's Contribution" equity account. The expense lands on the P&L without touching business bank or
@@ -727,7 +749,7 @@ Deno.serve(async (req) => {
     const job = req.headers.get('x-hq-job') || '';
     if (job) {
       // Server-side job (started from the database with a one-time token). Limited to a few actions.
-      if (!['accounts', 'pc_post', 'pl', 'acct_txns', 'account_save', 'account_active', 'move_many', 'card_credit'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
+      if (!['accounts', 'pc_post', 'pl', 'acct_txns', 'account_save', 'account_active', 'move_many', 'card_credit', 'balances', 'lookup', 'report'].includes(action)) return json(req, { error: 'Not allowed' }, 403);
       const { data: tok } = await admin.from('qbo_job_tokens').select('expires_at').eq('token_hash', await sha256(job)).maybeSingle();
       if (!tok || new Date(tok.expires_at).getTime() < Date.now()) return json(req, { error: 'Not signed in' }, 401);
       const { data: owner } = await admin.from('team_members').select('id').eq('role', 'owner').eq('active', true).limit(1).maybeSingle();
@@ -852,6 +874,10 @@ Deno.serve(async (req) => {
       }
       return json(req, { done, errors });
     }
+
+    if (action === 'balances') return json(req, { accounts: await accountBalances(), asOf: new Date().toISOString() });
+    if (action === 'lookup') return json(req, await lookup(String(body.query || '')));
+    if (action === 'report') return json(req, await report(String(body.name || ''), body.params || {}));
 
     if (action === 'card_credit') return json(req, await cardChargeToCredit(String(body.id || ''), num(body.expectAmount)));
 
