@@ -2290,6 +2290,9 @@ const TASK_CATS = [
   { k:'general',    label:'General',          color:'#6b7280', words:[] },
 ];
 const CAT = Object.fromEntries(TASK_CATS.map(c => [c.k, c]));
+// Repeating tasks: checking one off makes the next copy (database trigger tasks_repeat)
+const REPEAT_OPTS = [['weekly','Weekly'],['monthly','Monthly'],['quarterly','Every 3 months'],['yearly','Yearly']];
+const REPEAT_LABEL = Object.fromEntries(REPEAT_OPTS);
 const catTag = k => { const c = CAT[k] || CAT.general; return `<span class="tcat" style="--c:${c.color}">${esc(c.label)}</span>`; };
 const isoDay = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -2395,7 +2398,7 @@ function taskRow(t){
   return `<div class="trow ${t.status === 'done' ? 'done' : ''} ${t.priority === 'high' ? 'high' : ''}" data-task="${t.id}">
     <button class="tcheck" data-toggle-task="${t.id}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
     <div class="tmain"><div class="tt" title="${esc(t.title)}">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
-      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${taskThreadId(t) ? '<span title="Has an email">✉ Email</span>' : ''}${from}</div></div>
+      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${taskThreadId(t) ? '<span title="Has an email">✉ Email</span>' : ''}${t.repeat ? `<span title="When you check this off, the next one is added automatically">↻ ${esc(REPEAT_LABEL[t.repeat])}</span>` : ''}${from}</div></div>
     ${t.status === 'doing' ? '<span class="tstate">In progress</span>' : ''}
     ${t.status === 'done' ? `<span class="due">${esc(fmtShort(t.done_at))}</span>` : dueLabel(t.due_date)}${who}
   </div>`;
@@ -2410,6 +2413,7 @@ function bindTaskRows(root){
     const row = b.closest('.trow'); if (row) { row.classList.toggle('done', status === 'done'); b.textContent = status === 'done' ? '✓' : ''; }
     const { error } = await sb.from('tasks').update({ status }).eq('id', t.id);
     if (error) return fail(error);
+    if (status === 'done' && t.repeat) { toast(`Done ✓ · next one added (repeats ${REPEAT_LABEL[t.repeat].toLowerCase()})`); await loadTasks(); render(); }
     paintTaskBadge();
     setTimeout(() => { if (S.view === 'tasks') renderTasks(); if (S.view === 'home') paintHomeTasks(); }, status === 'done' ? 700 : 0);
     if (status === 'done') toast('Done ✓');
@@ -2683,6 +2687,7 @@ function openTask(id){
         <div><label>Assigned to</label><select name="assigned_to">${opt(people.map(m => [m.id, m.id === S.me.id ? `${m.full_name} (me)` : m.full_name]), t.assigned_to, 'Unassigned')}</select></div>
         <div><label>Category</label><select name="category">${opt(TASK_CATS.map(c => [c.k, c.label]), t.category)}</select></div>
         <div><label>Priority</label><select name="priority">${opt([['normal','Normal'],['high','High']], t.priority)}</select></div>
+        <div><label>Repeat</label><select name="repeat">${opt(REPEAT_OPTS, t.repeat || '', 'Does not repeat')}</select></div>
         <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a => [a.id, a.full_name]), t.agent_id || '', '—')}</select></div>
         <div class="full" style="grid-column:1/-1"><label>Related project</label><select name="project_id">${opt(projs.map(p => [p.id, `${p.name} · ${MEDIA_LABEL[p.media]}`]), t.project_id || '', '—')}</select></div>
       </div>
@@ -2710,6 +2715,7 @@ function openTask(id){
     chips.push(due ? `<button type="button" class="tv-chip" data-edit="due_date">📅 ${dueLabel(due).replace(/<[^>]+>/g, '') || fmtShort(due)}${dueLabel(due).includes('over') ? ' <b class="late">late</b>' : ''}</button>`
                    : `<button type="button" class="tv-chip ghost" data-edit="due_date">📅 No due date</button>`);
     if (st === 'doing') chips.push(`<button type="button" class="tv-chip" data-edit="status">In progress</button>`);
+    if (f('repeat').value) chips.push(`<button type="button" class="tv-chip" data-edit="repeat">↻ Repeats ${esc(REPEAT_LABEL[f('repeat').value].toLowerCase())}</button>`);
     chips.push(`<button type="button" class="tv-chip" data-edit="category">${catTag(f('category').value)}</button>`);
     if (who && who !== S.me.id) chips.push(`<button type="button" class="tv-chip" data-edit="assigned_to">👤 ${esc(firstName(memberName(who)))}</button>`);
     if (!who) chips.push(`<button type="button" class="tv-chip ghost" data-edit="assigned_to">Unassigned</button>`);
@@ -2723,7 +2729,7 @@ function openTask(id){
     });
   };
   paintChips();
-  ['status','due_date','assigned_to','category','priority','agent_id','project_id'].forEach(n => f(n).addEventListener('change', () => { paintChips(); markDirty(); }));
+  ['status','due_date','assigned_to','category','priority','repeat','agent_id','project_id'].forEach(n => f(n).addEventListener('change', () => { paintChips(); markDirty(); }));
 
   // Details: read view, tap to edit
   const nv = $('#tNotesView'), na = $('#tNotes');
@@ -2767,7 +2773,7 @@ function openTask(id){
   $('#tDone').onclick = async () => {
     const done = f('status').value !== 'done';
     f('status').value = done ? 'done' : 'todo';
-    if (await save()) { closeLayer(); toast(done ? 'Done ✓' : 'Marked not done'); }
+    if (await save()) { closeLayer(); toast(done ? (t.repeat ? `Done ✓ · next one added (repeats ${REPEAT_LABEL[t.repeat].toLowerCase()})` : 'Done ✓') : 'Marked not done'); if (done && t.repeat) { await loadTasks(); render(); } }
   };
   form.onsubmit = async e => { e.preventDefault(); if (await save()) { closeLayer(); toast('Task saved'); } };
 }
