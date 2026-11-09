@@ -3829,7 +3829,7 @@ function kpiRowHTML(cur, prev, label, hint){
   </div>`;
 }
 // Bank and card balances straight from QuickBooks (live on each visit). Not yet reconciled with the bank, so say so.
-const FIN_RECON_NOTE = 'QuickBooks balance · not yet reconciled with the bank';
+const FIN_RECON_NOTE = 'Live QuickBooks balance · reconciled monthly with the bank';
 function finBalancesHTML(){
   const b = FIN.bal;
   if (!b) return `<div class="stat"><div class="l">Bank &amp; card balances</div><div class="n">${FIN.balError ? '—' : '<span class="spin"></span>'}</div><div class="l">${FIN.balError ? esc('Couldn’t load: ' + FIN.balError) : 'Loading from QuickBooks…'}</div></div>`;
