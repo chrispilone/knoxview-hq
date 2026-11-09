@@ -587,7 +587,7 @@ label.extra{margin:0}
 .kpi .d{font-size:12px;margin-top:3px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:640px){ .kpi .d .vs{display:none} }
 .kpi .d b.up{color:var(--ok)} .kpi .d b.down{color:var(--danger)}
-.fin-bal{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.fin-bal{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
 .fin-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
 .fin-grid .wide{grid-column:span 8} .fin-grid .fin-side{grid-column:span 4}
 .chart-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
@@ -3716,7 +3716,7 @@ async function refreshFinance(){
     if (e.notConnected) { await loadFinStatus(); toast(e.message); }
     else { FIN.error = e.message; toast('Couldn’t refresh from QuickBooks: ' + e.message); }
   }
-  FIN.refreshing = false;
+  FIN.refreshing = false; FIN.balAt = 0; // a manual refresh also re-pulls the balances
   if (S.view === 'finance') renderFinance();
 }
 function paintFinRefresh(){
@@ -3742,7 +3742,7 @@ async function renderFinance(){
     return;
   }
   if (!st.connected) {
-    box.innerHTML = head() + `<div class="panel"><div class="cal-cta"><div><b>Connect QuickBooks</b><p class="muted">See revenue, expenses and profit for this month and year to date, with trends, pulled straight from QuickBooks. Read-only: HQ never changes anything in QuickBooks.</p></div>
+    box.innerHTML = head() + `<div class="panel"><div class="cal-cta"><div><b>Connect QuickBooks</b><p class="muted">See revenue, expenses and profit for this month and year to date, with trends, pulled straight from QuickBooks. HQ only changes QuickBooks when you save a category or post a transaction in Bookkeeping.</p></div>
       <button class="btn primary" id="finConnect">Connect QuickBooks</button></div></div>`;
     $('#finConnect').onclick = connectQuickBooks;
     return;
@@ -3780,9 +3780,7 @@ async function renderFinance(){
       <div class="panel"><h2>Year to date <small>Jan 1–${esc(fmtShort(d.asOf))}</small></h2>${kpiRowHTML(d.ytd, d.ytdLastYear, 'last year', `Compared with Jan 1–${fmtShort(d.asOf)}, ${t.getFullYear() - 1}`)}</div>
     </div>
     <div class="fin-bal">
-      ${balHTML('Cash in bank', d.balances?.cash, 'Bank account balances')}
-      ${balHTML('Owed to you', d.balances?.receivables, 'Unpaid invoices (A/R)')}
-      ${balHTML('Credit cards', d.balances?.creditCards, 'Card balances owed')}
+      ${finBalancesHTML()}
       ${balHTML(`${monthName(d.lastMonth.month, true)} profit`, d.lastMonth.net, `${usd(d.lastMonth.revenue)} revenue · ${usd(d.lastMonth.expenses)} expenses`, true)}
     </div>
     <div class="fin-grid">
@@ -3797,11 +3795,13 @@ async function renderFinance(){
       <div class="panel fin-side"><h2>Where the money goes <span class="count">YTD</span></h2>${catBarsHTML(d.categories, d.ytd.expenses, 'var(--fin-exp)')}
         ${(d.incomeLines || []).length > 1 ? `<h2 style="margin-top:20px">Where it comes from <span class="count">YTD</span></h2>${catBarsHTML(d.incomeLines, d.ytd.revenue, 'var(--fin-rev)')}` : ''}</div>
     </div>
-    <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}: Profit &amp; Loss and Balance Sheet. Expenses include cost of goods sold. Read-only: HQ never changes anything in QuickBooks.</p>`;
+    <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}: Profit &amp; Loss and Balance Sheet. Bank and card balances are QuickBooks’ own balances, pulled fresh each time you open this page. HQ only changes QuickBooks when you save a category or post a transaction in Bookkeeping.</p>`;
   wireFinHead();
   $('#finChartSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; FIN.chart = b.dataset.c; renderFinance(); };
   wireFinChart(d);
   if (!FIN.refreshing && !FIN.error && Date.now() - new Date(snap.refreshedAt).getTime() > FIN_STALE_MS) refreshFinance();
+  // Fresh bank/card balances on every visit to the Overview (at most once a minute).
+  if (!FIN.balLoading && (!FIN.balAt || Date.now() - FIN.balAt > 60000)) { FIN.balAt = Date.now(); loadFinBalances(); }
 }
 function wireFinHead(){
   paintFinRefresh();
@@ -3821,6 +3821,27 @@ function kpiRowHTML(cur, prev, label, hint){
     <div class="kpi"><div class="l"><i style="--c:var(--fin-exp)"></i>Expenses</div><div class="n" title="${esc(usd(cur.expenses, true))}">${usd(cur.expenses)}</div><div class="d" title="${esc(hint)}">${deltaHTML(cur.expenses, prev.expenses, false, label)}</div></div>
     <div class="kpi"><div class="l"><i style="--c:var(--fin-net)"></i>Net profit</div><div class="n ${cur.net < 0 ? 'neg' : ''}" title="${esc(usd(cur.net, true))}">${usd(cur.net)}</div><div class="d">${margin === null ? '&nbsp;' : `${margin}% margin`}${prev.revenue ? `<span class="vs"> · was ${usd(prev.net)}</span>` : ''}</div></div>
   </div>`;
+}
+// Bank and card balances straight from QuickBooks (live on each visit). Not yet reconciled with the bank, so say so.
+const FIN_RECON_NOTE = 'QuickBooks balance · not yet reconciled with the bank';
+function finBalancesHTML(){
+  const b = FIN.bal;
+  if (!b) return `<div class="stat"><div class="l">Bank &amp; card balances</div><div class="n">${FIN.balError ? '—' : '<span class="spin"></span>'}</div><div class="l">${FIN.balError ? esc('Couldn’t load: ' + FIN.balError) : 'Loading from QuickBooks…'}</div></div>`;
+  const banks = b.accounts.filter(a => a.type === 'Bank' && (a.balance || a.sub !== 'CashOnHand'));
+  const cards = b.accounts.filter(a => a.type === 'Credit Card');
+  const short = n => String(n).replace(/^Knox View\s*-\s*/i, '').replace(/\s*-\s*\d+$/, '');
+  // QuickBooks reports a card's balance as a negative number when you owe; flip it so "owed" reads positive.
+  return [
+    ...banks.map(a => `<div class="stat"><div class="l">${esc(short(a.name))}</div><div class="n">${usd(a.balance)}</div><div class="l">${FIN_RECON_NOTE}</div></div>`),
+    ...cards.map(a => { const owed = -a.balance; return `<div class="stat"><div class="l">${esc(short(a.name))} · owed</div><div class="n" ${owed < 0 ? 'style="color:var(--danger)"' : ''}>${usd(owed)}</div><div class="l">${owed < 0 ? 'Shows as a credit in QuickBooks · ' : ''}${FIN_RECON_NOTE}</div></div>`; }),
+  ].join('');
+}
+async function loadFinBalances(){
+  if (FIN.balLoading) return;
+  FIN.balLoading = true; FIN.balError = null;
+  try { FIN.bal = await qboCall('balances'); } catch (e) { FIN.balError = e.message; }
+  FIN.balLoading = false;
+  if (S.view === 'finance' && FIN.tab === 'overview') renderFinance();
 }
 function balHTML(label, val, sub, colorNet){
   return `<div class="stat"><div class="l">${esc(label)}</div><div class="n" ${colorNet && val < 0 ? 'style="color:var(--danger)"' : ''}>${val === null || val === undefined ? '—' : usd(val)}</div><div class="l">${esc(sub)}</div></div>`;
