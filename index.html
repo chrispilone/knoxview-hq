@@ -702,6 +702,10 @@ label.extra{margin:0}
 @media (max-width:860px){.sp-grid{grid-template-columns:1fr}.sp-cats{position:static;max-height:260px}.sp-vrow{grid-template-columns:14px 1fr 44px 92px;gap:8px}.sp-vrow .sp-bar,.sp-vrow .sp-n{display:none}.sp-search{width:100%}}
 .books-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .books-bar select{width:auto}
+.books-live{font-size:12px;color:var(--muted)}
+.books-filters input[type=search]{flex:1;min-width:200px;max-width:360px}
+.books-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.books-count{font-size:12.5px}
 .books-bar .seg button b{font-weight:700;margin-left:4px}
 .books-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px}
 .books-bulk span{flex:1;min-width:200px}
@@ -766,24 +770,6 @@ label.extra{margin:0}
 .pill.ok{background:#e6f4ec;color:var(--ok)} .pill.warn{background:#fdf1dc;color:#9a5b00}
 @media (prefers-color-scheme: dark){ .pill.ok{background:#16352a} .pill.warn{background:#3a2a10;color:#e0a84a} }
 @media (max-width:640px){ .books-bar .seg{width:100%;overflow-x:auto} .books-bar .seg button{white-space:nowrap} .txn-actions a.btn{display:none} .cat-select{max-width:100%;width:100%} }
-.pc-head{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
-.pc-stats{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;min-width:260px}
-.pc-actions label.btn{display:inline-flex;align-items:center;margin:0;color:var(--text);font-size:13px;cursor:pointer}
-.pc-tabs{margin-bottom:12px;max-width:100%;overflow-x:auto}
-.pc-tabs button{white-space:nowrap}
-.pc-tabs button b{font-weight:700;margin-left:4px}
-.pc-sect{margin-bottom:18px}
-.pc-sect-h{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:4px}
-.pc-sect-h > div{flex:1;min-width:220px}
-.pc-sect-h h3{margin:0;font-size:15px}
-.pc-sect-h p{margin:2px 0 0;font-size:13px;color:var(--muted)}
-.pc-group.biz{border-color:var(--ok)}
-.pc-gbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--border)}
-.pc-gbar .pc-pick{width:300px;max-width:100%}
-.pc-row-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.pc-row-actions a.btn{text-decoration:none}
-.pc-dup{margin-top:6px;font-size:12.5px;color:#9a5b00}
-.pc-dup-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 @media (prefers-color-scheme: dark){ .pc-dup{color:#e0a84a} }
 @media (max-width:640px){ .pc-gbar .pc-pick{width:100%} .pc-gbar .spacer{display:none} .pc-row-actions{width:100%;justify-content:flex-end} }
 @media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .fin-side{grid-column:span 12} }
@@ -3274,7 +3260,7 @@ async function refreshCurrentView(){
   if (v === 'finance') {
     if (FIN.tab === 'pl') jobs.push(loadPL());
     else if (FIN.tab === 'spending') jobs.push(loadSP(true));
-    else if (FIN.tab === 'books') jobs.push(BOOKS.filter === 'cards' ? loadPC() : loadBooks());
+    else if (FIN.tab === 'books') jobs.push(loadBooks());
     else jobs.push(refreshFinance());
   }
   if (v === 'chat') jobs.push((async () => { if (await loadChatMeta()) await refreshUnread(); if (S.chat.active) await loadMessages(S.chat.active); })());
@@ -4431,7 +4417,7 @@ function wirePL(){
 }
 
 /* ----- Bookkeeping: every transaction gets confirmed; categories save to QuickBooks ----- */
-const BOOKS = { data:null, loading:false, error:null, filter:'uncat', range:'90', edits:{}, open:{}, busy:{}, applyAll:{} };
+const BOOKS = { data:null, loading:false, error:null, filter:'new', range:'90', q:'', acct:'', onlyUncat:false, edits:{}, open:{}, busy:{}, applyAll:{}, loadedAt:null, timer:null };
 try { BOOKS.range = localStorage.getItem('kvhq.books.range') || '90'; } catch (e) {}
 const BOOK_RANGES = [['month','This month'],['30','Last 30 days'],['90','Last 90 days'],['year','This year'],['lastyear','Since Jan 1 last year']];
 const TXN_LABEL = { Purchase:'Expense', Deposit:'Deposit', Bill:'Bill', Transfer:'Transfer', Payment:'Client payment', SalesReceipt:'Sales receipt', BillPayment:'Bill payment', JournalEntry:'Journal entry' };
@@ -4444,36 +4430,60 @@ function booksSince(){
   if (BOOKS.range === 'lastyear') return `${now.getFullYear() - 1}-01-01`;
   const d = new Date(now); d.setDate(d.getDate() - Number(BOOKS.range || 90)); return ymd(d);
 }
-async function loadBooks(){
-  BOOKS.loading = true; BOOKS.error = null; paintBooks();
+// New = transactions that landed in QuickBooks after the baseline and haven't been confirmed in HQ, plus anything uncategorized.
+// Once confirmed, a transaction stays confirmed even if it's edited later (edits made here or in QuickBooks don't bring it back).
+// Always fetches at least the last 90 days so New is complete whatever range All is set to.
+async function loadBooks(opts = {}){
+  if (BOOKS.loading) return;
+  BOOKS.loading = true; BOOKS.error = null; if (!opts.quiet) paintBooks();
+  const d90 = new Date(); d90.setDate(d90.getDate() - 90); const since90 = ymdOf(d90);
+  const since = booksSince() < since90 ? booksSince() : since90;
   try {
-    const [data, prefs] = await Promise.all([qboCall('books', { since: booksSince() }), sb.from('finance_prefs').select('books_baseline').eq('id', 1).maybeSingle()]);
-    BOOKS.data = data; BOOKS.edits = {}; BOOKS.open = {};
-    // Backlog cleared on the baseline date: anything not created or edited in QuickBooks since then counts as already looked over.
-    // (HQ-only checkmark; nothing in QuickBooks changes.) New or edited transactions still show up in To review.
+    const [data, prefs] = await Promise.all([qboCall('books', { since }), sb.from('finance_prefs').select('books_baseline').eq('id', 1).maybeSingle()]);
     const base = prefs?.data?.books_baseline ? new Date(prefs.data.books_baseline).getTime() : 0;
-    if (base) for (const x of data.items || []) {
-      const t = new Date(x.updated || x.created || 0).getTime();
-      if (!x.reviewed && t && t <= base) Object.assign(x, { reviewed: true, confirmedAt: prefs.data.books_baseline, changedSinceReview: false });
+    for (const x of data.items || []) {
+      if (x.confirmedAt) Object.assign(x, { reviewed: true, changedSinceReview: false });
+      else if (base && x.created && new Date(x.created).getTime() <= base) Object.assign(x, { reviewed: true, confirmedAt: null, preBaseline: true });
     }
+    if (opts.quiet && BOOKS.data) {
+      const seen = new Set(BOOKS.data.items.map(tkey));
+      const fresh = (data.items || []).filter(x => !seen.has(tkey(x)) && !x.reviewed).length;
+      if (fresh) toast(`${fresh} new transaction${fresh === 1 ? '' : 's'} from QuickBooks`);
+    }
+    BOOKS.data = data; BOOKS.loadedAt = new Date(); BOOKS.open = {};
+    for (const k of Object.keys(BOOKS.edits)) if (!findTxn(k)) delete BOOKS.edits[k];
     recount();
   }
   catch (e) { BOOKS.error = e.message; if (e.notConnected) { await loadFinStatus(); BOOKS.loading = false; return renderFinance(); } }
   BOOKS.loading = false;
-  if (S.view === 'finance' && FIN.tab === 'books') renderFinance(); // also refreshes the tab badge
+  if (S.view === 'finance' && FIN.tab === 'books') { if (opts.quiet) { paintBooks(); recount(); } else renderFinance(); } // renderFinance also refreshes the tab badge
 }
+// Live feed: re-check QuickBooks every 2 minutes and when you come back to the tab, unless you're in the middle of an edit.
+function booksAuto(){
+  clearInterval(BOOKS.timer);
+  BOOKS.timer = setInterval(() => {
+    if (S.view !== 'finance' || FIN.tab !== 'books') return clearInterval(BOOKS.timer);
+    if (document.hidden || BOOKS.loading || Object.keys(BOOKS.edits).length || Object.keys(BOOKS.busy).length || Object.keys(BOOKS.open).length) return;
+    loadBooks({ quiet: true });
+  }, 120000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && S.view === 'finance' && FIN.tab === 'books' && BOOKS.loadedAt && Date.now() - BOOKS.loadedAt > 60000
+      && !BOOKS.loading && !Object.keys(BOOKS.edits).length && !Object.keys(BOOKS.busy).length) loadBooks({ quiet: true });
+});
 function renderBooks(){
-  if (/^#\/finance\/books\/cards/.test(location.hash)) BOOKS.filter = 'cards';
-  if (BOOKS.filter === 'cards') { paintBooks(); return; }
+  if (BOOKS.filter !== 'all') BOOKS.filter = 'new';
+  booksAuto();
   if (!BOOKS.data && !BOOKS.loading && !BOOKS.error) { loadBooks(); return; }
   paintBooks();
 }
+const booksIsNew = i => !i.reviewed || i.uncategorized;
 function booksList(){
   const items = BOOKS.data?.items || [];
-  if (BOOKS.filter === 'uncat') return items.filter(i => i.uncategorized);
-  if (BOOKS.filter === 'done') return items.filter(i => i.reviewed);
-  if (BOOKS.filter === 'all') return items;
-  return items.filter(i => !i.reviewed).sort((a, b) => (b.uncategorized - a.uncategorized) || (b.changedSinceReview - a.changedSinceReview) || (b.date || '').localeCompare(a.date || ''));
+  if (BOOKS.filter === 'new') return items.filter(booksIsNew).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.created || '').localeCompare(a.created || ''));
+  const since = booksSince(), q = BOOKS.q.trim().toLowerCase();
+  return items.filter(i => i.date >= since && (!BOOKS.acct || i.account?.id === BOOKS.acct) && (!BOOKS.onlyUncat || i.uncategorized)
+    && (!q || [i.payee, i.memo, i.account?.name, ...i.lines.map(l => `${l.account?.name || ''} ${l.desc || ''}`), String(i.amount)].join(' ').toLowerCase().includes(q)));
 }
 function paintBooks(){
   const box = $('#booksBox'); if (!box) return;
@@ -4481,27 +4491,36 @@ function paintBooks(){
   const items = d?.items || [];
   const list = booksList();
   const shown = list.slice(0, BOOKS.limit || 60);
+  const isNew = BOOKS.filter === 'new';
   const easy = items.filter(i => !i.reviewed && !i.uncategorized && !BOOKS.edits[tkey(i)]);
+  const accts = [...new Map(items.filter(i => i.account?.id).map(i => [i.account.id, i.account.name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const allTotal = list.reduce((a, i) => a + (i.direction === 'out' ? -i.amount : i.direction === 'in' ? i.amount : 0), 0);
   box.innerHTML = `
     <div class="books-bar">
       <div class="seg" id="booksFilter">
-        <button data-f="uncat" class="${BOOKS.filter === 'uncat' ? 'active' : ''}">Needs category <b>${c.uncategorized}</b></button>
-        <button data-f="review" class="${BOOKS.filter === 'review' ? 'active' : ''}">To review <b>${c.toReview}</b></button>
-        <button data-f="done" class="${BOOKS.filter === 'done' ? 'active' : ''}">Confirmed</button>
-        <button data-f="all" class="${BOOKS.filter === 'all' ? 'active' : ''}">All <b>${c.total}</b></button>
-        <button data-f="cards" class="${BOOKS.filter === 'cards' ? 'active' : ''}">Personal cards${PC.rows ? ` <b>${PC.rows.filter(r => !r.decision).length}</b>` : ''}</button>
+        <button data-f="new" class="${isNew ? 'active' : ''}">New${c.toReview ? ` <b>${c.toReview}</b>` : ''}</button>
+        <button data-f="all" class="${!isNew ? 'active' : ''}">All transactions</button>
       </div>
       <span class="spacer"></span>
-      ${BOOKS.filter === 'cards' ? '' : `<select id="booksRange" title="Which transactions to show">${opt(BOOK_RANGES, BOOKS.range)}</select>
-      <button class="btn small" id="booksReload" ${BOOKS.loading ? 'disabled' : ''}>${BOOKS.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>`}
+      <span class="books-live">${BOOKS.loadedAt ? `Updated ${esc(BOOKS.loadedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }))} · checks every 2 min` : ''}</span>
+      <a class="btn small ghost" href="https://qbo.intuit.com/app/banking" target="_blank" rel="noopener" title="Approve pending bank items in QuickBooks">QuickBooks Banking ↗</a>
+      <button class="btn small" id="booksReload" ${BOOKS.loading ? 'disabled' : ''}>${BOOKS.loading ? '<span class="spin"></span>Checking…' : '↻ Refresh'}</button>
     </div>
-    ${BOOKS.filter === 'cards' ? `<div id="pcBox">${pcHTML()}</div>` : `
+    ${!isNew ? `<div class="books-bar books-filters">
+      <input type="search" id="booksSearch" placeholder="Search payee, memo, category or amount…" value="${esc(BOOKS.q)}" />
+      <select id="booksAcct" title="Bank or card account"><option value="">All accounts</option>${accts.map(([id, n]) => `<option value="${esc(id)}" ${BOOKS.acct === id ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+      <select id="booksRange" title="Dates">${opt(BOOK_RANGES, BOOKS.range)}</select>
+      <label class="books-chk"><input type="checkbox" id="booksUncat" ${BOOKS.onlyUncat ? 'checked' : ''}/> Needs a category</label>
+      <span class="spacer"></span><span class="muted books-count">${list.length} transaction${list.length === 1 ? '' : 's'}${list.length ? ` · net ${allTotal < 0 ? '−' : '+'}${usd(Math.abs(allTotal), true)}` : ''}</span>
+    </div>` : ''}
     ${BOOKS.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load transactions: ${esc(BOOKS.error)}</div></div>` : ''}
     ${!d && BOOKS.loading ? `<div class="panel fin-loading"><span class="spin"></span>Pulling transactions from QuickBooks…</div>` : ''}
-    ${d && BOOKS.filter === 'review' && easy.length > 1 ? `<div class="books-bulk"><span>${easy.length} already have a category. Look them over, then confirm them together.</span><button class="btn small" id="booksBulk">✓ Confirm all ${easy.length} categorized</button></div>` : ''}
-    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${BOOKS.filter === 'review' ? '🎉 All caught up. Nothing new or changed to look over.' : BOOKS.filter === 'uncat' ? '🎉 Nothing uncategorized. Every transaction in this range has a category in QuickBooks.' : 'Nothing here.'}</div>`) : ''}
+    ${d && isNew && easy.length > 1 ? `<div class="books-bulk"><span>${easy.length} already have a category. Look them over, then confirm them together.</span><button class="btn small" id="booksBulk">✓ Confirm all ${easy.length} categorized</button></div>` : ''}
+    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${isNew ? '🎉 All caught up. New transactions show up here as soon as they land in QuickBooks.' : 'No transactions match.'}</div>`) : ''}
     ${list.length > shown.length ? `<div style="text-align:center;margin-top:12px"><button class="btn" id="booksMore">Show more (${list.length - shown.length} left)</button></div>` : ''}
-    ${d ? `<p class="fin-note">Every expense, deposit, bill, transfer and payment in QuickBooks from ${esc(fmtDate(d.since))} on. Changing a category saves it to QuickBooks. Suggestions come from how you’ve categorized the same payee before. Matching deposits to invoices and bank-feed “For Review” items still happen in QuickBooks.</p>` : ''}`}`;
+    ${d ? `<p class="fin-note">${isNew
+      ? 'Transactions show up here once they’re in QuickBooks: after you accept them on the QuickBooks Banking screen, or a bank rule adds them. Pick or change the category, then confirm: the category saves to QuickBooks right away and the transaction leaves this list. Anything without a category stays here until it has one.'
+      : 'Everything in QuickBooks for the dates picked: expenses, deposits, bills, transfers, payments and journal entries. Changing a category here saves it to QuickBooks.'}</p>` : ''}`;
   wireBooks();
 }
 function acctName(id){ return BOOKS.data?.accounts?.find(a => a.id === id)?.full || ''; }
@@ -4539,8 +4558,8 @@ function txnHTML(x){
     ${sug ? `<button class="sug-chip" data-sug="${esc(k)}">Usually <b>${esc(sug.name)}</b> (${sug.count} of ${sug.total}) · Use this</button>` : ''}
     ${changed && samePayee.length ? `<label class="apply-all"><input type="checkbox" data-apply="${esc(k)}" ${BOOKS.applyAll[k] ? 'checked' : ''}/> Also apply to ${samePayee.length} other ${esc(x.payee)} transaction${samePayee.length === 1 ? '' : 's'} to review</label>` : ''}
     <div class="txn-actions">
-      ${x.changedSinceReview ? `<span class="pill warn">Changed in QuickBooks</span>` : ''}
-      ${x.reviewed ? `<span class="pill ok">✓ Confirmed ${esc(fmtShort(x.confirmedAt))}</span><span class="spacer"></span><button class="btn small ghost" data-undo="${esc(k)}">Undo</button>`
+      ${!x.reviewed && BOOKS.filter === 'all' ? `<span class="pill warn">New</span>` : ''}
+      ${x.reviewed ? (x.preBaseline ? `<span class="pill ok">✓ Reviewed</span><span class="spacer"></span>` : `<span class="pill ok">✓ Confirmed ${esc(fmtShort(x.confirmedAt))}</span><span class="spacer"></span><button class="btn small ghost" data-undo="${esc(k)}">Undo</button>`)
         : `<span class="spacer"></span>
            <a class="btn small ghost" href="https://qbo.intuit.com/app/${QBO_PAGE[x.type] || 'expense'}?txnId=${encodeURIComponent(x.id)}" target="_blank" rel="noopener">Open in QuickBooks ↗</a>
            ${changed ? `<button class="btn small ghost" data-reset="${esc(k)}">Reset</button>` : ''}
@@ -4569,7 +4588,7 @@ function replaceTxn(updated){
 }
 function recount(){
   const items = BOOKS.data.items;
-  BOOKS.data.counts = { total: items.length, toReview: items.filter(i => !i.reviewed).length, uncategorized: items.filter(i => i.uncategorized).length };
+  BOOKS.data.counts = { total: items.length, toReview: items.filter(booksIsNew).length, uncategorized: items.filter(i => i.uncategorized).length };
   const b = document.querySelector('.fin-tabs .badge'); const n = BOOKS.data.counts.toReview;
   if (b) { b.textContent = n > 999 ? '999+' : n; b.classList.toggle('hidden', !n); }
 }
@@ -4609,14 +4628,19 @@ async function confirmTxn(k){
 }
 function wireBooks(){
   const box = $('#booksBox'); if (!box) return;
-  if (BOOKS.filter === 'cards') wirePC();
   box.querySelector('#booksFilter')?.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return; BOOKS.filter = b.dataset.f; BOOKS.limit = 60;
-    if (b.dataset.f !== 'cards' && !BOOKS.data && !BOOKS.loading) { loadBooks(); return; }
+    if (!BOOKS.data && !BOOKS.loading) { loadBooks(); return; }
     paintBooks();
   });
-  const rng = box.querySelector('#booksRange'); if (rng) rng.onchange = () => { BOOKS.range = rng.value; try { localStorage.setItem('kvhq.books.range', BOOKS.range); } catch (e) {} loadBooks(); };
-  const rl = box.querySelector('#booksReload'); if (rl) rl.onclick = loadBooks;
+  const rng = box.querySelector('#booksRange'); if (rng) rng.onchange = () => {
+    BOOKS.range = rng.value; try { localStorage.setItem('kvhq.books.range', BOOKS.range); } catch (e) {}
+    const since = BOOKS.data?.since || ''; if (!since || booksSince() < since) loadBooks(); else paintBooks();
+  };
+  const srch = box.querySelector('#booksSearch'); if (srch) { let t; srch.oninput = () => { clearTimeout(t); t = setTimeout(() => { BOOKS.q = srch.value; BOOKS.limit = 60; paintBooks(); const n = $('#booksSearch'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); }; }
+  const ac = box.querySelector('#booksAcct'); if (ac) ac.onchange = () => { BOOKS.acct = ac.value; BOOKS.limit = 60; paintBooks(); };
+  const un = box.querySelector('#booksUncat'); if (un) un.onchange = () => { BOOKS.onlyUncat = un.checked; BOOKS.limit = 60; paintBooks(); };
+  const rl = box.querySelector('#booksReload'); if (rl) rl.onclick = () => loadBooks();
   const more = box.querySelector('#booksMore'); if (more) more.onclick = () => { BOOKS.limit = (BOOKS.limit || 60) + 60; paintBooks(); };
   const bulk = box.querySelector('#booksBulk'); if (bulk) bulk.onclick = async () => {
     const easy = BOOKS.data.items.filter(i => !i.reviewed && !i.uncategorized && !BOOKS.edits[tkey(i)]);
@@ -4645,361 +4669,6 @@ function wireBooks(){
   box.querySelectorAll('[data-undo]').forEach(b => b.onclick = async () => {
     const x = findTxn(b.dataset.undo);
     try { await qboCall('unconfirm', { type: x.type, id: x.id }); replaceTxn({ ...x, reviewed: false, confirmedAt: null }); paintBooks(); } catch (e) { fail(e); }
-  });
-}
-
-/* ----- Personal cards (Bookkeeping → Personal cards): business purchases paid with a personal card ----- */
-// Card statements (CSV) go into personal_card_txns. HQ guesses which charges could be business, Chris
-// taps Business or Personal (one tap per merchant, or per charge), and business ones post to QuickBooks
-// through the qbo function as journal entries: expense category debited (vendor attached), Owner
-// investments credited. Decisions on a whole merchant are remembered for the next upload.
-const PC = { rows:null, rules:{}, accounts:null, loading:false, error:null, view:'decide', open:{}, pick:{}, busy:false, progress:'', dups:{}, more:{}, msg:'' };
-// [pattern, guess, suggested category name, why]. First match wins; anything unmatched is "likely personal".
-const PC_GUESS = [
-  [/blink|audible|amazon prime|prime video|kindle/i, 'personal'],
-  [/google.*(workspace|gsuite)/i, 'business', 'Software & Subscriptions'],
-  [/spiro/i, 'business', 'Spiro Delivery Fees'],
-  [/\bdji\b|dji\.com/i, 'business', 'Gear & Equipment'],
-  [/adobe|dropbox|vimeo|canva|squarespace|netlify|notion|slack|zapier|openai|chatgpt|anthropic|claude\.ai|intuit|qbooks|quickbooks|openphone|\bquo\b|cubicasa|autohdr|matterport|boxbrownie|frame\.io|godaddy|calendly|docusign|wise\.com/i, 'business', 'Software & Subscriptions'],
-  [/b ?& ?h photo|bhphoto|adorama|\bkeh\b|peak design|godox|sandisk|lexar|best ?buy|apple store/i, 'maybe', 'Gear & Equipment', 'Camera or electronics store: business if it was gear'],
-  [/ups store|usps|fedex|staples|office ?depot/i, 'maybe', 'Supplies', 'Shipping or office supplies'],
-  [/kaplan|udemy|skillshare|masterclass/i, 'maybe', 'Education & Coaching', 'Course or licensing'],
-  [/realtor|association of|chamber of commerce/i, 'maybe', 'Dues & Memberships'],
-  [/amazon|amzn/i, 'maybe', 'Supplies', 'Check your Amazon order history for what this was'],
-  [/next insur/i, 'business', 'Insurance', 'NEXT general liability insurance'],
-  [/gdit faa|faa ?drone/i, 'business', 'Taxes, Licenses & Fees', 'FAA drone registration'],
-  [/apple store|apple\.com\/us/i, 'maybe', 'Gear & Equipment', 'Apple hardware: business if it’s your work computer, phone or iPad'],
-  [/apple\.com\/bill|apple services/i, 'maybe', 'Software & Subscriptions', 'App Store or iCloud: check your Apple purchase history'],
-  [/reelme/i, 'maybe', 'Software & Subscriptions', 'Reel app: business if you use it for client videos'],
-  [/^sp\s/i, 'maybe', 'Gear & Equipment', 'Online store: was this for the business?'],
-  [/allegiant|allegnt|delta air|united air|southwest|american air|frontier w|spirit air|marriott|hilton|hyatt|airbnb|hotel|metropolis|parkmobile|parking/i, 'maybe', 'Travel', 'Travel or parking: business if it was for work'],
-  [/\| (airlines|hotels|transportation|govt-services-parking)$/i, 'maybe', 'Travel', 'Travel: business if it was for work'],
-  [/\| gas$/i, 'maybe', 'Vehicle & Fuel', 'Gas: if you claim mileage instead, leave these personal'],
-  [/shell oil|kroger fuel|weigel|marathon|exxon|\bbp#|circle k|casey|goodstop|buc-ee|\bpilot\b|love's|amoco|wawa|speedway|citgo|racetrac|gulf oil|phillips 66|flying j|speed mart|rite stop|kgp mart|sunspot|top fuels|costco gas|gas-n-go|7-eleven/i, 'maybe', 'Vehicle & Fuel', 'Gas: if you claim mileage instead, leave these personal'],
-];
-function pcMerchant(name){
-  const s0 = String(name || '').replace(/\s+/g, ' ').trim();
-  if (/amazon|amzn/i.test(s0) && !/blink|audible|prime/i.test(s0)) return 'Amazon';
-  if (/apple store|apple\.com\/us/i.test(s0)) return 'Apple Store';
-  if (/apple\.com/i.test(s0)) return 'Apple (App Store / iCloud)';
-  if (/google.*(workspace|gsuite)/i.test(s0)) return 'Google Workspace';
-  if (/collectivesutherl/i.test(s0)) return 'Collective Sutherland (rent)';
-  if (/chick-fil-a/i.test(s0)) return 'Chick-fil-A';
-  for (const [re, label] of [[/next insur/i, 'NEXT Insurance'], [/godaddy/i, 'GoDaddy'], [/reelme/i, 'Reelme'], [/gdit faa|faa ?drone/i, 'FAA (drone registration)'], [/dji\.com|\bdji\b/i, 'DJI'], [/^spiro/i, 'Spiro'], [/^shell oil/i, 'Shell'], [/^exxon/i, 'Exxon'], [/citgo/i, 'Citgo'], [/^circle medical/i, 'Circle Medical'], [/^weigel/i, "Weigel's"], [/^kroger fuel/i, 'Kroger Fuel'], [/^kroger/i, 'Kroger'], [/^cook out/i, 'Cook Out'], [/great clips/i, 'Great Clips'], [/^costco whse/i, 'Costco'], [/^marathon/i, 'Marathon'], [/^dunkin/i, "Dunkin'"], [/^spotify/i, 'Spotify'], [/^geico/i, 'Geico']])
-    if (re.test(s0)) return label;
-  let s = s0.replace(/^(SQ|TST|SP|FSP|GLF|CTLP|PAR|DK|FI)\s*[*-]\s*/i, '').replace(/^SP\s+/i, '').replace(/^www\./i, '').replace(/^\d+\s+/, '');
-  s = s.replace(/[#*].*$/, '').replace(/\b[\w'-]*\d[\w'-]*\b.*$/, '').replace(/\s[A-Z]{2}$/, '').trim();
-  const CITY = /^(knoxville|maryville|sevierville|pigeon|forge|gatlinburg|alcoa|powell|kodak|seymour|townsend|loudon|farragut|lenoir|city|oak|ridge|mason|cincinnati|richmond|las|vegas|austin|leander|nashville|denver|riverhead|bucuresti|us)$/i;
-  const root = w => w.toLowerCase().replace(/\.(com|media|app|io|co|net|us)\.?$/, '').replace(/[^a-z0-9]/g, '');
-  const words = [];
-  for (const w of s.split(' ')) {
-    if (!w || (words.length && (/[.@]/.test(w) || CITY.test(w)))) continue;          // domains and city names after the name
-    if (words.some(x => root(x) === root(w) || (root(w).startsWith(root(x)) && root(x).length > 3))) continue; // "Spiro.media Spiro.media", "Nobull Nobullproject"
-    words.push(w.replace(/\.(com|media|app|io)$/i, ''));
-  }
-  s = words.slice(0, 4).join(' ') || s0.split(' ')[0];
-  return s.toLowerCase().replace(/(^|[\s(/-])([a-z])/g, (m, a, b) => a + b.toUpperCase()).replace(/\bDji\b/, 'DJI').replace(/\bBp\b/, 'BP').replace(/\bLlc\b/, 'LLC').slice(0, 60);
-}
-const pcCardLabel = c => /^\d{4}$/.test(c) ? '••' + c : c;
-const pcKey = name => pcMerchant(name).toLowerCase().replace(/['’]/g, '');
-function pcGuess(name){
-  const g = PC_GUESS.find(([re]) => re.test(name));
-  return g ? { guess: g[1], cat: g[2] || null, why: g[3] || '' } : { guess: 'personal', cat: null, why: '' };
-}
-const pcExpenseAccounts = () => (PC.accounts || []).filter(a => a.active !== false && ['Expense', 'Other Expense', 'Cost of Goods Sold'].includes(a.type) && !/uncategori/i.test(a.name));
-function pcAccountFor(catName){ if (!catName) return null; const a = pcExpenseAccounts().find(x => x.name === catName); return a ? a.id : null; }
-const pcAcctName = id => (PC.accounts || []).find(a => a.id === id)?.full || '';
-
-async function loadPC(){
-  PC.loading = true; PC.error = null;
-  try {
-    const all = [];
-    for (let from = 0; from < 50000; from += 1000) {
-      const { data, error } = await sb.from('personal_card_txns').select('*').order('txn_date', { ascending:false }).range(from, from + 999);
-      if (error) throw error;
-      all.push(...data); if (data.length < 1000) break;
-    }
-    const { data: rules } = await sb.from('personal_card_rules').select('*');
-    PC.rows = all; PC.rules = Object.fromEntries((rules || []).map(r => [r.merchant_key, r]));
-    if (!PC.accounts) PC.accounts = BOOKS.data?.accounts?.length ? BOOKS.data.accounts : (await qboCall('accounts')).accounts;
-  } catch (e) { PC.error = e.message; }
-  PC.loading = false;
-  if (S.view === 'finance' && BOOKS.filter === 'cards') paintBooks();
-}
-// Merchant groups for a list of rows.
-function pcGroups(rows){
-  const m = new Map();
-  for (const r of rows) {
-    const k = pcKey(r.name);
-    if (!m.has(k)) m.set(k, { key: k, label: pcMerchant(r.name), rows: [], total: 0, ...pcGuess(`${r.name} | ${r.memo || ''}`) });
-    const g = m.get(k); g.rows.push(r); g.total += Number(r.amount);
-  }
-  for (const g of m.values()) {
-    const rule = PC.rules[g.key];
-    g.rule = rule || null;
-    g.first = g.rows[g.rows.length - 1]?.txn_date; g.last = g.rows[0]?.txn_date;
-  }
-  return [...m.values()].sort((a, b) => b.total - a.total);
-}
-function pcPickFor(g){
-  if (PC.pick[g.key] !== undefined) return PC.pick[g.key];
-  return g.rule?.account_id || pcAccountFor(g.cat) || '';
-}
-function pcAcctSelect(attr, cur){
-  const list = pcExpenseAccounts(), groups = new Map();
-  for (const a of list) { const g = a.full.includes(':') ? a.full.split(':').slice(0, -1).join(': ') : 'Other'; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(a); }
-  return `<select class="cat-select pc-pick" ${attr}><option value="">Choose a category…</option>${[...groups].map(([g, as]) => `<optgroup label="${esc(g)}">${as.map(a => `<option value="${esc(a.id)}" ${a.id === cur ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</optgroup>`).join('')}</select>`;
-}
-const pcRange = g => g.first === g.last ? fmtShort(g.first) : `${fmtShort(g.first)} – ${fmtShort(g.last)}`;
-function pcHTML(){
-  if (!PC.rows) return PC.error ? `<div class="panel"><div class="none">Couldn’t load card transactions: ${esc(PC.error)}</div></div>` : `<div class="panel fin-loading"><span class="spin"></span>Loading card transactions…</div>`;
-  const rows = PC.rows;
-  const undecided = rows.filter(r => !r.decision), ready = rows.filter(r => r.decision === 'business' && !r.qbo_txn_id),
-    posted = rows.filter(r => r.qbo_txn_id), personal = rows.filter(r => r.decision === 'personal' || r.decision === 'already');
-  const sum = list => list.reduce((a, r) => a + Number(r.amount), 0);
-  const cards = [...new Set(rows.map(r => r.card))];
-  const tabs = [['decide', 'To decide', undecided.length], ['ready', 'Ready to post', ready.length], ['posted', 'In QuickBooks', posted.length], ['personal', 'Personal', personal.length]];
-  let body = '';
-  if (PC.view === 'decide') body = pcDecideHTML(undecided);
-  else if (PC.view === 'ready') body = pcReadyHTML(ready);
-  else if (PC.view === 'posted') body = pcPostedHTML(posted);
-  else body = pcPersonalHTML(personal);
-  return `
-    <div class="pc-head">
-      <div class="pc-stats">
-        <div class="stat"><div class="l">To decide</div><div class="n">${undecided.length}</div><div class="l">${usd(sum(undecided))}</div></div>
-        <div class="stat"><div class="l">Business, not posted</div><div class="n">${ready.length}</div><div class="l">${usd(sum(ready), true)}</div></div>
-        <div class="stat"><div class="l">In QuickBooks</div><div class="n">${posted.length}</div><div class="l">${usd(sum(posted), true)}</div></div>
-        <div class="stat"><div class="l">Cards</div><div class="n">${cards.length}</div><div class="l">${cards.map(c => esc(pcCardLabel(c))).join(', ') || 'None yet'}</div></div>
-      </div>
-      <div class="pc-actions"><label class="btn small" for="pcFile">⬆ Upload card CSV</label><input type="file" id="pcFile" accept=".csv,text/csv" class="hidden" multiple /></div>
-    </div>
-    ${PC.msg ? `<div class="books-bulk"><span>${esc(PC.msg)}</span><button class="btn small ghost" id="pcMsgX">✕</button></div>` : ''}
-    <div class="seg pc-tabs" id="pcTabs">${tabs.map(([k, l, n]) => `<button data-v="${k}" class="${PC.view === k ? 'active' : ''}">${l} <b>${n}</b></button>`).join('')}</div>
-    ${body}
-    <p class="fin-note">Business charges post to QuickBooks as a journal entry on the charge date: the expense category (with the vendor) on one side and <b>Owner investments</b> on the other, because your personal money paid for it. Before posting, HQ checks QuickBooks for anything with the same amount within 4 days so nothing is counted twice. Keep receipts for what you claim, and run the setup by your accountant.</p>`;
-}
-function pcGroupHTML(g, mode){
-  const open = PC.open[g.key], pick = pcPickFor(g);
-  const tag = mode === 'decide' ? (g.rule ? `<span class="pill ok">Remembered: ${g.rule.decision}</span>` : g.guess === 'business' ? '<span class="pill ok">Likely business</span>' : g.guess === 'maybe' ? '<span class="pill warn">Check</span>' : '') : '';
-  const rowsShown = g.rows.slice(0, PC.more[g.key] ? 9999 : 25);
-  return `<div class="cl-group pc-group ${g.guess === 'business' && mode === 'decide' ? 'biz' : ''}">
-    <div class="cl-gh" data-pcg="${esc(g.key)}"><span class="cl-caret">${open ? '▾' : '▸'}</span>
-      <div class="cl-gt"><b>${esc(g.label)}</b> ${tag}
-        <div class="cl-meta">${g.rows.length} charge${g.rows.length === 1 ? '' : 's'} · ${usd(g.total, true)} · ${esc(pcRange(g))}${g.why && mode === 'decide' ? ` · <b>${esc(g.why)}</b>` : ''}</div></div>
-      <div class="cl-amt">${usd(g.total, true)}</div>
-    </div>
-    ${mode === 'decide' ? `<div class="pc-gbar">
-      ${pcAcctSelect(`data-pcpick="${esc(g.key)}"`, pick)}
-      <span class="spacer"></span>
-      <button class="btn small" data-pcall="personal" data-k="${esc(g.key)}" ${PC.busy ? 'disabled' : ''}>Personal${g.rows.length > 1 ? ` (all ${g.rows.length})` : ''}</button>
-      <button class="btn small primary" data-pcall="business" data-k="${esc(g.key)}" ${PC.busy ? 'disabled' : ''}>Business${g.rows.length > 1 ? ` (all ${g.rows.length})` : ''}</button>
-    </div>` : ''}
-    ${open ? `<div class="cl-rows">${rowsShown.map(r => pcRowHTML(r, mode)).join('')}${g.rows.length > rowsShown.length ? `<button class="btn small ghost" data-pcmore="${esc(g.key)}">Show all ${g.rows.length}</button>` : ''}</div>` : ''}
-  </div>`;
-}
-function pcRowHTML(r, mode){
-  const amt = Number(r.amount), dups = PC.dups[r.id];
-  let right = '';
-  if (mode === 'decide') right = `<button class="btn small ghost" data-pcone="personal" data-id="${r.id}">Personal</button><button class="btn small" data-pcone="business" data-id="${r.id}">Business</button>`;
-  else if (mode === 'ready') right = `<span class="cat-ro">${esc(pcAcctName(r.account_id) || r.account_name || 'No category')}</span><button class="btn small ghost" data-pcundo="${r.id}" title="Back to To decide">↩</button>`;
-  else if (mode === 'posted') right = `<span class="cat-ro">${esc(r.account_name || '')}</span><a class="btn small ghost" href="https://qbo.intuit.com/app/journal?txnId=${encodeURIComponent(r.qbo_txn_id)}" target="_blank" rel="noopener">Open ↗</a><button class="btn small ghost" data-pcunpost="${r.id}">Remove from QuickBooks</button>`;
-  else right = `${r.decision === 'already' ? '<span class="pill ok">Already in QuickBooks</span>' : ''}<button class="btn small ghost" data-pcundo="${r.id}">↩ Undo</button>`;
-  return `<div class="cl-row ${dups ? 'decide' : ''}">
-    <div class="cl-main"><div class="cl-payee" title="${esc(r.name)}">${esc(r.name)}</div>
-      <div class="cl-meta">${esc(fmtShort(r.txn_date))} · ${esc(pcCardLabel(r.card))}${r.memo ? ` · ${esc(r.memo)}` : ''}</div>
-      ${dups ? `<div class="pc-dup">Possible duplicate already in QuickBooks: ${dups.map(d => `${esc(TXN_LABEL[d.type] || d.type)} ${esc(fmtShort(d.date))} ${usd(d.amount, true)}${d.payee ? ` · ${esc(d.payee)}` : ''}${d.account ? ` (${esc(d.account)})` : ''}`).join('; ')}
-        <div class="pc-dup-actions"><button class="btn small" data-pcalready="${r.id}">It’s already there, skip it</button><button class="btn small primary" data-pcforce="${r.id}">Different charge, post it</button></div></div>` : ''}
-    </div>
-    <div class="cl-amt ${amt < 0 ? 'in' : ''}">${amt < 0 ? '+' : ''}${usd(Math.abs(amt), true)}</div>
-    <div class="pc-row-actions">${right}</div>
-  </div>`;
-}
-function pcDecideHTML(list){
-  if (!list.length) return `<div class="empty">🎉 Every charge has been sorted. Upload another card’s CSV to keep going.</div>`;
-  const groups = pcGroups(list);
-  const by = k => groups.filter(g => (g.rule ? (g.rule.decision === 'business' ? 'business' : 'personal') : g.guess) === k);
-  const biz = by('business'), maybe = by('maybe'), pers = by('personal');
-  const persCount = pers.reduce((a, g) => a + g.rows.length, 0);
-  const sect = (title, sub, gs, extra) => gs.length ? `<div class="pc-sect"><div class="pc-sect-h"><div><h3>${title}</h3><p>${sub}</p></div>${extra || ''}</div>${gs.map(g => pcGroupHTML(g, 'decide')).join('')}</div>` : '';
-  return sect('Likely business', 'Known business tools. Check the category, then tap Business.', biz)
-    + sect('Check these', 'Could go either way. Tap a merchant to see each charge and decide one by one, or all at once.', maybe)
-    + (PC.open.__personal
-      ? sect('Likely personal', `${persCount} charges at ${pers.length} places that don’t look like business.`, pers, `<button class="btn small" id="pcAllPersonal" ${PC.busy ? 'disabled' : ''}>Mark all ${persCount} personal</button>`)
-      : (pers.length ? `<div class="pc-sect"><div class="pc-sect-h"><div><h3>Likely personal</h3><p>${persCount} charges at ${pers.length} places (food, rent, insurance, subscriptions…) that don’t look like business.</p></div>
-          <button class="btn small ghost" id="pcShowPersonal">Look through them</button><button class="btn small" id="pcAllPersonal" ${PC.busy ? 'disabled' : ''}>Mark all ${persCount} personal</button></div></div>` : ''));
-}
-function pcReadyHTML(list){
-  if (!list.length) return `<div class="empty">Nothing waiting. Mark charges as Business on the To decide tab and they show up here.</div>`;
-  const noCat = list.filter(r => !r.account_id);
-  const groups = pcGroups(list);
-  return `<div class="books-bulk"><span>${list.length} business charge${list.length === 1 ? '' : 's'} (${usd(list.reduce((a, r) => a + Number(r.amount), 0), true)}) ready for QuickBooks.${noCat.length ? ` ${noCat.length} still need a category.` : ''}</span>
-      <button class="btn primary small" id="pcPostAll" ${PC.busy ? 'disabled' : ''}>${PC.busy ? `<span class="spin"></span>${esc(PC.progress)}` : `Post ${list.length - noCat.length} to QuickBooks`}</button></div>
-    ${groups.map(g => { PC.open[g.key] = PC.open[g.key] ?? true; return pcGroupHTML(g, 'ready'); }).join('')}`;
-}
-function pcPostedHTML(list){
-  if (!list.length) return `<div class="empty">Nothing posted yet.</div>`;
-  return pcGroups(list).map(g => pcGroupHTML(g, 'posted')).join('');
-}
-function pcPersonalHTML(list){
-  if (!list.length) return `<div class="empty">Nothing marked personal yet.</div>`;
-  return pcGroups(list).map(g => pcGroupHTML(g, 'personal')).join('');
-}
-
-async function pcSetDecision(ids, decision, accountId, merchantLabel){
-  const patch = decision === 'business'
-    ? { decision, account_id: accountId, account_name: pcAcctName(accountId) || null, note: merchantLabel || null, decided_at: new Date().toISOString() }
-    : decision ? { decision, decided_at: new Date().toISOString() } : { decision: null, account_id: null, account_name: null, note: null, decided_at: null };
-  for (let i = 0; i < ids.length; i += 200) {
-    const { error } = await sb.from('personal_card_txns').update(patch).in('id', ids.slice(i, i + 200));
-    if (error) throw error;
-  }
-  for (const r of PC.rows) if (ids.includes(r.id)) Object.assign(r, patch);
-}
-async function pcDecideGroup(key, decision){
-  const g = pcGroups(PC.rows.filter(r => !r.decision)).find(x => x.key === key); if (!g) return;
-  const acct = pcPickFor(g);
-  if (decision === 'business' && !acct) { toast('Pick a category first'); return; }
-  PC.busy = true; paintBooks();
-  try {
-    await pcSetDecision(g.rows.map(r => r.id), decision, acct, g.label);
-    const rule = { merchant_key: key, decision, account_id: decision === 'business' ? acct : null, account_name: decision === 'business' ? pcAcctName(acct) : null, updated_at: new Date().toISOString() };
-    await sb.from('personal_card_rules').upsert(rule); PC.rules[key] = rule;
-    toast(`${g.label}: ${g.rows.length} marked ${decision}`);
-  } catch (e) { fail(e); }
-  PC.busy = false; paintBooks();
-}
-async function pcPost(ids, force){
-  const list = PC.rows.filter(r => ids.includes(r.id) && r.decision === 'business' && r.account_id && !r.qbo_txn_id);
-  if (!list.length) return toast('Nothing ready to post');
-  PC.busy = true; let posted = 0, dupN = 0; const errs = [];
-  for (let i = 0; i < list.length; i += 10) {
-    PC.progress = `Posting ${Math.min(i + 10, list.length)} of ${list.length}…`; paintBooks();
-    try {
-      const r = await qboCall('pc_post', { ids: list.slice(i, i + 10).map(x => x.id), force: !!force });
-      for (const x of r.results || []) {
-        const row = PC.rows.find(o => o.id === x.id); if (!row) continue;
-        if (x.posted) { Object.assign(row, { qbo_txn_id: x.qboId, posted_at: x.postedAt || new Date().toISOString(), account_name: x.account || row.account_name }); delete PC.dups[x.id]; posted++; }
-        else if (x.duplicates) { PC.dups[x.id] = x.duplicates; dupN++; }
-        else if (x.error) errs.push(`${row.name}: ${x.error}`);
-      }
-    } catch (e) { errs.push(e.message); if (e.notConnected) break; }
-  }
-  PC.busy = false; PC.progress = '';
-  PC.msg = `Posted ${posted} to QuickBooks.${dupN ? ` ${dupN} look like they may already be in QuickBooks: check them below.` : ''}${errs.length ? ` ${errs.length} didn’t post: ${errs.slice(0, 3).join(' · ')}` : ''}`;
-  paintBooks();
-}
-// Read a card statement CSV: finds the date, description and amount columns (or debit/credit columns).
-function pcParseCSV(text){
-  const rows = []; let cur = [], f = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; continue; }
-    if (c === '"') q = true; else if (c === ',') { cur.push(f); f = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; cur.push(f); rows.push(cur); cur = []; f = ''; } else f += c;
-  }
-  if (f || cur.length) { cur.push(f); rows.push(cur); }
-  return rows.filter(r => r.some(x => x.trim()));
-}
-function pcFromCSV(text, card){
-  const rows = pcParseCSV(text.replace(/^﻿/, ''));
-  const hi = rows.findIndex(r => r.some(h => /date/i.test(h)) && r.some(h => /amount|debit|charge/i.test(h)));
-  if (hi < 0) throw new Error('Couldn’t find Date and Amount columns in that file');
-  const H = rows[hi].map(h => h.trim().toLowerCase());
-  const col = (...res) => { for (const re of res) { const i = H.findIndex(h => re.test(h)); if (i >= 0) return i; } return -1; };
-  const iDate = col(/^transaction date$/, /^trans\.? date$/, /^date$/, /date/), iDesc = col(/^merchant$/, /^name$/, /description/, /merchant/, /payee/, /^transaction$/, /details/),
-    iMemo = col(/^memo$/, /^category$/), iAmt = col(/^amount$/, /amount/), iDebit = col(/debit|charge/), iCredit = col(/credit|payment/), iType = col(/^transaction$/, /^type$/);
-  if (iDate < 0 || iDesc < 0 || (iAmt < 0 && iDebit < 0)) throw new Error('Couldn’t find the date, description and amount columns');
-  const num = v => { const n = parseFloat(String(v || '').replace(/[$,\s]/g, '').replace(/^\((.*)\)$/, '-$1')); return Number.isFinite(n) ? n : 0; };
-  const dateOf = v => { const s = String(v || '').trim(); let m;
-    if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
-    if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))) return `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
-    return null; };
-  const data = rows.slice(hi + 1).map(r => ({ date: dateOf(r[iDate]), name: String(r[iDesc] || '').replace(/\s+/g, ' ').trim(), memo: iMemo >= 0 ? String(r[iMemo] || '').trim() : '',
-    raw: iAmt >= 0 ? num(r[iAmt]) : (num(r[iDebit]) ? -Math.abs(num(r[iDebit])) : Math.abs(num(r[iCredit]))), type: iType >= 0 && iType !== iDesc ? String(r[iType] || '') : '' })).filter(x => x.date && x.name);
-  // Which sign is a charge? Most rows on a card statement are charges.
-  const negs = data.filter(x => x.raw < 0).length, chargeNegative = iAmt < 0 || negs >= data.length / 2;
-  const seen = {}, out = [];
-  for (const x of data) {
-    const amount = Math.round((chargeNegative ? -x.raw : x.raw) * 100) / 100;
-    if (amount < 0 && /payment|thank you|autopay|reversal/i.test(x.name)) continue; // paying the card isn't a purchase
-    if (/^payment$/i.test(x.type) || /internet transfer from account|reversal - insufficient/i.test(x.name)) continue; // card payments and their bounces
-    const base = `${card}|${x.date}|${amount.toFixed(2)}|${x.name.toUpperCase()}`;
-    const n = seen[base] = (seen[base] ?? -1) + 1;
-    const memo = /[a-z]{3}/i.test(x.memo.replace(/[\d;*\s]+/g, ' ')) ? x.memo.split(';').slice(2).join(';').replace(/^[;\s]+|[;\s]+$/g, '') || x.memo : null;
-    out.push({ card, txn_date: x.date, name: x.name, memo, amount, fingerprint: `${base}|${n}` });
-  }
-  return out;
-}
-async function pcUpload(files){
-  let added = 0, total = 0;
-  for (const file of files) {
-    const guess = (file.name.match(/(?:^|\D)(\d{4})(?:\D|$)/) || [])[1] || (/apple card/i.test(file.name) ? 'Apple' : '');
-    const card = (prompt(`Last 4 digits of the card in “${file.name}” (or a short name like Apple):`, guess) || '').trim();
-    if (!/^[A-Za-z0-9]{2,12}$/.test(card)) { toast('Skipped: use the last 4 digits or a short name'); continue; }
-    try {
-      const rows = pcFromCSV(await file.text(), card);
-      total += rows.length;
-      // Remembered merchants are decided automatically.
-      for (const r of rows) { const rule = PC.rules[pcKey(r.name)]; if (rule) Object.assign(r, { decision: rule.decision, account_id: rule.account_id, account_name: rule.account_name, note: rule.decision === 'business' ? pcMerchant(r.name) : null, decided_at: new Date().toISOString() }); }
-      for (let i = 0; i < rows.length; i += 500) {
-        const { data, error } = await sb.from('personal_card_txns').upsert(rows.slice(i, i + 500), { onConflict: 'fingerprint', ignoreDuplicates: true }).select('id');
-        if (error) throw error; added += (data || []).length;
-      }
-    } catch (e) { fail(e); }
-  }
-  PC.msg = `Added ${added} new charge${added === 1 ? '' : 's'}${total - added > 0 ? ` (${total - added} were already here)` : ''}. Remembered merchants were sorted automatically.`;
-  await loadPC();
-}
-function wirePC(){
-  const box = $('#pcBox'); if (!box) return;
-  if (!PC.rows && !PC.loading && !PC.error) { loadPC(); return; }
-  if (!PC.rows) return;
-  if (BOOKS.data?.accounts?.length && PC.accounts !== BOOKS.data.accounts) { PC.accounts = BOOKS.data.accounts; paintBooks(); return; } // keep the personal-card category picker current
-  box.querySelector('#pcTabs')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; PC.view = b.dataset.v; paintBooks(); });
-  const file = box.querySelector('#pcFile'); if (file) file.onchange = () => { const fs = [...file.files]; file.value = ''; if (fs.length) pcUpload(fs); };
-  const mx = box.querySelector('#pcMsgX'); if (mx) mx.onclick = () => { PC.msg = ''; paintBooks(); };
-  box.querySelectorAll('[data-pcg]').forEach(h => h.onclick = e => { if (e.target.closest('button,select')) return; PC.open[h.dataset.pcg] = !PC.open[h.dataset.pcg]; paintBooks(); });
-  box.querySelectorAll('[data-pcmore]').forEach(b => b.onclick = () => { PC.more[b.dataset.pcmore] = true; paintBooks(); });
-  box.querySelectorAll('[data-pcpick]').forEach(s => s.onchange = () => { PC.pick[s.dataset.pcpick] = s.value; });
-  box.querySelectorAll('[data-pcall]').forEach(b => b.onclick = () => pcDecideGroup(b.dataset.k, b.dataset.pcall));
-  box.querySelectorAll('[data-pcone]').forEach(b => b.onclick = async () => {
-    const r = PC.rows.find(x => x.id === b.dataset.id); if (!r) return;
-    const g = pcGroups(PC.rows.filter(x => !x.decision)).find(x => x.key === pcKey(r.name));
-    const acct = g ? pcPickFor(g) : '';
-    if (b.dataset.pcone === 'business' && !acct) { toast('Pick a category for this merchant first'); return; }
-    try { await pcSetDecision([r.id], b.dataset.pcone, acct, g?.label); } catch (e) { fail(e); }
-    paintBooks();
-  });
-  box.querySelectorAll('[data-pcundo]').forEach(b => b.onclick = async () => { try { await pcSetDecision([b.dataset.pcundo], null); delete PC.dups[b.dataset.pcundo]; } catch (e) { fail(e); } paintBooks(); });
-  const sp = box.querySelector('#pcShowPersonal'); if (sp) sp.onclick = () => { PC.open.__personal = true; paintBooks(); };
-  const ap = box.querySelector('#pcAllPersonal'); if (ap) ap.onclick = async () => {
-    const groups = pcGroups(PC.rows.filter(r => !r.decision)).filter(g => (g.rule ? g.rule.decision !== 'business' : g.guess === 'personal'));
-    const ids = groups.flatMap(g => g.rows.map(r => r.id));
-    if (!confirm(`Mark ${ids.length} charges at ${groups.length} places as personal? You can undo any of them on the Personal tab.`)) return;
-    PC.busy = true; paintBooks();
-    try {
-      await pcSetDecision(ids, 'personal');
-      const rules = groups.map(g => ({ merchant_key: g.key, decision: 'personal', account_id: null, account_name: null, updated_at: new Date().toISOString() }));
-      for (let i = 0; i < rules.length; i += 200) await sb.from('personal_card_rules').upsert(rules.slice(i, i + 200));
-      rules.forEach(r => PC.rules[r.merchant_key] = r);
-      toast(`${ids.length} marked personal`);
-    } catch (e) { fail(e); }
-    PC.busy = false; paintBooks();
-  };
-  const pa = box.querySelector('#pcPostAll'); if (pa) pa.onclick = () => {
-    const ids = PC.rows.filter(r => r.decision === 'business' && r.account_id && !r.qbo_txn_id && !PC.dups[r.id]).map(r => r.id);
-    if (!ids.length) return toast('Nothing new to post (check the possible duplicates below)');
-    if (!confirm(`Post ${ids.length} business charge${ids.length === 1 ? '' : 's'} to QuickBooks?`)) return;
-    pcPost(ids, false);
-  };
-  box.querySelectorAll('[data-pcforce]').forEach(b => b.onclick = () => pcPost([b.dataset.pcforce], true));
-  box.querySelectorAll('[data-pcalready]').forEach(b => b.onclick = async () => { try { await pcSetDecision([b.dataset.pcalready], 'already'); delete PC.dups[b.dataset.pcalready]; } catch (e) { fail(e); } paintBooks(); });
-  box.querySelectorAll('[data-pcunpost]').forEach(b => b.onclick = async () => {
-    const r = PC.rows.find(x => x.id === b.dataset.pcunpost);
-    if (!confirm(`Delete the QuickBooks entry for ${r.name} (${usd(Number(r.amount), true)})? It goes back to Ready to post.`)) return;
-    b.disabled = true;
-    try { await qboCall('pc_unpost', { id: r.id }); Object.assign(r, { qbo_txn_id: null, posted_at: null }); toast('Removed from QuickBooks'); } catch (e) { fail(e); }
-    paintBooks();
   });
 }
 
