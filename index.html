@@ -589,7 +589,7 @@ label.extra{margin:0}
 .kpi .d b.up{color:var(--ok)} .kpi .d b.down{color:var(--danger)}
 .fin-bal{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .fin-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-.fin-grid .wide{grid-column:span 8} .fin-grid .side{grid-column:span 4}
+.fin-grid .wide{grid-column:span 8} .fin-grid .fin-side{grid-column:span 4}
 .chart-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .chart-head h2{margin:0}
 .chart-legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
@@ -755,7 +755,7 @@ label.extra{margin:0}
 .pc-dup-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 @media (prefers-color-scheme: dark){ .pc-dup{color:#e0a84a} }
 @media (max-width:640px){ .pc-gbar .pc-pick{width:100%} .pc-gbar .spacer{display:none} .pc-row-actions{width:100%;justify-content:flex-end} }
-@media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .side{grid-column:span 12} }
+@media (max-width:960px){ .fin-kpis{grid-template-columns:1fr} .fin-grid .wide,.fin-grid .fin-side{grid-column:span 12} }
 @media (max-width:640px){ .fin-bal{grid-template-columns:1fr 1fr} .kpi .n{font-size:19px} .kpi{padding:10px} .kpi-row{gap:8px} .fin-actions{width:100%} .fin-actions .btn.primary{flex:1} }
 .temail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--accent-soft)}
 .temail span{flex:1;min-width:160px;font-size:13.5px;font-weight:600;color:var(--accent)}
@@ -3794,7 +3794,7 @@ async function renderFinance(){
           : `<div class="chart-legend"><span><i class="line" style="--c:var(--fin-rev)"></i>${t.getFullYear()} (running total)</span><span><i class="line" style="--c:var(--fin-ly)"></i>${t.getFullYear() - 1}</span></div>`}
         <div class="chart-wrap" id="finChart">${FIN.chart === 'monthly' ? monthlyChartSVG(d) : yoyChartSVG(d)}<div class="chart-tip hidden"></div></div>
       </div>
-      <div class="panel side"><h2>Where the money goes <span class="count">YTD</span></h2>${catBarsHTML(d.categories, d.ytd.expenses, 'var(--fin-exp)')}
+      <div class="panel fin-side"><h2>Where the money goes <span class="count">YTD</span></h2>${catBarsHTML(d.categories, d.ytd.expenses, 'var(--fin-exp)')}
         ${(d.incomeLines || []).length > 1 ? `<h2 style="margin-top:20px">Where it comes from <span class="count">YTD</span></h2>${catBarsHTML(d.incomeLines, d.ytd.revenue, 'var(--fin-rev)')}` : ''}</div>
     </div>
     <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}: Profit &amp; Loss and Balance Sheet. Expenses include cost of goods sold. Read-only: HQ never changes anything in QuickBooks.</p>`;
