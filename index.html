@@ -669,6 +669,37 @@ label.extra{margin:0}
 .fin-tabs a{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;color:var(--muted);font-weight:500;text-decoration:none}
 .fin-tabs a.active{background:var(--accent-soft);color:var(--accent)}
 .fin-tabs .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:700}
+.sp-search{width:220px}
+.sp-grid{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:16px;align-items:start}
+.sp-cats{padding:8px;display:flex;flex-direction:column;gap:2px;position:sticky;top:12px;max-height:calc(100vh - 40px);overflow-y:auto}
+.sp-cat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;width:100%;text-align:left;border:none;background:none;color:inherit;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600}
+.sp-cat.d1{font-weight:400;padding-left:22px}
+.sp-cat:hover{background:var(--panel-2)}
+.sp-cat.on{background:var(--accent-soft);color:var(--accent)}
+.sp-cat-a{font-variant-numeric:tabular-nums;font-size:13px}
+.sp-cat .sp-bar{grid-column:1/-1}
+.sp-bar{display:block;height:5px;background:var(--panel-2);border-radius:3px;overflow:hidden;min-width:40px}
+.sp-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.sp-head h2{margin:0 0 10px}
+.sp-head h2 small{font-weight:500;color:var(--muted);font-size:13px}
+.sp-kinds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sp-kinds span{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px}
+.sp-kinds i{font-style:normal;color:var(--muted);margin-left:4px}
+.sp-v{border-bottom:1px solid var(--border)}
+.sp-v:last-child{border-bottom:none}
+.sp-vrow{display:grid;grid-template-columns:16px minmax(120px,1fr) minmax(60px,180px) 52px 40px 100px;gap:10px;align-items:center;width:100%;border:none;background:none;color:inherit;text-align:left;padding:10px 4px;cursor:pointer;font-size:14px}
+.sp-vrow:hover{background:var(--panel-2)}
+.sp-caret{color:var(--muted);font-size:12px}
+.sp-vname{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sp-kind{font-weight:500;font-size:11px;color:var(--muted);background:var(--panel-2);border-radius:999px;padding:1px 7px;margin-left:4px}
+.sp-pct,.sp-n{color:var(--muted);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+.sp-amt{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.sp-vbody{padding:0 4px 12px 30px}
+.sp-vtools{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:6px;flex-wrap:wrap}
+.sp-misc .sp-vname{font-weight:500}
+.sp-miscbody{padding-left:20px;border-top:1px solid var(--border)}
+.sp-top{font-size:18px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:860px){.sp-grid{grid-template-columns:1fr}.sp-cats{position:static;max-height:260px}.sp-vrow{grid-template-columns:14px 1fr 44px 92px;gap:8px}.sp-vrow .sp-bar,.sp-vrow .sp-n{display:none}.sp-search{width:100%}}
 .books-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .books-bar select{width:auto}
 .books-bar .seg button b{font-weight:700;margin-left:4px}
@@ -3242,6 +3273,7 @@ async function refreshCurrentView(){
   }
   if (v === 'finance') {
     if (FIN.tab === 'pl') jobs.push(loadPL());
+    else if (FIN.tab === 'spending') jobs.push(loadSP(true));
     else if (FIN.tab === 'books') jobs.push(BOOKS.filter === 'cards' ? loadPC() : loadBooks());
     else jobs.push(refreshFinance());
   }
@@ -3757,7 +3789,13 @@ async function renderFinance(){
   const actions = `<div class="fin-actions"><span class="fin-updated">${snap ? `Updated ${esc(fmtDateTime(snap.refreshedAt))}` : ''}</span>
     <button class="btn primary" id="finRefresh"></button>
     <button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`;
-  FIN.tab = /^#\/finance\/books/.test(location.hash) ? 'books' : /^#\/finance\/pl/.test(location.hash) ? 'pl' : 'overview';
+  FIN.tab = /^#\/finance\/books/.test(location.hash) ? 'books' : /^#\/finance\/pl/.test(location.hash) ? 'pl' : /^#\/finance\/spending/.test(location.hash) ? 'spending' : 'overview';
+  if (FIN.tab === 'spending') {
+    box.innerHTML = head(`<div class="fin-actions"><button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`) + finTabsHTML() + `<div id="spBox"></div>`;
+    $('#finDisconnect').onclick = disconnectQuickBooks;
+    renderSP();
+    return;
+  }
   if (FIN.tab === 'pl') {
     box.innerHTML = head(`<div class="fin-actions"><button class="btn small ghost" id="finDisconnect" title="Disconnect QuickBooks">Disconnect</button></div>`) + finTabsHTML() + `<div id="plBox"></div>`;
     $('#finDisconnect').onclick = disconnectQuickBooks;
@@ -3871,9 +3909,255 @@ async function disconnectQuickBooks(){
 }
 function finTabsHTML(){
   const n = BOOKS.data?.counts?.toReview;
-  return `<div class="fin-tabs seg"><a href="#/finance" class="${FIN.tab === 'overview' ? 'active' : ''}">Overview</a><a href="#/finance/pl" class="${FIN.tab === 'pl' ? 'active' : ''}">Profit &amp; Loss</a><a href="#/finance/books" class="${FIN.tab === 'books' ? 'active' : ''}">Bookkeeping${n ? ` <span class="badge">${n > 999 ? '999+' : n}</span>` : ''}</a></div>`;
+  return `<div class="fin-tabs seg"><a href="#/finance" class="${FIN.tab === 'overview' ? 'active' : ''}">Overview</a><a href="#/finance/pl" class="${FIN.tab === 'pl' ? 'active' : ''}">Profit &amp; Loss</a><a href="#/finance/spending" class="${FIN.tab === 'spending' ? 'active' : ''}">Spending</a><a href="#/finance/books" class="${FIN.tab === 'books' ? 'active' : ''}">Bookkeeping${n ? ` <span class="badge">${n > 999 ? '999+' : n}</span>` : ''}</a></div>`;
 }
 
+
+/* ----- Spending: expenses by category and vendor (read-only summary of QuickBooks) ----- */
+// Pulls QuickBooks' Profit & Loss Detail for the period and groups every expense line by category, then by vendor.
+// Nothing here writes to QuickBooks. Vendor names are cleaned up in HQ only (bank descriptions → "Shell", "Amazon"…);
+// renames you make are saved in finance_prefs.vendor_names.
+const SP = { period:'ytd', custom:{ start:'', end:'' }, cat:'all', q:'', open:{}, showMisc:false, data:null, loading:false, error:null, names:null, cacheKey:'' };
+try { const s = JSON.parse(localStorage.getItem('kvhq.sp') || '{}'); Object.assign(SP, { period: s.period || 'ytd', custom: s.custom || SP.custom, cat: s.cat || 'all' }); } catch (e) {}
+const saveSP = () => { try { localStorage.setItem('kvhq.sp', JSON.stringify({ period: SP.period, custom: SP.custom, cat: SP.cat })); } catch (e) {} };
+const SP_PERIODS = [['month','This month'],['lastmonth','Last month'],['quarter','This quarter'],['lastquarter','Last quarter'],['ytd','Year to date'],['last12','Last 12 months'],['lastyear','Last year'],['twoyears','This year + last year'],['custom','Custom dates']];
+function spRange(){
+  if (SP.period === 'twoyears') { const y = new Date().getFullYear(); return { start: `${y - 1}-01-01`, end: ymdOf(new Date()) }; }
+  const keep = { period: PL.period, custom: PL.custom, compare: PL.compare };
+  PL.period = SP.period; PL.custom = SP.custom; PL.compare = 'none';
+  const r = plRange(); Object.assign(PL, keep);
+  return { start: r.start, end: r.end };
+}
+// Known vendors. First match wins; tested against "payee + bank description". kind groups a category's vendors (Gas, Car wash…).
+// fn lets one bank name mean different people by category/date (Wise payments carry no recipient on the bank side).
+const SP_VENDORS = [
+  [/creo|maverick/i, 'Creo / Maverick'],
+  [/autohdr/i, 'AutoHDR'],
+  [/thundersmed|thunders media/i, 'Mark (video editor)'],
+  [/yopskie/i, 'Harvey (video editor)'],
+  [/onlinejobs/i, 'OnlineJobs.ph'],
+  [/whittington/i, 'Anthony Whittington'],
+  [/navarra/i, 'Miguel Navarra'],
+  [/\bwise\b/i, null, (x) => x.sub === 'Photo Editing' ? 'Creo / Maverick' : x.sub === 'Video Editing' ? (x.date < '2026-01-01' ? 'Mark (video editor)' : 'Harvey (video editor)') : x.sub === 'Team & Admin Support' ? 'Charlene (VA)' : 'Wise'],
+  [/amzn digital|amazon digital/i, 'Amazon Digital'],
+  [/amazon|amzn/i, 'Amazon'],
+  [/apple\.com\/bill|apple services|itunes/i, 'Apple (apps & iCloud)'],
+  [/apple store|apple\.com\/us|apple online/i, 'Apple Store'],
+  [/\bdji\b/i, 'DJI'],
+  [/google|gsuite/i, 'Google Workspace'],
+  [/intuit|qbooks|quickbooks/i, 'QuickBooks'],
+  [/openai|chatgpt/i, 'ChatGPT'],
+  [/anthropic|claude\.ai/i, 'Claude (Anthropic)'],
+  [/\bquo\b|openphone/i, 'Quo (business phone)'],
+  [/squarespace|sqsp/i, 'Squarespace'],
+  [/godaddy/i, 'GoDaddy'],
+  [/reelme/i, 'ReelMe'],
+  [/stripeconnect/i, 'StripeConnect'],
+  [/spiro/i, 'Spiro'],
+  [/cubicasa/i, 'Cubicasa'],
+  [/matterport/i, 'Matterport'],
+  [/dropbox/i, 'Dropbox'], [/vimeo/i, 'Vimeo'], [/canva/i, 'Canva'], [/adobe/i, 'Adobe'], [/slack/i, 'Slack'], [/notion/i, 'Notion'], [/wondershare/i, 'Wondershare'],
+  [/\bshell\b/i, 'Shell', 0, 'Gas'], [/casey/i, "Casey's", 0, 'Gas'], [/weigel/i, "Weigel's", 0, 'Gas'], [/kroger fuel/i, 'Kroger Fuel', 0, 'Gas'],
+  [/marathon/i, 'Marathon', 0, 'Gas'], [/buc-?ee/i, "Buc-ee's", 0, 'Gas'], [/pilot travel|pilot_|\bpilot\b/i, 'Pilot', 0, 'Gas'], [/goodstop/i, 'GoodStop', 0, 'Gas'],
+  [/7-?eleven/i, '7-Eleven', 0, 'Gas'], [/flying j/i, 'Pilot', 0, 'Gas'], [/racetrac/i, 'RaceTrac', 0, 'Gas'], [/exxon/i, 'Exxon', 0, 'Gas'], [/phillips\s*66|^phillips|\sphillips/i, 'Phillips 66', 0, 'Gas'], [/sunoco/i, 'Sunoco', 0, 'Gas'],
+  [/citgo/i, 'Citgo', 0, 'Gas'], [/\bbp\b|bp#/i, 'BP', 0, 'Gas'], [/circle k/i, 'Circle K', 0, 'Gas'], [/speedway/i, 'Speedway', 0, 'Gas'], [/mapco/i, 'Mapco', 0, 'Gas'],
+  [/murphy/i, 'Murphy USA', 0, 'Gas'], [/quiktrip|\bqt\b/i, 'QuikTrip', 0, 'Gas'], [/valero/i, 'Valero', 0, 'Gas'], [/chevron/i, 'Chevron', 0, 'Gas'], [/love'?s travel/i, "Love's", 0, 'Gas'],
+  [/mobil\b/i, 'Mobil', 0, 'Gas'], [/texaco/i, 'Texaco', 0, 'Gas'], [/sheetz/i, 'Sheetz', 0, 'Gas'], [/costco gas/i, 'Costco Gas', 0, 'Gas'], [/townsend shopping/i, 'Townsend Shopping Center', 0, 'Gas'], [/kay mart/i, 'Kay Mart Citgo', 0, 'Gas'],
+  [/car ?wash|auto wash|tidal wave|mister car/i, null, 0, 'Car wash'],
+  [/tire|jiffy|valvoline|oil change|autozone|o'?reilly|advance auto|midas|firestone|pep boys|auto repair|collision/i, null, 0, 'Tires & service'],
+];
+const SP_NOISE = new Set('electronic withdrawal deposit web authorized auth pmt payment purchase recurring card debit credit pos ach online mobile banking transfer on ppd ccd id ref checkcard visa mastercard bill pay paid sq tst des indn co refund www com inc llc ltd us the knoxville sevierville gatlinburg pigeon forge alcoa maryville farragut harriman townsend lenoir oak ridge powell clinton seymour kodak'.split(' '));
+function spClean(memo){
+  const raw = String(memo || '').replace(/\(paid with personal card[^)]*\)/i, ' ').replace(/^refund:\s*/i, '').replace(/[#*|]/g, ' ').split(/\s+/);
+  const kept = [], roots = [];
+  for (let w of raw) {
+    w = w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, '');
+    if (!w || !/[a-z]/i.test(w) || /\d{3,}/.test(w) || /^x{2,}/i.test(w)) continue;      // card refs, phone numbers, store numbers
+    const root = w.toLowerCase().replace(/^www\./, '').split('.')[0].replace(/[^a-z0-9]/g, '');
+    if (!root || SP_NOISE.has(root)) continue;
+    if (roots.some(r => r === root || (r.length >= 5 && root.length >= 5 && (r.startsWith(root) || root.startsWith(r))))) continue; // "Dropbox Dropbox.com"
+    roots.push(root); kept.push(w.includes('.') ? w.split('.')[0] : w);
+  }
+  if (kept.length > 1 && /^[A-Z][a-zA-Z]$/.test(kept[kept.length - 1])) kept.pop();      // trailing state code
+  const label = kept.slice(0, 3).join(' ');
+  return label ? label.replace(/\b([a-z])/g, c => c.toUpperCase()).replace(/\b([A-Z])([A-Z]+)\b/g, (m, a, b) => a + b.toLowerCase()) : '';
+}
+function spVendor(x){
+  const text = `${x.name} ${x.memo}`;
+  for (const [re, label, fn, kind] of SP_VENDORS) {
+    if (!re.test(text)) continue;
+    const name = (typeof fn === 'function' ? fn(x) : label) || x.name || spClean(x.memo) || 'Unknown';
+    return { key: name.toLowerCase(), name, kind: kind || null };
+  }
+  const name = x.name || spClean(x.memo) || 'Unknown';
+  const key = name.toLowerCase().split(/\s+/).filter(w => w.length > 1).slice(0, 2).join(' ') || name.toLowerCase();
+  return { key, name, kind: null };
+}
+// ProfitAndLossDetail → expense lines with their category path (sections Income/Other Income are skipped).
+function spParse(rep){
+  const keys = (rep?.Columns?.Column || []).map(c => (c.MetaData || []).find(m => m.Name === 'ColKey')?.Value || c.ColTitle);
+  const at = k => keys.indexOf(k);
+  const COST = /^(expenses|cost of goods sold|other expenses?)$/i;
+  const items = [];
+  const walk = (rows, path, cost) => {
+    for (const r of rows || []) {
+      if (r.Rows?.Row) {
+        const name = String(r.Header?.ColData?.[0]?.value || '').replace(/^\d+\s+/, '');
+        if (!cost && COST.test(name)) walk(r.Rows.Row, [], true);
+        else if (cost) walk(r.Rows.Row, [...path, name], true);
+        else walk(r.Rows.Row, path, false);
+        continue;
+      }
+      if (!cost || !r.ColData || r.Summary) continue;
+      const cd = r.ColData, get = k => (at(k) >= 0 ? cd[at(k)] : null) || {};
+      const date = get('tx_date').value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) continue;
+      const x = { date, type: get('txn_type').value || '', txnId: get('txn_type').id || null, name: get('name').value || '', memo: get('memo').value || '',
+        amount: Number(get('subt_nat_amount').value) || 0, group: path[0] || 'Other', sub: path[path.length - 1] || path[0] || 'Other' };
+      const v = spVendor(x); x.vkey = v.key; x.vname = v.name; x.kind = v.kind;
+      items.push(x);
+    }
+  };
+  walk(rep?.Rows?.Row || [], [], false);
+  return items.sort((a, b) => b.date.localeCompare(a.date));
+}
+async function loadSP(force){
+  const r = spRange(), key = `${r.start}|${r.end}`;
+  if (!force && SP.data && SP.cacheKey === key) return paintSP();
+  SP.loading = true; SP.error = null; paintSP();
+  try {
+    const [rep, prefs] = await Promise.all([
+      qboCall('report', { name: 'ProfitAndLossDetail', params: { start_date: r.start, end_date: r.end, columns: 'tx_date,txn_type,name,memo,subt_nat_amount' } }),
+      SP.names ? Promise.resolve(null) : sb.from('finance_prefs').select('vendor_names').eq('id', 1).maybeSingle(),
+    ]);
+    if (prefs) SP.names = prefs.data?.vendor_names || {};
+    SP.data = { ...r, basis: rep?.Header?.ReportBasis || null, items: spParse(rep) }; SP.cacheKey = key;
+  } catch (e) { SP.error = e.message; if (e.notConnected) { await loadFinStatus(); SP.loading = false; return renderFinance(); } }
+  SP.loading = false; paintSP();
+}
+function renderSP(){ if (!SP.data && !SP.loading) loadSP(); else paintSP(); }
+const spName = x => (SP.names || {})[x.vkey] || x.vname;
+function spCats(items){
+  const groups = new Map();
+  for (const x of items) {
+    const g = groups.get(x.group) || { name: x.group, total: 0, subs: new Map() };
+    g.total += x.amount;
+    if (x.sub !== x.group) g.subs.set(x.sub, (g.subs.get(x.sub) || 0) + x.amount);
+    groups.set(x.group, g);
+  }
+  return [...groups.values()].sort((a, b) => b.total - a.total);
+}
+function spSelected(items){
+  const [k, v] = SP.cat === 'all' ? ['all'] : [SP.cat.slice(0, 1), SP.cat.slice(2)];
+  return k === 'all' ? items : items.filter(x => k === 'g' ? x.group === v : x.sub === v);
+}
+function spVendors(items){
+  const m = new Map();
+  for (const x of items) {
+    const name = spName(x), key = name.toLowerCase();
+    const v = m.get(key) || { key, name, total: 0, n: 0, items: [], kind: x.kind, vkeys: new Set(), cats: new Set() };
+    v.total += x.amount; v.n++; v.items.push(x); v.vkeys.add(x.vkey); v.cats.add(x.sub); if (!v.kind) v.kind = x.kind;
+    m.set(key, v);
+  }
+  return [...m.values()].sort((a, b) => b.total - a.total);
+}
+function paintSP(){
+  const box = $('#spBox'); if (!box) return;
+  const r = spRange(), d = SP.data;
+  const items = d?.items || [];
+  const cats = spCats(items), sel = spSelected(items);
+  const total = sel.reduce((a, x) => a + x.amount, 0), all = items.reduce((a, x) => a + x.amount, 0);
+  const q = SP.q.trim().toLowerCase();
+  let vendors = spVendors(sel);
+  const months = Math.max(1, (dOf(r.end).getFullYear() - dOf(r.start).getFullYear()) * 12 + dOf(r.end).getMonth() - dOf(r.start).getMonth() + 1);
+  const catName = SP.cat === 'all' ? 'All expenses' : SP.cat.slice(2);
+  // Main list: vendors that matter; the long tail goes into "Everything else".
+  let main = vendors, misc = [];
+  if (!q && vendors.length > 10) {
+    main = vendors.filter((v, i) => i < 15 && (i < 6 || v.total >= total * 0.02));
+    misc = vendors.slice(main.length);
+  }
+  if (q) main = vendors.filter(v => v.name.toLowerCase().includes(q) || v.items.some(x => (x.memo + ' ' + x.name).toLowerCase().includes(q)));
+  const miscTotal = misc.reduce((a, v) => a + v.total, 0);
+  const kinds = {}; for (const v of vendors) if (v.kind) kinds[v.kind] = (kinds[v.kind] || 0) + v.total;
+  const kindsOther = total - Object.values(kinds).reduce((a, b) => a + b, 0);
+  const pct = n => total ? Math.round(n / total * 1000) / 10 : 0;
+  const bar = (n, max) => `<span class="sp-bar"><i style="width:${max ? Math.max(1, Math.round(Math.abs(n) / max * 100)) : 0}%"></i></span>`;
+  const maxV = Math.max(...main.map(v => Math.abs(v.total)), miscTotal, 1);
+  const catRow = (key, name, amt, depth, max) => `<button class="sp-cat d${depth} ${SP.cat === key ? 'on' : ''}" data-cat="${esc(key)}"><span class="sp-cat-n">${esc(name)}</span><span class="sp-cat-a">${usd(amt)}</span>${depth ? bar(amt, max) : ''}</button>`;
+  const txHTML = list => `<div class="pl-det-list">${list.map(x => `<div class="pl-det sp-tx"><span class="pl-det-date">${esc(fmtShort(x.date))}${x.date.slice(0, 4) !== String(new Date().getFullYear()) ? ` ’${x.date.slice(2, 4)}` : ''}</span>
+      <span class="pl-det-main" title="${esc(x.memo)}">${esc(x.memo || x.name || x.type)}${SP.cat === 'all' || SP.cat.startsWith('g') ? ` <span class="muted">· ${esc(x.sub)}</span>` : ''}</span>
+      <span class="pl-det-amt">${usd(x.amount, true)}</span>
+      ${x.txnId && QBO_TXN_PAGE[x.type] ? `<a class="pl-det-link" href="https://qbo.intuit.com/app/${QBO_TXN_PAGE[x.type]}?txnId=${encodeURIComponent(x.txnId)}" target="_blank" rel="noopener" title="Open in QuickBooks">↗</a>` : '<span></span>'}</div>`).join('')}</div>`;
+  const vRow = v => `<div class="sp-v ${SP.open[v.key] ? 'open' : ''}">
+      <button class="sp-vrow" data-v="${esc(v.key)}"><span class="sp-caret">${SP.open[v.key] ? '▾' : '▸'}</span>
+        <span class="sp-vname">${esc(v.name)}${v.kind ? ` <span class="sp-kind">${esc(v.kind)}</span>` : ''}</span>
+        ${bar(v.total, maxV)}<span class="sp-pct">${pct(v.total)}%</span><span class="sp-n">${v.n}×</span><span class="sp-amt">${usd(v.total, true)}</span></button>
+      ${SP.open[v.key] ? `<div class="sp-vbody"><div class="sp-vtools"><span class="muted">${v.n} payment${v.n === 1 ? '' : 's'} · avg ${usd(v.total / v.n, true)}${months > 1 ? ` · ${usd(v.total / months)}/mo over the period` : ''}</span><span class="spacer"></span><button class="btn small ghost" data-rename="${esc(v.key)}">✎ Rename / group</button></div>${txHTML(v.items)}</div>` : ''}
+    </div>`;
+  const maxCat = Math.max(...cats.flatMap(g => [...g.subs.values()]), 1);
+  box.innerHTML = `
+    <div class="pl-bar">
+      <select id="spPeriod">${opt(SP_PERIODS, SP.period)}</select>
+      ${SP.period === 'custom' ? `<input type="date" id="spFrom" value="${esc(r.start)}"/><span class="muted">to</span><input type="date" id="spTo" value="${esc(r.end)}"/>` : ''}
+      <input type="search" id="spSearch" class="sp-search" placeholder="Find a vendor…" value="${esc(SP.q)}" />
+      <span class="spacer"></span>
+      <button class="btn small" id="spCsv" ${d ? '' : 'disabled'}>⬇ CSV</button>
+      <button class="btn small" id="spReload" ${SP.loading ? 'disabled' : ''}>${SP.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
+    </div>
+    <div class="pl-range">${esc(rangeLabel(r.start, r.end))}</div>
+    ${SP.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load your expenses: ${esc(SP.error)}</div></div>` : ''}
+    ${!d && SP.loading ? `<div class="panel fin-loading"><span class="spin"></span>Pulling every expense from QuickBooks…</div>` : ''}
+    ${d ? `<div class="pl-sum">
+        <div class="stat"><div class="l">${esc(catName)}</div><div class="n">${usd(total)}</div><div class="l">${SP.cat === 'all' ? 'all expenses in the period' : `${pct(total) && all ? Math.round(total / all * 1000) / 10 : 0}% of all expenses`}</div></div>
+        <div class="stat"><div class="l">Per month</div><div class="n">${usd(total / months)}</div><div class="l">average over ${months} month${months === 1 ? '' : 's'}</div></div>
+        <div class="stat"><div class="l">Top vendor</div><div class="n sp-top">${vendors[0] ? esc(vendors[0].name) : '—'}</div><div class="l">${vendors[0] ? `${usd(vendors[0].total)} · ${pct(vendors[0].total)}%` : '&nbsp;'}</div></div>
+        <div class="stat"><div class="l">Payments</div><div class="n">${sel.length}</div><div class="l">to ${vendors.length} vendor${vendors.length === 1 ? '' : 's'}</div></div>
+      </div>
+      <div class="sp-grid">
+        <div class="panel sp-cats">
+          ${catRow('all', 'All expenses', all, 0)}
+          ${cats.map(g => catRow('g:' + g.name, g.name, g.total, 0) + [...g.subs.entries()].sort((a, b) => b[1] - a[1]).map(([n, a]) => catRow('a:' + n, n, a, 1, maxCat)).join('')).join('')}
+        </div>
+        <div class="panel sp-main">
+          <div class="sp-head"><h2>${esc(catName)} <small>by vendor</small></h2></div>
+          ${Object.keys(kinds).length ? `<div class="sp-kinds">${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, a]) => `<span><b>${esc(k)}</b> ${usd(a)} <i>${pct(a)}%</i></span>`).join('')}${Math.abs(kindsOther) >= 0.5 ? `<span><b>Everything else</b> ${usd(kindsOther)} <i>${pct(kindsOther)}%</i></span>` : ''}</div>` : ''}
+          ${main.length ? main.map(vRow).join('') : `<div class="none">${q ? 'No vendor matches that search.' : 'No expenses in this period.'}</div>`}
+          ${misc.length ? `<div class="sp-v sp-misc"><button class="sp-vrow" id="spMisc"><span class="sp-caret">${SP.showMisc ? '▾' : '▸'}</span><span class="sp-vname">Everything else <span class="muted">· ${misc.length} smaller vendors</span></span>${bar(miscTotal, maxV)}<span class="sp-pct">${pct(miscTotal)}%</span><span class="sp-n">${misc.reduce((a, v) => a + v.n, 0)}×</span><span class="sp-amt">${usd(miscTotal, true)}</span></button>
+            ${SP.showMisc ? `<div class="sp-miscbody">${misc.map(vRow).join('')}</div>` : ''}</div>` : ''}
+        </div>
+      </div>
+      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}, read-only: nothing here changes QuickBooks. Vendor names are tidied up in HQ from the payee or bank description; Wise payments are named by category (Photo Editing → Creo / Maverick, Video Editing → Mark in 2025 and Harvey in 2026, Team &amp; Admin → Charlene). Use ✎ Rename / group to fix a name or merge two vendors (give them the same name). Refunds show as negative amounts.</p>` : ''}`;
+  wireSP(vendors);
+}
+function wireSP(vendors){
+  const reload = () => { saveSP(); SP.open = {}; SP.showMisc = false; loadSP(); };
+  $('#spPeriod').onchange = e => { SP.period = e.target.value; reload(); };
+  if ($('#spFrom')) { $('#spFrom').onchange = e => { SP.custom = { ...SP.custom, start: e.target.value }; reload(); }; $('#spTo').onchange = e => { SP.custom = { ...SP.custom, end: e.target.value }; reload(); }; }
+  $('#spReload').onclick = () => loadSP(true);
+  const s = $('#spSearch'); let t;
+  s.oninput = () => { clearTimeout(t); t = setTimeout(() => { SP.q = s.value; paintSP(); const n = $('#spSearch'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); };
+  document.querySelectorAll('#spBox [data-cat]').forEach(b => b.onclick = () => { SP.cat = b.dataset.cat; SP.open = {}; SP.showMisc = false; saveSP(); paintSP(); });
+  document.querySelectorAll('#spBox [data-v]').forEach(b => b.onclick = () => { SP.open[b.dataset.v] = !SP.open[b.dataset.v]; paintSP(); });
+  if ($('#spMisc')) $('#spMisc').onclick = () => { SP.showMisc = !SP.showMisc; paintSP(); };
+  document.querySelectorAll('#spBox [data-rename]').forEach(b => b.onclick = async () => {
+    const v = vendors.find(x => x.key === b.dataset.rename); if (!v) return;
+    const name = (prompt(`Show “${v.name}” as… (give two vendors the same name to group them; leave empty to undo a rename)`, v.name) ?? '').trim();
+    if (name === v.name) return;
+    const names = { ...(SP.names || {}) };
+    for (const k of v.vkeys) { if (name) names[k] = name; else delete names[k]; }
+    const { error } = await sb.from('finance_prefs').upsert({ id: 1, vendor_names: names, updated_at: new Date().toISOString() });
+    if (error) return fail(error);
+    SP.names = names; SP.open = { [name.toLowerCase() || v.key]: true }; paintSP(); toast(name ? 'Vendor renamed in HQ' : 'Rename removed');
+  });
+  $('#spCsv').onclick = () => {
+    const sel = spSelected(SP.data.items).filter(x => !SP.q || (spName(x) + ' ' + x.memo).toLowerCase().includes(SP.q.toLowerCase()));
+    const rows = [['Date', 'Vendor', 'Category group', 'Category', 'Description', 'Amount'], ...sel.map(x => [x.date, spName(x), x.group, x.sub, x.memo || x.name, x.amount.toFixed(2)])];
+    const csv = rows.map(r => r.map(c => /[",\n]/.test(String(c)) ? `"${String(c).replace(/"/g, '""')}"` : c).join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `spending-${SP.cat === 'all' ? 'all' : SP.cat.slice(2).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${SP.data.start}-to-${SP.data.end}.csv`; a.click();
+  };
+}
 
 /* ----- Profit & Loss: full statement, any period, compare, by month, drill-down ----- */
 const PL = { period:'ytd', compare:'ly', byMonth:false, data:null, loading:false, error:null, collapsed:{}, detail:{}, custom:{ start:'', end:'' } };
