@@ -3938,7 +3938,7 @@ const SP_VENDORS = [
   [/onlinejobs/i, 'OnlineJobs.ph'],
   [/whittington/i, 'Anthony Whittington'],
   [/navarra/i, 'Miguel Navarra'],
-  [/\bwise\b/i, null, (x) => x.sub === 'Photo Editing' ? 'Creo / Maverick' : x.sub === 'Video Editing' ? (x.date < '2026-01-01' ? 'Mark (video editor)' : 'Harvey (video editor)') : x.sub === 'Team & Admin Support' ? 'Charlene (VA)' : 'Wise'],
+  [/\bwise\b/i, null, (x) => x.date < '2025-01-01' ? 'Wise' : x.sub === 'Photo Editing' ? 'Creo / Maverick' : x.sub === 'Video Editing' ? (x.date < '2026-01-01' ? 'Mark (video editor)' : 'Harvey (video editor)') : x.sub === 'Team & Admin Support' ? 'Charlene (VA)' : 'Wise'],
   [/amzn digital|amazon digital/i, 'Amazon Digital'],
   [/amazon|amzn/i, 'Amazon'],
   [/apple\.com\/bill|apple services|itunes/i, 'Apple (apps & iCloud)'],
@@ -3957,6 +3957,10 @@ const SP_VENDORS = [
   [/cubicasa/i, 'Cubicasa'],
   [/matterport/i, 'Matterport'],
   [/dropbox/i, 'Dropbox'], [/vimeo/i, 'Vimeo'], [/canva/i, 'Canva'], [/adobe/i, 'Adobe'], [/slack/i, 'Slack'], [/notion/i, 'Notion'], [/wondershare/i, 'Wondershare'],
+  [/repp ?launch/i, 'Repp Launch'], [/skool/i, 'Skool'], [/tn sos|tnsos|tn bus/i, 'TN Secretary of State'], [/tn state revenue|tn dept.*revenue/i, 'TN Dept. of Revenue'], [/ohio business filing/i, 'Ohio Business Filing'],
+  [/interest charge/i, 'Card interest'], [/late fee/i, 'Late fees'], [/wm supercenter|walmart|wal-mart/i, 'Walmart'], [/costco whse|costco wholesale/i, 'Costco'], [/home depot/i, 'Home Depot'], [/lowe'?s/i, "Lowe's"], [/best buy/i, 'Best Buy'], [/b ?& ?h photo|bhphoto/i, 'B&H Photo'],
+  [/allegnt|allegiant/i, 'Allegiant'], [/frontier/i, 'Frontier Airlines'], [/delta air/i, 'Delta'], [/united airlines/i, 'United Airlines'], [/southwest/i, 'Southwest'], [/american air/i, 'American Airlines'], [/mytrip/i, 'Mytrip'], [/edreams/i, 'eDreams'], [/uber/i, 'Uber'], [/lyft/i, 'Lyft'], [/enterprise rent/i, 'Enterprise Rent-A-Car'], [/holiday inn/i, 'Holiday Inn'], [/airbnb/i, 'Airbnb'],
+  [/frgn trans fee|foreign trans/i, 'Foreign transaction fees'],
   [/\bshell\b/i, 'Shell', 0, 'Gas'], [/casey/i, "Casey's", 0, 'Gas'], [/weigel/i, "Weigel's", 0, 'Gas'], [/kroger fuel/i, 'Kroger Fuel', 0, 'Gas'],
   [/marathon/i, 'Marathon', 0, 'Gas'], [/buc-?ee/i, "Buc-ee's", 0, 'Gas'], [/pilot travel|pilot_|\bpilot\b/i, 'Pilot', 0, 'Gas'], [/goodstop/i, 'GoodStop', 0, 'Gas'],
   [/7-?eleven/i, '7-Eleven', 0, 'Gas'], [/flying j/i, 'Pilot', 0, 'Gas'], [/racetrac/i, 'RaceTrac', 0, 'Gas'], [/exxon/i, 'Exxon', 0, 'Gas'], [/phillips\s*66|^phillips|\sphillips/i, 'Phillips 66', 0, 'Gas'], [/sunoco/i, 'Sunoco', 0, 'Gas'],
@@ -3966,13 +3970,13 @@ const SP_VENDORS = [
   [/car ?wash|auto wash|tidal wave|mister car/i, null, 0, 'Car wash'],
   [/tire|jiffy|valvoline|oil change|autozone|o'?reilly|advance auto|midas|firestone|pep boys|auto repair|collision/i, null, 0, 'Tires & service'],
 ];
-const SP_NOISE = new Set('electronic withdrawal deposit web authorized auth pmt payment purchase recurring card debit credit pos ach online mobile banking transfer on ppd ccd id ref checkcard visa mastercard bill pay paid sq tst des indn co refund www com inc llc ltd us the knoxville sevierville gatlinburg pigeon forge alcoa maryville farragut harriman townsend lenoir oak ridge powell clinton seymour kodak'.split(' '));
+const SP_NOISE = new Set('electronic withdrawal deposit web authorized auth pmt payment purchase recurring card debit credit pos ach online mobile banking transfer on ppd ccd id ref checkcard visa mastercard bill pay paid sq tst des indn co refund www com inc llc ltd us the direct gosq lxg tst knoxville sevierville gatlinburg pigeon forge alcoa maryville farragut harriman townsend lenoir oak ridge powell clinton seymour kodak'.split(' '));
 function spClean(memo){
-  const raw = String(memo || '').replace(/\(paid with personal card[^)]*\)/i, ' ').replace(/^refund:\s*/i, '').replace(/[#*|]/g, ' ').split(/\s+/);
+  const raw = String(memo || '').replace(/\(paid with personal card[^)]*\)/i, ' ').replace(/^refund:\s*/i, '').replace(/[#*|/_]/g, ' ').split(/\s+/);
   const kept = [], roots = [];
   for (let w of raw) {
     w = w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, '');
-    if (!w || !/[a-z]/i.test(w) || /\d{3,}/.test(w) || /^x{2,}/i.test(w)) continue;      // card refs, phone numbers, store numbers
+    if (!w || !/[a-z]/i.test(w) || (/\d/.test(w) && !/^\d+-[a-z]+$/i.test(w)) || /^x{2,}/i.test(w)) continue; // card refs, phone and store numbers, booking codes
     const root = w.toLowerCase().replace(/^www\./, '').split('.')[0].replace(/[^a-z0-9]/g, '');
     if (!root || SP_NOISE.has(root)) continue;
     if (roots.some(r => r === root || (r.length >= 5 && root.length >= 5 && (r.startsWith(root) || root.startsWith(r))))) continue; // "Dropbox Dropbox.com"
@@ -4079,7 +4083,7 @@ function paintSP(){
   }
   if (q) main = vendors.filter(v => v.name.toLowerCase().includes(q) || v.items.some(x => (x.memo + ' ' + x.name).toLowerCase().includes(q)));
   const miscTotal = misc.reduce((a, v) => a + v.total, 0);
-  const kinds = {}; for (const v of vendors) if (v.kind) kinds[v.kind] = (kinds[v.kind] || 0) + v.total;
+  const kinds = {}; if (SP.cat.startsWith('a:')) for (const v of vendors) if (v.kind) kinds[v.kind] = (kinds[v.kind] || 0) + v.total;
   const kindsOther = total - Object.values(kinds).reduce((a, b) => a + b, 0);
   const pct = n => total ? Math.round(n / total * 1000) / 10 : 0;
   const bar = (n, max) => `<span class="sp-bar"><i style="width:${max ? Math.max(1, Math.round(Math.abs(n) / max * 100)) : 0}%"></i></span>`;
@@ -4127,7 +4131,7 @@ function paintSP(){
             ${SP.showMisc ? `<div class="sp-miscbody">${misc.map(vRow).join('')}</div>` : ''}</div>` : ''}
         </div>
       </div>
-      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}, read-only: nothing here changes QuickBooks. Vendor names are tidied up in HQ from the payee or bank description; Wise payments are named by category (Photo Editing → Creo / Maverick, Video Editing → Mark in 2025 and Harvey in 2026, Team &amp; Admin → Charlene). Use ✎ Rename / group to fix a name or merge two vendors (give them the same name). Refunds show as negative amounts.</p>` : ''}`;
+      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}, read-only: nothing here changes QuickBooks. Vendor names are tidied up in HQ from the payee or bank description; Wise payments from 2025 on are named by category (Photo Editing → Creo / Maverick, Video Editing → Mark in 2025 and Harvey in 2026, Team &amp; Admin → Charlene). Use ✎ Rename / group to fix a name or merge two vendors (give them the same name). Refunds show as negative amounts.</p>` : ''}`;
   wireSP(vendors);
 }
 function wireSP(vendors){
