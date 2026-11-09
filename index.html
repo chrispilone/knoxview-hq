@@ -647,6 +647,8 @@ label.extra{margin:0}
 .pl-move{display:inline-flex;gap:2px;margin-left:8px;vertical-align:middle}
 .pl-move button{border:1px solid var(--border);background:var(--panel);color:inherit;border-radius:6px;width:24px;height:22px;padding:0;font-size:12px;line-height:1;cursor:pointer}
 .pl-move button:disabled{opacity:.3;cursor:default}
+.pl-row.pl-gross td{font-weight:700;background:var(--panel-2);border-top:1px solid var(--border)}
+.pl-gross-tag{font-weight:400;font-size:11px;color:var(--muted);margin-left:6px}
 .pl-arrange-note{font-size:13px;color:var(--muted);margin:2px 0 8px}
 .pl-caret-sp{display:inline-block;width:18px}
 .pl-drill{color:inherit;text-decoration:none;border-bottom:1px dashed var(--border)}
@@ -3937,7 +3939,7 @@ function plPrint(){
   const d = PL.data; if (!d) return;
   const cmp = d.compare?.totals || null, byMonth = d.byMonth;
   const valCols = byMonth ? d.columns : d.columns.slice(-1);
-  const hasCogs = !!plFind(d.rows, 'gCOGS');
+  const hasCogs = !!plFind(d.rows, 'gCOGS'), gross = plGross(d), income = plTotal(plFind(d.rows, 'gIncome'));
   const money = v => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const head = `<tr><th></th>${valCols.map(c => `<th>${esc(byMonth ? (c.total ? 'Total' : c.title) : 'Amount')}</th>`).join('')}${cmp ? `<th>${PL.compare === 'ly' ? 'Last year' : 'Prior period'}</th><th>Change</th>` : ''}</tr>`;
   const rows = [];
@@ -3949,6 +3951,7 @@ function plPrint(){
     rows.push(`<tr class="b ${depth ? '' : 'section'}"><td style="${pad}" colspan="${1 + vals.length + (cmp ? 2 : 0)}">${esc(n.name)}</td></tr>`);
     walk(n.children, depth + 1);
     rows.push(`<tr class="b sub"><td style="${pad}">Total ${esc(n.name)}</td>${nums}</tr>`);
+    if (gross && n.key === gross.cosKey) rows.push(`<tr class="b gross"><td style="${pad}">Gross profit <span class="m">(income − cost of services${income ? `, ${(gross.total / income * 100).toFixed(1)}% margin` : ''})</span></td>${(byMonth ? gross.values : [gross.total]).map(v => `<td>${money(v)}</td>`).join('')}${cmp ? `<td>${money(gross.cmp)}</td><td>${money(gross.total - gross.cmp)}</td>` : ''}</tr>`);
   });
   walk(d.rows, 0);
   const co = FIN.status?.company || 'Knox View Media LLC';
@@ -3956,7 +3959,7 @@ function plPrint(){
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Profit and Loss ${esc(d.start)} to ${esc(d.end)}</title><style>
     body{font-family:Inter,system-ui,sans-serif;color:#111;margin:32px}h1{font-size:18px;margin:0;text-align:center}.sub-h{text-align:center;color:#555;font-size:12px;margin:4px 0 18px}
     table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:right;border-bottom:1px solid #999;padding:4px 6px}td{padding:3px 6px;text-align:right;white-space:nowrap}td:first-child{text-align:left;white-space:normal}
-    tr.b td{font-weight:600}tr.section td{padding-top:10px}tr.total td{border-top:1px solid #999}tr.sub td{border-top:1px solid #ddd}.foot{margin-top:18px;color:#777;font-size:11px;text-align:center}
+    tr.b td{font-weight:600}tr.section td{padding-top:10px}tr.total td{border-top:1px solid #999}tr.sub td{border-top:1px solid #ddd}tr.gross td{background:#f2f2f2;border-top:1px solid #999}.m{font-weight:400;color:#666}.foot{margin-top:18px;color:#777;font-size:11px;text-align:center}
   </style></head><body><h1>${esc(co)}</h1><div class="sub-h">Profit and Loss · ${esc(rangeLabel(d.start, d.end))}${d.basis ? ` · ${esc(String(d.basis))} basis` : ''}</div>
   <table><thead>${head}</thead><tbody>${rows.join('')}</tbody></table><div class="foot">From QuickBooks via Knox View HQ · ${esc(new Date().toLocaleString())}</div></body></html>`);
   w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
@@ -3964,6 +3967,21 @@ function plPrint(){
 const rangeLabel = (a, b) => `${fmtDate(a)} – ${fmtDate(b)}`;
 function plFind(rows, key){ for (const n of rows || []) { if (n.key === key) return n; const f = plFind(n.children, key); if (f) return f; } return null; }
 const plTotal = n => n ? (n.values[n.values.length - 1] || 0) : 0;
+// HQ-only reporting line: Gross profit = total income − Cost of Services (both straight from QuickBooks).
+// Used only when the books have no Cost of Goods Sold section (then QuickBooks' own "Gross Profit" just equals income).
+const PL_COS_ID = '149';
+function plCos(d){
+  if (!d || plFind(d.rows, 'gCOGS')) return null;
+  const find = ns => { for (const n of ns || []) { if (n.id === PL_COS_ID || n.name === 'Cost of Services') return n; const f = find(n.children); if (f) return f; } return null; };
+  return find(d.rows);
+}
+function plGross(d){
+  const cos = plCos(d), inc = d ? plFind(d.rows, 'gIncome') : null;
+  if (!cos || !inc) return null;
+  const values = inc.values.map((v, i) => Math.round((v - (cos.values[i] || 0)) * 100) / 100);
+  const cmp = d.compare?.totals ? (d.compare.totals.gIncome || 0) - (d.compare.totals[cos.key] || 0) : null;
+  return { cosKey: cos.key, values, total: values[values.length - 1] || 0, cmp };
+}
 function paintPL(){
   const box = $('#plBox'); if (!box) return;
   const d = PL.data, r = plRange();
@@ -3973,15 +3991,14 @@ function paintPL(){
   const cmpOf = k => cmp ? (cmp[k] || 0) : null;
   const expenses = key('gCOGS') + key('gExpenses') + key('gOtherExpenses');
   const cExpenses = cmp ? (cmpOf('gCOGS') + cmpOf('gExpenses') + cmpOf('gOtherExpenses')) : null;
-  // Without a Cost of Goods Sold section QuickBooks' "Gross Profit" just equals income, so show Cost of Services instead.
+  // Without a Cost of Goods Sold section QuickBooks' "Gross Profit" just equals income, so HQ shows income − Cost of Services.
   const hasCogs = !!(d && plFind(d.rows, 'gCOGS'));
-  const findName = (ns, name) => { for (const n of ns || []) { if (n.name === name) return n; const f = findName(n.children, name); if (f) return f; } return null; };
-  const cos = d ? findName(d.rows, 'Cost of Services') : null;
+  const gross = plGross(d);
   const summary = d ? [
     ['Income', income, cmpOf('gIncome'), true, null],
-    hasCogs || !cos
-      ? ['Gross profit', key('gGrossProfit'), cmpOf('gGrossProfit'), true, income ? `${Math.round(key('gGrossProfit') / income * 100)}% margin` : null]
-      : ['Cost of services', plTotal(cos), cmp ? (cmp[cos.key] || 0) : null, false, income ? `${Math.round(plTotal(cos) / income * 100)}% of income` : null],
+    gross
+      ? ['Gross profit', gross.total, gross.cmp, true, income ? `${(gross.total / income * 100).toFixed(1)}% gross margin` : null]
+      : ['Gross profit', key('gGrossProfit'), cmpOf('gGrossProfit'), true, income ? `${(key('gGrossProfit') / income * 100).toFixed(1)}% gross margin` : null],
     ['Expenses', expenses, cExpenses, false, hasCogs ? 'incl. cost of goods sold' : null],
     ['Net income', key('gNetIncome'), cmpOf('gNetIncome'), true, income ? `${Math.round(key('gNetIncome') / income * 100)}% margin` : null],
   ] : [];
@@ -4033,8 +4050,14 @@ function plTableHTML(d, income){
         rows.push(`<tr class="pl-detail"><td colspan="${span}">${det.loading ? '<div class="fin-loading"><span class="spin"></span>Loading transactions…</div>' : det.error ? `<div class="none">${esc(det.error)}</div>` : plDetailHTML(det.data)}</td></tr>`);
       }
       if (hasKids && !closed) walk(n.children, depth + 1, isCost, n.key);
+      if (gross && n.key === gross.cosKey) {
+        const gv = byMonth ? gross.values : [gross.total], gc = gross.cmp, gchg = gc !== null ? gross.total - gc : null;
+        const gg = gchg === null || Math.abs(gchg) < 0.5 ? '' : gchg > 0 ? 'up' : 'down';
+        rows.push(`<tr class="pl-row pl-gross d${Math.min(depth, 4)}"><td class="pl-name" style="padding-left:${10 + depth * 18}px"><span class="pl-caret-sp"></span>Gross profit <span class="pl-gross-tag" title="Calculated in HQ: total income minus Cost of Services, both from QuickBooks">income − cost of services</span></td>${gv.map(v => `<td class="${v < 0 ? 'neg' : ''}">${usd(v, true)}</td>`).join('')}${!byMonth ? `<td class="pl-pct">${income ? `${(gross.total / income * 100).toFixed(1)}%` : ''}</td>` : ''}${cmp ? `<td class="pl-cmp">${usd(gc, true)}</td><td class="pl-chg ${gg}">${gchg >= 0 ? '+' : ''}${usd(gchg, true)}</td><td class="pl-chgp ${gg}">${gc ? `${gchg >= 0 ? '+' : ''}${Math.round(gchg / Math.abs(gc) * 100)}%` : ''}</td>` : ''}</tr>`);
+      }
     }
   };
+  const gross = plGross(d);
   walk(d.rows, 0, false, null);
   return `<table class="pl-table"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table>`;
 }
@@ -4058,7 +4081,9 @@ function plCsv(){
     const vals = byMonth ? n.values : [plTotal(n)];
     lines.push([ '  '.repeat(depth) + n.name, ...vals.map(v => v.toFixed(2)), ...(cmp ? [(cmp[n.key] ?? 0).toFixed(2), (plTotal(n) - (cmp[n.key] ?? 0)).toFixed(2)] : []) ].map(q).join(','));
     walk(n.children, depth + 1);
+    if (gross && n.key === gross.cosKey) lines.push([ '  '.repeat(depth) + 'Gross profit (income - cost of services)', ...(byMonth ? gross.values : [gross.total]).map(v => v.toFixed(2)), ...(cmp ? [gross.cmp.toFixed(2), (gross.total - gross.cmp).toFixed(2)] : []) ].map(q).join(','));
   });
+  const gross = plGross(d);
   walk(d.rows, 0);
   const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Profit-and-Loss_${d.start}_to_${d.end}.csv`; a.click();
