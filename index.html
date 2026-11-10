@@ -67,6 +67,9 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .tgroup h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 8px;display:flex;gap:6px;align-items:center}
 .tgroup h3 span{font-weight:500}
 .tgroup.over h3{color:var(--danger)}
+.recur-note{font-size:12.5px;margin:-2px 0 8px}
+.recurgrp .trow{opacity:.85}
+.recur-on{color:var(--accent);font-weight:500}
 .tlist{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .panel .tlist{border:none;border-radius:0;background:none}
 .trow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--border);cursor:pointer}
@@ -2388,6 +2391,10 @@ function dueLabel(d){
   return `<span class="due">${diff < 6 ? dt.toLocaleDateString(undefined, { weekday:'long' }) : fmtShort(d)}</span>`;
 }
 const openTasks = () => (S.tasks || []).filter(t => t.status !== 'done');
+// Repeating tasks stay off the list until 7 days before they're due (shown under "Upcoming recurring" instead)
+const RECUR_LEAD_DAYS = 7;
+const isParked = t => t.status !== 'done' && !!t.repeat && !!t.due_date && t.due_date > isoDay(addDays(new Date(), RECUR_LEAD_DAYS));
+const showsOn = t => isoDay(addDays(new Date(t.due_date + 'T12:00:00'), -RECUR_LEAD_DAYS));
 const myOpen = () => openTasks().filter(t => t.assigned_to === S.me.id);
 function paintTaskBadge(){
   const n = myOpen().filter(t => t.due_date && t.due_date <= today()).length;
@@ -2610,7 +2617,8 @@ function renderTasks(){
   const base = (S.tasks || []).filter(inScope);
   const cat = S.taskCat || '';
   const list = base.filter(t => !cat || t.category === cat);
-  const open = list.filter(t => t.status !== 'done').sort(sortTasks);
+  const open = list.filter(t => t.status !== 'done' && !isParked(t)).sort(sortTasks);
+  const parked = list.filter(isParked).sort((a, b) => a.due_date.localeCompare(b.due_date));
   const t0 = today(), wk = isoDay(addDays(new Date(), 7));
   const groups = [
     ['Overdue', open.filter(t => t.due_date && t.due_date < t0), 'over'],
@@ -2620,7 +2628,7 @@ function renderTasks(){
     ['No due date', open.filter(t => !t.due_date), ''],
   ];
   const done = list.filter(t => t.status === 'done').sort((a, b) => (b.done_at || '').localeCompare(a.done_at || '')).slice(0, 30);
-  const catCounts = Object.fromEntries(TASK_CATS.map(c => [c.k, base.filter(t => t.status !== 'done' && t.category === c.k).length]));
+  const catCounts = Object.fromEntries(TASK_CATS.map(c => [c.k, base.filter(t => t.status !== 'done' && !isParked(t) && t.category === c.k).length]));
   $('#tasksView').innerHTML = `
     <div class="page-head"><div><h1>Tasks</h1><p>${open.length} open${scope === 'mine' ? ' for you' : ''}</p></div>
       <div class="spacer"></div><button class="btn primary" id="tNew">+ New task</button></div>
@@ -2632,11 +2640,14 @@ function renderTasks(){
     </div>
     ${open.length ? groups.filter(([, g]) => g.length).map(([label, g, cls]) => `<div class="tgroup ${cls}"><h3>${label} <span>${g.length}</span></h3><div class="tlist">${g.map(taskRow).join('')}</div></div>`).join('')
       : `<div class="empty">${scope === 'delegated' ? 'Nothing assigned to others right now.' : 'You’re all caught up. Add a task above.'}</div>`}
+    ${parked.length ? `<div class="tgroup recurgrp"><h3><button class="linkish" id="tRecurToggle">${S.showRecur ? '▾' : '▸'} ↻ Upcoming recurring</button> <span>${parked.length}</span></h3>
+      ${S.showRecur ? `<p class="muted recur-note">Repeating tasks move onto your list ${RECUR_LEAD_DAYS} days before they're due.</p><div class="tlist">${parked.map(t => taskRow(t).replace('<div class="tmeta">', `<div class="tmeta"><span class="recur-on">On your list ${esc(fmtShort(showsOn(t)))}</span>`)).join('')}</div>` : ''}</div>` : ''}
     ${done.length ? `<div class="tgroup donegrp"><h3><button class="linkish" id="tDoneToggle">${S.showDoneTasks ? '▾' : '▸'} Completed</button> <span>${done.length}</span></h3>
       ${S.showDoneTasks ? `<div class="tlist">${done.map(taskRow).join('')}</div>` : ''}</div>` : ''}`;
   document.querySelectorAll('#tScope button').forEach(b => { b.classList.toggle('active', b.dataset.s === scope); b.onclick = () => { S.taskScope = b.dataset.s; renderTasks(); }; });
   document.querySelectorAll('#tCats button').forEach(b => b.onclick = () => { S.taskCat = b.dataset.c; renderTasks(); });
   $('#tNew').onclick = openQuickTask;
+  const rt = $('#tRecurToggle'); if (rt) rt.onclick = () => { S.showRecur = !S.showRecur; renderTasks(); };
   const dt = $('#tDoneToggle'); if (dt) dt.onclick = () => { S.showDoneTasks = !S.showDoneTasks; renderTasks(); };
   wireQuickAdd($('#qPage'), { onSaved: () => renderTasks(), autofocus: !matchMedia('(max-width:760px)').matches });
   wireInbox();
@@ -2647,7 +2658,7 @@ function renderTasks(){
 function paintHomeTasks(){
   const box = $('#homeTasks'); if (!box) return;
   const t0 = today();
-  const mine = myOpen().sort(sortTasks);
+  const mine = myOpen().filter(t => !isParked(t)).sort(sortTasks);
   const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
   const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, 10);
   box.querySelector('.count').textContent = mine.length;
@@ -2790,9 +2801,9 @@ function openTask(id){
   $('#tDone').onclick = async () => {
     const done = f('status').value !== 'done';
     f('status').value = done ? 'done' : 'todo';
-    if (await save()) { closeLayer(); toast(done ? (t.repeat ? `Done ✓ · next one added (repeats ${REPEAT_LABEL[t.repeat].toLowerCase()})` : 'Done ✓') : 'Marked not done'); if (done && t.repeat) { await loadTasks(); render(); } }
+    if (await save()) { closeLayer(); toast(done ? (t.repeat ? `Done ✓ · next one added (repeats ${REPEAT_LABEL[t.repeat].toLowerCase()}, shows on your list a week before it's due)` : 'Done ✓') : 'Marked not done'); if (done && t.repeat) { await loadTasks(); render(); } }
   };
-  form.onsubmit = async e => { e.preventDefault(); if (await save()) { closeLayer(); toast('Task saved'); } };
+  form.onsubmit = async e => { e.preventDefault(); if (await save()) { closeLayer(); toast(isParked(t) ? `Task saved · it'll show on your list ${fmtShort(showsOn(t))} (see ↻ Upcoming recurring)` : 'Task saved'); } };
 }
 
 /* ===================== MAIL (Gmail Primary inbox via the gcal edge function) ===================== */
