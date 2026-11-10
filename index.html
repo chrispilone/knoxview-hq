@@ -378,7 +378,7 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .stat.alert .n{color:var(--danger)}
 
 /* Board */
-.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(165px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
 .col{background:var(--panel-2);border-radius:var(--radius);padding:10px;min-height:200px;display:flex;flex-direction:column}
 .col.drag-over{outline:2px dashed var(--accent)}
 .col-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;margin:2px 4px 10px}
@@ -401,6 +401,8 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .col-tools{display:flex;justify-content:flex-end;margin:-4px 2px 6px}
 .col-tools button{border:none;background:none;color:var(--muted);font-size:12px;padding:0}
 .col-tools button:hover{color:var(--accent);text-decoration:underline}
+.show-more{border:1px dashed var(--border);background:none;color:var(--muted);border-radius:7px;padding:5px 8px;font-size:12px;font-weight:500;margin-top:2px}
+.show-more:hover{color:var(--accent);border-color:var(--accent)}
 .empty-col{font-size:12.5px;color:var(--muted);text-align:center;padding:14px 6px}
 .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;background:var(--panel-2);font-size:11.5px;font-weight:500;color:var(--muted)}
 .tag.photo{background:var(--photo-soft);color:var(--photo)}
@@ -1123,6 +1125,7 @@ const STATUS_LABEL = Object.fromEntries(STATUSES);
 const DONE = ['delivered','archived'];
 // Delivered projects stay on the board (one-line cards) until someone archives them; "Show archived" shows the rest.
 const onBoard = p => S.showDone || p.status !== 'archived';
+const ARCHIVE_PAGE = 15; // Archived column shows this many, then "Show more"
 const DELIVERY = [['spiro','Spiro'],['text_message','Text Message'],['email','Email (template)'],['chris_delivers','Chris will deliver']];
 const TASK_KINDS = [['drone_pin','Drone Pin Photo'],['virtual_twilight','Virtual Twilight'],['virtual_staging','Virtual Staging'],
   ['object_removal','Object Removal'],['property_lines','Property Lines'],['callout_graphics','Callout Graphics'],['custom','Custom Task']];
@@ -1142,7 +1145,7 @@ const S = { user:null, me:null, projects:[], types:[], agents:[], team:[], logos
   cal:{ status:null, cache:{}, week:null, weekItems:[] },
   tasks:[], suggestions:[], scans:[], taskScope:'mine', taskCat:'', showDoneTasks:false,
   chat:{ channels:[], members:[], unread:{}, lastAt:{}, active:null, msgs:{}, more:{}, loaded:{}, files:[], editing:null },
-  media:'photo', layout:'board', search:'', assignee:'', showDone:false };
+  media:'photo', layout:'board', search:'', assignee:'', showDone:false, archLimit:15 };
 
 /* Per-person view preferences, remembered in this browser only */
 const PREF_KEY = () => 'kvhq.prefs.' + (S.me?.id || 'anon');
@@ -1721,6 +1724,7 @@ function renderProjects(){
   const nb = $('#newProjectBtn'); nb.textContent = `+ New ${m} project`; nb.className = `btn ${m}`; nb.classList.toggle('hidden', !can('create_projects'));
   $('#search').placeholder = `Search ${m} projects…`;
   $('#showDone').checked = S.showDone;
+  $('#showDone').closest('label').classList.toggle('hidden', S.layout !== 'list');
   if ($('#assigneeFilter').value !== S.assignee) $('#assigneeFilter').value = S.assignee;
   renderStats();
   $('#boardWrap').classList.toggle('hidden', S.layout !== 'board');
@@ -1765,13 +1769,18 @@ function cardHTML(p){
 }
 function renderBoard(){
   const list = filtered();
-  const cols = STATUSES.filter(([s]) => S.showDone || s !== 'archived');
+  const cols = STATUSES;
+  const newest = k => (a, b) => String(b[k] || b.created_at || '').localeCompare(String(a[k] || a.created_at || ''));
   $('#boardWrap').innerHTML = cols.map(([s,l]) => {
-    const items = list.filter(p => p.status === s && onBoard(p)).sort(s === 'delivered' ? (a, b) => String(b.delivered_at || '').localeCompare(String(a.delivered_at || '')) : byDue);
+    const all = list.filter(p => p.status === s).sort(s === 'delivered' ? newest('delivered_at') : s === 'archived' ? newest('archived_at') : byDue);
+    // Archived: show the most recently archived first, ARCHIVE_PAGE at a time ("Show more")
+    const items = s === 'archived' ? all.slice(0, S.archLimit) : all;
+    const more = s === 'archived' && all.length > items.length
+      ? `<button class="show-more" data-arch-more>Show more (${Math.min(ARCHIVE_PAGE, all.length - items.length)} of ${all.length - items.length} left)</button>` : '';
     const tools = s === 'delivered' && items.length && can('edit_projects') ? `<div class="col-tools"><button data-archive-all title="Archive every project in this column">Archive all ${items.length}</button></div>` : '';
     return `<div class="col ${DONE.includes(s) ? 'compact-col' : ''}" data-status="${s}">
-      <div class="col-head"><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${items.length}</span></div>${tools}
-      <div class="cards">${items.map(cardHTML).join('') || '<div class="empty-col">—</div>'}</div></div>`;
+      <div class="col-head"><span class="dot" style="background:var(--s-${s})"></span>${l}<span class="count">${all.length}</span></div>${tools}
+      <div class="cards">${items.map(cardHTML).join('') || '<div class="empty-col">—</div>'}${more}</div></div>`;
   }).join('');
   const archive = async ids => {
     const { error } = await sb.from('projects').update({ status: 'archived' }).in('id', ids);
@@ -1779,10 +1788,12 @@ function renderBoard(){
     toast(ids.length === 1 ? 'Archived' : `Archived ${ids.length} projects`); reloadProjects();
   };
   document.querySelectorAll('#boardWrap [data-archive]').forEach(b => b.onclick = e => { e.stopPropagation(); archive([b.dataset.archive]); });
+  const am = document.querySelector('#boardWrap [data-arch-more]');
+  if (am) am.onclick = e => { e.stopPropagation(); S.archLimit += ARCHIVE_PAGE; renderBoard(); };
   const aa = document.querySelector('#boardWrap [data-archive-all]');
   if (aa) aa.onclick = () => {
     const ids = [...document.querySelectorAll('#boardWrap .col[data-status=delivered] .card')].map(c => c.dataset.id);
-    if (ids.length && confirm(`Archive ${ids.length} delivered project${ids.length === 1 ? '' : 's'}? They'll be hidden from the board (you can still see them with Show archived).`)) archive(ids);
+    if (ids.length && confirm(`Archive ${ids.length} delivered project${ids.length === 1 ? '' : 's'}? They'll move to the Archived column.`)) archive(ids);
   };
   document.querySelectorAll('#boardWrap .card').forEach(c => {
     c.onclick = () => openProject(c.dataset.id);
