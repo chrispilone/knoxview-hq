@@ -1018,6 +1018,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-svc-list{display:flex;flex-direction:column;gap:6px}
 .bk-svc{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:8px 12px}
 .bk-svc span{flex:1;display:flex;flex-direction:column}.bk-svc small{color:var(--muted)}.bk-svc.off{opacity:.6}
+.bk-typepick{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px 10px}.bk-typepick .check{color:var(--text);font-weight:400}
 .bk-wdays{display:flex;flex-wrap:wrap;gap:6px 14px}.bk-wdays .check{color:var(--text)}
 @media (max-width:900px){ .bk-layout{grid-template-columns:1fr} .bk-summary{position:static} .bk-detail{grid-template-columns:1fr} }
 @media (max-width:640px){ .bk-row{gap:10px;padding:10px 12px} .bk-agent-pick{flex-wrap:wrap} .bk-agent-pick .btn{width:100%} #bkSettings{margin-left:0!important} }
@@ -3780,6 +3781,7 @@ const BK = { services:[], settings:null, list:[], loaded:false, tab:'upcoming', 
 const BK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const money = n => { const v = Number(n || 0); return '$' + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
 const bkSvc = id => BK.services.find(s => s.id === id);
+const bkTypes = v => String(v || '').split(',').map(x => x.trim()).filter(Boolean); // a service can create several projects, e.g. "Cinematic Video, Premium Reel"
 const bkActive = kind => BK.services.filter(s => s.kind === kind && s.active).sort((a, b) => a.sort_order - b.sort_order);
 const bkWhen = b => b.shoot_start ? `${new Date(b.shoot_start).toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })} · ${fmtT(b.shoot_start)}–${fmtT(b.shoot_end)}` : 'Not scheduled';
 const bkClient = b => agentName(b.agent_id) || b.client_name || 'No client';
@@ -4043,7 +4045,7 @@ function bkPaintSummary(){
   const d = BK.draft, q = bkQuote(d), box = $('#bkSummary'); if (!box) return;
   const client = d.newClient ? d.client.name : agentName(d.agent_id);
   const missing = [!client && 'a client', !d.address.trim() && 'the address', !q.items.length && 'a package or add-on', !d.pick.start && 'a date and time'].filter(Boolean);
-  const hasPhoto = [q.pkg, ...q.adds].some(s => s?.photo_type), vids = [q.pkg, ...q.adds].filter(s => s?.video_type);
+  const hasPhoto = [q.pkg, ...q.adds].some(s => s?.photo_type), vids = [q.pkg, ...q.adds].flatMap(s => bkTypes(s?.video_type));
   box.innerHTML = `<h2>Order summary</h2>
     ${q.items.length ? `<div class="bk-lines">${q.items.map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
       <div class="bk-disc"><span>Discount</span><span><input id="bkDisc" type="number" min="0" step="1" inputmode="decimal" value="${esc(d.discount)}" placeholder="0" /></span></div>
@@ -4124,17 +4126,20 @@ async function bkCreateProjects(b, q, postChat){
   const base = { name: b.address, address: [b.address, b.city].filter(Boolean).join(', '), city: b.city, agent_id: b.agent_id, delivery_method: 'spiro', submitted_by: S.me.id, notify_slack: !!postChat,
     notes: [`From order #${b.number} (shoot ${new Date(b.shoot_start).toLocaleDateString(undefined, { month:'short', day:'numeric' })})`, b.notes].filter(Boolean).join('\n') };
   const ids = []; let photoId = null;
-  const photoSvc = services.find(s => s.photo_type);
-  if (photoSvc) {
-    const { data, error } = await sb.from('projects').insert({ ...base, media: 'photo', project_type_id: typeId('photo', photoSvc.photo_type) }).select().single();
+  const photoTypes = [...new Set(services.flatMap(s => bkTypes(s.photo_type)))];
+  for (const [i, pt] of photoTypes.entries()) {
+    const { data, error } = await sb.from('projects').insert({ ...base, media: 'photo', project_type_id: typeId('photo', pt), parent_project_id: photoId }).select().single();
     if (error) throw error;
-    photoId = data.id; ids.push(data.id);
-    const tasks = [{ project_id: data.id, kind: 'drone_pin', title: 'Drone Pin Photo', details: 'One high/far photo with a small drone pin (if applicable)', sort_order: 0 }];
-    if (services.some(s => s.twilight)) tasks.push({ project_id: data.id, kind: 'virtual_twilight', title: 'Virtual Twilight', sort_order: 1 });
-    const { error: tErr } = await sb.from('project_tasks').insert(tasks); if (tErr) console.warn(tErr);
+    ids.push(data.id);
+    if (i === 0) {
+      photoId = data.id;
+      const tasks = [{ project_id: data.id, kind: 'drone_pin', title: 'Drone Pin Photo', details: 'One high/far photo with a small drone pin (if applicable)', sort_order: 0 }];
+      if (services.some(s => s.twilight)) tasks.push({ project_id: data.id, kind: 'virtual_twilight', title: 'Virtual Twilight', sort_order: 1 });
+      const { error: tErr } = await sb.from('project_tasks').insert(tasks); if (tErr) console.warn(tErr);
+    }
   }
-  for (const s of services.filter(x => x.video_type)) {
-    const t = S.types.find(x => x.id === typeId('video', s.video_type));
+  for (const s of services) for (const vt of bkTypes(s.video_type)) {
+    const t = S.types.find(x => x.id === typeId('video', vt));
     const { data, error } = await sb.from('projects').insert({ ...base, media: 'video', project_type_id: t?.id || null, parent_project_id: photoId,
       video_tier: s.video_tier || 'standard', video_length: t?.default_length || null, video_format: /cinematic|youtube|lux/i.test(t?.name || '') ? 'Horizontal' : 'Vertical',
       export_notes: 'Export Branded & Unbranded' }).select().single();
@@ -4301,8 +4306,8 @@ function openServiceEdit(s){
       <div><label>Time on site (min)</label><input name="duration_min" type="number" min="0" step="5" value="${s.duration_min}" /></div>
       <div class="full"><label>Short description</label><input name="description" value="${esc(s.description || '')}" /></div>
       <div class="full"><label>What's included (one per line)</label><textarea name="includes" style="min-height:90px">${esc((s.includes || []).join('\n'))}</textarea></div>
-      <div><label>Creates a photo project</label><select name="photo_type">${opt(pTypes, s.photo_type || '', 'No')}</select></div>
-      <div><label>Creates a video project</label><select name="video_type">${opt(vTypes, s.video_type || '', 'No')}</select></div>
+      <div><label>Creates photo projects</label><div class="bk-typepick">${pTypes.map(([v]) => `<label class="check"><input type="checkbox" name="pt" value="${esc(v)}" ${bkTypes(s.photo_type).includes(v) ? 'checked' : ''} /> ${esc(v)}</label>`).join('')}</div></div>
+      <div><label>Creates video projects</label><div class="bk-typepick">${vTypes.map(([v]) => `<label class="check"><input type="checkbox" name="vt" value="${esc(v)}" ${bkTypes(s.video_type).includes(v) ? 'checked' : ''} /> ${esc(v)}</label>`).join('')}</div></div>
       <div><label>Video tier</label><select name="video_tier">${opt(VIDEO_TIERS, s.video_tier || '', '—')}</select></div>
       <div><label>Order on the form</label><input name="sort_order" type="number" value="${s.sort_order}" /></div>
       <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
@@ -4316,8 +4321,8 @@ function openServiceEdit(s){
   box.querySelector('#svcForm').onsubmit = async e => {
     e.preventDefault();
     const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
-      includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: f.photo_type.value || null, video_type: f.video_type.value || null,
-      video_tier: f.video_tier.value || (f.video_type.value ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked, updated_at: new Date().toISOString() };
+      includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: [...f.querySelectorAll('[name=pt]:checked')].map(x => x.value).join(', ') || null, video_type: [...f.querySelectorAll('[name=vt]:checked')].map(x => x.value).join(', ') || null,
+      video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked, updated_at: new Date().toISOString() };
     const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
     if (r.error) return fail(r.error);
     if (isNew) BK.services.push(r.data); else Object.assign(bkSvc(s.id), r.data);
