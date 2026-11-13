@@ -93,17 +93,17 @@ async function sendInterviewEmail(to: string, first: string, title: string, link
   try {
     const token = await ownerGmailToken();
     if (!token) return false;
-    const plain = `Hi ${first},\n\nThanks for applying to be a ${title} with Knox View Media! We read every application.\n\nNext step: a short video interview. You answer a few quick questions on camera, on your own time, right from your phone or computer.\n\nStart your video interview: ${link}\n\nIf you already finished it, you're all set. We'll reach out if it looks like a fit.\n\nChris\nKnox View Media`;
+    const plain = `Hi ${first},\n\nThanks for applying to be a ${title} with Knox View Media! We read every application.\n\nLast step: a quick one-minute video so we can meet you. Record it right from your phone or computer, whenever it works for you.\n\nRecord your video: ${link}\n\nIf you already recorded it, you're all set. We'll reach out if it looks like a fit.\n\nChris\nKnox View Media`;
     const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#1f3c66">
 <p>Hi ${escHtml(first)},</p>
 <p>Thanks for applying to be a <b>${escHtml(title)}</b> with Knox View Media! We read every application.</p>
-<p><b>Next step: a short video interview.</b> You answer a few quick questions on camera, on your own time, right from your phone or computer.</p>
-<p><a href="${link}" style="display:inline-block;background:#1f3c66;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Start my video interview</a></p>
+<p><b>Last step: a quick one-minute video</b> so we can meet you. Record it right from your phone or computer, whenever it works for you.</p>
+<p><a href="${link}" style="display:inline-block;background:#1f3c66;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Record my one-minute video</a></p>
 <p style="font-size:13px;color:#5f7389">Or paste this link into your browser: ${link}</p>
-<p>If you already finished it, you're all set. We'll reach out if it looks like a fit.</p>
+<p>If you already recorded it, you're all set. We'll reach out if it looks like a fit.</p>
 <p>Chris<br>Knox View Media</p></div>`;
     const boundary = 'kvapply_' + crypto.randomUUID().replace(/-/g, '');
-    const subj = 'Next step: your Knox View video interview';
+    const subj = 'Last step: your one-minute Knox View video';
     const raw = [
       `To: ${to}`, `Subject: ${subj}`, 'MIME-Version: 1.0',
       `Content-Type: multipart/alternative; boundary="${boundary}"`, '',
