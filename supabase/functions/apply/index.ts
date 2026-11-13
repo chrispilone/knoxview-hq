@@ -98,7 +98,7 @@ function emailHtml(first: string, paras: string[], buttons: Btn[], after: string
   return `<!doctype html><html><body style="margin:0;padding:0;background:#eef2f7">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden">
-<tr><td style="background:#0d1726;padding:22px 28px;color:#e7edf6;font-family:Georgia,serif;font-size:20px;letter-spacing:.5px">Knox View Media<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2.5px;color:#8ca6cc;margin-top:4px;text-transform:uppercase">Careers</div></td></tr>
+<tr><td bgcolor="#0d1726" style="background:#0d1726;padding:0;line-height:0;font-size:0"><img src="${SITE}/img/email-header.jpg" width="560" alt="Knox View Real Estate Media · Careers" style="display:block;width:100%;max-width:560px;height:auto;border:0;color:#e7edf6;font-family:Georgia,serif;font-size:20px;line-height:1.4"></td></tr>
 <tr><td style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1f3c66">
 ${p(`Hi ${escHtml(first)},`)}${paras.map(p).join('')}
 ${buttons.map(b => `<div style="margin:0 0 12px">${btn(b)}</div>`).join('')}
@@ -147,9 +147,8 @@ function sendCompleteEmail(to: string, first: string, title: string, reviewLink:
   const html = emailHtml(first,
     [`Thanks for recording your video! Your application for the <b>${escHtml(title)}</b> role at Knox View Media is <b>complete and now under review</b>.`,
      `We personally review every application and video. If it looks like a fit, we'll reach out to set up a time to meet in person.`],
-    [{ label: 'Review my application', url: reviewLink }],
-    [`In the meantime, check out our work on Instagram: <a href="https://instagram.com/knoxviewmedia" style="color:#1f3c66;font-weight:bold">@knoxviewmedia</a>`]);
-  return sendEmail(to, 'Your Knox View application is complete', plain, html);
+    [{ label: 'Review my application', url: reviewLink }]);
+  return sendEmail(to, 'Your application is complete!', plain, html);
 }
 
 Deno.serve(async (req) => {
