@@ -1036,6 +1036,10 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .hr-badge.ok{background:#e3f4ea;color:var(--ok)}
 .hr-badge.mid{background:#fdf1dc;color:var(--warn)}
 .hr-stage{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.hr-badge.iv{background:#e8f1fb;color:#1f5d9e}
+.hr-iv-when{font-weight:700;font-size:15.5px}
+.hr-iv-btns{display:flex;gap:8px;flex-wrap:wrap}
+.hr-stage.s-interview{background:#e8f1fb;color:#1f5d9e}
 .hr-stage.s-new{background:#e8f1fb;color:#1f5d9e}
 .hr-stage.s-hired{background:#e3f4ea;color:var(--ok)}
 .hr-stage.s-passed{background:var(--panel-2);color:var(--muted)}
@@ -1067,7 +1071,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .hr-act{display:grid;gap:8px;font-size:13.5px}
 .hr-act div{display:flex;justify-content:space-between;gap:10px}
 .hr-act small{color:var(--muted);white-space:nowrap}
-@media (prefers-color-scheme: dark){ .hr-badge.ok,.hr-stage.s-hired{background:#173a2a} .hr-badge.mid{background:#3a2e17} .hr-stage.s-new{background:#1b2a3d;color:#8cbcf0} .hr-stage.s-talent_pool{background:#2a1f38;color:#c5a3ec} .hr-stars,.hr-stars.edit button{color:#3a4c66} }
+@media (prefers-color-scheme: dark){ .hr-badge.iv,.hr-stage.s-interview{background:#1b2a3d;color:#8cbcf0} .hr-badge.ok,.hr-stage.s-hired{background:#173a2a} .hr-badge.mid{background:#3a2e17} .hr-stage.s-new{background:#1b2a3d;color:#8cbcf0} .hr-stage.s-talent_pool{background:#2a1f38;color:#c5a3ec} .hr-stars,.hr-stars.edit button{color:#3a4c66} }
 @media (max-width:860px){ .hr-grid{grid-template-columns:1fr} .hr-pdf{height:420px} }
 @media (max-width:640px){ .hr-row{flex-wrap:wrap} .hr-right{width:100%;justify-content:flex-start;padding-left:48px} }
 </style>
@@ -3858,14 +3862,14 @@ async function reloadBookings(){ const { data, error } = await sb.from('bookings
 /* ===================== HIRING =====================
    Applicants from knoxview.com/apply (and later Indeed). Resumes + interview videos live in the private "hiring" bucket. */
 const HR = { loaded:false, list:[], openings:[], tab:'active', q:'', sub:'', urls:{}, act:{} };
-const HR_STAGES = [['new','New'],['screened','Screened'],['video_review','Video review'],['in_person','Meet in person'],['test_shoot','Test shoot'],['offer','Offer'],['hired','Hired'],['talent_pool','Talent pool'],['passed','Passed']];
+const HR_STAGES = [['new','New'],['screened','Screened'],['video_review','Video review'],['interview','Interview'],['in_person','Meet in person'],['test_shoot','Test shoot'],['offer','Offer'],['hired','Hired'],['talent_pool','Talent pool'],['passed','Passed']];
 const HR_STAGE = Object.fromEntries(HR_STAGES);
 const HR_CLOSED = ['hired','talent_pool','passed'];
 const HR_SRC = { website:'knoxview.com', indeed:'Indeed', manual_upload:'Uploaded', referral:'Referral' };
 const hrQs = [['why','Why would you be great at this role?'],['availability','Availability'],['friends','What would friends or past coworkers say it\'s like to be around you?']];
 async function loadHiring(){
   const [c, o] = await Promise.all([
-    sb.from('candidates').select('id, opening_id, first_name, last_name, full_name, email, phone, city, source, applied_at, stage, resume_path, resume_name, answers, website_url, portfolio_url, videos, video_started_at, video_completed_at, ai_score, ai_verdict, my_rating, notes, last_contacted_at, created_at').order('applied_at', { ascending:false }),
+    sb.from('candidates').select('id, opening_id, first_name, last_name, full_name, email, phone, city, source, applied_at, stage, resume_path, resume_name, answers, website_url, portfolio_url, videos, video_started_at, video_completed_at, ai_score, ai_verdict, my_rating, notes, last_contacted_at, interview_at, interview_minutes, interview_meet_url, interview_event_id, interview_status, created_at').order('applied_at', { ascending:false }),
     sb.from('job_openings').select('*').order('created_at'),
   ]);
   if (c.error) return fail(c.error);
@@ -3877,6 +3881,64 @@ const hrInitials = c => (hrName(c).split(/\s+/).map(w => w[0]).slice(0, 2).join(
 const hrVideo = c => c.video_completed_at ? '<span class="hr-badge ok">▶ Video done</span>' : c.video_started_at ? '<span class="hr-badge mid">Video started</span>' : '<span class="hr-badge">No video yet</span>';
 const hrStars = (n, edit) => `<span class="hr-stars${edit ? ' edit' : ''}" ${edit ? 'id="hrStars"' : ''}>${[1,2,3,4,5].map(i => `<${edit ? 'button type="button"' : 'i'} data-star="${i}" class="${i <= (n || 0) ? 'on' : ''}" ${edit ? `title="${i} star${i > 1 ? 's' : ''}"` : ''}>★</${edit ? 'button' : 'i'}>`).join('')}</span>`;
 const hrExt = c => { const u = HR.openings.find(o => o.id === c.opening_id)?.interview_url; return safeUrl(u) && !(c.videos || []).length ? u : ''; };
+const hrIvWhen = d => new Date(d).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+const hrIvBadge = c => c.interview_status === 'scheduled' && c.interview_at && new Date(c.interview_at).getTime() > Date.now() - 3600e3 ? `<span class="hr-badge iv">📅 ${esc(hrIvWhen(c.interview_at))}</span>` : '';
+async function hiringFn(action, payload = {}){
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/hiring-interview`, { method:'POST',
+    headers: { Authorization: 'Bearer ' + session?.access_token, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...payload }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Something went wrong');
+  return d;
+}
+function hrIvPanel(c){
+  const up = c.interview_status === 'scheduled' && c.interview_at;
+  const past = up && new Date(c.interview_at).getTime() + (c.interview_minutes || 30) * 60e3 < Date.now();
+  if (!up) return `<section class="panel hr-iv"><h2>Interview ${c.interview_status === 'done' ? '<span class="hr-badge ok">Done</span>' : c.interview_status === 'canceled' ? '<span class="hr-badge">Canceled</span>' : ''}</h2>
+    <p class="muted" style="margin:0 0 12px">Send ${esc(hrName(c).split(' ')[0])} a Google Meet link for a video interview. It goes to ${esc(c.email || 'their email')} and onto your Google Calendar.</p>
+    <button class="btn primary" id="hrIvNew" ${c.email ? '' : 'disabled'}>📅 Schedule interview</button></section>`;
+  return `<section class="panel hr-iv"><h2>Interview <span class="hr-badge ${past ? '' : 'iv'}">${past ? 'Time has passed' : 'Scheduled'}</span></h2>
+    <div class="hr-iv-when">${esc(new Date(c.interview_at).toLocaleString('en-US', { weekday:'long', month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }))} <span class="muted">· ${c.interview_minutes || 30} min · Google Meet</span></div>
+    ${c.interview_meet_url ? `<p style="margin:6px 0 12px;font-size:13.5px"><a href="${esc(c.interview_meet_url)}" target="_blank" rel="noopener">${esc(c.interview_meet_url.replace(/^https?:\/\//, ''))}</a></p>` : ''}
+    <div class="hr-iv-btns">
+      ${c.interview_meet_url ? `<a class="btn primary small" href="${esc(c.interview_meet_url)}" target="_blank" rel="noopener">Join Meet ↗</a>` : ''}
+      <button class="btn small" id="hrIvMove">Reschedule</button>
+      ${past ? '<button class="btn small" id="hrIvDone">✓ Mark done</button>' : ''}
+      <button class="btn small danger" id="hrIvCancel">Cancel</button>
+    </div></section>`;
+}
+function openInterviewModal(c, onDone){
+  const resched = c.interview_status === 'scheduled' && c.interview_at;
+  let s = resched ? new Date(c.interview_at) : (() => { const d = new Date(); d.setDate(d.getDate() + 1); while ([0, 6].includes(d.getDay())) d.setDate(d.getDate() + 1); d.setHours(10, 0, 0, 0); return d; })();
+  const mins = c.interview_minutes || 30;
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>${resched ? 'Reschedule interview' : 'Schedule interview'}</h2>
+    <form id="ivForm">
+      <p class="muted" style="margin:-6px 0 14px;font-size:13.5px">${esc(hrName(c))} gets an email at <b>${esc(c.email)}</b> with the time and a Google Meet link. It's added to your Google Calendar too.</p>
+      <div class="grid3">
+        <div><label>Date</label><input type="date" name="date" required value="${toLocalDate(s)}" min="${toLocalDate(new Date())}" /></div>
+        <div><label>Time</label><input type="time" name="time" required value="${toLocalTime(s)}" step="900" /></div>
+        <div><label>Length</label><select name="minutes">${[15, 20, 30, 45, 60].map(m => `<option value="${m}" ${m === mins ? 'selected' : ''}>${m} min</option>`).join('')}</select></div>
+      </div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Times are in your time zone (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone.replace('_', ' '))}).</p>
+      <p class="ferr" id="ivErr" style="color:var(--danger,#c0392b);font-size:13px;margin:8px 0 0"></p>
+      <div class="actions"><button type="button" class="btn" id="ivClose">Cancel</button><button class="btn primary" id="ivSend">${resched ? 'Update & email them' : 'Send invite'}</button></div>
+    </form></div>`;
+  $('#ov').onclick = closeLayer; $('#ivClose').onclick = closeLayer;
+  $('#ivForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target), [y, mo, d] = f.get('date').split('-').map(Number), [h, mi] = f.get('time').split(':').map(Number);
+    const start = new Date(y, mo - 1, d, h, mi);
+    const btn = $('#ivSend'); btn.disabled = true; btn.textContent = 'Sending…'; $('#ivErr').textContent = '';
+    try {
+      const r = await hiringFn('schedule', { candidate_id: c.id, start: start.toISOString(), minutes: +f.get('minutes') });
+      Object.assign(c, { interview_at: r.interview_at, interview_minutes: r.interview_minutes, interview_meet_url: r.interview_meet_url, interview_event_id: r.interview_event_id, interview_status: 'scheduled', stage: r.stage || c.stage });
+      closeLayer(); toast(r.emailed ? `Invite sent to ${c.email}` : 'Scheduled (email could not be sent, share the Meet link yourself)'); onDone && onDone();
+    } catch (err) { $('#ivErr').textContent = err.message; btn.disabled = false; btn.textContent = resched ? 'Update & email them' : 'Send invite'; }
+  };
+}
 const hrAgo = d => { const days = Math.floor((Date.now() - new Date(d).getTime()) / 864e5); return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 30 ? `${days} days ago` : fmtDate(d); };
 
 async function renderHiring(){
@@ -3917,7 +3979,7 @@ function renderHiringList(){
       <a class="hr-row" href="#/hiring/${c.id}">
         <span class="hr-av">${esc(hrInitials(c))}</span>
         <span class="hr-main"><b>${esc(hrName(c))}</b><small>${[c.city, HR_SRC[c.source] || c.source, 'applied ' + hrAgo(c.applied_at)].filter(Boolean).map(esc).join(' · ')}</small></span>
-        <span class="hr-right">${c.my_rating ? hrStars(c.my_rating) : ''}${hrExt(c) ? '' : hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">📄</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
+        <span class="hr-right">${hrIvBadge(c)}${c.my_rating ? hrStars(c.my_rating) : ''}${hrExt(c) ? '' : hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">📄</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
       </a>`).join('')
       : `<div class="panel bk-empty"><p>${HR.list.length ? 'No applicants here.' : 'No applicants yet. Share <b>knoxview.com/apply</b> to start getting them.'}</p></div>`}`;
   $('#hrTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; HR.tab = b.dataset.t; renderHiringList(); };
@@ -3971,6 +4033,7 @@ async function renderCandidate(id){
         </section>
       </div>
       <div class="hr-col">
+        ${hrIvPanel(c)}
         <section class="panel"><h2>Resume ${c.resume_path ? `<a href="#" id="hrResOpen">Open ↗</a>` : ''}</h2>
           ${c.resume_path ? (ext === 'pdf' ? '<iframe class="hr-pdf" id="hrPdf" title="Resume"></iframe>' : ['jpg','png','webp','heic'].includes(ext) ? '<img class="hr-img" id="hrImg" alt="Resume">' : `<p style="margin:0">📄 ${esc(c.resume_name || 'Resume')} <span class="muted">(Word document — use Open)</span></p>`) : '<p class="muted" style="margin:0">No resume attached (it was optional).</p>'}
         </section>
@@ -3998,6 +4061,18 @@ async function renderCandidate(id){
   $('#hrStars').onclick = e => { const b = e.target.closest('[data-star]'); if (!b) return; const n = +b.dataset.star === c.my_rating ? null : +b.dataset.star;
     $('#hrStars').querySelectorAll('[data-star]').forEach(s => s.classList.toggle('on', n && +s.dataset.star <= n)); save({ my_rating: n }); };
   $('#hrSaveNotes').onclick = async () => { await save({ notes: $('#hrNotes').value.trim() || null }); $('#hrNoteMsg').textContent = 'Saved'; setTimeout(() => { const m = $('#hrNoteMsg'); if (m) m.textContent = ''; }, 2000); };
+  const rerender = () => renderCandidate(c.id);
+  const ivNew = $('#hrIvNew'); if (ivNew) ivNew.onclick = () => openInterviewModal(c, rerender);
+  const ivMove = $('#hrIvMove'); if (ivMove) ivMove.onclick = () => openInterviewModal(c, rerender);
+  const ivDone = $('#hrIvDone'); if (ivDone) ivDone.onclick = async () => {
+    try { await hiringFn('done', { candidate_id: c.id }); c.interview_status = 'done'; toast('Interview marked done'); rerender(); } catch (e) { toast(e.message); }
+  };
+  const ivCancel = $('#hrIvCancel'); if (ivCancel) ivCancel.onclick = async () => {
+    if (!confirm(`Cancel the interview with ${hrName(c)}? It's removed from your calendar and they get a short cancellation email.`)) return;
+    ivCancel.disabled = true;
+    try { await hiringFn('cancel', { candidate_id: c.id }); Object.assign(c, { interview_status: 'canceled', interview_meet_url: null, interview_event_id: null }); toast('Interview canceled'); rerender(); }
+    catch (e) { ivCancel.disabled = false; toast(e.message); }
+  };
   const lk = $('#hrLink'); if (lk) lk.onclick = async () => {
     const { data } = await sb.from('candidates').select('video_token').eq('id', c.id).single();
     if (data) navigator.clipboard.writeText(`https://knoxview.com/apply?i=${data.video_token}`).then(() => toast('Interview link copied'));
