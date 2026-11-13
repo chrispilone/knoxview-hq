@@ -952,6 +952,75 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
   .mail-search{flex:1 1 100%;order:3}
   .mread-head .mread-top-reply{display:none}
 }
+
+/* ----- Bookings ----- */
+#bookingsView a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.bk-back{display:inline-block;font-size:13px;text-decoration:none;margin-bottom:4px}
+.bk-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.kpi-mini{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:baseline;gap:8px;flex:1 1 160px}
+.kpi-mini b{font-size:20px}.kpi-mini span{color:var(--muted);font-size:12.5px}
+.bk-group{margin-bottom:18px}
+.bk-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
+.bk-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:6px;color:var(--text);text-decoration:none;min-width:0}
+.bk-row:hover{background:var(--panel-2)}
+.bk-row.cancelled{opacity:.6}.bk-row.cancelled .bk-main b{text-decoration:line-through}
+.bk-time{display:flex;flex-direction:column;font-weight:600;min-width:58px;font-size:13.5px}.bk-time small{color:var(--muted);font-weight:400}
+.bk-main{display:flex;flex-direction:column;flex:1;min-width:0}.bk-main b,.bk-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bk-main small{color:var(--muted)}
+.bk-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.bk-paid,.bk-unpaid{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+.bk-paid{background:rgba(30,142,90,.13);color:var(--ok)}.bk-unpaid{background:rgba(183,112,10,.13);color:var(--warn)}
+.bk-empty{text-align:center;padding:30px}
+.bk-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.bk-steps{display:flex;flex-direction:column;gap:14px;min-width:0}
+.bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
+.bk-summary{position:sticky;top:12px}
+.bk-hint{font-size:12.5px;margin:6px 0 0}
+.bk-check{color:var(--text);font-size:14px}
+.bk-agent-pick{display:flex;gap:8px}.bk-agent-pick input{flex:1;min-width:0}
+.bk-agent-card{margin:10px 0 0;padding:10px 12px;background:var(--panel-2);border-radius:8px;font-size:13.5px}
+.bk-pkgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.bk-pkg{position:relative;display:flex;flex-direction:column;gap:4px;border:1.5px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;color:var(--text);font-size:13.5px;font-weight:400;margin:0}
+.bk-pkg input{position:absolute;opacity:0;pointer-events:none}
+.bk-pkg.on{border-color:var(--accent);background:var(--accent-soft)}
+.bk-pkg-h{display:flex;justify-content:space-between;gap:8px;font-size:15px}.bk-pkg-h span{font-weight:700}
+.bk-pkg small{color:var(--muted)}
+.bk-pkg ul{margin:4px 0 0;padding-left:17px;color:var(--muted);font-size:12.5px;line-height:1.45}
+.bk-sub{font-size:13px;margin:16px 0 8px;color:var(--text)}
+.bk-adds{display:flex;flex-direction:column;gap:6px}
+.bk-add{border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;cursor:pointer;align-items:flex-start}
+.bk-add span{display:flex;flex-direction:column;flex:1}.bk-add small{color:var(--muted);font-weight:400}.bk-add .p{flex:none;font-weight:600}
+.bk-add.on{border-color:var(--accent);background:var(--accent-soft)}
+.bk-days{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.bk-day{flex:none;display:flex;flex-direction:column;align-items:center;width:62px;padding:7px 0;border:1.5px solid var(--border);border-radius:10px;background:var(--panel)}
+.bk-day b{font-size:18px;line-height:1.2}.bk-day small{font-size:11px;color:var(--muted)}.bk-day i{font-style:normal;font-size:10.5px;color:var(--ok);margin-top:2px}
+.bk-day.none i{color:var(--muted)}.bk-day.none{opacity:.65}
+.bk-day.on{border-color:var(--accent);background:var(--accent-soft);opacity:1}
+.bk-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;margin-top:10px}
+.bk-slot{padding:9px 0;border:1px solid var(--border);border-radius:8px;background:var(--panel);font-weight:500}
+.bk-slot:hover{background:var(--panel-2)}.bk-slot.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.bk-chosen{margin:12px 0 0;font-weight:600}
+.bk-warn{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(183,112,10,.11);color:var(--text);font-size:13px}
+.bk-warn ul{margin:6px 0;padding-left:18px}
+.bk-lines>div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:14px}
+.bk-lines .bk-total{border-top:1px solid var(--border);margin-top:4px;padding-top:9px;font-weight:700;font-size:16px}
+.bk-disc input{width:90px;padding:4px 8px;text-align:right}
+.bk-disc{align-items:center;color:var(--muted)}
+.bk-opts{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.bk-opts .check{color:var(--text);align-items:flex-start}.bk-opts .check input{margin-top:2px}
+.bk-place{width:100%;padding:12px;font-size:15px}.bk-place:disabled{opacity:.5;cursor:not-allowed}
+.bk-clear{width:100%;margin-top:6px;color:var(--muted)}
+.bk-detail{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bk-detail .bk-wide{grid-column:1/-1}
+.bk-detail p{margin:6px 0}
+.bk-big{font-size:16px;font-weight:600}
+.bk-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.bk-resched{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px}
+.bk-svc-list{display:flex;flex-direction:column;gap:6px}
+.bk-svc{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:8px 12px}
+.bk-svc span{flex:1;display:flex;flex-direction:column}.bk-svc small{color:var(--muted)}.bk-svc.off{opacity:.6}
+.bk-wdays{display:flex;flex-wrap:wrap;gap:6px 14px}.bk-wdays .check{color:var(--text)}
+@media (max-width:900px){ .bk-layout{grid-template-columns:1fr} .bk-summary{position:static} .bk-detail{grid-template-columns:1fr} }
+@media (max-width:640px){ .bk-row{gap:10px;padding:10px 12px} .bk-agent-pick{flex-wrap:wrap} .bk-agent-pick .btn{width:100%} #bkSettings{margin-left:0!important} }
 </style>
 </head>
 <body>
@@ -1000,6 +1069,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
+      <a href="#/bookings" data-view="bookings" title="Bookings" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Bookings</span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
       <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
       <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
@@ -1080,6 +1150,8 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
     <!-- Calendar -->
     <div id="calendarView" class="hidden"></div>
     <div id="notificationsView" class="hidden"></div>
+    <!-- Bookings (owner only for now) -->
+    <div id="bookingsView" class="hidden"></div>
 
     <!-- Finance (owner only) -->
     <div id="financeView" class="hidden"></div>
@@ -1186,9 +1258,9 @@ async function loadRoleAccess(){
 }
 const permFor = (m, k) => !m ? false : m.role === 'owner' ? true : (m.permissions && k in m.permissions ? !!m.permissions[k] : roleDefault(m.role, k));
 const can = k => permFor(S.me, k);
-const viewAllowed = v => ['tasks','mail','calendar','agents','chat'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => ['tasks','mail','calendar','agents','chat'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' || v === 'bookings' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','bookings','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
@@ -1554,13 +1626,14 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  let view = ['home','notifications','tasks','mail','calendar','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','bookings','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
     else { history.replaceState(null, '', `#/projects/${S.media}`); }
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
+  if (view === 'bookings') S.bkSub = parts[1] || '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
@@ -1597,6 +1670,8 @@ function render(){
   $('#mailView').classList.toggle('hidden', S.view !== 'mail');
   if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
+  $('#bookingsView').classList.toggle('hidden', S.view !== 'bookings');
+  if (S.view === 'bookings') renderBookings();
   if (S.view === 'calendar') renderCalendar();
   if (S.view === 'finance') renderFinance();
   if (S.view === 'tasks') renderTasks();
@@ -3400,8 +3475,9 @@ function normEvent(e){
   const en = allDay ? new Date(e.end.date + 'T00:00:00') : new Date(e.end.dateTime);
   const spiro = parseSpiro(e.description);
   const kv = e.extendedProperties?.private?.kvhq;
-  const kind = spiro ? 'shoot' : (kv === 'block' || e.eventType === 'focusTime') ? 'block' : allDay && /^booked$/i.test(e.summary || '') ? 'booked' : 'event';
-  return { id: e.id, raw: e, allDay, s, e: en, kind, spiro, title: kind === 'shoot' ? (spiro.client || e.summary) : (e.summary || '(No title)'), location: e.location || '', link: e.htmlLink, mine: !spiro };
+  const bookingId = e.extendedProperties?.private?.kvhq_booking || null;
+  const kind = spiro || bookingId ? 'shoot' : (kv === 'block' || e.eventType === 'focusTime') ? 'block' : allDay && /^booked$/i.test(e.summary || '') ? 'booked' : 'event';
+  return { id: e.id, raw: e, allDay, s, e: en, kind, spiro, title: spiro ? (spiro.client || e.summary) : (e.summary || '(No title)'), location: e.location || '', link: e.htmlLink, mine: !spiro && !bookingId, bookingId };
 }
 function agentForEvent(ev){
   const n = (ev.spiro?.client || '').toLowerCase().trim(); if (!n) return null;
@@ -3615,11 +3691,13 @@ function openCalEvent(ev){
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn danger" id="evDel" style="margin-right:auto">Delete</button>` : ''}
       ${agent ? `<button class="btn" id="evAgent">Agent file</button>` : ''}
       ${proj ? `<button class="btn" id="evProj">Open project</button>` : ''}
+      ${ev.bookingId && isOwner() ? `<a class="btn" href="#/bookings/${esc(ev.bookingId)}" id="evBooking">Open booking</a>` : ''}
       ${sp?.admin ? `<a class="btn" href="${esc(sp.admin)}" target="_blank" rel="noopener">Open in Spiro</a>` : ''}
       ${safeUrl(ev.link) ? `<a class="btn" href="${esc(ev.link)}" target="_blank" rel="noopener">Google Calendar</a>` : ''}
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn" id="evEdit">Edit</button>` : ''}
       <button class="btn primary" id="evClose">Close</button></div></div>`;
   $('#ov').onclick = closeLayer; $('#evClose').onclick = closeLayer;
+  const evB = $('#evBooking'); if (evB) evB.onclick = () => closeLayer();
   const a = $('#evAgent'); if (a) a.onclick = () => { closeLayer(); openAgent(agent.id); };
   const p = $('#evProj'); if (p) p.onclick = () => { closeLayer(); openProject(proj.id); };
   const ed = $('#evEdit'); if (ed) ed.onclick = () => openCalForm({ kind: ev.kind === 'block' ? 'block' : 'event', ev });
@@ -3692,6 +3770,566 @@ function openCalForm({ kind = 'event', start, ev } = {}){
     } catch (e2) { $('#cfSave').disabled = false; fail(e2); }
   };
   setTimeout(() => $('#cfTitle').focus(), 30);
+}
+
+/* ===================== BOOKINGS (order form + booking management, owner only for now) =====================
+   Tables: booking_services (packages + add-ons, editable), booking_settings (hours, buffer, large-property fee),
+   bookings (one row per order). Placing an order can also put the shoot on your Google Calendar and create the
+   Photo/Video projects. Built so a public version (book.knoxview.com) can reuse the same catalog and openings rules. */
+const BK = { services:[], settings:null, list:[], loaded:false, tab:'upcoming', q:'', draft:null, busy:null, busyAt:0 };
+const BK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const money = n => { const v = Number(n || 0); return '$' + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+const bkSvc = id => BK.services.find(s => s.id === id);
+const bkActive = kind => BK.services.filter(s => s.kind === kind && s.active).sort((a, b) => a.sort_order - b.sort_order);
+const bkWhen = b => b.shoot_start ? `${new Date(b.shoot_start).toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })} · ${fmtT(b.shoot_start)}–${fmtT(b.shoot_end)}` : 'Not scheduled';
+const bkClient = b => agentName(b.agent_id) || b.client_name || 'No client';
+const bkPkgName = b => (b.items || []).find(i => i.kind === 'package')?.name || (b.items || [])[0]?.name || '';
+const BK_STATUS = { requested:['Requested','var(--warn)'], scheduled:['Scheduled','var(--accent-2)'], completed:['Completed','var(--ok)'], cancelled:['Cancelled','var(--muted)'] };
+const bkPill = s => `<span class="status-pill"><span class="dot" style="background:${BK_STATUS[s]?.[1]}"></span>${BK_STATUS[s]?.[0] || s}</span>`;
+
+async function loadBookingData(force){
+  if (BK.loaded && !force) return;
+  const [s, st, b] = await Promise.all([
+    sb.from('booking_services').select('*').order('sort_order'),
+    sb.from('booking_settings').select('*').eq('id', 1).maybeSingle(),
+    sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }),
+  ]);
+  if (s.error || st.error || b.error) return fail(s.error || st.error || b.error);
+  BK.services = s.data || []; BK.settings = st.data; BK.list = b.data || []; BK.loaded = true;
+}
+async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
+
+async function renderBookings(){
+  const root = $('#bookingsView');
+  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading bookings…</p>'; await loadBookingData(); if (S.view !== 'bookings') return; }
+  const sub = S.bkSub || '';
+  if (sub === 'new') return renderOrderForm();
+  if (sub) return renderBookingDetail(sub);
+  renderBookingList();
+}
+
+/* ----- List ----- */
+function renderBookingList(){
+  const now = new Date().toISOString();
+  const q = BK.q.toLowerCase();
+  let rows = BK.list.filter(b => {
+    if (BK.tab === 'upcoming') return b.status !== 'cancelled' && b.status !== 'completed' && (!b.shoot_start || b.shoot_end >= now);
+    if (BK.tab === 'past') return b.status !== 'cancelled' && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now));
+    if (BK.tab === 'unpaid') return b.status !== 'cancelled' && !b.paid;
+    if (BK.tab === 'cancelled') return b.status === 'cancelled';
+    return true;
+  }).filter(b => !q || [b.address, b.city, bkClient(b), bkPkgName(b), String(b.number)].join(' ').toLowerCase().includes(q));
+  if (BK.tab !== 'upcoming') rows = rows.slice().reverse();
+  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now);
+  const unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid);
+  const weekEnd = addDays(new Date(), 7).toISOString();
+  const groups = [];
+  rows.forEach(b => {
+    const k = b.shoot_start ? new Date(b.shoot_start).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }) : 'Not scheduled';
+    let g = groups.find(x => x.k === k); if (!g) groups.push(g = { k, items: [] }); g.items.push(b);
+  });
+  $('#bookingsView').innerHTML = `
+    <div class="page-head"><div><h1>Bookings</h1><p>Place orders, schedule shoots and keep track of what's been paid.</p></div></div>
+    <div class="bk-kpis">
+      <div class="kpi-mini"><b>${upcoming.filter(b => b.shoot_start < weekEnd).length}</b><span>shoots in the next 7 days</span></div>
+      <div class="kpi-mini"><b>${upcoming.length}</b><span>upcoming</span></div>
+      <div class="kpi-mini"><b>${money(unpaid.reduce((t, b) => t + Number(b.total || 0), 0))}</b><span>unpaid (${unpaid.length})</span></div>
+    </div>
+    <div class="toolbar">
+      <a class="btn primary" href="#/bookings/new">+ New order</a>
+      <div class="seg" id="bkTabs">${[['upcoming','Upcoming'],['past','Past'],['unpaid','Unpaid'],['cancelled','Cancelled'],['all','All']].map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+      <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
+      <button class="btn" id="bkSettings" style="margin-left:auto">⚙ Services & hours</button>
+    </div>
+    ${groups.length ? groups.map(g => `<div class="bk-group"><h3>${esc(g.k)}</h3>${g.items.map(b => `
+      <a class="bk-row ${b.status}" href="#/bookings/${b.id}">
+        <span class="bk-time">${b.shoot_start ? `${fmtT(b.shoot_start)}<small>${fmtT(b.shoot_end)}</small>` : '—'}</span>
+        <span class="bk-main"><b>${esc(b.address)}</b><small>${esc(bkClient(b))}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''} · #${b.number}</small></span>
+        <span class="bk-right"><b>${money(b.total)}</b>${b.status === 'cancelled' ? bkPill('cancelled') : b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</span>
+      </a>`).join('')}</div>`).join('')
+      : `<div class="panel bk-empty"><p>${BK.list.length ? 'Nothing here.' : 'No bookings yet.'}</p>${BK.list.length ? '' : '<a class="btn primary" href="#/bookings/new">Place your first order</a>'}</div>`}`;
+  $('#bkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; BK.tab = b.dataset.t; renderBookingList(); };
+  $('#bkSearch').oninput = e => { BK.q = e.target.value; const pos = e.target.selectionStart; renderBookingList(); const i = $('#bkSearch'); i.focus(); i.setSelectionRange(pos, pos); };
+  $('#bkSettings').onclick = openBookingSettings;
+}
+
+/* ----- Pricing ----- */
+function bkQuote(d){
+  const set = BK.settings || {};
+  const pkg = bkSvc(d.pkg), adds = [...d.addons].map(bkSvc).filter(Boolean);
+  const items = [];
+  if (pkg) items.push({ service_id: pkg.id, name: pkg.name, kind: 'package', price: Number(pkg.price) });
+  adds.forEach(a => items.push({ service_id: a.id, name: a.name, kind: 'addon', price: Number(a.price) }));
+  const large = !!d.adu || (Number(d.sqft) > 0 && Number(d.sqft) > Number(set.large_sqft || 3500));
+  if (large && Number(set.large_fee) > 0) items.push({ name: 'Large property fee', kind: 'fee', price: Number(set.large_fee) });
+  const subtotal = items.reduce((t, i) => t + i.price, 0);
+  const discount = Math.min(subtotal, Math.max(0, Number(d.discount) || 0));
+  const duration = (pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + (large ? 30 : 0);
+  return { items, subtotal, discount, total: subtotal - discount, duration: duration || 60, large, pkg, adds };
+}
+
+/* ----- Openings: working hours minus anything on your Google Calendar (all-day events block the whole day) ----- */
+async function bkLoadBusy(force){
+  if (!force && BK.busy && Date.now() - BK.busyAt < 2 * 60 * 1000) return BK.busy;
+  const start = startOfDay(new Date()), end = addDays(start, (BK.settings?.horizon_days || 21) + 1);
+  const d = await gcal('list', { timeMin: start.toISOString(), timeMax: end.toISOString() });
+  BK.busy = (d.items || []).filter(e => e.status !== 'cancelled').map(e => {
+    const allDay = !!e.start?.date;
+    const s = allDay ? new Date(e.start.date + 'T00:00:00') : new Date(e.start.dateTime);
+    const en = allDay ? new Date(e.end.date + 'T00:00:00') : new Date(e.end.dateTime);
+    return { id: e.id, s, e: en, allDay, title: e.summary || '(busy)', free: !allDay && e.transparency === 'transparent' };
+  }).filter(x => !x.free);
+  BK.busyAt = Date.now();
+  return BK.busy;
+}
+const bkMin = t => { const [h, m] = String(t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+function bkCheck(start, duration, ignoreEvent){
+  // Returns a list of plain-English reasons this time doesn't fit (empty = it fits)
+  const set = BK.settings || {}, why = [];
+  const end = new Date(start.getTime() + duration * 60000), buf = (set.buffer_min || 0) * 60000;
+  if (!(set.work_days || []).includes(start.getDay())) why.push(`${BK_DAYS[start.getDay()]} isn't one of your shoot days`);
+  const sm = start.getHours() * 60 + start.getMinutes(), em = sm + duration;
+  if (sm < bkMin(set.day_start) || em > bkMin(set.day_end)) why.push(`It's outside your hours (${fmtT(new Date(`2000-01-01T${String(set.day_start).slice(0,5)}`))}–${fmtT(new Date(`2000-01-01T${String(set.day_end).slice(0,5)}`))})`);
+  if (start.getTime() < Date.now() + (set.min_notice_hours || 0) * 3600000) why.push(start < new Date() ? 'That time has already passed' : `It's less than ${set.min_notice_hours} hours away`);
+  (BK.busy || []).forEach(b => {
+    if (b.id === ignoreEvent) return;
+    if (b.allDay ? (start < b.e && end > b.s) : (start.getTime() - buf < b.e.getTime() && end.getTime() + buf > b.s.getTime()))
+      why.push(b.allDay ? `"${b.title}" blocks that whole day` : `Too close to "${b.title}" (${fmtT(b.s)}–${fmtT(b.e)}${buf ? `, with ${set.buffer_min} min drive/buffer` : ''})`);
+  });
+  return why;
+}
+function bkOpenings(duration, ignoreEvent){
+  const set = BK.settings || {}, days = [];
+  for (let i = 0; i <= (set.horizon_days || 21); i++) {
+    const day = addDays(startOfDay(new Date()), i), slots = [];
+    if ((set.work_days || []).includes(day.getDay())) {
+      for (let m = bkMin(set.day_start); m + duration <= bkMin(set.day_end); m += (set.slot_step || 30)) {
+        const s = new Date(day); s.setMinutes(m);
+        if (!bkCheck(s, duration, ignoreEvent).length) slots.push(s);
+      }
+    }
+    days.push({ day, slots, workday: (set.work_days || []).includes(day.getDay()) });
+  }
+  return days;
+}
+/* Slot picker used by the order form and Reschedule. st = { start, override, day } ; onPick(start) */
+function bkPickerHTML(){ return `<div id="bkPicker"><p class="muted">Checking your calendar…</p></div>`; }
+async function bkPaintPicker(st, duration, ignoreEvent, onChange){
+  const box = $('#bkPicker'); if (!box) return;
+  if (!S.cal.status?.connected) { box.innerHTML = `<p class="bk-warn">Google Calendar isn't connected, so openings can't be checked. Connect it on the Calendar tab, or pick a time yourself below.</p>`; st.override = true; }
+  else { try { await bkLoadBusy(); } catch (e) { box.innerHTML = `<p class="bk-warn">Couldn't read your calendar (${esc(e.message)}). Pick a time yourself below.</p>`; st.override = true; } }
+  const paint = () => {
+    const days = S.cal.status?.connected && BK.busy ? bkOpenings(duration, ignoreEvent) : [];
+    if (!st.day) st.day = isoDay((days.find(d => d.slots.length) || days[0] || { day: new Date() }).day);
+    const cur = days.find(d => isoDay(d.day) === st.day);
+    const why = st.start ? bkCheck(st.start, duration, ignoreEvent) : [];
+    box.innerHTML = `
+      ${days.length && !st.override ? `
+      <div class="bk-days">${days.map(d => `<button type="button" class="bk-day ${isoDay(d.day) === st.day ? 'on' : ''} ${d.slots.length ? '' : 'none'}" data-day="${isoDay(d.day)}">
+        <small>${BK_DAYS[d.day.getDay()]}</small><b>${d.day.getDate()}</b><small>${d.day.toLocaleDateString(undefined, { month:'short' })}</small><i>${d.slots.length ? d.slots.length + ' open' : d.workday ? 'No times' : 'Off'}</i></button>`).join('')}</div>
+      <div class="bk-slots">${cur?.slots.length ? cur.slots.map(s => `<button type="button" class="bk-slot ${st.start && +st.start === +s ? 'on' : ''}" data-s="${s.toISOString()}">${fmtT(s)}</button>`).join('') : `<p class="muted">No openings this day for a ${duration}-minute shoot.</p>`}</div>` : ''}
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="bkOverride" ${st.override ? 'checked' : ''} ${!S.cal.status?.connected || !BK.busy ? 'disabled' : ''} /> Pick any time (override)</label>
+      ${st.override ? `<div class="grid2" style="margin-top:8px"><div><label>Date</label><input type="date" id="bkOvDate" value="${st.start ? isoDay(st.start) : st.day}" /></div><div><label>Start time</label><input type="time" id="bkOvTime" step="900" value="${st.start ? toLocalTime(st.start) : ''}" /></div></div>` : ''}
+      ${st.start ? `<p class="bk-chosen">📅 ${esc(st.start.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }))} · ${fmtT(st.start)}–${fmtT(new Date(st.start.getTime() + duration * 60000))} <span class="muted">(${duration} min)</span></p>
+        ${why.length ? `<div class="bk-warn"><b>Heads up — this time doesn't fit your rules:</b><ul>${why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>You can still book it.</div>` : ''}` : ''}`;
+    box.querySelectorAll('[data-day]').forEach(b => b.onclick = () => { st.day = b.dataset.day; paint(); });
+    box.querySelector('.bk-day.on')?.scrollIntoView({ block:'nearest', inline:'nearest' });
+    box.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { st.start = new Date(b.dataset.s); paint(); onChange?.(); });
+    const ov = $('#bkOverride'); if (ov) ov.onchange = () => { st.override = ov.checked; if (!st.override && st.start && bkCheck(st.start, duration, ignoreEvent).length) st.start = null; paint(); onChange?.(); };
+    const setOv = () => { const d = $('#bkOvDate').value, t = $('#bkOvTime').value; st.start = d && t ? new Date(`${d}T${t}`) : null; if (d) st.day = d; paint(); onChange?.(); };
+    if ($('#bkOvDate')) { $('#bkOvDate').onchange = setOv; $('#bkOvTime').onchange = setOv; }
+  };
+  st.repaint = paint;
+  paint();
+}
+
+/* ----- Order form ----- */
+function bkNewDraft(){ return { agent_id:'', newClient:false, client:{ name:'', email:'', phone:'', brokerage:'' }, address:'', city:'', sqft:'', adu:false,
+  occupancy:'', entry:'', access_notes:'', notes:'', pkg: bkActive('package')[0]?.id || '', addons: new Set(), discount:'', pick:{ start:null, override:false, day:'' },
+  mkCal:true, mkProjects:true, postChat:false, paid:false }; }
+function renderOrderForm(){
+  if (!BK.draft) BK.draft = bkNewDraft();
+  const d = BK.draft, pk = bkActive('package'), ad = bkActive('addon');
+  $('#bookingsView').innerHTML = `
+    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Bookings</a><h1>New order</h1></div></div>
+    <form id="bkForm" class="bk-layout" autocomplete="off">
+      <div class="bk-steps">
+        <section class="panel bk-step"><h2><span class="n">1</span> Client</h2>
+          <div id="bkClientBox"></div>
+        </section>
+        <section class="panel bk-step"><h2><span class="n">2</span> Property</h2>
+          <div class="grid2">
+            <div class="full"><label>Street address</label><input name="address" required value="${esc(d.address)}" placeholder="123 Mountain View Dr" /></div>
+            <div><label>City</label><input name="city" value="${esc(d.city)}" placeholder="Knoxville" /></div>
+            <div><label>Square feet</label><input name="sqft" type="number" min="0" inputmode="numeric" value="${esc(d.sqft)}" placeholder="2,400" /></div>
+            <div class="full"><label class="check bk-check"><input type="checkbox" name="adu" ${d.adu ? 'checked' : ''} /> ADU, guest house or other extra structure</label>
+              <p class="muted bk-hint">Homes over ${Number(BK.settings?.large_sqft || 3500).toLocaleString()} sq ft or with extra structures add the ${money(BK.settings?.large_fee)} large property fee (includes extra photos).</p></div>
+            <div><label>Occupied or vacant?</label><select name="occupancy">${opt([['Occupied','Occupied'],['Vacant','Vacant'],['Staged','Vacant, staged']], d.occupancy, '—')}</select></div>
+            <div><label>How do we get in?</label><select name="entry">${opt([['Agent will meet','Agent will meet'],['Owner will be home','Owner will be home'],['Lockbox','Lockbox'],['Door code','Door code'],['Other','Other (see notes)']], d.entry, '—')}</select></div>
+            <div class="full"><label>Access details</label><input name="access_notes" value="${esc(d.access_notes)}" placeholder="Lockbox / gate / door code, pets, parking…" /></div>
+          </div>
+        </section>
+        <section class="panel bk-step"><h2><span class="n">3</span> Package</h2>
+          <div class="bk-pkgs">${pk.map(p => `<label class="bk-pkg ${d.pkg === p.id ? 'on' : ''}"><input type="radio" name="pkg" value="${p.id}" ${d.pkg === p.id ? 'checked' : ''} />
+            <span class="bk-pkg-h"><b>${esc(p.name)}</b><span>${money(p.price)}</span></span>
+            ${p.description ? `<small>${esc(p.description)}</small>` : ''}
+            ${p.includes?.length ? `<ul>${p.includes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</label>`).join('')}
+            <label class="bk-pkg ${!d.pkg ? 'on' : ''}"><input type="radio" name="pkg" value="" ${!d.pkg ? 'checked' : ''} /><span class="bk-pkg-h"><b>No package</b><span></span></span><small>Add-ons only</small></label></div>
+          ${ad.length ? `<h4 class="bk-sub">Add-ons</h4><div class="bk-adds">${ad.map(a => `<label class="check bk-add ${d.addons.has(a.id) ? 'on' : ''}"><input type="checkbox" data-add="${a.id}" ${d.addons.has(a.id) ? 'checked' : ''} /><span><b>${esc(a.name)}</b>${a.description ? `<small>${esc(a.description)}</small>` : ''}</span><span class="p">+${money(a.price)}</span></label>`).join('')}</div>` : ''}
+        </section>
+        <section class="panel bk-step"><h2><span class="n">4</span> Date & time</h2>${bkPickerHTML()}</section>
+        <section class="panel bk-step"><h2><span class="n">5</span> Notes</h2>
+          <label>Notes for the shoot and the editors</label><textarea name="notes" placeholder="Special requests, rooms to skip, twilight timing…">${esc(d.notes)}</textarea>
+        </section>
+      </div>
+      <aside class="bk-summary panel" id="bkSummary"></aside>
+    </form>`;
+  bkPaintClient();
+  const form = $('#bkForm');
+  form.oninput = form.onchange = e => {
+    const t = e.target;
+    if (t.closest('#bkSummary') || t.closest('#bkPicker') || t.closest('#bkClientBox')) return;
+    if (['address','city','sqft','occupancy','entry','access_notes','notes'].includes(t.name)) d[t.name] = t.value;
+    if (t.name === 'adu') d.adu = t.checked;
+    if (t.name === 'pkg') { d.pkg = t.value; document.querySelectorAll('.bk-pkg').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); bkDurationChanged(); }
+    if (t.dataset.add) { t.checked ? d.addons.add(t.dataset.add) : d.addons.delete(t.dataset.add); t.closest('.bk-add').classList.toggle('on', t.checked); bkDurationChanged(); }
+    if (t.name === 'sqft' || t.name === 'adu') bkDurationChanged();
+    bkPaintSummary();
+  };
+  form.onsubmit = e => { e.preventDefault(); bkSubmit(); };
+  BK.pickDur = bkQuote(d).duration;
+  bkPaintPicker(d.pick, BK.pickDur, null, bkPaintSummary);
+  bkPaintSummary();
+}
+function bkDurationChanged(){
+  const dur = bkQuote(BK.draft).duration;
+  if (dur === BK.pickDur) return;
+  BK.pickDur = dur;
+  const st = BK.draft.pick;
+  if (st.start && !st.override && bkCheck(st.start, dur).length) { st.start = null; toast('The shoot got longer, so pick a time again'); }
+  bkPaintPicker(st, dur, null, bkPaintSummary);
+}
+function bkPaintClient(){
+  const d = BK.draft, box = $('#bkClientBox'); if (!box) return;
+  const a = S.agents.find(x => x.id === d.agent_id);
+  box.innerHTML = d.newClient ? `
+    <div class="grid2">
+      <div><label>Name</label><input id="bkcName" value="${esc(d.client.name)}" placeholder="Jane Smith" /></div>
+      <div><label>Brokerage</label><input id="bkcBrk" value="${esc(d.client.brokerage)}" placeholder="Realty Executives" /></div>
+      <div><label>Email</label><input id="bkcEmail" type="email" value="${esc(d.client.email)}" /></div>
+      <div><label>Phone</label><input id="bkcPhone" type="tel" value="${esc(d.client.phone)}" /></div>
+    </div>
+    <p class="muted bk-hint">They'll be added to Agents when you place the order. <a href="#" id="bkPickExisting">Pick an existing agent instead</a></p>`
+  : `<label>Agent</label>
+    <div class="bk-agent-pick"><input id="bkAgentSearch" list="bkAgentList" placeholder="Start typing a name…" value="${esc(a?.full_name || '')}" />
+      <datalist id="bkAgentList">${S.agents.slice().sort((x, y) => x.full_name.localeCompare(y.full_name)).map(x => `<option value="${esc(x.full_name)}">${esc([x.team_name, x.brokerage].filter(Boolean).join(' · '))}</option>`).join('')}</datalist>
+      <button type="button" class="btn" id="bkNewClient">+ New client</button></div>
+    ${a ? `<p class="bk-agent-card"><b>${esc(a.full_name)}</b>${[a.brokerage, a.phone, a.email].filter(Boolean).map(x => ' · ' + esc(x)).join('')}${a.preferences ? `<br><span class="muted">Preferences: ${esc(a.preferences)}</span>` : ''}</p>` : ''}`;
+  if (d.newClient) {
+    [['bkcName','name'],['bkcBrk','brokerage'],['bkcEmail','email'],['bkcPhone','phone']].forEach(([id, k]) => { $('#' + id).oninput = e => { d.client[k] = e.target.value; bkPaintSummary(); }; });
+    $('#bkPickExisting').onclick = e => { e.preventDefault(); d.newClient = false; bkPaintClient(); bkPaintSummary(); };
+  } else {
+    const inp = $('#bkAgentSearch');
+    inp.onchange = () => {
+      const v = inp.value.trim().toLowerCase(), m = S.agents.find(x => x.full_name.toLowerCase() === v);
+      d.agent_id = m?.id || '';
+      if (!m && v) { d.newClient = true; d.client.name = inp.value.trim(); }
+      bkPaintClient(); bkPaintSummary();
+    };
+    $('#bkNewClient').onclick = () => { d.newClient = true; d.agent_id = ''; bkPaintClient(); bkPaintSummary(); setTimeout(() => $('#bkcName')?.focus(), 20); };
+  }
+}
+function bkPaintSummary(){
+  const d = BK.draft, q = bkQuote(d), box = $('#bkSummary'); if (!box) return;
+  const client = d.newClient ? d.client.name : agentName(d.agent_id);
+  const missing = [!client && 'a client', !d.address.trim() && 'the address', !q.items.length && 'a package or add-on', !d.pick.start && 'a date and time'].filter(Boolean);
+  const hasPhoto = [q.pkg, ...q.adds].some(s => s?.photo_type), vids = [q.pkg, ...q.adds].filter(s => s?.video_type);
+  box.innerHTML = `<h2>Order summary</h2>
+    ${q.items.length ? `<div class="bk-lines">${q.items.map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
+      <div class="bk-disc"><span>Discount</span><span><input id="bkDisc" type="number" min="0" step="1" inputmode="decimal" value="${esc(d.discount)}" placeholder="0" /></span></div>
+      <div class="bk-total"><span>Total</span><span>${money(q.total)}</span></div></div>` : '<p class="muted">Choose a package to see the price.</p>'}
+    <p class="muted bk-hint">Shoot length: about ${q.duration} minutes</p>
+    <div class="bk-opts">
+      <label class="check"><input type="checkbox" id="bkMkCal" ${d.mkCal ? 'checked' : ''} ${S.cal.status?.connected ? '' : 'disabled'} /> Add the shoot to my Google Calendar</label>
+      <label class="check"><input type="checkbox" id="bkMkProj" ${d.mkProjects ? 'checked' : ''} /> Create projects${hasPhoto || vids.length ? ` (${[hasPhoto && 'photo', vids.length && (vids.length > 1 ? vids.length + ' videos' : 'video')].filter(Boolean).join(' + ')})` : ''}</label>
+      <label class="check ${d.mkProjects ? '' : 'hidden'}"><input type="checkbox" id="bkChat" ${d.postChat ? 'checked' : ''} /> Post the new projects in the team chat</label>
+      <label class="check"><input type="checkbox" id="bkPaid" ${d.paid ? 'checked' : ''} /> Already paid</label>
+    </div>
+    ${missing.length ? `<p class="muted bk-hint">Still needed: ${missing.join(', ')}</p>` : ''}
+    <button class="btn primary bk-place" id="bkPlace" ${missing.length ? 'disabled' : ''}>Place order${q.items.length ? ' · ' + money(q.total) : ''}</button>
+    <button type="button" class="btn ghost bk-clear" id="bkClear">Clear form</button>`;
+  const disc = $('#bkDisc'); if (disc) disc.onchange = () => { d.discount = disc.value; bkPaintSummary(); };
+  $('#bkMkCal').onchange = e => { d.mkCal = e.target.checked; };
+  $('#bkMkProj').onchange = e => { d.mkProjects = e.target.checked; bkPaintSummary(); };
+  $('#bkChat').onchange = e => { d.postChat = e.target.checked; };
+  $('#bkPaid').onchange = e => { d.paid = e.target.checked; };
+  $('#bkClear').onclick = () => { if (!confirm('Clear this order and start over?')) return; BK.draft = null; renderOrderForm(); };
+  if (!S.cal.status?.connected) d.mkCal = false;
+}
+function bkEventBody(b){
+  const lines = [`Knox View order #${b.number}`, '',
+    `Client: ${bkClient(b)}`,
+    ...(b.client_phone || S.agents.find(a => a.id === b.agent_id)?.phone ? [`Phone: ${b.client_phone || S.agents.find(a => a.id === b.agent_id)?.phone}`] : []),
+    ...(b.client_email || S.agents.find(a => a.id === b.agent_id)?.email ? [`Email: ${b.client_email || S.agents.find(a => a.id === b.agent_id)?.email}`] : []),
+    '', 'Services:', ...(b.items || []).map(i => `• ${i.name}`), '',
+    ...(b.sqft ? [`Size: ${Number(b.sqft).toLocaleString()} sq ft${b.large_property ? ' (large property)' : ''}`] : []),
+    ...(b.occupancy ? [`Occupancy: ${b.occupancy}`] : []), ...(b.entry ? [`Entry: ${b.entry}`] : []),
+    ...(b.access_notes ? [`Access: ${b.access_notes}`] : []), ...(b.notes ? ['', `Notes: ${b.notes}`] : []),
+    '', `Open in HQ: https://hq.knoxview.com/#/bookings/${b.id}`];
+  return { summary: `📷 ${bkClient(b)} · ${shortAddr(b.address)}`, location: [b.address, b.city].filter(Boolean).join(', '), description: lines.join('\n'),
+    start: { dateTime: new Date(b.shoot_start).toISOString(), timeZone: CAL_TZ }, end: { dateTime: new Date(b.shoot_end).toISOString(), timeZone: CAL_TZ },
+    extendedProperties: { private: { kvhq: 'shoot', kvhq_booking: b.id } } };
+}
+async function bkSubmit(){
+  const d = BK.draft, q = bkQuote(d), btn = $('#bkPlace');
+  if (btn.disabled) return;
+  if (d.pick.start && bkCheck(d.pick.start, q.duration).length && !confirm("This time doesn't fit your booking rules. Book it anyway?")) return;
+  btn.disabled = true; btn.textContent = 'Placing order…';
+  const warn = [];
+  try {
+    let agentId = d.agent_id || null;
+    if (d.newClient) {
+      const { data: ag, error } = await sb.from('agents').insert({ full_name: d.client.name.trim(), email: d.client.email.trim() || null, phone: d.client.phone.trim() || null, brokerage: d.client.brokerage.trim() || null }).select().single();
+      if (error) throw error;
+      S.agents.push(ag); agentId = ag.id;
+    }
+    const start = d.pick.start, end = new Date(start.getTime() + q.duration * 60000);
+    const row = { agent_id: agentId, client_name: d.newClient ? d.client.name.trim() : null, client_email: d.newClient ? d.client.email.trim() || null : null, client_phone: d.newClient ? d.client.phone.trim() || null : null,
+      address: d.address.trim(), city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
+      occupancy: d.occupancy || null, entry: d.entry || null, access_notes: d.access_notes.trim() || null, notes: d.notes.trim() || null,
+      items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, paid: d.paid, paid_at: d.paid ? new Date().toISOString() : null,
+      shoot_start: start.toISOString(), shoot_end: end.toISOString(), duration_min: q.duration, created_by: S.me.id };
+    const { data: b, error } = await sb.from('bookings').insert(row).select().single();
+    if (error) throw error;
+    const upd = {};
+    if (d.mkCal && S.cal.status?.connected) {
+      try { const ev = await gcal('create', { event: bkEventBody(b) }); upd.gcal_event_id = ev.id; clearCalCache(); BK.busy = null; }
+      catch (e) { warn.push('the calendar event (' + e.message + ')'); }
+    }
+    if (d.mkProjects) {
+      try { upd.project_ids = await bkCreateProjects(b, q, d.postChat); }
+      catch (e) { warn.push('the projects (' + e.message + ')'); }
+    }
+    if (Object.keys(upd).length) { const { error: uErr } = await sb.from('bookings').update(upd).eq('id', b.id); if (uErr) warn.push('linking (' + uErr.message + ')'); }
+    BK.draft = null;
+    await reloadBookings();
+    if (d.mkProjects) reloadProjects();
+    toast(warn.length ? `Order #${b.number} saved, but couldn't create ${warn.join(' and ')}` : `Order #${b.number} booked`);
+    location.hash = `#/bookings/${b.id}`;
+  } catch (e) { btn.disabled = false; btn.textContent = 'Place order'; fail(e); }
+}
+async function bkCreateProjects(b, q, postChat){
+  const services = [q.pkg, ...q.adds].filter(Boolean);
+  const typeId = (media, name) => S.types.find(t => t.media === media && t.name.toLowerCase() === String(name || '').toLowerCase())?.id || S.types.find(t => t.media === media && t.active)?.id || null;
+  const base = { name: b.address, address: [b.address, b.city].filter(Boolean).join(', '), city: b.city, agent_id: b.agent_id, delivery_method: 'spiro', submitted_by: S.me.id, notify_slack: !!postChat,
+    notes: [`From order #${b.number} (shoot ${new Date(b.shoot_start).toLocaleDateString(undefined, { month:'short', day:'numeric' })})`, b.notes].filter(Boolean).join('\n') };
+  const ids = []; let photoId = null;
+  const photoSvc = services.find(s => s.photo_type);
+  if (photoSvc) {
+    const { data, error } = await sb.from('projects').insert({ ...base, media: 'photo', project_type_id: typeId('photo', photoSvc.photo_type) }).select().single();
+    if (error) throw error;
+    photoId = data.id; ids.push(data.id);
+    const tasks = [{ project_id: data.id, kind: 'drone_pin', title: 'Drone Pin Photo', details: 'One high/far photo with a small drone pin (if applicable)', sort_order: 0 }];
+    if (services.some(s => s.twilight)) tasks.push({ project_id: data.id, kind: 'virtual_twilight', title: 'Virtual Twilight', sort_order: 1 });
+    const { error: tErr } = await sb.from('project_tasks').insert(tasks); if (tErr) console.warn(tErr);
+  }
+  for (const s of services.filter(x => x.video_type)) {
+    const t = S.types.find(x => x.id === typeId('video', s.video_type));
+    const { data, error } = await sb.from('projects').insert({ ...base, media: 'video', project_type_id: t?.id || null, parent_project_id: photoId,
+      video_tier: s.video_tier || 'standard', video_length: t?.default_length || null, video_format: /cinematic|youtube|lux/i.test(t?.name || '') ? 'Horizontal' : 'Vertical',
+      export_notes: 'Export Branded & Unbranded' }).select().single();
+    if (error) throw error;
+    ids.push(data.id);
+  }
+  return ids;
+}
+
+/* ----- Booking detail ----- */
+function renderBookingDetail(id){
+  const b = BK.list.find(x => x.id === id);
+  if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Bookings</a><p class="muted">That booking wasn't found.</p>`; return; }
+  const a = S.agents.find(x => x.id === b.agent_id);
+  const phone = b.client_phone || a?.phone, email = b.client_email || a?.email;
+  const projs = (b.project_ids || []).map(pid => S.projects.find(p => p.id === pid)).filter(Boolean);
+  const loc = [b.address, b.city].filter(Boolean).join(', ');
+  $('#bookingsView').innerHTML = `
+    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Bookings</a><h1>${esc(b.address)}</h1><p>Order #${b.number} · ${bkPill(b.status)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</p></div></div>
+    <div class="bk-detail">
+      <div class="panel"><h2>Shoot</h2>
+        <p class="bk-big">${esc(bkWhen(b))}</p>
+        <p>📍 ${esc(loc)} · <a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></p>
+        <div class="sp-grid">
+          <div><label>Size</label>${b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : '—'}${b.large_property ? ' · large' : ''}</div>
+          <div><label>Occupancy</label>${esc(b.occupancy || '—')}</div>
+          <div><label>Entry</label>${esc(b.entry || '—')}</div>
+          <div><label>Length</label>${b.duration_min || '—'} min</div>
+        </div>
+        ${b.access_notes ? `<p><b>Access:</b> ${esc(b.access_notes)}</p>` : ''}
+        <div id="bkResched"></div>
+        <div class="bk-actions">
+          ${b.status !== 'cancelled' ? `<button class="btn" id="bkReschedBtn">Reschedule</button>` : ''}
+          ${b.status === 'scheduled' ? `<button class="btn" id="bkDone">Mark shoot complete</button>` : ''}
+          ${b.status === 'completed' ? `<button class="btn" id="bkUndone">Mark not complete</button>` : ''}
+          ${b.status !== 'cancelled' ? `<button class="btn danger" id="bkCancel">Cancel booking</button>` : `<button class="btn" id="bkRestore">Restore booking</button>`}
+        </div>
+      </div>
+      <div class="panel"><h2>Client</h2>
+        <p class="bk-big">${esc(bkClient(b))}</p>
+        ${a?.brokerage ? `<p class="muted">${esc(a.brokerage)}</p>` : ''}
+        <p>${phone ? `<a href="tel:${esc(phone)}">${esc(phone)}</a>` : ''}${phone && email ? ' · ' : ''}${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : ''}</p>
+        ${a ? `<button class="btn small" id="bkAgent">Agent file</button>` : ''}
+      </div>
+      <div class="panel"><h2>Order</h2>
+        <div class="bk-lines">${(b.items || []).map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
+          ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
+          <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div></div>
+        <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}</span>` : ''}</div>
+      </div>
+      <div class="panel"><h2>Projects & calendar</h2>
+        ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
+          : `<p class="muted">No projects linked.</p>`}
+        <div class="bk-actions">
+          ${!projs.length && b.status !== 'cancelled' ? `<button class="btn" id="bkMkProj">Create projects</button>` : ''}
+          ${b.gcal_event_id ? `<span class="muted">✓ On your Google Calendar</span>` : b.status !== 'cancelled' && b.shoot_start && S.cal.status?.connected ? `<button class="btn" id="bkMkCal">Add to Google Calendar</button>` : ''}
+        </div>
+      </div>
+      <div class="panel bk-wide"><h2>Notes</h2>
+        <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
+        <label style="margin-top:10px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" />
+        <div class="bk-actions"><button class="btn" id="bkSaveNotes">Save notes</button></div>
+        <p class="muted bk-hint">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</p>
+      </div>
+    </div>`;
+  const save = async (patch, msg) => {
+    const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) return fail(error) || false;
+    Object.assign(b, patch); if (msg) toast(msg); renderBookingDetail(b.id); return true;
+  };
+  document.querySelectorAll('#bookingsView [data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
+  const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
+  on('bkAgent', () => openAgent(a.id));
+  on('bkPaidBtn', () => save({ paid: !b.paid, paid_at: b.paid ? null : new Date().toISOString() }, b.paid ? 'Marked unpaid' : 'Marked paid'));
+  on('bkDone', () => save({ status: 'completed' }, 'Shoot marked complete'));
+  on('bkUndone', () => save({ status: 'scheduled' }));
+  on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
+  on('bkCancel', async () => {
+    if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
+    if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (e) { if (!/404|410|not found|deleted/i.test(e.message)) return fail(e); } }
+    save({ status: 'cancelled', cancelled_at: new Date().toISOString(), gcal_event_id: null }, 'Booking cancelled');
+  });
+  on('bkRestore', () => save({ status: 'scheduled', cancelled_at: null }, 'Booking restored — pick Add to Google Calendar if you need it there again'));
+  on('bkMkCal', async () => {
+    try { const ev = await gcal('create', { event: bkEventBody(b) }); clearCalCache(); BK.busy = null; save({ gcal_event_id: ev.id }, 'Added to Google Calendar'); } catch (e) { fail(e); }
+  });
+  on('bkMkProj', async () => {
+    const svc = (b.items || []).map(i => bkSvc(i.service_id)).filter(Boolean);
+    try { const ids = await bkCreateProjects(b, { pkg: svc.find(s => s.kind === 'package'), adds: svc.filter(s => s.kind === 'addon') }, false); await reloadProjects(); save({ project_ids: ids }, ids.length ? 'Projects created' : 'No services on this order create projects'); }
+    catch (e) { fail(e); }
+  });
+  on('bkReschedBtn', () => {
+    const st = { start: null, override: false, day: b.shoot_start ? isoDay(new Date(b.shoot_start)) : '' };
+    const dur = b.duration_min || 60;
+    $('#bkResched').innerHTML = `<div class="bk-resched"><h4 class="bk-sub">Pick a new time</h4>${bkPickerHTML()}<div class="bk-actions"><button class="btn" id="bkRsCancel">Never mind</button><button class="btn primary" id="bkRsSave" disabled>Save new time</button></div></div>`;
+    $('#bkReschedBtn').classList.add('hidden');
+    bkPaintPicker(st, dur, b.gcal_event_id, () => { $('#bkRsSave').disabled = !st.start; });
+    $('#bkRsCancel').onclick = () => renderBookingDetail(b.id);
+    $('#bkRsSave').onclick = async () => {
+      if (bkCheck(st.start, dur, b.gcal_event_id).length && !confirm("This time doesn't fit your booking rules. Move it anyway?")) return;
+      const patch = { shoot_start: st.start.toISOString(), shoot_end: new Date(st.start.getTime() + dur * 60000).toISOString(), status: b.status === 'completed' ? 'scheduled' : b.status };
+      $('#bkRsSave').disabled = true;
+      if (b.gcal_event_id) {
+        try { await gcal('update', { id: b.gcal_event_id, event: { start: { dateTime: patch.shoot_start, timeZone: CAL_TZ }, end: { dateTime: patch.shoot_end, timeZone: CAL_TZ } } }); clearCalCache(); BK.busy = null; }
+        catch (e) { $('#bkRsSave').disabled = false; return fail(e); }
+      }
+      await save(patch, 'Rescheduled' + (b.gcal_event_id ? ' — Google Calendar updated' : ''));
+      await reloadBookings();
+    };
+  });
+}
+
+/* ----- Services & hours (owner) ----- */
+function openBookingSettings(){
+  const set = BK.settings || {};
+  const list = () => ['package', 'addon'].map(k => `<h3 class="bk-sub">${k === 'package' ? 'Packages' : 'Add-ons'}</h3>
+    <div class="bk-svc-list">${BK.services.filter(s => s.kind === k).sort((a, b) => a.sort_order - b.sort_order).map(s => `
+      <div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · ⚠ no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`).join('')}</div>`).join('');
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide"><h2>Services & hours</h2>
+    <div id="bkSvcBox">${list()}</div>
+    <button type="button" class="btn" id="bkSvcAdd" style="margin-top:10px">+ Add a service</button>
+    <form id="bkSetForm">
+      <h3 class="bk-sub" style="margin-top:22px">Shoot hours (used to show openings)</h3>
+      <div class="bk-wdays">${BK_DAYS.map((n, i) => `<label class="check"><input type="checkbox" name="wd" value="${i}" ${(set.work_days || []).includes(i) ? 'checked' : ''} /> ${n}</label>`).join('')}</div>
+      <div class="grid3" style="margin-top:10px">
+        <div><label>First start</label><input type="time" name="day_start" value="${esc(String(set.day_start || '09:00').slice(0, 5))}" /></div>
+        <div><label>Done by</label><input type="time" name="day_end" value="${esc(String(set.day_end || '17:00').slice(0, 5))}" /></div>
+        <div><label>Start times every (min)</label><input type="number" min="15" step="15" name="slot_step" value="${set.slot_step || 30}" /></div>
+        <div><label>Gap between shoots (min)</label><input type="number" min="0" step="5" name="buffer_min" value="${set.buffer_min ?? 30}" /></div>
+        <div><label>Minimum notice (hours)</label><input type="number" min="0" name="min_notice_hours" value="${set.min_notice_hours ?? 12}" /></div>
+        <div><label>Show openings for (days)</label><input type="number" min="7" max="90" name="horizon_days" value="${set.horizon_days || 21}" /></div>
+        <div><label>Large property fee ($)</label><input type="number" min="0" name="large_fee" value="${set.large_fee ?? 75}" /></div>
+        <div><label>Large property over (sq ft)</label><input type="number" min="0" step="100" name="large_sqft" value="${set.large_sqft || 3500}" /></div>
+      </div>
+      <p class="muted bk-hint">Anything on your Google Calendar blocks that time (plus the gap). All-day events block the whole day, even ones marked Free.</p>
+      <div class="actions"><button type="button" class="btn" id="bkSetClose">Close</button><button class="btn primary">Save hours</button></div>
+    </form></div>`;
+  $('#ov').onclick = $('#bkSetClose').onclick = () => { closeLayer(); if (S.view === 'bookings') renderBookings(); };
+  const wire = () => document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
+  wire();
+  $('#bkSvcAdd').onclick = () => openServiceEdit(null);
+  $('#bkSetForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, patch = { work_days: [...f.querySelectorAll('[name=wd]:checked')].map(x => +x.value), day_start: f.day_start.value, day_end: f.day_end.value,
+      slot_step: +f.slot_step.value || 30, buffer_min: +f.buffer_min.value || 0, min_notice_hours: +f.min_notice_hours.value || 0, horizon_days: +f.horizon_days.value || 21,
+      large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, updated_at: new Date().toISOString() };
+    if (bkMin(patch.day_end) <= bkMin(patch.day_start)) return toast('"Done by" has to be after the first start');
+    const { error } = await sb.from('booking_settings').update(patch).eq('id', 1);
+    if (error) return fail(error);
+    Object.assign(BK.settings, patch); toast('Hours saved');
+  };
+}
+function openServiceEdit(s){
+  const isNew = !s; s = s || { kind:'addon', name:'', description:'', includes:[], price:0, duration_min:30, photo_type:null, video_type:null, video_tier:null, twilight:false, active:true, public:true, sort_order: 200 };
+  const pTypes = S.types.filter(t => t.media === 'photo' && t.active).map(t => [t.name, t.name]), vTypes = S.types.filter(t => t.media === 'video' && t.active).map(t => [t.name, t.name]);
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>${isNew ? 'New service' : 'Edit ' + esc(s.name)}</h2>
+    <form id="svcForm"><div class="grid2">
+      <div><label>Type</label><select name="kind">${opt([['package','Package'],['addon','Add-on']], s.kind)}</select></div>
+      <div><label>Name</label><input name="name" required value="${esc(s.name)}" /></div>
+      <div><label>Price ($)</label><input name="price" type="number" min="0" step="0.01" value="${Number(s.price)}" /></div>
+      <div><label>Time on site (min)</label><input name="duration_min" type="number" min="0" step="5" value="${s.duration_min}" /></div>
+      <div class="full"><label>Short description</label><input name="description" value="${esc(s.description || '')}" /></div>
+      <div class="full"><label>What's included (one per line)</label><textarea name="includes" style="min-height:90px">${esc((s.includes || []).join('\n'))}</textarea></div>
+      <div><label>Creates a photo project</label><select name="photo_type">${opt(pTypes, s.photo_type || '', 'No')}</select></div>
+      <div><label>Creates a video project</label><select name="video_type">${opt(vTypes, s.video_type || '', 'No')}</select></div>
+      <div><label>Video tier</label><select name="video_tier">${opt(VIDEO_TIERS, s.video_tier || '', '—')}</select></div>
+      <div><label>Order on the form</label><input name="sort_order" type="number" value="${s.sort_order}" /></div>
+      <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
+      <div class="full"><label class="check"><input type="checkbox" name="active" ${s.active ? 'checked' : ''} /> Show on the order form</label></div>
+    </div>
+    <div class="actions">${isNew ? '' : `<button type="button" class="btn danger" id="svcDel" style="margin-right:auto">Delete</button>`}<button type="button" class="btn" id="svcCancel">Cancel</button><button class="btn primary">Save</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove();
+  box.querySelector('.overlay').onclick = close; box.querySelector('#svcCancel').onclick = close;
+  const back = () => { close(); openBookingSettings(); };
+  box.querySelector('#svcForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
+      includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: f.photo_type.value || null, video_type: f.video_type.value || null,
+      video_tier: f.video_tier.value || (f.video_type.value ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked, updated_at: new Date().toISOString() };
+    const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
+    if (r.error) return fail(r.error);
+    if (isNew) BK.services.push(r.data); else Object.assign(bkSvc(s.id), r.data);
+    toast('Saved'); back();
+  };
+  const del = box.querySelector('#svcDel');
+  if (del) del.onclick = async () => {
+    if (!confirm(`Delete "${s.name}"? Past orders keep their line items. (To just hide it, uncheck "Show on the order form".)`)) return;
+    const { error } = await sb.from('booking_services').delete().eq('id', s.id);
+    if (error) return fail(error);
+    BK.services = BK.services.filter(x => x.id !== s.id); back();
+  };
 }
 
 /* ===================== FINANCE (QuickBooks via the qbo edge function, owner only) ===================== */
