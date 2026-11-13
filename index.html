@@ -3876,6 +3876,7 @@ const hrName = c => c.full_name || [c.first_name, c.last_name].filter(Boolean).j
 const hrInitials = c => (hrName(c).split(/\s+/).map(w => w[0]).slice(0, 2).join('') || '?').toUpperCase();
 const hrVideo = c => c.video_completed_at ? '<span class="hr-badge ok">▶ Video done</span>' : c.video_started_at ? '<span class="hr-badge mid">Video started</span>' : '<span class="hr-badge">No video yet</span>';
 const hrStars = (n, edit) => `<span class="hr-stars${edit ? ' edit' : ''}" ${edit ? 'id="hrStars"' : ''}>${[1,2,3,4,5].map(i => `<${edit ? 'button type="button"' : 'i'} data-star="${i}" class="${i <= (n || 0) ? 'on' : ''}" ${edit ? `title="${i} star${i > 1 ? 's' : ''}"` : ''}>★</${edit ? 'button' : 'i'}>`).join('')}</span>`;
+const hrExt = c => { const u = HR.openings.find(o => o.id === c.opening_id)?.interview_url; return safeUrl(u) && !(c.videos || []).length ? u : ''; };
 const hrAgo = d => { const days = Math.floor((Date.now() - new Date(d).getTime()) / 864e5); return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 30 ? `${days} days ago` : fmtDate(d); };
 
 async function renderHiring(){
@@ -3904,7 +3905,7 @@ function renderHiringList(){
     <div class="bk-kpis">
       <div class="kpi-mini"><b>${HR.list.filter(c => new Date(c.applied_at).getTime() >= weekAgo).length}</b><span>applied this week</span></div>
       <div class="kpi-mini"><b>${HR.list.filter(c => c.stage === 'new').length}</b><span>new, not reviewed</span></div>
-      <div class="kpi-mini"><b>${HR.list.filter(c => c.video_completed_at && ['new','screened','video_review'].includes(c.stage)).length}</b><span>videos to watch</span></div>
+      ${op?.interview_url ? '' : `<div class="kpi-mini"><b>${HR.list.filter(c => c.video_completed_at && ['new','screened','video_review'].includes(c.stage)).length}</b><span>videos to watch</span></div>`}
       <div class="kpi-mini"><b>${HR.list.length}</b><span>applicants all time</span></div>
     </div>
     <div class="toolbar">
@@ -3916,7 +3917,7 @@ function renderHiringList(){
       <a class="hr-row" href="#/hiring/${c.id}">
         <span class="hr-av">${esc(hrInitials(c))}</span>
         <span class="hr-main"><b>${esc(hrName(c))}</b><small>${[c.city, HR_SRC[c.source] || c.source, 'applied ' + hrAgo(c.applied_at)].filter(Boolean).map(esc).join(' · ')}</small></span>
-        <span class="hr-right">${c.my_rating ? hrStars(c.my_rating) : ''}${hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">📄</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
+        <span class="hr-right">${c.my_rating ? hrStars(c.my_rating) : ''}${hrExt(c) ? '' : hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">📄</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
       </a>`).join('')
       : `<div class="panel bk-empty"><p>${HR.list.length ? 'No applicants here.' : 'No applicants yet. Share <b>knoxview.com/apply</b> to start getting them.'}</p></div>`}`;
   $('#hrTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; HR.tab = b.dataset.t; renderHiringList(); };
@@ -3959,12 +3960,12 @@ async function renderCandidate(id){
     </div>
     <div class="hr-grid">
       <div class="hr-col">
-        <section class="panel"><h2>Video interview ${c.video_completed_at ? `<span class="hr-badge ok">Done ${esc(fmtShort(c.video_completed_at))}</span>` : c.video_started_at ? '<span class="hr-badge mid">Started, not finished</span>' : '<span class="hr-badge">Not started</span>'}</h2>
+        ${hrExt(c) ? `<section class="panel"><h2>Video interview <span class="hr-badge">HireVire</span></h2><p style="margin:0 0 10px">Applicants are sent to HireVire for their video interview after they apply. Their answers are in your HireVire account.</p><a class="btn small" href="https://app.hirevire.com" target="_blank" rel="noopener">Open HireVire ↗</a></section>` : `<section class="panel"><h2>Video interview ${c.video_completed_at ? `<span class="hr-badge ok">Done ${esc(fmtShort(c.video_completed_at))}</span>` : c.video_started_at ? '<span class="hr-badge mid">Started, not finished</span>' : '<span class="hr-badge">Not started</span>'}</h2>
           ${vids.length ? vids.map(v => `<div class="hr-vid"><p class="q"><b>Q${v.i + 1}.</b> ${esc(v.q || qs[v.i]?.q || '')}${v.seconds ? ` <span class="muted">· ${Math.floor(v.seconds / 60)}:${String(Math.round(v.seconds % 60)).padStart(2, '0')}</span>` : ''}</p>
             <video controls playsinline preload="metadata" data-vpath="${esc(v.path)}"></video></div>`).join('')
             : `<p class="muted" style="margin:0">${c.video_started_at ? 'They opened the interview but haven\'t sent any answers yet.' : 'They haven\'t recorded their video interview yet. The link was emailed to them when they applied.'}</p>`}
           ${!c.video_completed_at ? `<p style="margin:12px 0 0"><button class="btn small" id="hrLink">🔗 Copy their interview link</button></p>` : ''}
-        </section>
+        </section>`}
         <section class="panel"><h2>Application answers</h2>
           ${hrQs.map(([k, l]) => `<div class="hr-ans"><h3>${esc(l)}</h3><p>${esc(c.answers?.[k] || '—')}</p></div>`).join('')}
         </section>

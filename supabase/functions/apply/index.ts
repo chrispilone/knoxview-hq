@@ -93,11 +93,11 @@ async function sendInterviewEmail(to: string, first: string, title: string, link
   try {
     const token = await ownerGmailToken();
     if (!token) return false;
-    const plain = `Hi ${first},\n\nThanks for applying to be a ${title} with Knox View Media! We read every application.\n\nNext step: a short video interview. It's 3 quick questions you answer on camera, on your own time, right from your phone or computer. It takes about 5 minutes.\n\nStart your video interview: ${link}\n\nIf you already finished it, you're all set. We'll reach out if it looks like a fit.\n\nChris\nKnox View Media`;
+    const plain = `Hi ${first},\n\nThanks for applying to be a ${title} with Knox View Media! We read every application.\n\nNext step: a short video interview. You answer a few quick questions on camera, on your own time, right from your phone or computer.\n\nStart your video interview: ${link}\n\nIf you already finished it, you're all set. We'll reach out if it looks like a fit.\n\nChris\nKnox View Media`;
     const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#1f3c66">
 <p>Hi ${escHtml(first)},</p>
 <p>Thanks for applying to be a <b>${escHtml(title)}</b> with Knox View Media! We read every application.</p>
-<p><b>Next step: a short video interview.</b> It's 3 quick questions you answer on camera, on your own time, right from your phone or computer. It takes about 5 minutes.</p>
+<p><b>Next step: a short video interview.</b> You answer a few quick questions on camera, on your own time, right from your phone or computer.</p>
 <p><a href="${link}" style="display:inline-block;background:#1f3c66;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Start my video interview</a></p>
 <p style="font-size:13px;color:#5f7389">Or paste this link into your browser: ${link}</p>
 <p>If you already finished it, you're all set. We'll reach out if it looks like a fit.</p>
@@ -127,14 +127,14 @@ Deno.serve(async (req) => {
   try {
     switch (b.action) {
       case 'opening': {
-        const { data } = await admin.from('job_openings').select('id, slug, title, status, location, pay_range, hours, video_questions').eq('slug', clean(b.slug || 'creative-media-specialist', 80)).maybeSingle();
+        const { data } = await admin.from('job_openings').select('id, slug, title, status, location, pay_range, hours, video_questions, interview_url').eq('slug', clean(b.slug || 'creative-media-specialist', 80)).maybeSingle();
         if (!data) throw new Bad('Opening not found.');
-        return json(req, { title: data.title, open: data.status === 'open', location: data.location, pay: data.pay_range, hours: data.hours, questions: (data.video_questions || []).length });
+        return json(req, { title: data.title, open: data.status === 'open', location: data.location, pay: data.pay_range, hours: data.hours, questions: (data.video_questions || []).length, interview_url: data.interview_url || null });
       }
 
       case 'submit': {
         if (clean(b.company)) return json(req, { ok: true, token: crypto.randomUUID() }); // honeypot: pretend it worked
-        const { data: op } = await admin.from('job_openings').select('id, title, status').eq('slug', clean(b.slug || 'creative-media-specialist', 80)).maybeSingle();
+        const { data: op } = await admin.from('job_openings').select('id, title, status, interview_url').eq('slug', clean(b.slug || 'creative-media-specialist', 80)).maybeSingle();
         if (!op || op.status !== 'open') throw new Bad('This position is not accepting applications right now.');
         const f = {
           first_name: clean(b.first_name, 60), last_name: clean(b.last_name, 60),
@@ -185,9 +185,11 @@ Deno.serve(async (req) => {
           if (error) throw error;
           upload = { url: su.signedUrl, path, name: resume.name };
         }
-        const link = `${SITE}/apply?i=${token}`;
+        // External interview tool (e.g. HireVire) when set on the opening; otherwise the built-in recorder
+        const ext = /^https:\/\//i.test(op.interview_url || '') ? op.interview_url : null;
+        const link = ext || `${SITE}/apply?i=${token}`;
         const emailed = await sendInterviewEmail(f.email, f.first_name, op.title, link);
-        return json(req, { ok: true, token, upload, emailed });
+        return json(req, { ok: true, token, upload, emailed, interview_url: ext });
       }
 
       case 'resume_done': {
