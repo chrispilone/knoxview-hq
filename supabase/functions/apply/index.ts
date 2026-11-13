@@ -51,7 +51,7 @@ async function objectExists(path: string) {
 async function candidateByToken(token: unknown) {
   const t = String(token || '');
   if (!UUID_RE.test(t)) throw new Bad('That interview link is not valid.');
-  const { data } = await admin.from('candidates').select('id, first_name, last_name, email, videos, video_started_at, video_completed_at, opening_id, job_openings(title, video_questions)').eq('video_token', t).maybeSingle();
+  const { data } = await admin.from('candidates').select('id, first_name, last_name, email, phone, city, website_url, answers, resume_path, resume_name, applied_at, videos, video_started_at, video_completed_at, video_token, opening_id, job_openings(title, video_questions)').eq('video_token', t).maybeSingle();
   if (!data) throw new Bad('That interview link is not valid.');
   return data as any;
 }
@@ -89,21 +89,31 @@ async function ownerGmailToken() {
   await admin.from('google_accounts').update({ access_token: t.access_token, access_expires_at: new Date(Date.now() + (t.expires_in ?? 3600) * 1000).toISOString(), updated_at: new Date().toISOString() }).eq('member_id', owner.id);
   return t.access_token as string;
 }
-async function sendInterviewEmail(to: string, first: string, title: string, link: string) {
+type Btn = { label: string; url: string; primary?: boolean };
+function emailHtml(first: string, paras: string[], buttons: Btn[], after: string[] = []) {
+  const p = (t: string) => `<p style="margin:0 0 16px">${t}</p>`;
+  const btn = (b: Btn) => b.primary
+    ? `<a href="${b.url}" style="display:inline-block;background:#1f3c66;color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:999px;font-weight:bold;font-size:15px">${escHtml(b.label)}</a>`
+    : `<a href="${b.url}" style="display:inline-block;color:#1f3c66;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:bold;font-size:15px;border:1.5px solid #1f3c66">${escHtml(b.label)}</a>`;
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#eef2f7">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:24px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden">
+<tr><td style="background:#0d1726;padding:22px 28px;color:#e7edf6;font-family:Georgia,serif;font-size:20px;letter-spacing:.5px">Knox View Media<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2.5px;color:#8ca6cc;margin-top:4px;text-transform:uppercase">Careers</div></td></tr>
+<tr><td style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#1f3c66">
+${p(`Hi ${escHtml(first)},`)}${paras.map(p).join('')}
+${buttons.map(b => `<div style="margin:0 0 12px">${btn(b)}</div>`).join('')}
+${after.map(t => `<p style="margin:16px 0 0">${t}</p>`).join('')}
+<p style="margin:24px 0 0">Chris<br>Knox View Media</p>
+</td></tr>
+<tr><td style="padding:16px 28px;background:#f6f8fb;font-family:Arial,sans-serif;font-size:12px;color:#6b7c93">Knox View Real Estate Media · Knoxville, TN</td></tr>
+</table></td></tr></table></body></html>`;
+}
+async function sendEmail(to: string, subject: string, plain: string, html: string) {
   try {
     const token = await ownerGmailToken();
     if (!token) return false;
-    const plain = `Hi ${first},\n\nThanks for applying for the ${title} role at Knox View Media! We read every application.\n\nLast step: a quick one-minute video so we can meet you. Record it right from your phone or computer, whenever it works for you.\n\nRecord your video: ${link}\n\nIf you already recorded it, you're all set. We'll reach out if it looks like a fit.\n\nChris\nKnox View Media`;
-    const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#1f3c66">
-<p>Hi ${escHtml(first)},</p>
-<p>Thanks for applying for the <b>${escHtml(title)}</b> role at Knox View Media! We read every application.</p>
-<p><b>Last step: a quick one-minute video</b> so we can meet you. Record it right from your phone or computer, whenever it works for you.</p>
-<p><a href="${link}" style="display:inline-block;background:#1f3c66;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Record my one-minute video</a></p>
-<p style="font-size:13px;color:#5f7389">Or paste this link into your browser: ${link}</p>
-<p>If you already recorded it, you're all set. We'll reach out if it looks like a fit.</p>
-<p>Chris<br>Knox View Media</p></div>`;
     const boundary = 'kvapply_' + crypto.randomUUID().replace(/-/g, '');
-    const subj = 'Last step: your one-minute Knox View video';
+    const subj = /^[\x20-\x7e]*$/.test(subject) ? subject : `=?UTF-8?B?${b64(subject)}?=`;
     const raw = [
       `To: ${to}`, `Subject: ${subj}`, 'MIME-Version: 1.0',
       `Content-Type: multipart/alternative; boundary="${boundary}"`, '',
@@ -115,8 +125,31 @@ async function sendInterviewEmail(to: string, first: string, title: string, link
       method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ raw: b64(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') }),
     });
+    if (!r.ok) console.error('gmail send failed', r.status, await r.text());
     return r.ok;
-  } catch (_) { return false; }
+  } catch (e) { console.error('gmail send error', e); return false; }
+}
+// 1) Right after they apply: review link + record-video link
+function sendAppliedEmail(to: string, first: string, title: string, videoLink: string, reviewLink: string, videoDone: boolean) {
+  const plain = `Hi ${first},\n\nThanks for applying for the ${title} role at Knox View Media! We received your application.\n\n` +
+    (videoDone ? `You've already recorded your video, so you're all set.\n\n` : `Last step: a quick one-minute video so we can meet you. Record it right from your phone or computer, whenever it works for you.\n\nRecord your video: ${videoLink}\n\n`) +
+    `Review your application: ${reviewLink}\n\nChris\nKnox View Media`;
+  const html = emailHtml(first,
+    [`Thanks for applying for the <b>${escHtml(title)}</b> role at Knox View Media! We received your application.`,
+     videoDone ? `You've already recorded your video, so you're all set.` : `<b>Last step: a quick one-minute video</b> so we can meet you. Record it right from your phone or computer, whenever it works for you.`],
+    [...(videoDone ? [] : [{ label: 'Record my one-minute video', url: videoLink, primary: true }]), { label: 'Review my application', url: reviewLink, primary: videoDone }],
+    [`<span style="font-size:13px;color:#6b7c93">Button not working? Copy this link into your browser: ${videoDone ? reviewLink : videoLink}</span>`]);
+  return sendEmail(to, videoDone ? 'We received your Knox View application' : 'We got your application! One last step', plain, html);
+}
+// 2) After the video: application complete and under review
+function sendCompleteEmail(to: string, first: string, title: string, reviewLink: string) {
+  const plain = `Hi ${first},\n\nThanks for recording your video! Your application for the ${title} role at Knox View Media is complete and is now under review.\n\nWe personally review every application and video. If it looks like a fit, we'll reach out to set up a time to meet in person.\n\nReview your application anytime: ${reviewLink}\n\nChris\nKnox View Media`;
+  const html = emailHtml(first,
+    [`Thanks for recording your video! Your application for the <b>${escHtml(title)}</b> role at Knox View Media is <b>complete and now under review</b>.`,
+     `We personally review every application and video. If it looks like a fit, we'll reach out to set up a time to meet in person.`],
+    [{ label: 'Review my application', url: reviewLink }],
+    [`In the meantime, check out our work on Instagram: <a href="https://instagram.com/knoxviewmedia" style="color:#1f3c66;font-weight:bold">@knoxviewmedia</a>`]);
+  return sendEmail(to, 'Your Knox View application is complete', plain, html);
 }
 
 Deno.serve(async (req) => {
@@ -188,7 +221,8 @@ Deno.serve(async (req) => {
         // External interview tool (e.g. HireVire) when set on the opening; otherwise the built-in recorder
         const ext = /^https:\/\//i.test(op.interview_url || '') ? op.interview_url : null;
         const link = ext || `${SITE}/apply?i=${token}`;
-        const emailed = await sendInterviewEmail(f.email, f.first_name, op.title, link);
+        const { data: vd } = await admin.from('candidates').select('video_completed_at').eq('id', id).single();
+        const emailed = await sendAppliedEmail(f.email, f.first_name, op.title, link, `${SITE}/apply?a=${token}`, !!vd?.video_completed_at);
         return json(req, { ok: true, token, upload, emailed, interview_url: ext });
       }
 
@@ -207,6 +241,21 @@ Deno.serve(async (req) => {
           first_name: c.first_name, title: c.job_openings?.title,
           questions: qs.map((q: any, i: number) => ({ i, q: q.q, seconds: q.seconds || 60, done: (c.videos || []).some((v: any) => v.i === i) })),
           completed: !!c.video_completed_at,
+        });
+      }
+
+      case 'application': {
+        const c = await candidateByToken(b.token);
+        let resume_url = null;
+        if (c.resume_path) {
+          const { data: su } = await admin.storage.from(BUCKET).createSignedUrl(c.resume_path, 600);
+          resume_url = su?.signedUrl || null;
+        }
+        return json(req, {
+          title: c.job_openings?.title, applied_at: c.applied_at,
+          first_name: c.first_name, last_name: c.last_name, email: c.email, phone: c.phone, city: c.city,
+          website: c.website_url, answers: c.answers || {}, resume_name: c.resume_name, resume_url,
+          video_done: !!c.video_completed_at, video_completed_at: c.video_completed_at,
         });
       }
 
@@ -243,6 +292,7 @@ Deno.serve(async (req) => {
         if (complete && !c.video_completed_at) {
           await admin.from('candidate_activity').insert({ candidate_id: c.id, action: 'video_done', note: 'Finished the video interview' });
           await notifyHiring('application', `Video interview done: ${c.first_name} ${c.last_name}`, c.job_openings?.title || null, c.id);
+          if (c.email) await sendCompleteEmail(c.email, c.first_name || 'there', c.job_openings?.title || 'open', `${SITE}/apply?a=${c.video_token}`);
         }
         return json(req, { ok: true, complete });
       }
