@@ -4560,6 +4560,7 @@ async function dbxWire(b){
     } catch (e) { fail(e); }
     sync.disabled = false; sync.textContent = '⟳ Sync with Dropbox';
   };
+  if (!b.dropbox_path) dbxCall('preview_path', { bookingId: b.id }).then(r => { const el = document.querySelector('#dsPanel') ? document.querySelector('.dbx-path') : null; if (el && !b.dropbox_path) el.innerHTML = `<span class="muted">Folder will be created at</span><b style="white-space:pre" title="${esc(r.path)}">${esc(r.path)}</b>`; }).catch(() => {});
   const mk = $('#dbxMake'); if (mk) mk.onclick = async () => {
     mk.disabled = true;
     try { const r = await dbxCall('create_folders', { bookingId: b.id }); b.dropbox_path = r.path; toast('Dropbox folders created'); renderBookingDetail(b.id); } catch (e) { fail(e); mk.disabled = false; }
@@ -4929,7 +4930,7 @@ function openBookingSettings(){
     <form id="dbxSetForm" class="grid2" style="margin-top:10px">
       <div class="full"><label>Orders folder in Dropbox</label><input name="root" value="${esc(set.dropbox_root || '')}" placeholder="/Knox View Media/Orders" /></div>
       <div class="full"><label>Folder name for each order <span class="muted">(use / for sub-levels)</span></label><input name="name" value="${esc(set.dropbox_folder_name || '')}" placeholder="{year}/{address} #{order_number}" />
-        <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins: {address} {city} {zip} {client_name} {brokerage} {order_number} {date} {year} {month} {month_name} {day} (shoot date)</p></div>
+        <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins (from the shoot date and order): {year} {quarter} {photographer} {date_dots} (11.18.2026) {day_seq} (01, 02… that day) {address_slug} (2381-misty-mountain-cir) {client_lower} {client_name} {address} {city} {zip} {brokerage} {order_number} {date} {month} {month_name} {day}</p></div>
       <div><label>Folders inside each order <span class="muted">(one per line)</span></label><textarea name="subs" style="min-height:120px">${esc((set.dropbox_subfolders || []).join('\n'))}</textarea></div>
       <div><label>Final photos folder <span class="muted">(what clients see)</span></label><input name="final" value="${esc(set.dropbox_final_photos || 'Final Photos')}" />
         <label class="check" style="margin-top:12px"><input type="checkbox" name="auto" ${set.dropbox_auto_create !== false ? 'checked' : ''} /> Create the folders when an order is marked completed</label>
@@ -4969,9 +4970,10 @@ function openBookingSettings(){
   $('#bkTplAdd').onclick = () => openTemplateEdit(null);
   const df = $('#dbxSetForm');
   const example = () => { const f = df, segs = s => s.split('/').map(x => x.trim()).filter(Boolean);
-    const v = { year: '2026', month: '11', month_name: 'November', day: '18', date: '2026-11-18', address: '2381 Misty Mountain Circle', city: 'Sevierville', zip: '37862', client_name: 'Sarah Mitchell', brokerage: 'Realty Executives', order_number: '1042' };
-    const name = segs(f.name.value).map(x => x.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m)).join('/');
-    $('#dbxExample').innerHTML = `Example: <b>/${esc([...segs(f.root.value), name].filter(Boolean).join('/'))}/${esc(f.final.value.trim() || 'Final Photos')}</b>`; };
+    const v = { year: '2026', quarter: '4', month: '11', month_name: 'November', day: '18', date: '2026-11-18', date_dots: '11.18.2026', day_seq: '02', photographer: 'Chris Pilone',
+      address: '2381 Misty Mountain Circle', address_slug: '2381-misty-mountain-cir', city: 'Sevierville', zip: '37862', client_name: 'Sarah Mitchell', client_lower: 'sarah mitchell', brokerage: 'Realty Executives', order_number: '1042' };
+    const name = f.name.value.split('/').map(x => x.trim()).filter(Boolean).map(x => x.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m)).join('/');
+    $('#dbxExample').innerHTML = `Example: <b style="white-space:pre-wrap">/${esc([...segs(f.root.value), name].filter(Boolean).join('/'))}/${esc(f.final.value.trim() || 'Final Photos')}</b>`; };
   df.oninput = example; example();
   df.onsubmit = async e => { e.preventDefault();
     const patch = { dropbox_root: df.root.value.trim() || null, dropbox_folder_name: df.name.value.trim() || null, dropbox_subfolders: df.subs.value.split('\n').map(x => x.trim()).filter(Boolean),
