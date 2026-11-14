@@ -4512,7 +4512,9 @@ function renderBookingDetail(id){
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
           <div><label>Cover photo for the listing card (image link)</label><input id="dvCover" value="${esc(b.cover_url || '')}" /></div>
         </div>
-        <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button>${b.paid ? '' : '<span class="muted">Unpaid: the client sees "pay to unlock" until it is paid.</span>'}</div>
+        <label class="check" style="margin-top:12px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
+        <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>
+        <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button></div>
       </div>
       <div class="panel bk-wide"><h2>Notes</h2>
         <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
@@ -4538,8 +4540,9 @@ function renderBookingDetail(id){
     if (bad) return toast('Links need to start with https://');
     const videos = $('#dvVideos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [url, ...rest] = l.split('|'); return { url: url.trim(), label: rest.join('|').trim() || null }; });
     if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
-    save({ photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
+    save({ require_payment: $('#dvReqPay').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
   });
+  const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
   on('bkCancel', async () => {
     if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
