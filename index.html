@@ -1122,7 +1122,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
-      <a href="#/bookings" data-view="bookings" title="Bookings" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Bookings</span></a>
+      <a href="#/bookings" data-view="bookings" title="Bookings · booking portal control center" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Bookings</span></a>
       <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
       <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
@@ -1301,6 +1301,9 @@ const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
 function toast(msg){ const t = document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
 function fail(err){ console.error(err); toast(err?.message || 'Something went wrong'); }
 const isOwner = () => S.me?.role === 'owner';
+// Super admin: the owner, plus anyone the owner turns it on for (Team → Access). Runs the booking portal control center.
+// Enforced in the database by private.is_super_admin(); finance and team access stay owner-only.
+const isSuperAdmin = () => isOwner() || (!!S.me?.active && S.me?.permissions?.super_admin === true);
 /* ----- Per-person access (role defaults come from the database: public.role_defaults()) ----- */
 const PERM_SECTIONS = [['tasks','Tasks'],['mail','Mail','Their own Gmail inbox inside HQ'],['calendar','Calendar','Their own Google Calendar and My Day'],['photo','Photo projects'],['video','Video projects'],['agents','Agents tab'],['chat','Chat & direct messages'],['hiring','Hiring','Applicants, resumes and video interviews']];
 const PERM_ACTIONS = [['all_projects','See all projects','Off = only projects assigned to them'],['create_projects','Create new projects'],['edit_projects','Edit projects','Status, details, checklists, revisions'],['delete_projects','Delete projects'],['manage_agents','Add & edit agents'],['upload_logos','Upload & remove agent logos']];
@@ -1313,9 +1316,10 @@ async function loadRoleAccess(){
 }
 const permFor = (m, k) => !m ? false : m.role === 'owner' ? true : (m.permissions && k in m.permissions ? !!m.permissions[k] : roleDefault(m.role, k));
 const can = k => permFor(S.me, k);
-// Bookings is archived (hidden) for now, Nov 13 2026. Code, data and settings are kept; set to true to bring the tab back.
-const BOOKINGS_ENABLED = false;
-const viewAllowed = v => v === 'bookings' && !BOOKINGS_ENABLED ? false : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' || v === 'bookings' ? isOwner() : true;
+// Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
+// Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
+const BOOKINGS_ENABLED = true;
+const viewAllowed = v => v === 'bookings' && !BOOKINGS_ENABLED ? false : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
   ['tasks','mail','calendar','bookings','hiring','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
@@ -3752,7 +3756,7 @@ function openCalEvent(ev){
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn danger" id="evDel" style="margin-right:auto">Delete</button>` : ''}
       ${agent ? `<button class="btn" id="evAgent">Agent file</button>` : ''}
       ${proj ? `<button class="btn" id="evProj">Open project</button>` : ''}
-      ${ev.bookingId && isOwner() && BOOKINGS_ENABLED ? `<a class="btn" href="#/bookings/${esc(ev.bookingId)}" id="evBooking">Open booking</a>` : ''}
+      ${ev.bookingId && isSuperAdmin() && BOOKINGS_ENABLED ? `<a class="btn" href="#/bookings/${esc(ev.bookingId)}" id="evBooking">Open booking</a>` : ''}
       ${sp?.admin ? `<a class="btn" href="${esc(sp.admin)}" target="_blank" rel="noopener">Open in Spiro</a>` : ''}
       ${safeUrl(ev.link) ? `<a class="btn" href="${esc(ev.link)}" target="_blank" rel="noopener">Google Calendar</a>` : ''}
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn" id="evEdit">Edit</button>` : ''}
@@ -3851,13 +3855,14 @@ const bkPill = s => `<span class="status-pill"><span class="dot" style="backgrou
 
 async function loadBookingData(force){
   if (BK.loaded && !force) return;
-  const [s, st, b] = await Promise.all([
+  const [s, st, b, u] = await Promise.all([
     sb.from('booking_services').select('*').order('sort_order'),
     sb.from('booking_settings').select('*').eq('id', 1).maybeSingle(),
     sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }),
+    sb.from('booking_upsells').select('*').order('sort_order'),
   ]);
-  if (s.error || st.error || b.error) return fail(s.error || st.error || b.error);
-  BK.services = s.data || []; BK.settings = st.data; BK.list = b.data || []; BK.loaded = true;
+  if (s.error || st.error || b.error || u.error) return fail(s.error || st.error || b.error || u.error);
+  BK.services = s.data || []; BK.settings = st.data; BK.list = b.data || []; BK.upsells = u.data || []; BK.loaded = true;
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
 
@@ -4136,7 +4141,7 @@ function renderBookingList(){
       <a class="btn primary" href="#/bookings/new">+ New order</a>
       <div class="seg" id="bkTabs">${[['upcoming','Upcoming'],['past','Past'],['unpaid','Unpaid'],['cancelled','Cancelled'],['all','All']].map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
-      <button class="btn" id="bkSettings" style="margin-left:auto">⚙ Services & hours</button>
+      <button class="btn" id="bkSettings" style="margin-left:auto">⚙ Portal settings</button>
     </div>
     ${groups.length ? groups.map(g => `<div class="bk-group"><h3>${esc(g.k)}</h3>${g.items.map(b => `
       <a class="bk-row ${b.status}" href="#/bookings/${b.id}">
@@ -4555,9 +4560,14 @@ function openBookingSettings(){
       <div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · ⚠ no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`).join('')}</div>`).join('');
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal wide"><h2>Services & hours</h2>
+  <div class="modal wide"><h2>Booking portal settings</h2>
+    <p class="muted bk-hint" style="margin-top:-6px">Everything here changes what clients see on the booking portal right away. Prices are always re-checked on the server.</p>
     <div id="bkSvcBox">${list()}</div>
     <button type="button" class="btn" id="bkSvcAdd" style="margin-top:10px">+ Add a service</button>
+    <h3 class="bk-sub" style="margin-top:22px">Upsells <span class="muted" style="font-weight:400">(suggestions shown on the Services step)</span></h3>
+    <div class="bk-svc-list">${(BK.upsells || []).slice().sort((a, b) => a.sort_order - b.sort_order).map(u => `
+      <div class="bk-svc ${u.active ? '' : 'off'}"><span><b>${esc(u.title)}</b><small>Adds ${esc(bkSvc(u.service_id)?.name || '(missing service)')}${u.active ? ' · <b style="color:var(--ok,#2f7a55)">On</b>' : ' · Off'}</small></span><button type="button" class="btn small" data-ups="${u.id}">Edit</button></div>`).join('') || '<p class="muted">No upsells yet.</p>'}</div>
+    <button type="button" class="btn" id="bkUpAdd" style="margin-top:10px">+ Add an upsell</button>
     <form id="bkSetForm">
       <h3 class="bk-sub" style="margin-top:22px">Shoot hours (used to show openings)</h3>
       <div class="bk-wdays">${BK_DAYS.map((n, i) => `<label class="check"><input type="checkbox" name="wd" value="${i}" ${(set.work_days || []).includes(i) ? 'checked' : ''} /> ${n}</label>`).join('')}</div>
@@ -4570,23 +4580,39 @@ function openBookingSettings(){
         <div><label>Show openings for (days)</label><input type="number" min="7" max="90" name="horizon_days" value="${set.horizon_days || 21}" /></div>
         <div><label>Large property fee ($)</label><input type="number" min="0" name="large_fee" value="${set.large_fee ?? 75}" /></div>
         <div><label>Large property over (sq ft)</label><input type="number" min="0" step="100" name="large_sqft" value="${set.large_sqft || 3500}" /></div>
+        <div><label>Large property extra time (min)</label><input type="number" min="0" step="5" name="large_minutes" value="${set.large_minutes ?? 20}" /></div>
+        <div style="grid-column:span 2"><label>Large property fee name (shown to clients)</label><input name="large_label" value="${esc(set.large_label || 'Large Property')}" /></div>
       </div>
+      <h3 class="bk-sub" style="margin-top:18px">Square footage choices</h3>
+      <p class="muted bk-hint" style="margin-top:0">One per line: <b>label | max sq ft</b>. Leave the max blank for the top size. Sizes at or over the large property size add the fee.</p>
+      <textarea name="sqft" style="min-height:100px;font-family:ui-monospace,monospace;font-size:13px">${esc((set.sqft_options || []).map(o => `${o.label} | ${o.max ?? ''}`).join('\n'))}</textarea>
+      <h3 class="bk-sub" style="margin-top:18px">Payment options clients can pick</h3>
+      <label class="check"><input type="checkbox" name="po" value="save_card" ${(set.payment_options || []).includes('save_card') ? 'checked' : ''} /> Save card, charge when media is delivered</label>
+      <label class="check"><input type="checkbox" name="po" value="pay_now" ${(set.payment_options || []).includes('pay_now') ? 'checked' : ''} /> Pay in full now</label>
       <p class="muted bk-hint">Anything on your Google Calendar blocks that time (plus the gap). All-day events block the whole day, even ones marked Free.</p>
-      <div class="actions"><button type="button" class="btn" id="bkSetClose">Close</button><button class="btn primary">Save hours</button></div>
+      <div class="actions"><button type="button" class="btn" id="bkSetClose">Close</button><button class="btn primary">Save settings</button></div>
     </form></div>`;
   $('#ov').onclick = $('#bkSetClose').onclick = () => { closeLayer(); if (S.view === 'bookings') renderBookings(); };
   const wire = () => document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
   wire();
   $('#bkSvcAdd').onclick = () => openServiceEdit(null);
+  document.querySelectorAll('[data-ups]').forEach(b => b.onclick = () => openUpsellEdit(BK.upsells.find(u => u.id === b.dataset.ups)));
+  $('#bkUpAdd').onclick = () => openUpsellEdit(null);
   $('#bkSetForm').onsubmit = async e => {
     e.preventDefault();
     const f = e.target, patch = { work_days: [...f.querySelectorAll('[name=wd]:checked')].map(x => +x.value), day_start: f.day_start.value, day_end: f.day_end.value,
       slot_step: +f.slot_step.value || 30, buffer_min: +f.buffer_min.value || 0, min_notice_hours: +f.min_notice_hours.value || 0, horizon_days: +f.horizon_days.value || 21,
-      large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, updated_at: new Date().toISOString() };
+      large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, large_minutes: +f.large_minutes.value || 0, large_label: f.large_label.value.trim() || 'Large Property',
+      payment_options: [...f.querySelectorAll('[name=po]:checked')].map(x => x.value), updated_at: new Date().toISOString() };
     if (bkMin(patch.day_end) <= bkMin(patch.day_start)) return toast('"Done by" has to be after the first start');
+    if (!patch.payment_options.length) return toast('Keep at least one payment option on');
+    const tiers = f.sqft.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [label, max] = l.split('|').map(x => (x || '').trim()); return { label, max: max === '' || max == null ? null : Number(max.replace(/[^\d]/g, '')) }; });
+    if (!tiers.length || tiers.some(t => !t.label || (t.max !== null && !Number.isFinite(t.max)))) return toast('Check the square footage lines: "label | max"');
+    if (tiers.filter(t => t.max === null).length > 1) return toast('Only the top size can have no max');
+    patch.sqft_options = tiers;
     const { error } = await sb.from('booking_settings').update(patch).eq('id', 1);
     if (error) return fail(error);
-    Object.assign(BK.settings, patch); toast('Hours saved');
+    Object.assign(BK.settings, patch); toast('Portal settings saved');
   };
 }
 function openServiceEdit(s){
@@ -4605,19 +4631,25 @@ function openServiceEdit(s){
       <div><label>Creates video projects</label><div class="bk-typepick">${vTypes.map(([v]) => `<label class="check"><input type="checkbox" name="vt" value="${esc(v)}" ${bkTypes(s.video_type).includes(v) ? 'checked' : ''} /> ${esc(v)}</label>`).join('')}</div></div>
       <div><label>Video tier</label><select name="video_tier">${opt(VIDEO_TIERS, s.video_tier || '', '—')}</select></div>
       <div><label>Order on the form</label><input name="sort_order" type="number" value="${s.sort_order}" /></div>
+      <div><label>Badge <span class="muted">(e.g. Most popular)</span></label><input name="badge" value="${esc(s.badge || '')}" /></div>
+      <div class="full bk-covers" ${s.kind === 'package' ? '' : 'style="display:none"'}><label>Add-ons this package already includes <span class="muted">(clients can't add these on top)</span></label>
+        <div class="bk-typepick">${BK.services.filter(x => x.kind === 'addon').sort((a, b) => a.sort_order - b.sort_order).map(x => `<label class="check"><input type="checkbox" name="cv" value="${x.id}" ${(s.covers || []).includes(x.id) ? 'checked' : ''} /> ${esc(x.name)}</label>`).join('')}</div></div>
       <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
-      <div class="full"><label class="check"><input type="checkbox" name="active" ${s.active ? 'checked' : ''} /> Show on the order form</label></div>
+      <div class="full"><label class="check"><input type="checkbox" name="active" ${s.active ? 'checked' : ''} /> Active</label></div>
+      <div class="full"><label class="check"><input type="checkbox" name="public" ${s.public !== false ? 'checked' : ''} /> Clients can book it online <span class="muted">(off = only you can add it to an order in HQ)</span></label></div>
     </div>
     <div class="actions">${isNew ? '' : `<button type="button" class="btn danger" id="svcDel" style="margin-right:auto">Delete</button>`}<button type="button" class="btn" id="svcCancel">Cancel</button><button class="btn primary">Save</button></div></form></div>`;
   document.body.appendChild(box);
   const close = () => box.remove();
   box.querySelector('.overlay').onclick = close; box.querySelector('#svcCancel').onclick = close;
+  box.querySelector('[name=kind]').onchange = e => { box.querySelector('.bk-covers').style.display = e.target.value === 'package' ? '' : 'none'; };
   const back = () => { close(); openBookingSettings(); };
   box.querySelector('#svcForm').onsubmit = async e => {
     e.preventDefault();
     const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
       includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: [...f.querySelectorAll('[name=pt]:checked')].map(x => x.value).join(', ') || null, video_type: [...f.querySelectorAll('[name=vt]:checked')].map(x => x.value).join(', ') || null,
-      video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked, updated_at: new Date().toISOString() };
+      video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked,
+      public: f.public.checked, badge: f.badge.value.trim() || null, covers: f.kind.value === 'package' ? [...f.querySelectorAll('[name=cv]:checked')].map(x => x.value) : [], updated_at: new Date().toISOString() };
     const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
     if (r.error) return fail(r.error);
     if (isNew) BK.services.push(r.data); else Object.assign(bkSvc(s.id), r.data);
@@ -4629,6 +4661,44 @@ function openServiceEdit(s){
     const { error } = await sb.from('booking_services').delete().eq('id', s.id);
     if (error) return fail(error);
     BK.services = BK.services.filter(x => x.id !== s.id); back();
+  };
+}
+
+function openUpsellEdit(u){
+  const isNew = !u; u = u || { service_id: '', title: '', description: '', show_when_any: [], hide_when_any: [], active: false, sort_order: 100 };
+  const all = BK.services.filter(x => x.active).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'package' ? -1 : 1) || a.sort_order - b.sort_order);
+  const picks = (name, sel) => all.map(x => `<label class="check"><input type="checkbox" name="${name}" value="${x.id}" ${(sel || []).includes(x.id) ? 'checked' : ''} /> ${esc(x.name)}${x.kind === 'package' ? ' <span class="muted">(package)</span>' : ''}</label>`).join('');
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>${isNew ? 'New upsell' : 'Edit upsell'}</h2>
+    <form id="upForm"><div class="grid2">
+      <div class="full"><label>Suggests adding</label><select name="service_id" required>${opt(BK.services.filter(x => x.kind === 'addon').map(x => [x.id, `${x.name} (${money(x.price)})`]), u.service_id, 'Choose an add-on')}</select></div>
+      <div class="full"><label>Headline</label><input name="title" required value="${esc(u.title)}" placeholder="Make it glow at dusk" /></div>
+      <div class="full"><label>Short pitch</label><input name="description" value="${esc(u.description || '')}" /></div>
+      <div><label>Show when the order has any of</label><div class="bk-typepick">${picks('sw', u.show_when_any)}</div><p class="muted bk-hint">None checked = never shows.</p></div>
+      <div><label>Hide when the order has any of</label><div class="bk-typepick">${picks('hw', u.hide_when_any)}</div></div>
+      <div><label>Order</label><input name="sort_order" type="number" value="${u.sort_order}" /></div>
+      <div class="full"><label class="check"><input type="checkbox" name="active" ${u.active ? 'checked' : ''} /> On: clients see this suggestion</label></div>
+    </div>
+    <div class="actions">${isNew ? '' : `<button type="button" class="btn danger" id="upDel" style="margin-right:auto">Delete</button>`}<button type="button" class="btn" id="upCancel">Cancel</button><button class="btn primary">Save</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove(), back = () => { close(); openBookingSettings(); };
+  box.querySelector('.overlay').onclick = close; box.querySelector('#upCancel').onclick = close;
+  box.querySelector('#upForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, row = { service_id: f.service_id.value, title: f.title.value.trim(), description: f.description.value.trim() || null, sort_order: +f.sort_order.value || 0, active: f.active.checked,
+      show_when_any: [...f.querySelectorAll('[name=sw]:checked')].map(x => x.value), hide_when_any: [...f.querySelectorAll('[name=hw]:checked')].map(x => x.value) };
+    if (row.active && !row.show_when_any.length) return toast('Pick at least one "show when" item, or turn it off');
+    const r = isNew ? await sb.from('booking_upsells').insert(row).select().single() : await sb.from('booking_upsells').update(row).eq('id', u.id).select().single();
+    if (r.error) return fail(r.error);
+    if (isNew) BK.upsells.push(r.data); else Object.assign(BK.upsells.find(x => x.id === u.id), r.data);
+    toast('Saved'); back();
+  };
+  const del = box.querySelector('#upDel');
+  if (del) del.onclick = async () => {
+    if (!confirm(`Delete the "${u.title}" upsell?`)) return;
+    const { error } = await sb.from('booking_upsells').delete().eq('id', u.id);
+    if (error) return fail(error);
+    BK.upsells = BK.upsells.filter(x => x.id !== u.id); back();
   };
 }
 
@@ -6070,6 +6140,7 @@ function openChannelMembers(ch){
 /* ===================== TEAM ===================== */
 const accessSummary = t => {
   if (t.role === 'owner') return 'Full access';
+  if (t.permissions?.super_admin === true) return 'Super admin';
   const n = Object.keys(t.permissions || {}).filter(k => !!t.permissions[k] !== roleDefault(t.role, k)).length;
   return n ? `${n} custom setting${n === 1 ? '' : 's'}` : 'Role defaults';
 };
@@ -6231,6 +6302,7 @@ function openAccess(id){
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal"><h2>Access · ${esc(t.full_name)}</h2>
     <p class="muted" style="margin:-8px 0 16px;font-size:13px">Starts from the <b>${esc(ROLE_LABEL[t.role])}</b> defaults. Changes save right away and apply within a couple of minutes, even if they're signed in.</p>
+    <div class="perm-group"><h3>Super admin</h3>${row(['super_admin', 'Super admin', 'Runs the booking portal control center: orders, packages and prices, upsells, hours and fees. Finance and team access stay with you.'])}</div>
     <div class="perm-group"><h3>Sections they can open</h3>${PERM_SECTIONS.map(row).join('')}</div>
     <div class="perm-group"><h3>What they can do</h3>${PERM_ACTIONS.map(row).join('')}</div>
     <div class="perm-group"><h3>Chat channels</h3>
