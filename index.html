@@ -4602,9 +4602,16 @@ function dvVid(b){
   const brand = list.find(v => /^branded$/i.test(v.label || '')), unbrand = list.find(v => /^unbranded$/i.test(v.label || ''));
   return { brand, unbrand, more: list.filter(v => v !== brand && v !== unbrand) };
 }
+// Same cleanup the client delivery page uses for video titles ("1208 FT CRAIG TRL" -> "1208 Ft Craig Trl")
+function dvAddr(a){
+  const dirs = new Set(['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW']);
+  return String(a || '').replace(/\s+/g, ' ').replace(/[\s,.;]+$/, '').trim()
+    .replace(/[A-Za-z][A-Za-z']*/g, w => dirs.has(w.toUpperCase()) ? w.toUpperCase() : /^po$/i.test(w) ? 'PO' : w[0].toUpperCase() + w.slice(1).toLowerCase())
+    .replace(/\b(\d+)(St|Nd|Rd|Th)\b/g, (m, n, x) => n + x.toLowerCase());
+}
 function dvVidRow(v, i){
   return `<div class="dv-vrow grid2"><div><label>Video link</label><input class="dv-vurl" placeholder="https://vimeo.com/…" value="${esc(v?.url || '')}" /></div>
-    <div><label>Name shown to the client</label><div style="display:flex;gap:6px"><input class="dv-vlbl" placeholder="e.g. Cinematic film" value="${esc(v?.label || '')}" /><button type="button" class="btn small dv-vdel" title="Remove this video">✕</button></div></div></div>`;
+    <div><label>Name shown to the client <span class="muted">(optional)</span></label><div style="display:flex;gap:6px"><input class="dv-vlbl" placeholder="e.g. Cinematic film" value="${esc(v?.label || '')}" /><button type="button" class="btn small dv-vdel" title="Remove this video">✕</button></div></div></div>`;
 }
 const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
 async function dvPaintPlans(b){
@@ -4726,6 +4733,7 @@ function renderBookingDetail(id){
           <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
           <div><label>Unbranded video</label><input id="dvVidU" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).unbrand?.url || '')}" /></div>
         </div>
+        <p class="muted bk-hint" style="margin:6px 0 0">The client sees each video titled <b>${esc(dvAddr(b.address))}</b>, with its name as a small tag.</p>
         <div id="dvVidMore">${dvVid(b).more.map((v, i) => dvVidRow(v, i)).join('')}</div>
         <button type="button" class="btn small" id="dvVidAdd" style="margin-top:8px">+ Add video</button>
         <h3 class="dv-h">🧊 3D tour</h3>
@@ -4789,7 +4797,7 @@ function renderBookingDetail(id){
     const bad = ['dvPhotos', 'dvTour', 'dvPlan', 'dvSite', 'dvSite2', 'dvMkt', 'dvCover'].find(id => val(id) && !/^https:\/\//i.test(val(id)));
     if (bad) return toast('Links need to start with https://');
     const videos = [[val('dvVidB'), 'Branded'], [val('dvVidU'), 'Unbranded'],
-      ...[...document.querySelectorAll('#dvVidMore .dv-vrow')].map((r, i) => [r.querySelector('.dv-vurl').value.trim(), r.querySelector('.dv-vlbl').value.trim() || `Video ${i + 3}`])]
+      ...[...document.querySelectorAll('#dvVidMore .dv-vrow')].map((r, i) => [r.querySelector('.dv-vurl').value.trim(), r.querySelector('.dv-vlbl').value.trim()])]
       .filter(([url]) => url).map(([url, label]) => ({ url, label, ...((b.videos || []).find(p => p.url === url)?.portrait ? { portrait: true } : {}) }));
     if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
     save({ websites_enabled: $('#dvSites').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
