@@ -50,7 +50,9 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .ds-prev{position:sticky;top:12px;background:#f5f4f0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .ds-subj{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);background:#fff}
 #dsFrame{display:block;width:100%;height:720px;border:0;background:#f5f4f0}
-@media (max-width:860px){.ds-wrap{grid-template-columns:1fr}#dsFrame{height:560px}}
+@media (max-width:860px){.ds-wrap{grid-template-columns:1fr}.ds-prev{position:static}#dsFrame{height:620px}}
+@media (max-width:520px){#dsFrame{height:540px}.ds-form .bk-actions .btn{width:100%;padding:12px}}
+@media (pointer:coarse){input,select,textarea{font-size:16px}} /* stops iPhone/iPad zooming into fields */
 .muted{color:var(--muted)}
 
 /* ----- Tasks ----- */
