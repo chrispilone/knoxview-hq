@@ -4507,6 +4507,7 @@ function renderBookingDetail(id){
           <div class="full"><label>Videos · one per line: <b>link | label</b> (Vimeo or Dropbox)</label><textarea id="dvVideos" style="min-height:64px" placeholder="https://vimeo.com/123456789 | Branded&#10;https://vimeo.com/987654321 | Unbranded">${esc((b.videos || []).map(v => v.url + (v.label ? ' | ' + v.label : '')).join('\n'))}</textarea></div>
           <div><label>3D tour link</label><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" /></div>
           <div><label>Floor plan · Dropbox link (file or folder)</label><input id="dvPlan" value="${esc(b.floorplan_url || '')}" /></div>
+          <div class="full"><label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <b>Property websites</b> <span class="muted">(shows branded + unbranded website cards to the client; "coming soon" until a link is added)</span></label></div>
           <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" /></div>
           <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" /></div>
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
@@ -4540,8 +4541,9 @@ function renderBookingDetail(id){
     if (bad) return toast('Links need to start with https://');
     const videos = $('#dvVideos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [url, ...rest] = l.split('|'); return { url: url.trim(), label: rest.join('|').trim() || null }; });
     if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
-    save({ require_payment: $('#dvReqPay').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
+    save({ require_payment: $('#dvReqPay').checked, websites_enabled: $('#dvSites').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
   });
+  const ws = $('#dvSites'); if (ws) ws.onchange = () => save({ websites_enabled: ws.checked }, ws.checked ? 'Property websites on' : 'Property websites off');
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
   on('bkCancel', async () => {
