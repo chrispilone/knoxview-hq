@@ -45,6 +45,17 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.danger{color:var(--danger)}
 .hidden{display:none!important}
+.dbx-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+.dbx-path{display:flex;flex-direction:column;min-width:0;flex:1 1 240px;font-size:13px}.dbx-path b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dbx-acts{display:flex;flex-wrap:wrap;gap:6px}
+.dbx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px;user-select:none;-webkit-user-select:none}
+.dbx-tile{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:5px;cursor:grab;touch-action:pan-y;-webkit-touch-callout:none}
+.dbx-tile img,.dbx-ph{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:7px;background:var(--panel-2)}
+.dbx-tile small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.dbx-n{position:absolute;top:9px;left:9px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px}
+.dbx-tile.dragging{opacity:.85;transform:scale(1.04);box-shadow:0 10px 26px rgba(0,0,0,.25);z-index:2;cursor:grabbing;outline:2px solid var(--accent,#5b8def)}
+.dbx-grid.sorting .dbx-tile:not(.dragging){transition:transform .12s}
+@media (max-width:520px){.dbx-grid{grid-template-columns:repeat(3,1fr);gap:6px}.dbx-tile small{display:none}}
 .dv-h{font-size:14px;margin:18px 0 8px;display:flex;gap:8px;align-items:baseline}.dv-h:first-of-type{margin-top:6px}.dv-h .muted{font-weight:400;font-size:12.5px}
 .dv-vrow{margin-top:10px}
 .dv-drop{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;transition:background .15s,border-color .15s}
@@ -1254,6 +1265,14 @@ const QBO_RETURN = (() => {
   history.replaceState(null, '', location.pathname + '#/finance');
   return r;
 })();
+/* Dropbox sends you back to https://hq.knoxview.com/?code=…&state=dbx_… after "Connect Dropbox". */
+const DBX_RETURN = (() => {
+  const p = new URLSearchParams(location.search);
+  if (!(p.get('state') || '').startsWith('dbx_')) return null;
+  const r = { code: p.get('code'), error: p.get('error_description') || p.get('error') };
+  history.replaceState(null, '', location.pathname + '#/bookings');
+  return r;
+})();
 // View as: the owner can sign a browser tab in as a team member. That session is kept in this tab's
 // sessionStorage, so other tabs stay signed in as the owner; closing the tab ends it.
 const IMP = (() => { try { return JSON.parse(sessionStorage.getItem('kvhq.imp') || 'null'); } catch (e) { return null; } })();
@@ -1473,6 +1492,7 @@ async function boot(session){
   await loadInbox();
   route();
   if (QBO_RETURN && isOwner()) finishQboConnect(QBO_RETURN);
+  if (DBX_RETURN && isSuperAdmin()) finishDropboxConnect(DBX_RETURN);
   initChat(); subscribeTasks(); subscribeInbox(); loadMail({ quiet:true });
   loadNotes().then(subscribeNotes);
   watchAccess();
@@ -4468,6 +4488,95 @@ async function bkCreateProjects(b, q, postChat){
 }
 
 /* ----- Booking detail ----- */
+/* ----- Dropbox: order folders, "Sync with Dropbox", photo order (dropbox edge function) ----- */
+async function dbxCall(action, body = {}){
+  const { data, error } = await sb.functions.invoke('dropbox', { body: { action, ...body } });
+  if (error) { let m = 'Dropbox request failed'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+  return data;
+}
+const DBX_REDIRECT = () => location.origin + '/';
+async function finishDropboxConnect(r){
+  if (r.error || !r.code) return toast('Dropbox was not connected' + (r.error ? ': ' + r.error : ''));
+  try { await dbxCall('connect', { code: r.code, redirect: DBX_REDIRECT() }); toast('Dropbox connected'); } catch (e) { fail(e); }
+}
+async function dbxAutoFolders(b){
+  if (b.dropbox_path || BK.settings?.dropbox_auto_create === false) return;
+  try { const r = await dbxCall('create_folders', { bookingId: b.id }); b.dropbox_path = r.path; toast('Dropbox folders created'); renderBookingDetail(b.id); }
+  catch (e) { if (!/isn't connected/.test(e.message)) fail(e); }
+}
+function dbxPaintGrid(b, photos){
+  const grid = $('#dbxGrid'); if (!grid) return;
+  grid.innerHTML = photos.map((p, i) => `<div class="dbx-tile" data-name="${esc(p.name)}"><span class="dbx-n">${i + 1}</span><img src="${esc(p.thumb || '')}" alt="" draggable="false" loading="lazy" /><small>${esc(p.name)}</small></div>`).join('');
+  dbxSortable(grid, async names => {
+    const by = new Map((b.photo_files || []).map(f => [f.name, f]));
+    const photo_files = names.map(n => by.get(n)).filter(Boolean).map(({ name, path, size }) => ({ name, path, size }));
+    grid.querySelectorAll('.dbx-n').forEach((el, i) => el.textContent = i + 1);
+    const { error } = await sb.from('bookings').update({ photo_files, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) return fail(error);
+    b.photo_files = photo_files; toast('Photo order saved');
+  });
+}
+// Drag to reorder: mouse drags right away; on iPad/phone press and hold a photo, then drag (so the page still scrolls).
+function dbxSortable(grid, onDone){
+  let drag = null, timer = null, sx = 0, sy = 0;
+  const start = (tile, e) => { drag = tile; tile.classList.add('dragging'); tile.style.pointerEvents = 'none'; grid.classList.add('sorting'); try { tile.setPointerCapture?.(e.pointerId); } catch (_) {} };
+  const end = () => {
+    clearTimeout(timer); timer = null;
+    if (!drag) return;
+    drag.classList.remove('dragging'); drag.style.pointerEvents = ''; grid.classList.remove('sorting'); drag = null;
+    onDone([...grid.querySelectorAll('.dbx-tile')].map(t => t.dataset.name));
+  };
+  grid.onpointerdown = e => {
+    const tile = e.target.closest('.dbx-tile'); if (!tile) return;
+    sx = e.clientX; sy = e.clientY;
+    if (e.pointerType !== 'mouse') timer = setTimeout(() => { start(tile, e); navigator.vibrate?.(15); }, 280);
+    else grid._pending = tile;
+  };
+  grid.onpointermove = e => {
+    const moved = Math.hypot(e.clientX - sx, e.clientY - sy);
+    if (!drag) {
+      if (timer && moved > 8) { clearTimeout(timer); timer = null; }
+      if (grid._pending && moved > 5) { start(grid._pending, e); grid._pending = null; }
+      return;
+    }
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.dbx-tile');
+    if (!over || over === drag || over.parentNode !== grid) return;
+    const r = over.getBoundingClientRect();
+    grid.insertBefore(drag, e.clientX > r.left + r.width / 2 ? over.nextSibling : over);
+  };
+  grid.onpointerup = grid.onpointercancel = () => { grid._pending = null; end(); };
+  grid.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+  grid.oncontextmenu = e => e.preventDefault();
+}
+async function dbxWire(b){
+  const sync = $('#dbxSync'); if (!sync) return;
+  sync.onclick = async () => {
+    sync.disabled = true; sync.textContent = 'Syncing…';
+    try {
+      const r = await dbxCall('sync', { bookingId: b.id });
+      b.photo_files = r.photos.map(({ name, path, size }) => ({ name, path, size })); b.photos_synced_at = r.synced_at;
+      $('#dbxInfo').textContent = `${r.photos.length} photos from ${r.folder}${r.added || r.removed ? ` · ${r.added} added, ${r.removed} removed` : ''}. Drag to set the order clients see.`;
+      dbxPaintGrid(b, r.photos); toast(r.photos.length ? 'Synced with Dropbox' : 'The final photos folder is empty');
+    } catch (e) { fail(e); }
+    sync.disabled = false; sync.textContent = '⟳ Sync with Dropbox';
+  };
+  const mk = $('#dbxMake'); if (mk) mk.onclick = async () => {
+    mk.disabled = true;
+    try { const r = await dbxCall('create_folders', { bookingId: b.id }); b.dropbox_path = r.path; toast('Dropbox folders created'); renderBookingDetail(b.id); } catch (e) { fail(e); mk.disabled = false; }
+  };
+  $('#dbxPathEdit').onclick = async () => {
+    const v = prompt('Dropbox folder for this order (the folder that holds the final photos folder):', b.dropbox_path || '');
+    if (v == null) return;
+    const path = v.trim() ? '/' + v.trim().replace(/^\/+|\/+$/g, '') : null;
+    const { error } = await sb.from('bookings').update({ dropbox_path: path, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) return fail(error);
+    b.dropbox_path = path; toast('Dropbox folder saved'); renderBookingDetail(b.id);
+  };
+  if ((b.photo_files || []).length) {
+    $('#dbxGrid').innerHTML = (b.photo_files).map((p, i) => `<div class="dbx-tile"><span class="dbx-n">${i + 1}</span><div class="dbx-ph"></div><small>${esc(p.name)}</small></div>`).join('');
+    try { const g = await dbxCall('gallery', { bookingId: b.id }); dbxPaintGrid(b, g.photos); } catch (e) { /* thumbnails need Dropbox */ dbxPaintGrid(b, b.photo_files); }
+  }
+}
 /* ----- Delivery panel helpers: video slots + floor plan uploads (private "delivery" storage bucket) ----- */
 function dvVid(b){
   const list = (b.videos || []).filter(v => v && v.url);
@@ -4516,6 +4625,7 @@ async function dvUpload(b, files){
   } catch (e) { fail(e); }
   if ($('#dvDrop')) { drop.classList.remove('busy'); drop.querySelector('b').textContent = 'Drag floor plans here'; }
   dvPaintPlans(b);
+  dbxWire(b);
 }
 function dvWire(b){
   const more = $('#dvVidMore'); if (!more) return;
@@ -4582,7 +4692,13 @@ function renderBookingDetail(id){
       <div class="panel bk-wide"><h2>Delivery <span class="muted" style="font-weight:400;font-size:13px">· what the client sees on their delivery page</span></h2>
         <p class="muted bk-hint" style="margin-top:0">Photos and videos from delivered projects linked above show up automatically. Use these for anything else. Downloads unlock for the client once the order is paid.</p>
         <h3 class="dv-h">📷 Photos</h3>
-        <div class="grid2"><div class="full"><label>Dropbox shared folder link</label><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /></div></div>
+        <div class="dbx-bar">
+          <div class="dbx-path">${b.dropbox_path ? `<span class="muted">Dropbox folder</span><b title="${esc(b.dropbox_path)}">${esc(b.dropbox_path)}</b>` : '<span class="muted">No Dropbox folder yet. It\'s made when the order is marked completed.</span>'}</div>
+          <div class="dbx-acts">${b.dropbox_path ? '' : '<button type="button" class="btn small" id="dbxMake">Create folders</button>'}<button type="button" class="btn small" id="dbxPathEdit">${b.dropbox_path ? 'Change' : 'Set path'}</button><button type="button" class="btn small primary" id="dbxSync">⟳ Sync with Dropbox</button></div>
+        </div>
+        <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0">${(b.photo_files || []).length ? `${b.photo_files.length} photos from the final photos folder${b.photos_synced_at ? ' · synced ' + esc(fmtDateTime(b.photos_synced_at)) : ''}. Drag to set the order clients see.` : 'Sync pulls in everything in the order\'s final photos folder. You can then drag them into the order you want.'}</p>
+        <div class="dbx-grid" id="dbxGrid"></div>
+        <details class="dv-alt" ${b.photos_url ? 'open' : ''}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>
         <h3 class="dv-h">🎬 Video <span class="muted">Vimeo links</span></h3>
         <div class="grid2">
           <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
@@ -4643,7 +4759,7 @@ function renderBookingDetail(id){
   const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
   on('bkAgent', () => openAgent(a.id));
   on('bkPaidBtn', () => save({ paid: !b.paid, paid_at: b.paid ? null : new Date().toISOString() }, b.paid ? 'Marked unpaid' : 'Marked paid'));
-  on('bkDone', () => save({ status: 'completed' }, 'Shoot marked complete'));
+  on('bkDone', async () => { if (await save({ status: 'completed' }, 'Shoot marked complete')) dbxAutoFolders(b); });
   on('bkUndone', () => save({ status: 'scheduled' }));
   on('bkSaveDelivery', () => {
     const val = id => { const v = $('#' + id).value.trim(); return v || null; };
@@ -4808,6 +4924,18 @@ function openBookingSettings(){
     <h3 class="bk-sub" style="margin-top:22px">Delivery emails <span class="muted" style="font-weight:400">(templates in each order's Send delivery dropdown)</span></h3>
     <div class="bk-svc-list" id="bkTplList"><p class="muted">Loading…</p></div>
     <button type="button" class="btn" id="bkTplAdd" style="margin-top:10px">+ Add a delivery email</button>
+    <h3 class="bk-sub" style="margin-top:22px">Dropbox</h3>
+    <div class="dbx-bar"><div class="dbx-path" id="dbxStatus"><span class="muted">Checking the connection…</span></div><div class="dbx-acts" id="dbxConnActs"></div></div>
+    <form id="dbxSetForm" class="grid2" style="margin-top:10px">
+      <div class="full"><label>Orders folder in Dropbox</label><input name="root" value="${esc(set.dropbox_root || '')}" placeholder="/Knox View Media/Orders" /></div>
+      <div class="full"><label>Folder name for each order <span class="muted">(use / for sub-levels)</span></label><input name="name" value="${esc(set.dropbox_folder_name || '')}" placeholder="{year}/{address} #{order_number}" />
+        <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins: {address} {city} {zip} {client_name} {brokerage} {order_number} {date} {year} {month} {month_name} {day} (shoot date)</p></div>
+      <div><label>Folders inside each order <span class="muted">(one per line)</span></label><textarea name="subs" style="min-height:120px">${esc((set.dropbox_subfolders || []).join('\n'))}</textarea></div>
+      <div><label>Final photos folder <span class="muted">(what clients see)</span></label><input name="final" value="${esc(set.dropbox_final_photos || 'Final Photos')}" />
+        <label class="check" style="margin-top:12px"><input type="checkbox" name="auto" ${set.dropbox_auto_create !== false ? 'checked' : ''} /> Create the folders when an order is marked completed</label>
+        <p class="muted bk-hint" id="dbxExample" style="margin:8px 0 0"></p></div>
+      <div class="full"><button class="btn">Save Dropbox settings</button></div>
+    </form>
     <form id="bkSetForm">
       <h3 class="bk-sub" style="margin-top:22px">Shoot hours (used to show openings)</h3>
       <div class="bk-wdays">${BK_DAYS.map((n, i) => `<label class="check"><input type="checkbox" name="wd" value="${i}" ${(set.work_days || []).includes(i) ? 'checked' : ''} /> ${n}</label>`).join('')}</div>
@@ -4839,6 +4967,26 @@ function openBookingSettings(){
   document.querySelectorAll('[data-ups]').forEach(b => b.onclick = () => openUpsellEdit(BK.upsells.find(u => u.id === b.dataset.ups)));
   $('#bkUpAdd').onclick = () => openUpsellEdit(null);
   $('#bkTplAdd').onclick = () => openTemplateEdit(null);
+  const df = $('#dbxSetForm');
+  const example = () => { const f = df, segs = s => s.split('/').map(x => x.trim()).filter(Boolean);
+    const v = { year: '2026', month: '11', month_name: 'November', day: '18', date: '2026-11-18', address: '2381 Misty Mountain Circle', city: 'Sevierville', zip: '37862', client_name: 'Sarah Mitchell', brokerage: 'Realty Executives', order_number: '1042' };
+    const name = segs(f.name.value).map(x => x.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m)).join('/');
+    $('#dbxExample').innerHTML = `Example: <b>/${esc([...segs(f.root.value), name].filter(Boolean).join('/'))}/${esc(f.final.value.trim() || 'Final Photos')}</b>`; };
+  df.oninput = example; example();
+  df.onsubmit = async e => { e.preventDefault();
+    const patch = { dropbox_root: df.root.value.trim() || null, dropbox_folder_name: df.name.value.trim() || null, dropbox_subfolders: df.subs.value.split('\n').map(x => x.trim()).filter(Boolean),
+      dropbox_final_photos: df.final.value.trim() || 'Final Photos', dropbox_auto_create: df.auto.checked, updated_at: new Date().toISOString() };
+    if (patch.dropbox_final_photos && !patch.dropbox_subfolders.includes(patch.dropbox_final_photos)) patch.dropbox_subfolders.push(patch.dropbox_final_photos);
+    const { error } = await sb.from('booking_settings').update(patch).eq('id', 1); if (error) return fail(error);
+    Object.assign(BK.settings, patch); df.subs.value = patch.dropbox_subfolders.join('\n'); toast('Dropbox settings saved'); };
+  dbxCall('status').then(st => {
+    const box = $('#dbxStatus'), acts = $('#dbxConnActs'); if (!box) return;
+    box.innerHTML = st.connected ? `<span class="muted">Connected</span><b>✓ ${esc(st.account || 'Dropbox')}</b>` : st.configured ? '<span class="muted">Not connected</span><b>Connect your Dropbox to create order folders and sync photos.</b>'
+      : '<span class="muted">Not set up yet</span><b>Add the DROPBOX_APP_KEY and DROPBOX_APP_SECRET secrets in Supabase, then connect here.</b>';
+    acts.innerHTML = st.connected ? '<button type="button" class="btn small" id="dbxOff">Disconnect</button>' : st.configured ? '<button type="button" class="btn small primary" id="dbxOn">Connect Dropbox</button>' : '';
+    const on = $('#dbxOn'); if (on) on.onclick = async () => { try { const r = await dbxCall('auth_url', { redirect: DBX_REDIRECT() }); location.href = r.url; } catch (e) { fail(e); } };
+    const off = $('#dbxOff'); if (off) off.onclick = async () => { if (!confirm('Disconnect Dropbox? Syncing and the photo downloads that come from Dropbox stop until you connect again.')) return; try { await dbxCall('disconnect'); toast('Dropbox disconnected'); openBookingSettings(); } catch (e) { fail(e); } };
+  }).catch(e => { const box = $('#dbxStatus'); if (box) box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; });
   dtLoad().then(list => { const el = $('#bkTplList'); if (!el) return;
     el.innerHTML = list.map(t => `<div class="bk-svc ${t.active ? '' : 'off'}"><span><b>${esc(t.name)}</b><small>${esc(t.subject)}${t.active ? '' : ' · hidden'}</small></span><button type="button" class="btn small" data-tpl="${esc(t.key)}">Edit</button></div>`).join('') || '<p class="muted">No delivery emails yet.</p>';
     el.querySelectorAll('[data-tpl]').forEach(x => x.onclick = () => openTemplateEdit(list.find(t => t.key === x.dataset.tpl)));
