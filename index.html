@@ -6910,5 +6910,81 @@ function openRehire(id){
   };
 }
 </script>
+<script>
+/* ===================== Google address search (Places API New) =====================
+   On HQ's New order and project forms: type a street address, pick a suggestion, and street + city fill in.
+   Same browser key as the client portal; locked in Google Cloud to our sites and to Places/Maps/Geocoding. */
+(() => {
+  const GKEY = 'AIzaSyDI1r8ag79AVBBQhJftX9j5zpSnErm0mQY';
+  const AC = { t: null, tok: null, list: [], i: -1, input: null, q: '' };
+  const box = () => document.getElementById('acBox');
+  const close = () => { box()?.remove(); AC.list = []; AC.i = -1; };
+  async function search(input) {
+    const q = input.value.trim(); AC.input = input; AC.q = q;
+    if (q.length < 4 || !/\d/.test(q)) return close();
+    AC.tok = AC.tok || crypto.randomUUID();
+    try {
+      const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GKEY },
+        body: JSON.stringify({ input: q, sessionToken: AC.tok, includedRegionCodes: ['us'], includedPrimaryTypes: ['street_address', 'premise', 'subpremise'],
+          locationBias: { circle: { center: { latitude: 35.86, longitude: -83.75 }, radius: 50000 } } }) });
+      const d = await r.json();
+      if (q !== AC.q || document.activeElement !== input) return;
+      if (!r.ok) { console.warn('address search', d?.error?.message); return close(); }
+      AC.list = (d.suggestions || []).map(x => x.placePrediction).filter(Boolean).slice(0, 5); AC.i = -1; draw();
+    } catch (e) { console.warn('address search', e); }
+  }
+  function draw() {
+    box()?.remove();
+    if (!AC.list.length || !AC.input?.isConnected) return;
+    const r = AC.input.getBoundingClientRect(), b = document.createElement('div');
+    b.id = 'acBox'; b.className = 'ac-box'; b.setAttribute('role', 'listbox');
+    Object.assign(b.style, { left: r.left + 'px', top: r.bottom + 4 + 'px', width: r.width + 'px' });
+    b.innerHTML = AC.list.map((p, i) => `<div class="ac-opt ${i === AC.i ? 'on' : ''}" role="option" data-ac="${i}"><b>${esc(p.structuredFormat?.mainText?.text || p.text?.text || '')}</b><small>${esc(p.structuredFormat?.secondaryText?.text || '')}</small></div>`).join('')
+      + '<div class="ac-by">powered by Google</div>';
+    b.addEventListener('mousedown', e => { const o = e.target.closest('[data-ac]'); if (o) { e.preventDefault(); pick(+o.dataset.ac); } });
+    document.body.appendChild(b);
+  }
+  async function pick(i) {
+    const p = AC.list[i], input = AC.input; close(); if (!p || !input) return;
+    let a = { street: p.structuredFormat?.mainText?.text || input.value };
+    try {
+      const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(p.placeId)}?sessionToken=${AC.tok}`, { headers: { 'X-Goog-Api-Key': GKEY, 'X-Goog-FieldMask': 'addressComponents,location' } });
+      const d = await r.json(); if (!r.ok) throw new Error(d?.error?.message || 'lookup failed');
+      const c = t => (d.addressComponents || []).find(x => x.types.includes(t));
+      const street = [c('street_number')?.longText, c('route')?.shortText].filter(Boolean).join(' '), unit = c('subpremise')?.longText;
+      a = { street: (street || a.street) + (unit ? ` #${unit}` : ''), city: (c('locality') || c('postal_town') || c('administrative_area_level_3') || c('sublocality'))?.longText || '',
+        state: c('administrative_area_level_1')?.shortText || '', zip: c('postal_code')?.longText || '' };
+    } catch (e) { console.warn('address lookup', e); }
+    AC.tok = null; // a pick ends the billing session
+    const form = input.form, set = (name, v) => { const el = form?.elements[name]; if (el && v) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+    input.value = a.street; input.dispatchEvent(new Event('input', { bubbles: true }));
+    set('city', a.city); set('state', a.state); set('zip', a.zip);
+  }
+  // Any "address" field inside a form gets suggestions when focused
+  document.addEventListener('focusin', e => {
+    const input = e.target;
+    if (!(input instanceof HTMLInputElement) || input.name !== 'address' || !input.form || input._ac) return;
+    input._ac = true; input.setAttribute('autocomplete', 'off');
+    input.addEventListener('input', ev => { if (!ev.isTrusted) return; clearTimeout(AC.t); AC.t = setTimeout(() => search(input), 250); });
+    input.addEventListener('keydown', ev => {
+      if (!box()) return;
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); AC.i = (AC.i + (ev.key === 'ArrowDown' ? 1 : -1) + AC.list.length) % AC.list.length; draw(); }
+      else if (ev.key === 'Enter' && AC.i >= 0) { ev.preventDefault(); pick(AC.i); }
+      else if (ev.key === 'Escape') { ev.stopPropagation(); close(); }
+    });
+    input.addEventListener('blur', () => setTimeout(close, 150));
+  });
+  addEventListener('resize', close);
+  addEventListener('scroll', () => { if (box()) draw(); }, true);
+})();
+</script>
+<style>
+.ac-box{position:fixed;z-index:1000;background:var(--card,#fff);border:1px solid var(--border,#d9dfe7);border-radius:10px;box-shadow:0 10px 30px rgba(13,23,38,.18);overflow:hidden;font-size:14px}
+.ac-opt{padding:9px 12px;cursor:pointer;display:flex;flex-direction:column;gap:1px;border-bottom:1px solid var(--border,#f0f2f5)}
+.ac-opt b{font-weight:600}
+.ac-opt small{color:var(--muted,#6b7c93);font-size:12px}
+.ac-opt:hover,.ac-opt.on{background:var(--hover,rgba(31,93,158,.08))}
+.ac-by{padding:5px 12px;text-align:right;font-size:11px;color:var(--muted,#8a97a8)}
+</style>
 </body>
 </html>
