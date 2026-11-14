@@ -45,6 +45,14 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.danger{color:var(--danger)}
 .hidden{display:none!important}
+.dv-h{font-size:14px;margin:18px 0 8px;display:flex;gap:8px;align-items:baseline}.dv-h:first-of-type{margin-top:6px}.dv-h .muted{font-weight:400;font-size:12.5px}
+.dv-vrow{margin-top:10px}
+.dv-drop{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;transition:background .15s,border-color .15s}
+.dv-drop:hover,.dv-drop.over{border-color:var(--accent,#5b8def);background:var(--panel-2)}.dv-drop.busy{opacity:.7;pointer-events:none}
+.dv-plan{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
+.dv-pthumb{flex:none;width:52px;height:40px;border-radius:6px;background:var(--panel-2) center/cover no-repeat;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--muted)}
+.dv-pname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dv-alt{margin-top:10px}.dv-alt summary{cursor:pointer;font-size:13px;margin-bottom:6px}
 .ds-wrap{display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.15fr);gap:22px;align-items:start}
 .ds-form label{display:block;margin-top:12px}.ds-form label:first-child{margin-top:0}.ds-form label.check{display:flex}
 .ds-prev{position:sticky;top:12px;background:#f5f4f0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -4460,6 +4468,69 @@ async function bkCreateProjects(b, q, postChat){
 }
 
 /* ----- Booking detail ----- */
+/* ----- Delivery panel helpers: video slots + floor plan uploads (private "delivery" storage bucket) ----- */
+function dvVid(b){
+  const list = (b.videos || []).filter(v => v && v.url);
+  const brand = list.find(v => /^branded$/i.test(v.label || '')), unbrand = list.find(v => /^unbranded$/i.test(v.label || ''));
+  return { brand, unbrand, more: list.filter(v => v !== brand && v !== unbrand) };
+}
+function dvVidRow(v, i){
+  return `<div class="dv-vrow grid2"><div><label>Video link</label><input class="dv-vurl" placeholder="https://vimeo.com/…" value="${esc(v?.url || '')}" /></div>
+    <div><label>Name shown to the client</label><div style="display:flex;gap:6px"><input class="dv-vlbl" placeholder="e.g. Cinematic film" value="${esc(v?.label || '')}" /><button type="button" class="btn small dv-vdel" title="Remove this video">✕</button></div></div></div>`;
+}
+const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
+async function dvPaintPlans(b){
+  const box = $('#dvPlans'); if (!box) return;
+  const plans = dvPlansOf(b);
+  box.innerHTML = plans.map((f, i) => `<div class="dv-plan"><span class="dv-pthumb" data-i="${i}">${/\.pdf$/i.test(f.name || f.url) ? 'PDF' : ''}</span><span class="dv-pname">${esc(f.name || 'Floor plan')}</span><button type="button" class="btn small" data-rm="${i}">Remove</button></div>`).join('');
+  box.querySelectorAll('[data-rm]').forEach(btn => btn.onclick = async () => {
+    const f = plans[+btn.dataset.rm]; if (!confirm(`Remove ${f.name || 'this floor plan'} from the delivery?`)) return;
+    const media_files = (b.media_files || []).filter(x => x !== f);
+    const { error } = await sb.from('bookings').update({ media_files, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) return fail(error);
+    if (f.path) await sb.storage.from('delivery').remove([f.path]);
+    b.media_files = media_files; dvPaintPlans(b); toast('Floor plan removed');
+  });
+  for (const [i, f] of plans.entries()) if (f.path && !/\.pdf$/i.test(f.name || f.url)) {
+    const { data } = await sb.storage.from('delivery').createSignedUrl(f.path, 3600);
+    const el = box.querySelector(`.dv-pthumb[data-i="${i}"]`); if (el && data?.signedUrl) el.style.backgroundImage = `url("${data.signedUrl}")`;
+  }
+}
+async function dvUpload(b, files){
+  const ok = [...files].filter(f => /^(image\/(jpeg|png|webp)|application\/pdf)$/.test(f.type));
+  if (!ok.length) return toast('Floor plans need to be JPG, PNG or PDF');
+  const big = ok.find(f => f.size > 100 * 1048576); if (big) return toast(`${big.name} is over 100 MB`);
+  const drop = $('#dvDrop'); drop.classList.add('busy'); drop.querySelector('b').textContent = `Uploading ${ok.length} file${ok.length > 1 ? 's' : ''}…`;
+  const added = [];
+  try {
+    for (const f of ok) {
+      const path = `${b.id}/floorplans/${Date.now()}-${f.name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '-')}`;
+      const { error } = await sb.storage.from('delivery').upload(path, f, { contentType: f.type, upsert: false });
+      if (error) throw error;
+      added.push({ kind: 'floorplan', name: f.name, path, url: `${SUPABASE_URL}/storage/v1/object/delivery/${path}` });
+    }
+    const media_files = [...(b.media_files || []), ...added];
+    const { error } = await sb.from('bookings').update({ media_files, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) throw error;
+    b.media_files = media_files; toast(`${added.length} floor plan${added.length > 1 ? 's' : ''} added to the delivery`);
+  } catch (e) { fail(e); }
+  if ($('#dvDrop')) { drop.classList.remove('busy'); drop.querySelector('b').textContent = 'Drag floor plans here'; }
+  dvPaintPlans(b);
+}
+function dvWire(b){
+  const more = $('#dvVidMore'); if (!more) return;
+  const wireRows = () => more.querySelectorAll('.dv-vdel').forEach(x => x.onclick = () => x.closest('.dv-vrow').remove());
+  wireRows();
+  $('#dvVidAdd').onclick = () => { more.insertAdjacentHTML('beforeend', dvVidRow(null)); wireRows(); more.lastElementChild.querySelector('input').focus(); };
+  const drop = $('#dvDrop'), inp = $('#dvPlanFile');
+  drop.onclick = () => inp.click();
+  drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+  inp.onchange = () => { if (inp.files.length) dvUpload(b, inp.files); inp.value = ''; };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files.length) dvUpload(b, e.dataTransfer.files); };
+  dvPaintPlans(b);
+}
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
   if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Bookings</a><p class="muted">That booking wasn't found.</p>`; return; }
@@ -4510,12 +4581,26 @@ function renderBookingDetail(id){
       </div>
       <div class="panel bk-wide"><h2>Delivery <span class="muted" style="font-weight:400;font-size:13px">· what the client sees on their delivery page</span></h2>
         <p class="muted bk-hint" style="margin-top:0">Photos and videos from delivered projects linked above show up automatically. Use these for anything else. Downloads unlock for the client once the order is paid.</p>
+        <h3 class="dv-h">📷 Photos</h3>
+        <div class="grid2"><div class="full"><label>Dropbox shared folder link</label><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /></div></div>
+        <h3 class="dv-h">🎬 Video <span class="muted">Vimeo links</span></h3>
         <div class="grid2">
-          <div class="full"><label>Photos · Dropbox shared folder link</label><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /></div>
-          <div class="full"><label>Videos · one per line: <b>link | label</b> (Vimeo or Dropbox)</label><textarea id="dvVideos" style="min-height:64px" placeholder="https://vimeo.com/123456789 | Branded&#10;https://vimeo.com/987654321 | Unbranded">${esc((b.videos || []).map(v => v.url + (v.label ? ' | ' + v.label : '')).join('\n'))}</textarea></div>
-          <div><label>3D tour link</label><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" /></div>
-          <div><label>Floor plan · Dropbox link (file or folder)</label><input id="dvPlan" value="${esc(b.floorplan_url || '')}" /></div>
-          <div class="full"><label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <b>Property websites</b> <span class="muted">(shows branded + unbranded website cards to the client; "coming soon" until a link is added)</span></label></div>
+          <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
+          <div><label>Unbranded video</label><input id="dvVidU" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).unbrand?.url || '')}" /></div>
+        </div>
+        <div id="dvVidMore">${dvVid(b).more.map((v, i) => dvVidRow(v, i)).join('')}</div>
+        <button type="button" class="btn small" id="dvVidAdd" style="margin-top:8px">+ Add video</button>
+        <h3 class="dv-h">🧊 3D tour</h3>
+        <div class="grid2"><div class="full"><label>3D tour link</label><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" /></div></div>
+        <h3 class="dv-h">📐 Floor plan</h3>
+        <div class="dv-drop" id="dvDrop" tabindex="0" role="button" aria-label="Upload floor plans">
+          <input type="file" id="dvPlanFile" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
+          <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
+        <div id="dvPlans"></div>
+        <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>
+        <h3 class="dv-h">🌐 Property websites &amp; more</h3>
+        <div class="grid2">
+          <div class="full"><label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Property websites</b> <span class="muted">(shows branded + unbranded website cards to the client; "coming soon" until a link is added)</span></span></label></div>
           <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" /></div>
           <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" /></div>
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
@@ -4564,10 +4649,13 @@ function renderBookingDetail(id){
     const val = id => { const v = $('#' + id).value.trim(); return v || null; };
     const bad = ['dvPhotos', 'dvTour', 'dvPlan', 'dvSite', 'dvSite2', 'dvMkt', 'dvCover'].find(id => val(id) && !/^https:\/\//i.test(val(id)));
     if (bad) return toast('Links need to start with https://');
-    const videos = $('#dvVideos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [url, ...rest] = l.split('|'); return { url: url.trim(), label: rest.join('|').trim() || null }; });
+    const videos = [[val('dvVidB'), 'Branded'], [val('dvVidU'), 'Unbranded'],
+      ...[...document.querySelectorAll('#dvVidMore .dv-vrow')].map((r, i) => [r.querySelector('.dv-vurl').value.trim(), r.querySelector('.dv-vlbl').value.trim() || `Video ${i + 3}`])]
+      .filter(([url]) => url).map(([url, label]) => ({ url, label, ...((b.videos || []).find(p => p.url === url)?.portrait ? { portrait: true } : {}) }));
     if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
     save({ require_payment: $('#dvReqPay').checked, websites_enabled: $('#dvSites').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
   });
+  dvWire(b);
   const ws = $('#dvSites'); if (ws) ws.onchange = () => save({ websites_enabled: ws.checked }, ws.checked ? 'Property websites on' : 'Property websites off');
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
