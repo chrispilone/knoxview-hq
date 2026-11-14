@@ -4500,6 +4500,20 @@ function renderBookingDetail(id){
           ${b.gcal_event_id ? `<span class="muted">✓ On your Google Calendar</span>` : b.status !== 'cancelled' && b.shoot_start && S.cal.status?.connected ? `<button class="btn" id="bkMkCal">Add to Google Calendar</button>` : ''}
         </div>
       </div>
+      <div class="panel bk-wide"><h2>Delivery <span class="muted" style="font-weight:400;font-size:13px">· what the client sees on their delivery page</span></h2>
+        <p class="muted bk-hint" style="margin-top:0">Photos and videos from delivered projects linked above show up automatically. Use these for anything else. Downloads unlock for the client once the order is paid.</p>
+        <div class="grid2">
+          <div class="full"><label>Photos · Dropbox shared folder link</label><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /></div>
+          <div class="full"><label>Videos · one per line: <b>link | label</b> (Vimeo or Dropbox)</label><textarea id="dvVideos" style="min-height:64px" placeholder="https://vimeo.com/123456789 | Branded&#10;https://vimeo.com/987654321 | Unbranded">${esc((b.videos || []).map(v => v.url + (v.label ? ' | ' + v.label : '')).join('\n'))}</textarea></div>
+          <div><label>3D tour link</label><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" /></div>
+          <div><label>Floor plan · Dropbox link (file or folder)</label><input id="dvPlan" value="${esc(b.floorplan_url || '')}" /></div>
+          <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" /></div>
+          <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" /></div>
+          <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
+          <div><label>Cover photo for the listing card (image link)</label><input id="dvCover" value="${esc(b.cover_url || '')}" /></div>
+        </div>
+        <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button>${b.paid ? '' : '<span class="muted">Unpaid: the client sees "pay to unlock" until it is paid.</span>'}</div>
+      </div>
       <div class="panel bk-wide"><h2>Notes</h2>
         <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
         <label style="margin-top:10px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" />
@@ -4518,6 +4532,14 @@ function renderBookingDetail(id){
   on('bkPaidBtn', () => save({ paid: !b.paid, paid_at: b.paid ? null : new Date().toISOString() }, b.paid ? 'Marked unpaid' : 'Marked paid'));
   on('bkDone', () => save({ status: 'completed' }, 'Shoot marked complete'));
   on('bkUndone', () => save({ status: 'scheduled' }));
+  on('bkSaveDelivery', () => {
+    const val = id => { const v = $('#' + id).value.trim(); return v || null; };
+    const bad = ['dvPhotos', 'dvTour', 'dvPlan', 'dvSite', 'dvSite2', 'dvMkt', 'dvCover'].find(id => val(id) && !/^https:\/\//i.test(val(id)));
+    if (bad) return toast('Links need to start with https://');
+    const videos = $('#dvVideos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [url, ...rest] = l.split('|'); return { url: url.trim(), label: rest.join('|').trim() || null }; });
+    if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
+    save({ photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
+  });
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
   on('bkCancel', async () => {
     if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
