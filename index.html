@@ -1313,7 +1313,9 @@ async function loadRoleAccess(){
 }
 const permFor = (m, k) => !m ? false : m.role === 'owner' ? true : (m.permissions && k in m.permissions ? !!m.permissions[k] : roleDefault(m.role, k));
 const can = k => permFor(S.me, k);
-const viewAllowed = v => ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' || v === 'bookings' ? isOwner() : true;
+// Bookings is archived (hidden) for now, Nov 13 2026. Code, data and settings are kept; set to true to bring the tab back.
+const BOOKINGS_ENABLED = false;
+const viewAllowed = v => v === 'bookings' && !BOOKINGS_ENABLED ? false : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'finance' || v === 'bookings' ? isOwner() : true;
 function applyAccess(){
   ['tasks','mail','calendar','bookings','hiring','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
@@ -3750,7 +3752,7 @@ function openCalEvent(ev){
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn danger" id="evDel" style="margin-right:auto">Delete</button>` : ''}
       ${agent ? `<button class="btn" id="evAgent">Agent file</button>` : ''}
       ${proj ? `<button class="btn" id="evProj">Open project</button>` : ''}
-      ${ev.bookingId && isOwner() ? `<a class="btn" href="#/bookings/${esc(ev.bookingId)}" id="evBooking">Open booking</a>` : ''}
+      ${ev.bookingId && isOwner() && BOOKINGS_ENABLED ? `<a class="btn" href="#/bookings/${esc(ev.bookingId)}" id="evBooking">Open booking</a>` : ''}
       ${sp?.admin ? `<a class="btn" href="${esc(sp.admin)}" target="_blank" rel="noopener">Open in Spiro</a>` : ''}
       ${safeUrl(ev.link) ? `<a class="btn" href="${esc(ev.link)}" target="_blank" rel="noopener">Google Calendar</a>` : ''}
       ${ev.mine && ev.kind !== 'booked' ? `<button class="btn" id="evEdit">Edit</button>` : ''}
