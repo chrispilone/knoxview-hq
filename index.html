@@ -1031,6 +1031,13 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-warn{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(183,112,10,.11);color:var(--text);font-size:13px}
 .bk-warn ul{margin:6px 0;padding-left:18px}
 .bk-lines>div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:14px}
+.bk-links{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 12px}
+.bk-links .btn{text-decoration:none}
+.bk-rmline{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 0 0 6px;line-height:1}
+.bk-rmline:hover{color:var(--danger,#b0413e)}
+.bk-addline{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.bk-addrow{display:flex;gap:6px;align-items:center}
+.bk-addrow select,.bk-addrow input{flex:1;min-width:0}
 .bk-lines .bk-total{border-top:1px solid var(--border);margin-top:4px;padding-top:9px;font-weight:700;font-size:16px}
 .bk-disc input{width:90px;padding:4px 8px;text-align:right}
 .bk-disc{align-items:center;color:var(--muted)}
@@ -4678,6 +4685,11 @@ function renderBookingDetail(id){
     <div class="page-head"><div><a href="#/bookings" class="bk-back">← Bookings</a><h1>${esc(b.address)}</h1><p>Order #${b.number} · ${bkPill(b.status)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</p></div></div>
     <div class="bk-detail">
       <div class="panel"><h2>Shoot</h2>
+        <div class="bk-links">
+          <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">👁 Client's download page</button>
+          ${b.dropbox_path ? `<a class="btn small" href="${esc('https://www.dropbox.com/home' + b.dropbox_path.split('/').map(encodeURIComponent).join('/'))}" target="_blank" rel="noopener">📁 Open Dropbox</a>` : ''}
+          <button type="button" class="btn small" id="bkInvoice" title="Open the invoice the client sees in their portal">🧾 View invoice</button>
+        </div>
         <p class="bk-big">${esc(bkWhen(b))}</p>
         <p>📍 ${esc(loc)} · <a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></p>
         <div class="sp-grid">
@@ -4702,9 +4714,22 @@ function renderBookingDetail(id){
         ${a ? `<button class="btn small" id="bkAgent">Agent file</button>` : ''}
       </div>
       <div class="panel"><h2>Order</h2>
-        <div class="bk-lines">${(b.items || []).map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
+        <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)} <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button></span></div>`).join('')}
           ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
+          ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
           <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div></div>
+        <div class="bk-addline">
+          <label>Add a service</label>
+          <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
+              ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
+                  .map(x => `<option value="${x.id}">${esc(x.name)}${x.kind === 'package' ? ' (package)' : ''} · ${money(x.price)}</option>`).join('')
+              : `<option value="">No services set up yet (Settings → Services)</option>`}</select>
+            <button type="button" class="btn small" id="bkAddSvcBtn">Add</button></div>
+          <label style="margin-top:10px">Custom line item</label>
+          <div class="bk-addrow"><input id="bkCustName" placeholder="e.g. Extra twilight edit" maxlength="120" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$0.00" style="max-width:110px" />
+            <button type="button" class="btn small" id="bkAddCust">Add</button></div>
+          <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
+        </div>
         <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
         ${b.paid && b.paid_note ? `<p class="muted bk-hint" style="margin:6px 0 0">Note: ${esc(b.paid_note)}</p>` : ''}
         <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
@@ -4805,6 +4830,42 @@ function renderBookingDetail(id){
   dvWire(b);
   const ws = $('#dvSites'); if (ws) ws.onchange = () => save({ websites_enabled: ws.checked }, ws.checked ? 'Property websites on' : 'Property websites off');
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
+  // --- order lines: add from services, custom items, remove ---
+  const saveLines = async (items, msg) => {
+    if (b.paid && !confirm(`Order #${b.number} is already marked paid. Change its line items anyway? The total will no longer match what was paid.`)) return;
+    const subtotal = Math.round(items.reduce((t, i) => t + (Number(i.price) || 0), 0) * 100) / 100;
+    const total = Math.round((subtotal - (Number(b.discount) || 0) + (Number(b.tax) || 0)) * 100) / 100;
+    save({ items, subtotal, total }, msg);
+  };
+  on('bkAddSvcBtn', () => {
+    const s = BK.services.find(x => x.id === $('#bkAddSvc').value); if (!s) return toast('Choose a service first');
+    saveLines([...(b.items || []), { id: s.id, name: s.name, kind: s.kind === 'package' ? 'package' : 'service', price: Number(s.price) || 0, minutes: s.duration_min || 0, ...(s.includes ? { includes: s.includes } : {}) }], `${s.name} added`);
+  });
+  on('bkAddCust', () => {
+    const name = $('#bkCustName').value.trim(), raw = $('#bkCustPrice').value.trim(), price = Math.round(Number(raw) * 100) / 100;
+    if (!name) return toast('Name the line item');
+    if (raw === '' || !isFinite(price)) return toast('Enter a price');
+    saveLines([...(b.items || []), { id: 'custom-' + Date.now(), name, kind: 'custom', price }], `${name} added`);
+  });
+  document.querySelectorAll('#bookingsView [data-rmline]').forEach(x => x.onclick = () => {
+    const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from order #${b.number}?`)) return;
+    saveLines((b.items || []).filter((_, j) => j !== k), `${it.name} removed`);
+  });
+  // --- open the client portal as this client: delivery page or invoice ---
+  const openAsClient = async (btnId, go) => {
+    const btn = $('#' + btnId), label = btn.textContent, win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
+    btn.disabled = true; btn.textContent = 'Opening…';
+    try {
+      const { data, error } = await sb.functions.invoke('client-view', { body: { bookingId: b.id } });
+      if (error) { let m = 'Could not open the client portal'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+      const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const url = `${PORTAL_URL}/#ts=${tok}&go=${go}`;
+      if (win) win.location.href = url; else location.assign(url);
+    } catch (e) { if (win) win.close(); fail(e); }
+    btn.disabled = false; btn.textContent = label;
+  };
+  on('bkClientView', () => openAsClient('bkClientView', `delivery/${b.id}`));
+  on('bkInvoice', () => openAsClient('bkInvoice', `invoice/${b.number}${b.paid ? '/paid' : ''}`));
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
   on('bkCancel', async () => {
     if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
