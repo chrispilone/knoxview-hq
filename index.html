@@ -4141,7 +4141,8 @@ function renderBookingList(){
       <a class="btn primary" href="#/bookings/new">+ New order</a>
       <div class="seg" id="bkTabs">${[['upcoming','Upcoming'],['past','Past'],['unpaid','Unpaid'],['cancelled','Cancelled'],['all','All']].map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
-      <button class="btn" id="bkSettings" style="margin-left:auto">⚙ Portal settings</button>
+      <button class="btn" id="bkPortal" style="margin-left:auto">📱 Client portal</button>
+      <button class="btn" id="bkSettings">⚙ Portal settings</button>
     </div>
     ${groups.length ? groups.map(g => `<div class="bk-group"><h3>${esc(g.k)}</h3>${g.items.map(b => `
       <a class="bk-row ${b.status}" href="#/bookings/${b.id}">
@@ -4153,6 +4154,7 @@ function renderBookingList(){
   $('#bkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; BK.tab = b.dataset.t; renderBookingList(); };
   $('#bkSearch').oninput = e => { BK.q = e.target.value; const pos = e.target.selectionStart; renderBookingList(); const i = $('#bkSearch'); i.focus(); i.setSelectionRange(pos, pos); };
   $('#bkSettings').onclick = openBookingSettings;
+  $('#bkPortal').onclick = openClientPortalPanel;
 }
 
 /* ----- Pricing ----- */
@@ -4661,6 +4663,55 @@ function openServiceEdit(s){
     const { error } = await sb.from('booking_services').delete().eq('id', s.id);
     if (error) return fail(error);
     BK.services = BK.services.filter(x => x.id !== s.id); back();
+  };
+}
+
+/* ----- Client portal: link, home-screen app, test client (super admins) ----- */
+const PORTAL_URL = 'https://knoxview-booking.netlify.app'; // → book.knoxview.com when it goes live
+const PORTAL_TEST_EMAIL = 'chris+test@knoxview.com';
+function openClientPortalPanel(){
+  document.body.style.overflow = 'hidden';
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(PORTAL_URL + '/#listings')}`;
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal"><h2>Client portal</h2>
+    <p class="muted bk-hint" style="margin-top:-6px">What your clients see when they book and sign in. Test mode: payments use Stripe test cards (4242 4242 4242 4242).</p>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px">
+      <img src="${qr}" width="150" height="150" alt="QR code for the client portal" style="border-radius:10px;border:1px solid var(--border)" />
+      <div style="flex:1;min-width:220px">
+        <label>Portal link</label>
+        <div style="display:flex;gap:6px"><input readonly value="${PORTAL_URL}" id="cpUrl" /><button type="button" class="btn small" id="cpCopy">Copy</button></div>
+        <p class="muted bk-hint" style="margin:6px 0 0">Scan the code with your phone's camera to open it there.</p>
+      </div>
+    </div>
+    <h3 class="bk-sub" style="margin-top:18px">Test client account</h3>
+    <p style="margin:0 0 4px;font-size:14px"><b>Test Client</b> · <span id="cpEmail">${PORTAL_TEST_EMAIL}</span> <button type="button" class="btn small" id="cpCopyE">Copy</button></p>
+    <p class="muted bk-hint" style="margin:0 0 10px">Has two sample orders marked TEST (one paid, one unpaid). Sign-in codes for it go to your chris@knoxview.com inbox.</p>
+    <button type="button" class="btn primary" id="cpOpen">Open as test client</button>
+    <span class="muted" style="font-size:12.5px;margin-left:8px">Opens a new tab already signed in. No code needed.</span>
+    <h3 class="bk-sub" style="margin-top:20px">Put it on your phone's home screen</h3>
+    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
+      <li>Scan the QR code (or open the link) on your phone.</li>
+      <li><b>iPhone:</b> in Safari, tap Share → <b>Add to Home Screen</b>. <b>Android:</b> in Chrome, tap ⋮ → <b>Add to Home screen</b>.</li>
+      <li>Open <b>Knox View</b> from your home screen and sign in with <b>${PORTAL_TEST_EMAIL}</b>. The code lands in your inbox.</li>
+    </ol>
+    <p class="muted bk-hint">The home-screen app keeps its own sign-in, so you sign in once there.</p>
+    <div class="actions"><button type="button" class="btn" id="cpClose">Close</button></div>
+  </div>`;
+  $('#ov').onclick = $('#cpClose').onclick = closeLayer;
+  const copy = (v, what) => navigator.clipboard?.writeText(v).then(() => toast(what + ' copied'), () => toast("Couldn't copy"));
+  $('#cpCopy').onclick = () => copy(PORTAL_URL, 'Link');
+  $('#cpCopyE').onclick = () => copy(PORTAL_TEST_EMAIL, 'Email');
+  $('#cpOpen').onclick = async () => {
+    const btn = $('#cpOpen'), win = window.open('about:blank', '_blank'); // open now so the browser doesn't block the pop-up
+    btn.disabled = true; btn.textContent = 'Opening…';
+    try {
+      const { data, error } = await sb.functions.invoke('auth-code', { body: { action: 'test_session' } });
+      if (error) { let m = 'Could not open the test client'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+      const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const url = `${PORTAL_URL}/#ts=${tok}`;
+      if (win) win.location.href = url; else location.assign(url);
+    } catch (e) { if (win) win.close(); fail(e); }
+    btn.disabled = false; btn.textContent = 'Open as test client';
   };
 }
 
