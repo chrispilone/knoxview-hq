@@ -45,6 +45,12 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.danger{color:var(--danger)}
 .hidden{display:none!important}
+.ds-wrap{display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.15fr);gap:22px;align-items:start}
+.ds-form label{display:block;margin-top:12px}.ds-form label:first-child{margin-top:0}.ds-form label.check{display:flex}
+.ds-prev{position:sticky;top:12px;background:#f5f4f0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ds-subj{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);background:#fff}
+#dsFrame{display:block;width:100%;height:720px;border:0;background:#f5f4f0}
+@media (max-width:860px){.ds-wrap{grid-template-columns:1fr}#dsFrame{height:560px}}
 .muted{color:var(--muted)}
 
 /* ----- Tasks ----- */
@@ -4518,26 +4524,21 @@ function renderBookingDetail(id){
         <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button></div>
       </div>
       <div class="panel bk-wide" id="dsPanel"><h2>Send delivery <span class="muted" style="font-weight:400;font-size:13px">· email the client their delivery link${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</span></h2>
-        <div class="grid2">
-          <div><label>Template</label><select id="dsTpl"><option>Loading…</option></select></div>
-          <div><label>To <span class="muted">(agent's email on file)</span></label><input id="dsTo" type="email" value="${esc((a?.email || b.client_email || '').toLowerCase())}" /></div>
-          <div class="full"><label>Additional recipients <span class="muted">(optional, separate with commas)</span></label><input id="dsCc" placeholder="teammate@brokerage.com, assistant@…" /></div>
-          <p class="muted bk-hint full" style="margin:-4px 0 0">BCC: <b>chris@knoxview.com</b> is always copied on every delivery.</p>
-          <div class="full"><label>Subject</label><input id="dsSubj" /></div>
-          <div class="full"><label>Heading</label><input id="dsHead" /></div>
-          <div class="full"><label>Message <span class="muted">(blank line = new paragraph; the View &amp; download button goes after the 2nd paragraph)</span></label><textarea id="dsBody" style="min-height:150px"></textarea></div>
-          <div><label>Button label</label><input id="dsBtn" /></div>
-          <div></div>
-          <div class="full"><label class="check"><input type="checkbox" id="dsSms" /> <b>Also send the delivery by text message</b> <span class="muted">(from your Quo business number)</span></label></div>
-          <div id="dsSmsBox" class="full hidden"><div class="grid2">
-            <div><label>Mobile number</label><input id="dsSmsTo" type="tel" value="${esc(a?.phone || b.client_phone || '')}" /></div><div></div>
-            <div class="full"><label>Text message</label><textarea id="dsSmsBody" style="min-height:70px"></textarea></div>
-          </div></div>
-          <div class="full"><label class="check"><input type="checkbox" id="dsDone" ${b.status === 'completed' && b.delivered_at ? '' : 'checked'} /> <b>Mark order as delivered &amp; completed</b></label></div>
+        <div class="ds-wrap">
+          <div class="ds-form">
+            <label>What are you delivering?</label><select id="dsTpl"><option>Loading…</option></select>
+            <label>To <span class="muted">(agent's email on file)</span></label><input id="dsTo" type="email" value="${esc((a?.email || b.client_email || '').toLowerCase())}" />
+            <label>Additional recipients <span class="muted">(optional, separate with commas)</span></label><input id="dsCc" placeholder="teammate@brokerage.com" />
+            <p class="muted bk-hint" style="margin:6px 0 0">Bcc: <b>chris@knoxview.com</b> is copied on every delivery.</p>
+            <label>Additional notes <span class="muted">(optional, shows in the email as "A note from Chris")</span></label><textarea id="dsNotes" style="min-height:90px" placeholder="e.g. The twilight shots are in the second half of the gallery."></textarea>
+            <label class="check" style="margin-top:12px"><input type="checkbox" id="dsSms" /> <b>Also text the delivery link</b></label>
+            <div id="dsSmsBox" class="hidden" style="margin-left:26px"><input id="dsSmsTo" type="tel" placeholder="Mobile number" value="${esc(a?.phone || b.client_phone || '')}" /><p class="muted bk-hint" id="dsSmsText" style="margin:6px 0 0"></p></div>
+            <label class="check" style="margin-top:8px"><input type="checkbox" id="dsDone" ${b.status === 'completed' && b.delivered_at ? '' : 'checked'} /> <b>Mark order as delivered &amp; completed</b></label>
+            <div class="bk-actions"><button class="btn primary" id="dsSend">Send delivery</button></div>
+            <div id="dsHist"></div>
+          </div>
+          <div class="ds-prev"><div class="ds-subj" id="dsSubj"></div><iframe id="dsFrame" title="Email preview"></iframe></div>
         </div>
-        ${!b.paid && b.require_payment !== false ? '<p class="muted bk-hint">This order is unpaid, so the email adds a line that downloads unlock once it is paid.</p>' : ''}
-        <div class="bk-actions"><button class="btn" id="dsPrev">Preview</button><button class="btn primary" id="dsSend">Send delivery</button></div>
-        <div id="dsHist"></div>
       </div>
       <div class="panel bk-wide"><h2>Notes</h2>
         <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
@@ -4625,40 +4626,30 @@ async function dsWire(b, a){
   const sel = $('#dsTpl'); if (!sel) return;
   let tpls; try { tpls = (await dtLoad()).filter(t => t.active); } catch (e) { return fail(e); }
   if (!$('#dsTpl')) return; // navigated away
-  sel.innerHTML = tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name)}</option>`).join('') || '<option value="">No templates — add one in Portal settings</option>';
-  const apply = () => { const t = tpls.find(x => x.key === sel.value); if (!t) return;
-    $('#dsSubj').value = dsFill(t.subject, b, a); $('#dsHead').value = dsFill(t.heading, b, a); $('#dsBody').value = dsFill(t.body, b, a);
-    $('#dsBtn').value = t.button_label || 'View & download'; $('#dsSmsBody').value = dsFill(t.sms_body || 'Hi {first_name}, your media for {address} is ready! View and download here: {link} - Knox View Media', b, a); };
-  sel.onchange = apply; apply();
-  $('#dsSms').onchange = () => $('#dsSmsBox').classList.toggle('hidden', !$('#dsSms').checked);
-  const body = () => ({ bookingId: b.id, templateKey: sel.value, to: $('#dsTo').value.trim(), cc: $('#dsCc').value.split(/[\s,;]+/).filter(Boolean),
-    subject: $('#dsSubj').value.trim(), heading: $('#dsHead').value.trim(), body: $('#dsBody').value, button: $('#dsBtn').value.trim(),
-    sms: $('#dsSms').checked, smsTo: $('#dsSmsTo').value.trim(), smsBody: $('#dsSmsBody').value.trim(), markComplete: $('#dsDone').checked });
-  $('#dsPrev').onclick = async () => {
-    const btn = $('#dsPrev'); btn.disabled = true;
+  sel.innerHTML = tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name.replace(/\s*\(default\)$/i, ''))}</option>`).join('') || '<option value="">No templates — add one in Portal settings</option>';
+  const tpl = () => tpls.find(x => x.key === sel.value);
+  let seq = 0, timer;
+  const paint = async () => {
+    const my = ++seq;
+    $('#dsSmsText').textContent = tpl() ? 'Text: ' + dsFill(tpl().sms_body || '', b, a) : '';
     try {
-      const r = await deliverCall({ ...body(), action: 'preview' }), x = body();
-      const box = document.createElement('div');
-      box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal wide" style="z-index:62"><h2>Preview</h2>
-        <p style="margin:0 0 4px;font-size:13.5px"><b>To:</b> ${esc(x.to)}${x.cc.length ? ' · <b>Cc:</b> ' + esc(x.cc.join(', ')) : ''} · <b>Bcc:</b> chris@knoxview.com</p>
-        <p style="margin:0 0 10px;font-size:13.5px"><b>Subject:</b> ${esc(r.subject)}</p>
-        <iframe id="dsFrame" style="width:100%;height:60vh;border:1px solid var(--border);border-radius:10px;background:#f5f4f0"></iframe>
-        ${x.sms ? `<h3 class="bk-sub" style="margin-top:14px">Text to ${esc(x.smsTo)}</h3><div style="background:#e9ecf1;border-radius:14px;padding:10px 12px;font-size:14px;white-space:pre-wrap;max-width:360px">${esc(r.sms)}</div>` : ''}
-        <div class="actions"><button type="button" class="btn" id="dsPvClose">Close</button></div></div>`;
-      document.body.appendChild(box);
-      box.querySelector('#dsFrame').srcdoc = r.html;
-      box.querySelector('.overlay').onclick = box.querySelector('#dsPvClose').onclick = () => box.remove();
-    } catch (e) { fail(e); }
-    btn.disabled = false;
+      const r = await deliverCall({ action: 'preview', bookingId: b.id, templateKey: sel.value, notes: $('#dsNotes').value });
+      if (my !== seq || !$('#dsFrame')) return;
+      $('#dsSubj').innerHTML = `<b>Subject:</b> ${esc(r.subject)}`; $('#dsFrame').srcdoc = r.html;
+    } catch (e) { if (my === seq && $('#dsSubj')) $('#dsSubj').textContent = 'Preview unavailable: ' + e.message; }
   };
+  const later = () => { clearTimeout(timer); timer = setTimeout(paint, 500); };
+  sel.onchange = paint; $('#dsNotes').oninput = later; paint();
+  $('#dsSms').onchange = () => $('#dsSmsBox').classList.toggle('hidden', !$('#dsSms').checked);
   $('#dsSend').onclick = async () => {
-    const x = body();
+    const x = { action: 'send', bookingId: b.id, templateKey: sel.value, to: $('#dsTo').value.trim(), cc: $('#dsCc').value.split(/[\s,;]+/).filter(Boolean),
+      notes: $('#dsNotes').value.trim(), sms: $('#dsSms').checked, smsTo: $('#dsSmsTo').value.trim(), markComplete: $('#dsDone').checked };
     if (!x.to) return toast('Add the client email');
     if (x.sms && !x.smsTo) return toast('Add a mobile number for the text');
-    if (!confirm(`Send "${x.subject}" to ${[x.to, ...x.cc].join(', ')}${x.sms ? ' and text ' + x.smsTo : ''}?`)) return;
+    if (!confirm(`Send "${tpl()?.name.replace(/\s*\(default\)$/i, '')}" to ${[x.to, ...x.cc].join(', ')}${x.sms ? ' and text ' + x.smsTo : ''}?`)) return;
     const btn = $('#dsSend'); btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      const r = await deliverCall({ ...x, action: 'send' });
+      const r = await deliverCall(x);
       if (r.completed) Object.assign(b, { status: 'completed', delivered_at: new Date().toISOString() });
       toast('Delivery email sent' + (r.sms ? (r.sms.ok ? ' + text sent' : ' · text failed: ' + r.sms.error) : '') + (r.completed ? ' · order completed' : ''));
       renderBookingDetail(b.id);
@@ -4667,7 +4658,7 @@ async function dsWire(b, a){
   try {
     const c = await deliverCall({ action: 'context', bookingId: b.id });
     const hist = $('#dsHist'); if (!hist) return;
-    if (!c.sms) $('#dsSms').closest('label').insertAdjacentHTML('beforeend', ' <span class="muted">· texting needs QUO_API_KEY set up</span>');
+    if (!c.sms) $('#dsSms').closest('label').insertAdjacentHTML('beforeend', ' <span class="muted">· needs the Quo API key</span>');
     if (c.history?.length) hist.innerHTML = `<h3 class="bk-sub" style="margin-top:16px">Sent</h3>` + c.history.map(h => `<div class="mini-row"><span class="t">${h.ok ? '✓' : '✕'} ${esc(h.subject || '')}<small class="muted" style="display:block">${esc(fmtDateTime(h.created_at))} · ${esc([h.to_email, ...(h.cc || [])].join(', '))}${h.sms_to ? ` · text ${h.sms_ok ? 'sent' : 'failed'} to ${esc(h.sms_to)}` : ''}${h.marked_complete ? ' · marked complete' : ''}${h.error ? ' · ' + esc(h.error) : ''}</small></span></div>`).join('');
   } catch (e) { /* history is optional */ }
 }
