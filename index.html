@@ -45,6 +45,8 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.danger{color:var(--danger)}
 .hidden{display:none!important}
+.mp-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mp-opt{display:flex;align-items:center;gap:8px;margin:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-weight:500;color:var(--text)}.mp-opt:has(input:checked){border-color:var(--accent,#5b8def);background:var(--panel-2)}.mp-opt input{width:auto}
+@media (max-width:520px){.mp-opts{grid-template-columns:1fr 1fr}}
 .dbx-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
 .dbx-path{display:flex;flex-direction:column;min-width:0;flex:1 1 240px;font-size:13px}.dbx-path b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .dbx-acts{display:flex;flex-wrap:wrap;gap:6px}
@@ -4578,6 +4580,22 @@ async function dbxWire(b){
     try { const g = await dbxCall('gallery', { bookingId: b.id }); dbxPaintGrid(b, g.photos); } catch (e) { /* thumbnails need Dropbox */ dbxPaintGrid(b, b.photo_files); }
   }
 }
+/* ----- Mark as paid (payments taken outside the portal) ----- */
+const PAY_METHODS = { check: 'Check', venmo: 'Venmo', zelle: 'Zelle', cash: 'Cash', card: 'Card (in person)', other: 'Other' };
+function openMarkPaid(b, done){
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Mark order #${b.number} as paid</h2>
+    <p class="muted bk-hint" style="margin-top:-6px">${money(b.total)} · ${esc(b.address || '')}. Downloads unlock for the client right away.</p>
+    <form id="mpForm"><label>How was it paid?</label>
+      <div class="mp-opts">${Object.entries(PAY_METHODS).map(([k, l], i) => `<label class="mp-opt"><input type="radio" name="m" value="${k}" ${i === 0 ? 'checked' : ''} /><span>${l}</span></label>`).join('')}</div>
+      <label style="margin-top:12px">Notes <span class="muted">(optional, e.g. check #, Venmo name, who paid)</span></label>
+      <textarea name="note" style="min-height:70px" placeholder="Check #1042 from Sarah Mitchell"></textarea>
+      <div class="actions"><button type="button" class="btn" id="mpCancel">Cancel</button><button class="btn primary">Mark as paid</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove();
+  box.querySelector('.overlay').onclick = close; box.querySelector('#mpCancel').onclick = close;
+  box.querySelector('#mpForm').onsubmit = e => { e.preventDefault(); const f = e.target; close(); done(f.m.value, f.note.value.trim().slice(0, 500)); };
+}
 /* ----- Delivery panel helpers: video slots + floor plan uploads (private "delivery" storage bucket) ----- */
 function dvVid(b){
   const list = (b.videos || []).filter(v => v && v.url);
@@ -4680,7 +4698,10 @@ function renderBookingDetail(id){
         <div class="bk-lines">${(b.items || []).map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
           ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
           <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div></div>
-        <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}</span>` : ''}</div>
+        <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
+        ${b.paid && b.paid_note ? `<p class="muted bk-hint" style="margin:6px 0 0">Note: ${esc(b.paid_note)}</p>` : ''}
+        <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
+        <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>
       </div>
       <div class="panel"><h2>Projects & calendar</h2>
         ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
@@ -4723,8 +4744,6 @@ function renderBookingDetail(id){
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
           <div><label>Cover photo for the listing card (image link)</label><input id="dvCover" value="${esc(b.cover_url || '')}" /></div>
         </div>
-        <label class="check" style="margin-top:12px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
-        <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>
         <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button></div>
       </div>
       <div class="panel bk-wide" id="dsPanel"><h2>Send delivery <span class="muted" style="font-weight:400;font-size:13px">· email the client their delivery link${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</span></h2>
@@ -4759,7 +4778,10 @@ function renderBookingDetail(id){
   document.querySelectorAll('#bookingsView [data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
   const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
   on('bkAgent', () => openAgent(a.id));
-  on('bkPaidBtn', () => save({ paid: !b.paid, paid_at: b.paid ? null : new Date().toISOString() }, b.paid ? 'Marked unpaid' : 'Marked paid'));
+  on('bkPaidBtn', () => {
+    if (b.paid) { if (confirm(`Mark order #${b.number} as unpaid?`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
+    openMarkPaid(b, (method, note) => save({ paid: true, paid_at: new Date().toISOString(), paid_method: method, paid_note: note || null }, `Marked paid · ${PAY_METHODS[method]}`));
+  });
   on('bkDone', async () => { if (await save({ status: 'completed' }, 'Shoot marked complete')) dbxAutoFolders(b); });
   on('bkUndone', () => save({ status: 'scheduled' }));
   on('bkSaveDelivery', () => {
@@ -4770,7 +4792,7 @@ function renderBookingDetail(id){
       ...[...document.querySelectorAll('#dvVidMore .dv-vrow')].map((r, i) => [r.querySelector('.dv-vurl').value.trim(), r.querySelector('.dv-vlbl').value.trim() || `Video ${i + 3}`])]
       .filter(([url]) => url).map(([url, label]) => ({ url, label, ...((b.videos || []).find(p => p.url === url)?.portrait ? { portrait: true } : {}) }));
     if (videos.some(v => !/^https:\/\//i.test(v.url))) return toast('Video links need to start with https://');
-    save({ require_payment: $('#dvReqPay').checked, websites_enabled: $('#dvSites').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
+    save({ websites_enabled: $('#dvSites').checked, photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'), marketing_url: val('dvMkt'), cover_url: val('dvCover') }, 'Delivery saved');
   });
   dvWire(b);
   const ws = $('#dvSites'); if (ws) ws.onchange = () => save({ websites_enabled: ws.checked }, ws.checked ? 'Property websites on' : 'Property websites off');
