@@ -2536,6 +2536,8 @@ function openAgent(id){
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
       ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Order page <span class="muted">(what they see under Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Default order page</option>${a.custom_order_page_id ? `<option value="${esc(a.custom_order_page_id)}" selected>Loading…</option>` : ''}</select></div>` : ''}
       <div class="full"><label>Preferences (shown on every project for this agent)</label><textarea name="preferences" placeholder="Name/brokerage at end of reels, music style, export needs…">${esc(a.preferences || '')}</textarea></div>
+      <div class="full"><label class="check"><input type="checkbox" name="require_payment" ${a.require_payment !== false ? 'checked' : ''} ${can('manage_agents') ? '' : 'disabled'} /> <b>Requires payment before delivery</b></label>
+        <p class="muted" style="font-size:12.5px;margin:2px 0 0 26px">On (default): new orders show watermarked previews and "Pay to download" until paid. Turn off for trusted clients so their new orders open for download right away. You can still change it on any single order.</p></div>
     </div>
     <div class="actions"><button type="button" class="btn" id="aCancel">${can('manage_agents') ? 'Cancel' : 'Close'}</button>${can('manage_agents') ? `<button class="btn primary">${id ? 'Save' : 'Add agent'}</button>` : ''}</div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
@@ -2546,8 +2548,18 @@ function openAgent(id){
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
+    fd.require_payment = e.target.require_payment.checked;
+    const payChanged = id && fd.require_payment !== (a.require_payment !== false);
     const { error } = id ? await sb.from('agents').update(fd).eq('id', id) : await sb.from('agents').insert(fd);
     if (error) return fail(error);
+    // Changing the client default: offer to apply it to their orders that are still unpaid
+    if (payChanged) {
+      const { data: open } = await sb.from('bookings').select('id').eq('agent_id', id).eq('paid', false).neq('require_payment', fd.require_payment);
+      if (open?.length && confirm(`Also ${fd.require_payment ? 'require payment on' : 'open downloads for'} this client's ${open.length} unpaid order${open.length > 1 ? 's' : ''}?\n\n(Cancel = only their new orders use the new setting.)`)) {
+        const { error: e2 } = await sb.from('bookings').update({ require_payment: fd.require_payment }).in('id', open.map(o => o.id));
+        if (e2) fail(e2);
+      }
+    }
     closeLayer(); await loadAll(); render(); toast(id ? 'Agent saved' : 'Agent added');
   };
 }
