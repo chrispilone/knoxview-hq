@@ -1004,6 +1004,12 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.zs-now{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.zs-now>div{border:1px solid var(--border);border-radius:9px;padding:8px 10px;text-align:center}.zs-now b{display:block;font-size:18px}.zs-now small{color:var(--muted);font-size:12px}
+.zs-hist{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:9px;margin:0 0 12px}
+.zs-hist table{width:100%;border-collapse:collapse;font-size:13px}.zs-hist th,.zs-hist td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}.zs-hist th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600}
+.zs-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.zs-form .full{grid-column:1/-1}.zs-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:640px){.zs-now{grid-template-columns:repeat(3,1fr)}.zs-form{grid-template-columns:1fr 1fr}}
 .ag-media{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
 .ag-tile{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:0}
 .ag-tile b{display:block}.ag-tile small{display:block;color:var(--muted);font-size:12px;margin:2px 0 6px}
@@ -4120,6 +4126,68 @@ async function loadBookingData(force){
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
 
+/* ----- Zillow Stat Tracker (order card): the order's Zillow link + dated snapshots of views / saves / days on Zillow.
+   Usually filled from Claude (Chris pastes a link in his Zillow Stat Tracker project; Claude reads the page and saves here),
+   or by hand below. Clients see it on their listing card. Tables: zillow_listings, zillow_stats. */
+const ZS_STATUS = { for_sale: 'For sale', pending: 'Pending', sold: 'Sold', off_market: 'Off market' };
+async function renderZillowPanel(b){
+  const box = $('#zsPanel'); if (!box) return;
+  const [l, st] = await Promise.all([
+    sb.from('zillow_listings').select('*').eq('booking_id', b.id).maybeSingle(),
+    sb.from('zillow_stats').select('*').eq('booking_id', b.id).order('captured_at', { ascending: false }).limit(60),
+  ]);
+  if (!$('#zsPanel')) return;
+  const zl = l.data, rows = st.data || [], edit = isSuperAdmin(), last = rows[0];
+  const n = v => v == null ? '—' : Number(v).toLocaleString();
+  const perDay = (v, d) => v != null && d ? (v / Math.min(Math.max(d, 1), 30)).toFixed(1) : '—';
+  box.innerHTML = `<h2>Zillow Stat Tracker ${zl ? `<span class="status-pill"><span class="dot" style="background:${zl.status === 'final' ? 'var(--muted)' : 'var(--ok)'}"></span>${zl.status === 'final' ? 'Final' : 'Tracking'}</span>` : ''}
+      <span class="muted" style="font-weight:400;font-size:13px">· views, saves and days on Zillow, shown to the client on their listing</span></h2>
+    ${zl ? `<p style="margin:0 0 10px"><a href="${esc(zl.url)}" target="_blank" rel="noopener">${esc(zl.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 80))} ↗</a>${zl.final_reason ? ` <span class="muted">· ${esc(zl.final_reason)}</span>` : ''}</p>` : '<p class="muted" style="margin:0 0 10px">Not tracked yet. Paste the Zillow link here, or send it to Claude in your Zillow Stat Tracker project.</p>'}
+    ${last ? `<div class="zs-now"><div><b>${n(last.views)}</b><small>views</small></div><div><b>${n(last.saves)}</b><small>saves</small></div><div><b>${n(last.days_on_zillow)}</b><small>days on Zillow</small></div>
+      <div><b>${perDay(last.views, last.days_on_zillow)}</b><small>views / day</small></div><div><b>${perDay(last.saves, last.days_on_zillow)}</b><small>saves / day</small></div></div>` : ''}
+    ${rows.length ? `<div class="zs-hist"><table><thead><tr><th>Captured</th><th>Views</th><th>Saves</th><th>Days</th><th>Status</th><th>By</th>${edit ? '<th></th>' : ''}</tr></thead><tbody>
+      ${rows.map(r => `<tr><td>${esc(new Date(r.captured_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</td><td>${n(r.views)}</td><td>${n(r.saves)}</td><td>${n(r.days_on_zillow)}</td><td>${esc(ZS_STATUS[r.listing_status] || '—')}</td><td>${r.source === 'claude' ? 'Claude' : 'You'}</td>${edit ? `<td><button type="button" class="btn small" data-zsdel="${r.id}" title="Delete this capture">×</button></td>` : ''}</tr>`).join('')}
+      </tbody></table></div>` : ''}
+    ${edit ? `<form id="zsForm" class="zs-form">
+      <div class="full"><label>Zillow link</label><input type="url" name="url" value="${esc(zl?.url || '')}" placeholder="https://www.zillow.com/homedetails/…" /></div>
+      <div><label>Views</label><input type="number" min="0" name="views" /></div><div><label>Saves</label><input type="number" min="0" name="saves" /></div>
+      <div><label>Days on Zillow</label><input type="number" min="0" name="days" /></div>
+      <div><label>Status</label><select name="lst">${Object.entries(ZS_STATUS).map(([k, v]) => `<option value="${k}" ${k === (last?.listing_status || 'for_sale') ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="full zs-acts"><button class="btn primary small">Save</button>${zl ? `<button type="button" class="btn small" id="zsFinal">${zl.status === 'final' ? 'Resume tracking' : 'Mark final'}</button><button type="button" class="btn small danger" id="zsStop">Stop tracking</button>` : ''}
+        <span class="muted bk-hint" style="margin:0">Leave the numbers blank to just save the link.</span></div></form>` : ''}`;
+  if (!edit) return;
+  const f = $('#zsForm');
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const url = f.url.value.trim(), nums = ['views', 'saves', 'days'].map(k => f[k].value === '' ? null : Math.max(0, parseInt(f[k].value, 10)));
+    if (!url && !zl) return toast('Paste the Zillow link first');
+    if (url && !/^https:\/\/(www\.)?zillow\.com\//i.test(url)) return toast('That isn\'t a zillow.com link');
+    try {
+      if (url && url !== zl?.url) { const zpid = (url.match(/(\d+)_zpid/) || [])[1] || null;
+        const r = await sb.from('zillow_listings').upsert({ booking_id: b.id, url, zpid, updated_at: new Date().toISOString() }); if (r.error) throw r.error; }
+      if (nums.some(v => v != null)) {
+        const r = await sb.from('zillow_stats').insert({ booking_id: b.id, views: nums[0], saves: nums[1], days_on_zillow: nums[2], listing_status: f.lst.value, source: 'manual' }); if (r.error) throw r.error;
+        if (['pending', 'sold', 'off_market'].includes(f.lst.value)) await sb.from('zillow_listings').update({ status: 'final', final_reason: `Went ${ZS_STATUS[f.lst.value].toLowerCase()} after ${nums[2] ?? '?'} days`, updated_at: new Date().toISOString() }).eq('booking_id', b.id);
+      }
+      toast('Saved'); renderZillowPanel(b);
+    } catch (err) { fail(err); }
+  };
+  const fin = $('#zsFinal'); if (fin) fin.onclick = async () => {
+    const final = zl.status !== 'final';
+    const { error } = await sb.from('zillow_listings').update({ status: final ? 'final' : 'tracking', final_reason: final ? 'Marked final in HQ' : null, updated_at: new Date().toISOString() }).eq('booking_id', b.id);
+    if (error) return fail(error); renderZillowPanel(b);
+  };
+  const stop = $('#zsStop'); if (stop) stop.onclick = async () => {
+    if (!confirm('Stop tracking this listing? Its saved stats are deleted too, and the client no longer sees them.')) return;
+    const { error } = await sb.from('zillow_listings').delete().eq('booking_id', b.id); if (error) return fail(error);
+    await sb.from('zillow_stats').delete().eq('booking_id', b.id); renderZillowPanel(b);
+  };
+  box.querySelectorAll('[data-zsdel]').forEach(x => x.onclick = async () => {
+    if (!confirm('Delete this capture?')) return;
+    const { error } = await sb.from('zillow_stats').delete().eq('id', x.dataset.zsdel); if (error) return fail(error); renderZillowPanel(b);
+  });
+}
+
 /* ===================== HIRING =====================
    Applicants from knoxview.com/apply (and later Indeed). Resumes + interview videos live in the private "hiring" bucket. */
 const HR = { loaded:false, list:[], openings:[], tab:'active', q:'', sub:'', urls:{}, act:{} };
@@ -4885,6 +4953,7 @@ function dvWire(b){
 }
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
+  if (b) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
   if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Bookings</a><p class="muted">That booking wasn't found.</p>`; return; }
   const a = S.agents.find(x => x.id === b.agent_id);
   const phone = b.client_phone || a?.phone, email = b.client_email || a?.email;
@@ -4957,6 +5026,7 @@ function renderBookingDetail(id){
           ${b.gcal_event_id ? `<span class="muted">✓ On your Google Calendar</span>` : b.status !== 'cancelled' && b.shoot_start && S.cal.status?.connected ? `<button class="btn" id="bkMkCal">Add to Google Calendar</button>` : ''}
         </div>
       </div>
+      <div class="panel bk-wide" id="zsPanel"><h2>Zillow Stat Tracker</h2><p class="muted" style="margin:0">Loading…</p></div>
       <div class="panel bk-wide"><h2>Delivery <span class="muted" style="font-weight:400;font-size:13px">· what the client sees on their delivery page</span></h2>
         <p class="muted bk-hint" style="margin-top:0">Photos and videos from delivered projects linked above show up automatically. Use these for anything else. Downloads unlock for the client once the order is paid.</p>
         <h3 class="dv-h">📷 Photos</h3>
