@@ -2460,7 +2460,8 @@ function openAgent(id){
   <div class="modal ${id ? 'wide' : ''}"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
     ${id ? `<div id="agentLogos"></div>` : ''}
     <form id="aForm"><div class="grid2">
-      <div class="full"><label>Full name</label><input name="full_name" required value="${esc(a.full_name || '')}" /></div>
+      <div><label>First name</label><input name="first_name" required autocomplete="off" value="${esc(a.first_name || '')}" /></div>
+      <div><label>Last name</label><input name="last_name" required autocomplete="off" value="${esc(a.last_name || '')}" /></div>
       <div><label>Team</label><input name="team_name" value="${esc(a.team_name || '')}" placeholder="Mount LeConte Team" /></div>
       <div><label>Brokerage</label><input name="brokerage" value="${esc(a.brokerage || '')}" /></div>
       <div><label>Email</label><input type="email" name="email" value="${esc(a.email || '')}" /></div>
