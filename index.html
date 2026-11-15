@@ -1006,7 +1006,8 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
 .op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .op-card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
-.op-card:hover{border-color:var(--accent-2)}.op-card.off{opacity:.65}
+.op-card:hover{border-color:var(--accent-2)}
+.op-default{text-align:left;font:inherit;cursor:pointer;padding:0}.op-tag{font-size:11px;font-weight:600;color:var(--ok,#2f7a55);background:color-mix(in srgb,var(--ok,#2f7a55) 12%,transparent);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}.op-card.off{opacity:.65}
 .op-cover{display:block;aspect-ratio:3/2;background:linear-gradient(135deg,#2a4466,#1d3250);overflow:hidden}
 .op-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .op-cover>span{display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600;padding:10px;text-align:center}
@@ -5146,7 +5147,7 @@ function openBookingSettings(){
       <p class="muted bk-hint">Anything on your Google Calendar blocks that time (plus the gap). All-day events block the whole day, even ones marked Free.</p>
       <div class="actions"><button type="button" class="btn" id="bkSetClose">Close</button><button class="btn primary">Save settings</button></div>
     </form></div>`;
-  $('#ov').onclick = $('#bkSetClose').onclick = () => { closeLayer(); if (S.view === 'bookings') renderBookings(); };
+  $('#ov').onclick = $('#bkSetClose').onclick = () => { closeLayer(); if (S.view === 'bookings') renderBookings(); if (S.view === 'orderpages') renderOrderPages(); };
   const wire = () => document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
   wire();
   $('#bkSvcAdd').onclick = () => openServiceEdit(null);
@@ -5265,6 +5266,15 @@ async function renderOrderPages(){
   OP.draft = null;
   root.innerHTML = `<div class="page-head"><div><h1>Order Pages</h1><p>Custom order pages for agents in the client portal. Everyone else gets the default order page.</p></div>
       <div><button class="btn primary" id="opNew">+ New order page</button></div></div>
+    ${(() => { const svcs = BK.services.filter(x => x.active && x.public !== false), pk = svcs.filter(x => x.kind === 'package').length, n = S.agents.filter(a => !a.custom_order_page_id || !OP.pages.some(p => p.id === a.custom_order_page_id && p.active)).length; return `
+      <div class="op-grid" style="margin-bottom:14px"><button type="button" class="op-card op-default" id="opDefault">
+        <span class="op-cover"><img src="${PORTAL_URL}/img/type-listing.jpg?v=2" alt=""></span>
+        <span class="op-body"><b>Default Order Page <span class="op-tag">Everyone</span></b><small>Clients see: Listing Media · Land Media · STR Media</small>
+          <small>${pk} package${pk === 1 ? '' : 's'} · ${svcs.length - pk} add-on${svcs.length - pk === 1 ? '' : 's'} · ${n} agent${n === 1 ? '' : 's'} (everyone without a custom page)</small>
+          <small class="op-who">Edit packages, prices and booking settings</small></span></button>
+        <a class="op-card op-default" href="${PORTAL_URL}/#order" target="_blank" rel="noopener"><span class="op-cover"><span>Preview the default order page ↗</span></span>
+          <span class="op-body"><b>Preview</b><small>Opens the client portal's order page in a new tab</small></span></a></div>
+      ${OP.pages.length ? '<h3 class="bk-sub" style="margin:4px 0 10px">Custom order pages</h3>' : ''}`; })()}
     ${OP.pages.length ? `<div class="op-grid">${OP.pages.map(pg => { const ag = opAgents(pg.id), n = OP.items.filter(i => i.page_id === pg.id).length; return `
       <a class="op-card ${pg.active ? '' : 'off'}" href="#/orderpages/${pg.id}">
         <span class="op-cover">${pg.cover_url ? `<img src="${esc(pg.cover_url)}" alt="">` : `<span>${esc(pg.title)}</span>`}</span>
@@ -5274,6 +5284,7 @@ async function renderOrderPages(){
     : `<div class="panel" style="text-align:center;padding:34px"><p style="margin:0 0 6px"><b>No custom order pages yet</b></p><p class="muted" style="margin:0 0 14px">Make one for a team or an agent with special packages or pricing, then assign it to their account.</p><button class="btn primary" id="opNew2">+ New order page</button></div>`}`;
   const go = () => { location.hash = '#/orderpages/new'; };
   $('#opNew').onclick = go; const n2 = $('#opNew2'); if (n2) n2.onclick = go;
+  $('#opDefault').onclick = () => openBookingSettings();
 }
 function renderOrderPageEdit(pg){
   const root = $('#orderPagesView');
