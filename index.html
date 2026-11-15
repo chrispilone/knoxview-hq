@@ -2632,7 +2632,8 @@ function openAgent(id){
       <div class="full"><label>Text message notifications <span class="muted">(same switches the client sees under Account → Notification Preferences)</span></label>
         <label class="check"><input type="checkbox" name="sms_appointment_reminders" ${a.sms_appointment_reminders ? 'checked' : ''} /> Appointment reminders <span class="muted">(before each scheduled shoot)</span></label>
         <label class="check"><input type="checkbox" name="sms_media_delivered" ${a.sms_media_delivered ? 'checked' : ''} /> Media delivered</label>
-        ${a.sms_opt_in_at ? `<p class="muted bk-hint">Last turned on ${esc(new Date(a.sms_opt_in_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</p>` : ''}</div>
+        <label class="check"><input type="checkbox" name="sms_news" ${a.sms_news ? 'checked' : ''} /> News &amp; offers <span class="muted">(company text blasts: new services, specials, open dates)</span></label>
+        ${a.sms_opt_in_at || a.sms_news_opt_in_at ? `<p class="muted bk-hint">${[a.sms_opt_in_at && 'Reminders / delivery texts turned on ' + new Date(a.sms_opt_in_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }), a.sms_news_opt_in_at && 'News & offers turned on ' + new Date(a.sms_news_opt_in_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })].filter(Boolean).map(esc).join(' · ')}</p>` : ''}</div>
       <div class="full"><label>Branding files (Dropbox link)</label><input type="url" name="branding_folder_url" value="${esc(a.branding_folder_url || '')}" /></div>
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
       ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Custom order page <span class="muted">(Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Loading…</option></select>
@@ -2672,6 +2673,7 @@ function openAgent(id){
     fd.require_payment = e.target.require_payment.checked;
     fd.sms_appointment_reminders = e.target.sms_appointment_reminders.checked; fd.sms_media_delivered = e.target.sms_media_delivered.checked;
     if ((fd.sms_appointment_reminders && !a.sms_appointment_reminders) || (fd.sms_media_delivered && !a.sms_media_delivered)) fd.sms_opt_in_at = new Date().toISOString();
+    fd.sms_news = e.target.sms_news.checked; if (fd.sms_news && !a.sms_news) fd.sms_news_opt_in_at = new Date().toISOString();
     if (fd.website_url && !/^https?:\/\//i.test(fd.website_url)) fd.website_url = 'https://' + fd.website_url;
     if (!fd.birth_month !== !fd.birth_day) return toast('Pick both the birthday month and day, or leave both blank');
     if (fd.birth_month) { const mx = [31,29,31,30,31,30,31,31,30,31,30,31][fd.birth_month - 1]; if (+fd.birth_day > mx) return toast('That birthday date doesn\'t exist'); }
