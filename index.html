@@ -1004,6 +1004,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.agent-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}.agent-head h2{margin:0}
 nav.tabs .nav-group{display:flex;align-items:center;gap:14px;min-height:46px;padding:11px 14px;border-radius:10px;border:0;background:none;color:var(--muted);font:inherit;font-weight:500;font-size:15px;cursor:pointer;text-align:left;width:100%}
 nav.tabs .nav-group:hover{background:var(--panel-2);color:var(--text)}nav.tabs .nav-group.in{color:var(--accent);font-weight:600}
 nav.tabs .nav-group>svg:first-child{width:21px;height:21px;flex:none}nav.tabs .nav-group .chev{width:16px;height:16px;margin-left:auto;transition:transform .15s}
@@ -2548,7 +2549,7 @@ function openAgent(id){
   const a = S.agents.find(x => x.id === id) || {};
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal ${id ? 'wide' : ''}"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
+  <div class="modal ${id ? 'wide' : ''}"><div class="agent-head"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>${id && isSuperAdmin() && BOOKINGS_ENABLED ? `<button type="button" class="btn small primary" id="aAccess" title="Open the client portal signed in as ${esc(a.full_name || 'this client')}">Access agent ↗</button>` : ''}</div>
     ${id && a.photo_url ? `<div class="agent-photo"><img src="${esc(a.photo_url)}" alt="${esc(a.full_name || '')} profile photo"><div><b>Profile photo</b><small>Added by the client in their portal · used on property websites</small><a href="${esc(a.photo_url)}" target="_blank" rel="noopener" download>Open full size</a></div></div>` : ''}
     ${id ? `<div id="agentLogos"></div>` : ''}
     ${id && isSuperAdmin() ? `<div id="agentCredits" class="credits-box"></div>` : ''}
@@ -2572,6 +2573,20 @@ function openAgent(id){
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
   if (id && isSuperAdmin()) renderAgentCredits(id);
+  // "Access agent": open the client portal signed in as this client (same as the order's "Client's download page")
+  if ($('#aAccess')) $('#aAccess').onclick = async () => {
+    const btn = $('#aAccess'), win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
+    btn.disabled = true; btn.textContent = 'Opening…';
+    try {
+      const { data, error } = await sb.functions.invoke('client-view', { body: { agentId: id } });
+      if (error) { let m = 'Could not open the client portal'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+      const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const url = `${PORTAL_URL}/#ts=${tok}&go=listings`;
+      if (win) win.location.href = url; else location.assign(url);
+      toast(`Opened the portal as ${a.full_name || data.email}`);
+    } catch (e) { if (win) win.close(); fail(e); }
+    btn.disabled = false; btn.textContent = 'Access agent ↗';
+  };
   const fillPage = () => { const el = $('#aPage'); if (!el) return; const cur = el.dataset.v ?? (a.custom_order_page_id || ''); el.dataset.v = cur;
     const co = S.companies.find(c => c.id === ($('#aCo')?.value ?? a.company_id)), cp = co && OP.pages.find(p => p.id === co.custom_order_page_id);
     el.innerHTML = `<option value="">${cp ? `Company's page: ${esc(cp.name)}` : 'None: default order page only'}</option>` + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === cur ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join('');
