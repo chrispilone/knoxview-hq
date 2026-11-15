@@ -1004,6 +1004,29 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.op-card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
+.op-card:hover{border-color:var(--accent-2)}.op-card.off{opacity:.65}
+.op-cover{display:block;aspect-ratio:3/2;background:linear-gradient(135deg,#2a4466,#1d3250);overflow:hidden}
+.op-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.op-cover>span{display:flex;height:100%;align-items:center;justify-content:center;color:#fff;font-weight:600;padding:10px;text-align:center}
+.op-cover.sm{width:150px;flex:none;border-radius:9px}
+.op-body{display:flex;flex-direction:column;gap:3px;padding:12px 14px}.op-body small{color:var(--muted)}.op-who{font-style:italic}
+.op-edit{display:flex;flex-direction:column;gap:14px;max-width:900px}
+.op-h{font-size:16px;margin:0 0 10px}
+.op-photo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.op-svcs{display:flex;flex-direction:column;gap:6px}
+.op-svc{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:8px 10px}
+.op-svc.on{border-color:var(--accent-2);background:color-mix(in srgb,var(--accent-2) 6%,transparent)}.op-svc.off{opacity:.55}
+.op-svc .check{flex:1;display:flex;align-items:center;gap:8px;margin:0}.op-svc .check span{display:flex;flex-direction:column}.op-svc small{color:var(--muted)}
+.op-price{display:flex;align-items:center;gap:4px}.op-price input{width:96px}
+.op-agents{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.op-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:4px 6px 4px 12px;background:var(--panel)}
+.op-chip small{color:var(--muted)}.op-chip button{border:0;background:none;font-size:18px;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+.op-add select{max-width:420px}
+.op-actions{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--border);padding:10px 0;margin:0}
+@media(max-width:640px){.op-svc{flex-wrap:wrap}.op-price{margin-left:26px}.op-cover.sm{width:110px}}
+
 .bk-check{color:var(--text);font-size:14px}
 .bk-agent-pick{display:flex;gap:8px}.bk-agent-pick input{flex:1;min-width:0}
 .bk-agent-card{margin:10px 0 0;padding:10px 12px;background:var(--panel-2);border-radius:8px;font-size:13.5px}
@@ -1169,6 +1192,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
       <a href="#/bookings" data-view="bookings" title="Bookings · booking portal control center" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Bookings</span></a>
+      <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
       <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
       <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
@@ -1252,6 +1276,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
     <div id="notificationsView" class="hidden"></div>
     <!-- Bookings (owner only for now) -->
     <div id="bookingsView" class="hidden"></div>
+    <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
 
     <!-- Finance (owner only) -->
@@ -1373,9 +1398,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'bookings' && !BOOKINGS_ENABLED ? false : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','bookings','hiring','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
@@ -1743,7 +1768,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  let view = ['home','notifications','tasks','mail','calendar','bookings','hiring','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
@@ -1751,6 +1776,7 @@ function route(){
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   if (view === 'bookings') S.bkSub = parts[1] || '';
+  if (view === 'orderpages') OP.sub = parts[1] || '';
   if (view === 'hiring') HR.sub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
@@ -1790,6 +1816,8 @@ function render(){
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#bookingsView').classList.toggle('hidden', S.view !== 'bookings');
   if (S.view === 'bookings') renderBookings();
+  $('#orderPagesView').classList.toggle('hidden', S.view !== 'orderpages');
+  if (S.view === 'orderpages') renderOrderPages();
   $('#hiringView').classList.toggle('hidden', S.view !== 'hiring');
   if (S.view === 'hiring') renderHiring();
   if (S.view === 'calendar') renderCalendar();
@@ -2506,12 +2534,14 @@ function openAgent(id){
       <div><label>Phone</label><input name="phone" value="${esc(a.phone || '')}" /></div>
       <div class="full"><label>Branding files (Dropbox link)</label><input type="url" name="branding_folder_url" value="${esc(a.branding_folder_url || '')}" /></div>
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
+      ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Order page <span class="muted">(what they see under Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Default order page</option>${a.custom_order_page_id ? `<option value="${esc(a.custom_order_page_id)}" selected>Loading…</option>` : ''}</select></div>` : ''}
       <div class="full"><label>Preferences (shown on every project for this agent)</label><textarea name="preferences" placeholder="Name/brokerage at end of reels, music style, export needs…">${esc(a.preferences || '')}</textarea></div>
     </div>
     <div class="actions"><button type="button" class="btn" id="aCancel">${can('manage_agents') ? 'Cancel' : 'Close'}</button>${can('manage_agents') ? `<button class="btn primary">${id ? 'Save' : 'Add agent'}</button>` : ''}</div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
   if (id && isSuperAdmin()) renderAgentCredits(id);
+  if ($('#aPage')) loadOrderPages().then(() => { const el = $('#aPage'); if (el) el.innerHTML = '<option value="">Default order page</option>' + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === a.custom_order_page_id ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join(''); }).catch(fail);
   $('#aForm').onsubmit = async e => {
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
@@ -5153,8 +5183,8 @@ function openBookingSettings(){
     Object.assign(BK.settings, patch); toast('Portal settings saved');
   };
 }
-function openServiceEdit(s){
-  const isNew = !s; s = s || { kind:'addon', name:'', description:'', includes:[], price:0, duration_min:30, photo_type:null, video_type:null, video_tier:null, twilight:false, active:true, public:true, sort_order: 200 };
+function openServiceEdit(s, o = {}){
+  const isNew = !s; s = s || { kind:'addon', name:'', description:'', includes:[], price:0, duration_min:30, photo_type:null, video_type:null, video_tier:null, twilight:false, active:true, public: o.public ?? true, sort_order: 200 };
   const pTypes = S.types.filter(t => t.media === 'photo' && t.active).map(t => [t.name, t.name]), vTypes = S.types.filter(t => t.media === 'video' && t.active).map(t => [t.name, t.name]);
   const box = document.createElement('div');
   box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>${isNew ? 'New service' : 'Edit ' + esc(s.name)}</h2>
@@ -5174,14 +5204,14 @@ function openServiceEdit(s){
         <div class="bk-typepick">${BK.services.filter(x => x.kind === 'addon').sort((a, b) => a.sort_order - b.sort_order).map(x => `<label class="check"><input type="checkbox" name="cv" value="${x.id}" ${(s.covers || []).includes(x.id) ? 'checked' : ''} /> ${esc(x.name)}</label>`).join('')}</div></div>
       <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
       <div class="full"><label class="check"><input type="checkbox" name="active" ${s.active ? 'checked' : ''} /> Active</label></div>
-      <div class="full"><label class="check"><input type="checkbox" name="public" ${s.public !== false ? 'checked' : ''} /> Clients can book it online <span class="muted">(off = only you can add it to an order in HQ)</span></label></div>
+      <div class="full"><label class="check"><input type="checkbox" name="public" ${s.public !== false ? 'checked' : ''} /> On the default order page <span class="muted">(off = only on custom order pages it's added to, or added by you in HQ)</span></label></div>
     </div>
     <div class="actions">${isNew ? '' : `<button type="button" class="btn danger" id="svcDel" style="margin-right:auto">Delete</button>`}<button type="button" class="btn" id="svcCancel">Cancel</button><button class="btn primary">Save</button></div></form></div>`;
   document.body.appendChild(box);
   const close = () => box.remove();
   box.querySelector('.overlay').onclick = close; box.querySelector('#svcCancel').onclick = close;
   box.querySelector('[name=kind]').onchange = e => { box.querySelector('.bk-covers').style.display = e.target.value === 'package' ? '' : 'none'; };
-  const back = () => { close(); openBookingSettings(); };
+  const back = row => { close(); if (o.onSaved) o.onSaved(row); else openBookingSettings(); };
   box.querySelector('#svcForm').onsubmit = async e => {
     e.preventDefault();
     const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
@@ -5191,14 +5221,140 @@ function openServiceEdit(s){
     const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
     if (r.error) return fail(r.error);
     if (isNew) BK.services.push(r.data); else Object.assign(bkSvc(s.id), r.data);
-    toast('Saved'); back();
+    toast('Saved'); back(r.data);
   };
   const del = box.querySelector('#svcDel');
   if (del) del.onclick = async () => {
     if (!confirm(`Delete "${s.name}"? Past orders keep their line items. (To just hide it, uncheck "Show on the order form".)`)) return;
     const { error } = await sb.from('booking_services').delete().eq('id', s.id);
     if (error) return fail(error);
-    BK.services = BK.services.filter(x => x.id !== s.id); back();
+    BK.services = BK.services.filter(x => x.id !== s.id); back(null);
+  };
+}
+
+/* ===================== ORDER PAGES =====================
+   Custom order pages for agents in the client portal. A page has its own services: default ones at the normal price or a
+   custom price, plus services made only for custom pages (booking_services.public = false). Each agent has at most one page
+   (agents.custom_order_page_id); one page can go to many agents. "Also show the default order page" decides whether they
+   still see Listing / Land / STR Media. Prices are re-checked on the server (booking function) for the signed-in agent.
+   Tables: custom_order_pages, custom_order_page_items. Photos: public "order-pages" bucket. */
+const OP = { pages:[], items:[], loaded:false, sub:'', draft:null };
+async function loadOrderPages(force){
+  if (OP.loaded && !force) return;
+  const [p, i] = await Promise.all([sb.from('custom_order_pages').select('*').order('name'), sb.from('custom_order_page_items').select('*')]);
+  if (p.error || i.error) throw p.error || i.error;
+  OP.pages = p.data || []; OP.items = i.data || []; OP.loaded = true;
+}
+const opAgents = id => S.agents.filter(a => a.custom_order_page_id === id);
+async function renderOrderPages(){
+  const root = $('#orderPagesView');
+  if (!OP.loaded || !BK.loaded) { root.innerHTML = '<p class="muted">Loading order pages…</p>'; try { await Promise.all([loadOrderPages(), loadBookingData()]); } catch (e) { return fail(e); } if (S.view !== 'orderpages') return; }
+  if (OP.sub) return renderOrderPageEdit(OP.sub === 'new' ? null : OP.pages.find(p => p.id === OP.sub));
+  OP.draft = null;
+  root.innerHTML = `<div class="page-head"><div><h1>Order Pages</h1><p>Custom order pages for agents in the client portal. Everyone else gets the default order page.</p></div>
+      <div><button class="btn primary" id="opNew">+ New order page</button></div></div>
+    ${OP.pages.length ? `<div class="op-grid">${OP.pages.map(pg => { const ag = opAgents(pg.id), n = OP.items.filter(i => i.page_id === pg.id).length; return `
+      <a class="op-card ${pg.active ? '' : 'off'}" href="#/orderpages/${pg.id}">
+        <span class="op-cover">${pg.cover_url ? `<img src="${esc(pg.cover_url)}" alt="">` : `<span>${esc(pg.title)}</span>`}</span>
+        <span class="op-body"><b>${esc(pg.name)}</b><small>Clients see: “${esc(pg.title)}”</small>
+          <small>${n} service${n === 1 ? '' : 's'} · ${ag.length} agent${ag.length === 1 ? '' : 's'}${pg.show_default ? ' · default page shown too' : ' · custom page only'}${pg.active ? '' : ' · <b>Off</b>'}</small>
+          ${ag.length ? `<small class="op-who">${esc(ag.slice(0, 4).map(a => a.full_name).join(', '))}${ag.length > 4 ? ` +${ag.length - 4} more` : ''}</small>` : ''}</span></a>`; }).join('')}</div>`
+    : `<div class="panel" style="text-align:center;padding:34px"><p style="margin:0 0 6px"><b>No custom order pages yet</b></p><p class="muted" style="margin:0 0 14px">Make one for a team or an agent with special packages or pricing, then assign it to their account.</p><button class="btn primary" id="opNew2">+ New order page</button></div>`}`;
+  const go = () => { location.hash = '#/orderpages/new'; };
+  $('#opNew').onclick = go; const n2 = $('#opNew2'); if (n2) n2.onclick = go;
+}
+function renderOrderPageEdit(pg){
+  const root = $('#orderPagesView');
+  if (OP.sub !== 'new' && !pg) { root.innerHTML = '<p class="muted">That order page no longer exists. <a href="#/orderpages">Back to order pages</a></p>'; return; }
+  const key = pg?.id || 'new';
+  if (!OP.draft || OP.draft.key !== key) {
+    const items = new Map(OP.items.filter(i => pg && i.page_id === pg.id).map(i => [i.service_id, i.price == null ? '' : String(+i.price)]));
+    OP.draft = { key, name: pg?.name || '', title: pg?.title || 'Custom Order Page', cover_url: pg?.cover_url || '', show_default: pg ? pg.show_default : true, active: pg ? pg.active : true, notes: pg?.notes || '',
+      items, agents: new Set(pg ? opAgents(pg.id).map(a => a.id) : []) };
+  }
+  const d = OP.draft;
+  const svcRow = s => { const on = d.items.has(s.id); return `<div class="op-svc ${on ? 'on' : ''} ${s.active ? '' : 'off'}">
+      <label class="check"><input type="checkbox" data-inc="${s.id}" ${on ? 'checked' : ''} ${s.active ? '' : 'disabled'} /> <span><b>${esc(s.name)}</b><small>${s.kind === 'package' ? 'Package' : 'Add-on'} · normal price ${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden service'}</small></span></label>
+      <div class="op-price"><span>$</span><input type="number" min="0" step="0.01" data-price="${s.id}" placeholder="${Number(s.price)}" value="${esc(on ? d.items.get(s.id) : '')}" ${on ? '' : 'disabled'} title="Price on this page (blank = normal price)" /></div>
+      <button type="button" class="btn small" data-svcedit="${s.id}">Edit</button></div>`; };
+  const group = (title, list, hint = '') => list.length ? `<h3 class="bk-sub">${title}${hint ? ` <span class="muted" style="font-weight:400">${hint}</span>` : ''}</h3><div class="op-svcs">${list.map(svcRow).join('')}</div>` : '';
+  const sorted = BK.services.slice().sort((a, b) => a.sort_order - b.sort_order);
+  const pub = sorted.filter(s => s.public !== false), only = sorted.filter(s => s.public === false);
+  const others = id => { const a = S.agents.find(x => x.id === id); return a?.custom_order_page_id && a.custom_order_page_id !== pg?.id ? OP.pages.find(p => p.id === a.custom_order_page_id)?.name : ''; };
+  root.innerHTML = `<div class="page-head"><div><p style="margin:0 0 4px"><a href="#/orderpages">← Order pages</a></p><h1>${pg ? esc(pg.name) : 'New order page'}</h1>
+      <p>Same booking flow as the default page, with only the services you pick here at the prices you set.</p></div></div>
+    <form id="opForm" class="op-edit">
+      <section class="panel"><h2 class="op-h">Page</h2><div class="grid2">
+        <div><label>Name in HQ</label><input name="name" required value="${esc(d.name)}" placeholder="Mount LeConte Team" /></div>
+        <div><label>Card title clients see</label><input name="title" required maxlength="40" value="${esc(d.title)}" placeholder="Custom Order Page" /></div>
+        <div class="full"><label>Card photo</label><div class="op-photo"><span class="op-cover sm">${d.cover_url ? `<img src="${esc(d.cover_url)}" alt="">` : `<span>${esc(d.title)}</span>`}</span>
+          <div><label class="btn small" style="cursor:pointer">${d.cover_url ? 'Change photo' : 'Add a photo'}<input type="file" id="opPhoto" accept="image/*" hidden /></label>${d.cover_url ? ' <button type="button" class="btn small" id="opPhotoX">Remove</button>' : ''}<p class="muted bk-hint">Shown next to Listing / Land / STR Media. A wide photo works best.</p></div></div></div>
+        <div class="full"><label class="check"><input type="checkbox" name="show_default" ${d.show_default ? 'checked' : ''} /> Also show the default order page <span class="muted">(Listing / Land / STR Media next to this one)</span></label>
+          <label class="check"><input type="checkbox" name="active" ${d.active ? 'checked' : ''} /> On <span class="muted">(off = assigned agents get the default order page)</span></label></div>
+        <div class="full"><label>Notes <span class="muted">(only in HQ)</span></label><textarea name="notes" style="min-height:60px">${esc(d.notes)}</textarea></div>
+      </div></section>
+      <section class="panel"><h2 class="op-h">Services on this page <span class="muted" style="font-weight:400;font-size:13px">${d.items.size} picked</span></h2>
+        <p class="muted bk-hint" style="margin-top:0">Check what this page offers. Leave the price blank for the normal price, or type a custom price. The large-home fee and booking rules are the same as the default page.</p>
+        ${group('Packages', pub.filter(s => s.kind === 'package'))}${group('Add-ons & à la carte', pub.filter(s => s.kind !== 'package'))}
+        ${group('Custom-only services', only, '(not on the default order page)')}
+        <button type="button" class="btn" id="opSvcNew" style="margin-top:12px">+ New custom-only service</button></section>
+      <section class="panel"><h2 class="op-h">Agents <span class="muted" style="font-weight:400;font-size:13px">${d.agents.size} assigned</span></h2>
+        <div class="op-agents">${[...d.agents].map(id => { const a = S.agents.find(x => x.id === id); return a ? `<span class="op-chip">${esc(a.full_name)}${a.team_name ? ` <small>${esc(a.team_name)}</small>` : ''}<button type="button" data-unassign="${id}" aria-label="Remove ${esc(a.full_name)}">×</button></span>` : ''; }).join('') || '<p class="muted" style="margin:0">No agents yet.</p>'}</div>
+        <div class="op-add"><select id="opAgentAdd"><option value="">+ Assign an agent…</option>${S.agents.filter(a => !d.agents.has(a.id)).map(a => `<option value="${a.id}">${esc(a.full_name)}${a.team_name ? ' · ' + esc(a.team_name) : ''}${others(a.id) ? ` (now: ${esc(others(a.id))})` : ''}</option>`).join('')}</select></div>
+        <p class="muted bk-hint">An agent has one order page at a time. Assigning someone who has another page moves them to this one. You can also change it from the agent's window.</p></section>
+      <div class="actions op-actions">${pg ? '<button type="button" class="btn danger" id="opDel" style="margin-right:auto">Delete page</button>' : ''}<a class="btn" href="#/orderpages">Cancel</a><button class="btn primary" id="opSave">${pg ? 'Save order page' : 'Create order page'}</button></div>
+    </form>`;
+  const f = $('#opForm');
+  const keep = () => { d.name = f.name.value; d.title = f.title.value; d.show_default = f.show_default.checked; d.active = f.active.checked; d.notes = f.notes.value; };
+  const redraw = () => { keep(); const y = window.scrollY; renderOrderPageEdit(pg); window.scrollTo(0, y); };
+  f.querySelectorAll('[data-inc]').forEach(c => c.onchange = () => { if (c.checked) d.items.set(c.dataset.inc, ''); else d.items.delete(c.dataset.inc); redraw(); });
+  f.querySelectorAll('[data-price]').forEach(i => i.oninput = () => d.items.set(i.dataset.price, i.value));
+  f.querySelectorAll('[data-unassign]').forEach(b => b.onclick = () => { d.agents.delete(b.dataset.unassign); redraw(); });
+  $('#opAgentAdd').onchange = e => { if (e.target.value) { d.agents.add(e.target.value); redraw(); } };
+  f.querySelectorAll('[data-svcedit]').forEach(b => b.onclick = () => { keep(); openServiceEdit(bkSvc(b.dataset.svcedit), { onSaved: row => { if (!row) d.items.delete(b.dataset.svcedit); redraw(); } }); });
+  $('#opSvcNew').onclick = () => { keep(); openServiceEdit(null, { public: false, onSaved: row => { if (row) d.items.set(row.id, ''); redraw(); } }); };
+  $('#opPhoto').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!/^image\//.test(file.type)) return toast('Choose a photo');
+    if (file.size > 15e6) return toast('That photo is over 15 MB');
+    keep(); toast('Uploading photo…');
+    const path = `${pg?.id || 'new'}/${Date.now()}-${file.name.replace(/[^\w.-]+/g, '-').slice(-60)}`;
+    const up = await sb.storage.from('order-pages').upload(path, file, { contentType: file.type, upsert: false });
+    if (up.error) return fail(up.error);
+    d.cover_url = sb.storage.from('order-pages').getPublicUrl(path).data.publicUrl; redraw();
+  };
+  const px = $('#opPhotoX'); if (px) px.onclick = () => { d.cover_url = ''; redraw(); };
+  const delBtn = $('#opDel');
+  if (delBtn) delBtn.onclick = async () => {
+    const n = opAgents(pg.id).length;
+    if (!confirm(`Delete "${pg.name}"?${n ? ` ${n} agent${n === 1 ? '' : 's'} will go back to the default order page.` : ''} Past orders keep their prices.`)) return;
+    const { error } = await sb.from('custom_order_pages').delete().eq('id', pg.id); if (error) return fail(error);
+    S.agents.forEach(a => { if (a.custom_order_page_id === pg.id) a.custom_order_page_id = null; });
+    OP.pages = OP.pages.filter(p => p.id !== pg.id); OP.items = OP.items.filter(i => i.page_id !== pg.id); OP.draft = null;
+    toast('Order page deleted'); location.hash = '#/orderpages';
+  };
+  f.onsubmit = async e => {
+    e.preventDefault(); keep();
+    if (!d.name.trim() || !d.title.trim()) return toast('Add a name and a card title');
+    if (!d.items.size) return toast('Pick at least one service for this page');
+    for (const [id, v] of d.items) if (v !== '' && !(Number(v) >= 0)) return toast(`Check the price for ${bkSvc(id)?.name || 'a service'}`);
+    const btn = $('#opSave'); btn.disabled = true;
+    try {
+      const row = { name: d.name.trim(), title: d.title.trim(), cover_url: d.cover_url || null, show_default: d.show_default, active: d.active, notes: d.notes.trim() || null, updated_at: new Date().toISOString() };
+      const r = pg ? await sb.from('custom_order_pages').update(row).eq('id', pg.id).select().single() : await sb.from('custom_order_pages').insert(row).select().single();
+      if (r.error) throw r.error;
+      const id = r.data.id;
+      const rm = await sb.from('custom_order_page_items').delete().eq('page_id', id); if (rm.error) throw rm.error;
+      const items = [...d.items].map(([sid, v]) => ({ page_id: id, service_id: sid, price: v === '' ? null : Math.round(Number(v) * 100) / 100, sort_order: bkSvc(sid)?.sort_order ?? 0 }));
+      const ins = await sb.from('custom_order_page_items').insert(items); if (ins.error) throw ins.error;
+      const before = new Set(opAgents(id).map(a => a.id)), add = [...d.agents].filter(x => !before.has(x)), drop = [...before].filter(x => !d.agents.has(x));
+      if (add.length) { const u = await sb.from('agents').update({ custom_order_page_id: id }).in('id', add); if (u.error) throw u.error; }
+      if (drop.length) { const u = await sb.from('agents').update({ custom_order_page_id: null }).in('id', drop); if (u.error) throw u.error; }
+      S.agents.forEach(a => { if (add.includes(a.id)) a.custom_order_page_id = id; if (drop.includes(a.id)) a.custom_order_page_id = null; });
+      await loadOrderPages(true); OP.draft = null;
+      toast(pg ? 'Order page saved' : 'Order page created');
+      if (pg) renderOrderPageEdit(OP.pages.find(p => p.id === id)); else location.hash = '#/orderpages/' + id;
+    } catch (err) { btn.disabled = false; fail(err); }
   };
 }
 
