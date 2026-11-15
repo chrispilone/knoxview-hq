@@ -1110,6 +1110,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 @media (prefers-color-scheme: dark){ .hr-badge.iv,.hr-stage.s-interview{background:#1b2a3d;color:#8cbcf0} .hr-badge.ok,.hr-stage.s-hired{background:#173a2a} .hr-badge.mid{background:#3a2e17} .hr-stage.s-new{background:#1b2a3d;color:#8cbcf0} .hr-stage.s-talent_pool{background:#2a1f38;color:#c5a3ec} .hr-stars,.hr-stars.edit button{color:#3a4c66} }
 @media (max-width:860px){ .hr-grid{grid-template-columns:1fr} .hr-pdf{height:420px} }
 @media (max-width:640px){ .hr-row{flex-wrap:wrap} .hr-right{width:100%;justify-content:flex-start;padding-left:48px} }
+.agent-photo{display:flex;align-items:center;gap:14px;margin:0 0 16px}.agent-photo img{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none}.agent-photo b,.agent-photo small,.agent-photo a{display:block}.agent-photo small{opacity:.7;margin:2px 0 4px}
 </style>
 </head>
 <body>
@@ -2458,6 +2459,7 @@ function openAgent(id){
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal ${id ? 'wide' : ''}"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
+    ${id && a.photo_url ? `<div class="agent-photo"><img src="${esc(a.photo_url)}" alt="${esc(a.full_name || '')} profile photo"><div><b>Profile photo</b><small>Added by the client in their portal · used on property websites</small><a href="${esc(a.photo_url)}" target="_blank" rel="noopener" download>Open full size</a></div></div>` : ''}
     ${id ? `<div id="agentLogos"></div>` : ''}
     <form id="aForm"><div class="grid2">
       <div><label>First name</label><input name="first_name" required autocomplete="off" value="${esc(a.first_name || '')}" /></div>
