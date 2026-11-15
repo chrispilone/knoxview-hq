@@ -3206,18 +3206,7 @@ function mailSrcdoc(html, { images, quoted }){
     ${quoted ? '' : '.gmail_quote,.gmail_attr,.yahoo_quoted,blockquote[type=cite],#divRplyFwdMsg,#divRplyFwdMsg~*,#appendonsend~*{display:none!important}'}`;
   return `<!doctype html><html><head><meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${img}; style-src 'unsafe-inline' ${images ? 'https:' : ''}; font-src data: ${images ? 'https:' : ''}; media-src 'none'; frame-src 'none'; form-action 'none'">
-    <base target="_blank"><style>${css}</style></head><body>${html}<script>
-// Files a client attached to their order (e.g. a tax map for land). Private bucket: open with a short-lived link.
-document.addEventListener('click', async e => {
-  const a = e.target.closest && e.target.closest('[data-cfile]'); if (!a) return;
-  e.preventDefault();
-  const w = window.open('', '_blank');
-  const { data, error } = await sb.storage.from('order-files').createSignedUrl(a.dataset.cfile, 3600);
-  if (error || !data?.signedUrl) { w && w.close(); alert("Couldn't open that file: " + (error?.message || 'not found')); return; }
-  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
-});
-</script>
-</body></html>`;
+    <base target="_blank"><style>${css}</style></head><body>${html}</body></html>`;
 }
 function sizeFrame(fr){
   try {
@@ -6922,6 +6911,15 @@ function openRehire(id){
     closeLayer(); toast(`${t.full_name} is back on the team`); await loadAll(); await reloadChatMembers(); fillAssignee(); renderTeam();
   };
 }
+// Files a client attached to their order (e.g. a tax map for land). Private bucket: open with a short-lived link.
+document.addEventListener('click', async e => {
+  const a = e.target.closest && e.target.closest('[data-cfile]'); if (!a) return;
+  e.preventDefault();
+  const w = window.open('', '_blank');
+  const { data, error } = await sb.storage.from('order-files').createSignedUrl(a.dataset.cfile, 3600);
+  if (error || !data?.signedUrl) { w && w.close(); alert("Couldn't open that file: " + (error?.message || 'not found')); return; }
+  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+});
 </script>
 <script>
 /* ===================== Google address search (Places API New) =====================
