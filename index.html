@@ -2625,6 +2625,10 @@ function openAgent(id){
       <div class="full"><label>Company <span class="muted">(set by you · overrides their brokerage / team on deliveries and property websites)</span></label><select name="company_id" id="aCo"><option value="">No company</option>${S.companies.map(c => `<option value="${c.id}" ${c.id === a.company_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
       <div><label>Email</label><input type="email" name="email" value="${esc(a.email || '')}" /></div>
       <div><label>Phone</label><input name="phone" value="${esc(a.phone || '')}" /></div>
+      <div><label>Website</label><input type="url" name="website_url" value="${esc(a.website_url || '')}" placeholder="https://" /></div>
+      <div><label>Birthday <span class="muted">(month and day)</span></label><div class="grid2" style="gap:8px">
+        <select name="birth_month"><option value="">Month</option>${['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => `<option value="${i + 1}" ${a.birth_month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}</select>
+        <select name="birth_day"><option value="">Day</option>${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}" ${a.birth_day === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select></div></div>
       <div class="full"><label>Branding files (Dropbox link)</label><input type="url" name="branding_folder_url" value="${esc(a.branding_folder_url || '')}" /></div>
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
       ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Custom order page <span class="muted">(Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Loading…</option></select>
@@ -2662,6 +2666,9 @@ function openAgent(id){
     const fd = Object.fromEntries(new FormData(e.target));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
     fd.require_payment = e.target.require_payment.checked;
+    if (fd.website_url && !/^https?:\/\//i.test(fd.website_url)) fd.website_url = 'https://' + fd.website_url;
+    if (!fd.birth_month !== !fd.birth_day) return toast('Pick both the birthday month and day, or leave both blank');
+    if (fd.birth_month) { const mx = [31,29,31,30,31,30,31,31,30,31,30,31][fd.birth_month - 1]; if (+fd.birth_day > mx) return toast('That birthday date doesn\'t exist'); }
     if (e.target.show_default_order_page) fd.show_default_order_page = e.target.show_default_order_page.checked;
     const payChanged = id && fd.require_payment !== (a.require_payment !== false);
     const { error } = id ? await sb.from('agents').update(fd).eq('id', id) : await sb.from('agents').insert(fd);
