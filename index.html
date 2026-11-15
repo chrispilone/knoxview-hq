@@ -1004,6 +1004,18 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+nav.tabs .nav-group{display:flex;align-items:center;gap:14px;min-height:46px;padding:11px 14px;border-radius:10px;border:0;background:none;color:var(--muted);font:inherit;font-weight:500;font-size:15px;cursor:pointer;text-align:left;width:100%}
+nav.tabs .nav-group:hover{background:var(--panel-2);color:var(--text)}nav.tabs .nav-group.in{color:var(--accent);font-weight:600}
+nav.tabs .nav-group>svg:first-child{width:21px;height:21px;flex:none}nav.tabs .nav-group .chev{width:16px;height:16px;margin-left:auto;transition:transform .15s}
+nav.tabs .nav-group[aria-expanded="true"] .chev{transform:rotate(180deg)}nav.tabs .nav-group.hidden{display:none}
+nav.tabs .nav-sub{display:none;flex-direction:column;gap:2px;padding-left:22px}nav.tabs .nav-sub.open{display:flex}
+nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .nav-sub a svg{width:18px;height:18px}
+@media (min-width:901px){body.side-mini nav.tabs .nav-group{display:none}body.side-mini nav.tabs .nav-sub{display:flex;padding-left:0}}
+.co-of{color:var(--text);font-weight:600}.co-pg{color:var(--accent)}
+.co-logo-row{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.co-logo{width:84px;height:84px;flex:none;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:grid;place-items:center;background:var(--panel-2);color:var(--muted);font-size:12px}
+.co-logo img{width:100%;height:100%;object-fit:contain;background:#fff}
+
 .op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .op-card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
 .op-card:hover{border-color:var(--accent-2)}
@@ -1196,7 +1208,11 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
       <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
       <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
-      <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Agents</span></a>
+      <button type="button" class="nav-group" id="clientsTab" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="nav-sub" id="clientsSub">
+        <a href="#/companies" data-view="companies" title="Companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></svg><span class="lbl">Companies</span></a>
+        <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.5 7-5.5s6.1 1.9 7 5.5"/></svg><span class="lbl">Agents</span></a>
+      </div>
       <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
       <a href="#/chat" data-view="chat" title="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="lbl">Chat</span><span class="badge hidden" id="chatBadge"></span></a>
       <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
@@ -1257,6 +1273,7 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
     </div>
 
     <!-- Agents -->
+    <div id="companiesView" class="hidden"></div>
     <div id="agentsView" class="hidden">
       <div class="page-head"><div><h1>Agents</h1><p>Client preferences and branding, shown on every project for that agent.</p></div></div>
       <div class="toolbar">
@@ -1399,9 +1416,10 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','companies','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
@@ -1750,6 +1768,7 @@ async function loadAll(){
   ]);
   for (const r of [p,t,a,m,l]) if (r.error) fail(r.error);
   S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
+  loadCompanies().then(() => { S.companiesLoaded = true; if (S.view === 'agents') renderAgents(); }).catch(e => console.warn('companies', e));
   fillAssignee();
 }
 function fillAssignee(){
@@ -1769,7 +1788,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
@@ -1782,6 +1801,8 @@ function route(){
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
+  if (view === 'agents' || view === 'companies') navGroup(true);
+  $('#clientsTab')?.classList.toggle('in', view === 'agents' || view === 'companies');
   $('#topTitle').textContent = document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || '';
   document.body.classList.remove('menu-open');
   document.querySelector('#tabs a[data-view=projects]').href = `#/projects/${S.media}`;
@@ -1789,6 +1810,9 @@ function route(){
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', () => { if (S.me) route(); });
+function navGroup(open){ const t = $('#clientsTab'), s = $('#clientsSub'); if (!t) return; t.setAttribute('aria-expanded', open); s.classList.toggle('open', open); try { localStorage.setItem('hq.clientsOpen', open ? '1' : ''); } catch (_) {} }
+$('#clientsTab').onclick = () => navGroup($('#clientsTab').getAttribute('aria-expanded') !== 'true');
+try { if (localStorage.getItem('hq.clientsOpen')) navGroup(true); } catch (_) {}
 const goProjects = m => { location.hash = `#/projects/${m}`; };
 
 /* ===================== CONTROLS ===================== */
@@ -1806,6 +1830,8 @@ function render(){
   $('#homeView').classList.toggle('hidden', S.view !== 'home');
   $('#projectsView').classList.toggle('hidden', S.view !== 'projects');
   $('#agentsView').classList.toggle('hidden', S.view !== 'agents');
+  $('#companiesView').classList.toggle('hidden', S.view !== 'companies');
+  if (S.view === 'companies') renderCompanies();
   $('#teamView').classList.toggle('hidden', S.view !== 'team');
   $('#chatView').classList.toggle('hidden', S.view !== 'chat');
   $('#tasksView').classList.toggle('hidden', S.view !== 'tasks');
@@ -2392,7 +2418,7 @@ function revHTML(r){
 /* ===================== AGENTS ===================== */
 function renderAgents(){
   const q = ($('#agentSearch').value || '').toLowerCase();
-  const list = S.agents.filter(a => [a.full_name, a.team_name, a.brokerage].join(' ').toLowerCase().includes(q));
+  const list = S.agents.filter(a => [a.full_name, a.team_name, a.brokerage, coName(a.company_id)].join(' ').toLowerCase().includes(q));
   if (!list.length) { $('#agentsGrid').innerHTML = `<div class="empty" style="grid-column:1/-1">${S.agents.length ? 'No agents match.' : 'No agents yet. Add your first one.'}</div>`; return; }
   $('#agentsGrid').innerHTML = list.map(a => {
     const ps = S.projects.filter(p => p.agent_id === a.id);
@@ -2402,7 +2428,7 @@ function renderAgents(){
     return `<div class="entity" data-id="${a.id}"><div class="ent-row">
       ${cover ? `<div class="ent-logo"><img data-logo-path="${esc(cover.storage_path)}" alt="" /></div>` : `<div class="ent-logo none">${esc(initials)}</div>`}
       <div style="min-width:0"><div class="t">${esc(a.full_name)}</div>
-      <div class="muted" style="font-size:13px;margin-top:4px">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
+      <div class="muted" style="font-size:13px;margin-top:4px">${a.company_id && coName(a.company_id) ? `<b class="co-of">${esc(coName(a.company_id))}</b>` : esc([a.team_name, a.brokerage].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
       <div class="counts"><span class="tag photo">${ph} photo</span><span class="tag video">${vi} video</span>${logos.length ? `<span class="tag">${logos.length} logo${logos.length > 1 ? 's' : ''}</span>` : ''}</div></div>`;
   }).join('');
   document.querySelectorAll('#agentsGrid .entity').forEach(el => el.onclick = () => openAgent(el.dataset.id));
@@ -2529,13 +2555,15 @@ function openAgent(id){
     <form id="aForm"><div class="grid2">
       <div><label>First name</label><input name="first_name" required autocomplete="off" value="${esc(a.first_name || '')}" /></div>
       <div><label>Last name</label><input name="last_name" required autocomplete="off" value="${esc(a.last_name || '')}" /></div>
-      <div><label>Team</label><input name="team_name" value="${esc(a.team_name || '')}" placeholder="Mount LeConte Team" /></div>
-      <div><label>Brokerage</label><input name="brokerage" value="${esc(a.brokerage || '')}" /></div>
+      <div><label>Team <span class="muted">(as the client entered it)</span></label><input name="team_name" value="${esc(a.team_name || '')}" placeholder="Mount LeConte Team" /></div>
+      <div><label>Brokerage <span class="muted">(as the client entered it)</span></label><input name="brokerage" value="${esc(a.brokerage || '')}" /></div>
+      <div class="full"><label>Company <span class="muted">(set by you · overrides their brokerage / team on deliveries and property websites)</span></label><select name="company_id" id="aCo"><option value="">No company</option>${S.companies.map(c => `<option value="${c.id}" ${c.id === a.company_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
       <div><label>Email</label><input type="email" name="email" value="${esc(a.email || '')}" /></div>
       <div><label>Phone</label><input name="phone" value="${esc(a.phone || '')}" /></div>
       <div class="full"><label>Branding files (Dropbox link)</label><input type="url" name="branding_folder_url" value="${esc(a.branding_folder_url || '')}" /></div>
       <div class="full"><label>Logo link</label><input type="url" name="logo_url" value="${esc(a.logo_url || '')}" /></div>
-      ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Order page <span class="muted">(what they see under Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Default order page</option>${a.custom_order_page_id ? `<option value="${esc(a.custom_order_page_id)}" selected>Loading…</option>` : ''}</select></div>` : ''}
+      ${isSuperAdmin() && BOOKINGS_ENABLED ? `<div class="full"><label>Custom order page <span class="muted">(Order Now in the client portal)</span></label><select name="custom_order_page_id" id="aPage"><option value="">Loading…</option></select>
+        <label class="check" id="aShowDefWrap" style="margin-top:8px"><input type="checkbox" name="show_default_order_page" ${a.show_default_order_page !== false ? 'checked' : ''} /> Show default order page <span class="muted">(Listing / Land / STR Media above their custom page)</span></label></div>` : ''}
       <div class="full"><label>Preferences (shown on every project for this agent)</label><textarea name="preferences" placeholder="Name/brokerage at end of reels, music style, export needs…">${esc(a.preferences || '')}</textarea></div>
       <div class="full"><label class="check"><input type="checkbox" name="require_payment" ${a.require_payment !== false ? 'checked' : ''} ${can('manage_agents') ? '' : 'disabled'} /> <b>Requires payment before delivery</b></label>
         <p class="muted" style="font-size:12.5px;margin:2px 0 0 26px">On (default): new orders show watermarked previews and "Pay to download" until paid. Turn off for trusted clients so their new orders open for download right away. You can still change it on any single order.</p></div>
@@ -2544,12 +2572,17 @@ function openAgent(id){
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
   if (id && isSuperAdmin()) renderAgentCredits(id);
-  if ($('#aPage')) loadOrderPages().then(() => { const el = $('#aPage'); if (el) el.innerHTML = '<option value="">Default order page</option>' + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === a.custom_order_page_id ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join(''); }).catch(fail);
+  const fillPage = () => { const el = $('#aPage'); if (!el) return; const cur = el.dataset.v ?? (a.custom_order_page_id || ''); el.dataset.v = cur;
+    const co = S.companies.find(c => c.id === ($('#aCo')?.value ?? a.company_id)), cp = co && OP.pages.find(p => p.id === co.custom_order_page_id);
+    el.innerHTML = `<option value="">${cp ? `Company's page: ${esc(cp.name)}` : 'None: default order page only'}</option>` + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === cur ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join('');
+    $('#aShowDefWrap').classList.toggle('hidden', !(cur || cp)); };
+  if ($('#aPage')) { loadOrderPages().then(fillPage).catch(fail); $('#aPage').onchange = e => { e.target.dataset.v = e.target.value; fillPage(); }; if ($('#aCo')) $('#aCo').addEventListener('change', fillPage); }
   $('#aForm').onsubmit = async e => {
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
     fd.require_payment = e.target.require_payment.checked;
+    if (e.target.show_default_order_page) fd.show_default_order_page = e.target.show_default_order_page.checked;
     const payChanged = id && fd.require_payment !== (a.require_payment !== false);
     const { error } = id ? await sb.from('agents').update(fd).eq('id', id) : await sb.from('agents').insert(fd);
     if (error) return fail(error);
@@ -5245,6 +5278,108 @@ function openServiceEdit(s, o = {}){
   };
 }
 
+/* ===================== COMPANIES (Clients → Companies) =====================
+   A company is a brokerage team or office, e.g. "Realty Executives - Blevins Group". Agents are assigned to a company
+   here or in the agent's window (never automatically: the brokerage / team a client types in the portal is just their
+   own text). A company's custom order page goes to every agent in it, unless the agent has their own page.
+   The company's name, logo and contact details are the branding we'll use on property websites. */
+S.companies = S.companies || [];
+async function loadCompanies(){ const { data, error } = await sb.from('companies').select('*').order('name'); if (error) throw error; S.companies = data || []; }
+const coName = id => S.companies.find(c => c.id === id)?.name || '';
+const coAgents = id => S.agents.filter(a => a.company_id === id);
+// The order page an agent actually gets: their own, else their company's (same rule as the portal)
+function agentPageId(a){ return a.custom_order_page_id || S.companies.find(c => c.id === a.company_id)?.custom_order_page_id || null; }
+async function renderCompanies(){
+  const root = $('#companiesView');
+  if (!S.companiesLoaded) { root.innerHTML = '<p class="muted">Loading companies…</p>'; try { await Promise.all([loadCompanies(), isSuperAdmin() && BOOKINGS_ENABLED ? loadOrderPages() : null]); S.companiesLoaded = true; } catch (e) { return fail(e); } if (S.view !== 'companies') return; }
+  const q = (S.coQ || '').toLowerCase();
+  const list = S.companies.filter(c => [c.name, c.brokerage, c.team_name, c.admin_email].join(' ').toLowerCase().includes(q));
+  root.innerHTML = `<div class="page-head"><div><h1>Companies</h1><p>Brokerage teams and offices. Agents in a company get its custom order page and branding.</p></div></div>
+    <div class="toolbar">${can('manage_agents') ? '<button class="btn primary" id="coNew">+ New company</button>' : ''}<input type="search" id="coSearch" placeholder="Search companies…" value="${esc(S.coQ || '')}" /></div>
+    ${list.length ? `<div class="grid co-grid">${list.map(c => { const ag = coAgents(c.id), pg = OP.pages.find(p => p.id === c.custom_order_page_id); return `
+      <div class="entity" data-co="${c.id}"><div class="ent-row">
+        ${c.logo_url ? `<div class="ent-logo"><img src="${esc(c.logo_url)}" alt="" /></div>` : `<div class="ent-logo none">${esc(c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase())}</div>`}
+        <div style="min-width:0"><div class="t">${esc(c.name)}</div><div class="muted" style="font-size:13px;margin-top:4px">${esc([c.brokerage, c.admin_phone].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
+        <div class="counts"><span class="tag">${ag.length} agent${ag.length === 1 ? '' : 's'}</span>${pg ? `<span class="tag co-pg">★ ${esc(pg.name)}</span>` : ''}</div></div>`; }).join('')}</div>`
+      : `<div class="empty">${S.companies.length ? 'No companies match.' : 'No companies yet. Add one for each team or office, then assign its agents.'}</div>`}`;
+  const s = $('#coSearch'); s.oninput = () => { S.coQ = s.value; renderCompanies(); const el = $('#coSearch'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); };
+  const nb = $('#coNew'); if (nb) nb.onclick = () => openCompany(null);
+  root.querySelectorAll('[data-co]').forEach(el => el.onclick = () => openCompany(el.dataset.co));
+}
+async function openCompany(id){
+  const c = S.companies.find(x => x.id === id) || {}, edit = can('manage_agents'), pages = isSuperAdmin() && BOOKINGS_ENABLED;
+  if (pages) { try { await loadOrderPages(); } catch (e) { return fail(e); } }
+  const members = new Set(id ? coAgents(id).map(a => a.id) : []);
+  let logo = c.logo_url || '';
+  document.body.style.overflow = 'hidden';
+  const draw = () => {
+    $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+    <div class="modal wide"><h2>${id ? esc(c.name) : 'New company'}</h2>
+      <form id="coForm"><div class="co-logo-row"><span class="co-logo">${logo ? `<img src="${esc(logo)}" alt="">` : '<span>Logo</span>'}</span>
+        ${edit ? `<div><label class="btn small" style="cursor:pointer">${logo ? 'Change logo' : 'Add logo'}<input type="file" id="coLogo" accept="image/*" hidden /></label>${logo ? ' <button type="button" class="btn small" id="coLogoX">Remove</button>' : ''}<p class="muted bk-hint">Used for this company's branding (property websites).</p></div>` : ''}</div>
+      <div class="grid2">
+        <div class="full"><label>Company name</label><input name="name" required value="${esc(c.name || '')}" placeholder="Realty Executives - Blevins Group" /></div>
+        <div><label>Brokerage</label><input name="brokerage" value="${esc(c.brokerage || '')}" placeholder="Realty Executives" /></div>
+        <div><label>Team</label><input name="team_name" value="${esc(c.team_name || '')}" placeholder="Blevins Group" /></div>
+        <div class="full"><label>Address</label><input name="address" value="${esc(c.address || '')}" /></div>
+        <div><label>Office phone</label><input name="admin_phone" value="${esc(c.admin_phone || '')}" /></div>
+        <div><label>Office email</label><input type="email" name="admin_email" value="${esc(c.admin_email || '')}" /></div>
+        <div class="full"><label>Media delivery CC <span class="muted">(emails, comma separated)</span></label><input name="delivery_cc" value="${esc(c.delivery_cc || '')}" /></div>
+        ${pages ? `<div class="full"><label>Custom order page <span class="muted">(every agent in this company gets it, unless they have their own)</span></label>
+          <select name="custom_order_page_id"><option value="">None: default order page</option>${OP.pages.map(p => `<option value="${p.id}" ${p.id === c.custom_order_page_id ? 'selected' : ''}>${esc(p.name)}${p.active ? '' : ' (off)'}</option>`).join('')}</select></div>` : ''}
+        <div class="full"><label>Notes</label><textarea name="notes" style="min-height:60px">${esc(c.notes || '')}</textarea></div>
+      </div>
+      <h3 class="bk-sub">Agents <span class="muted" style="font-weight:400">${members.size}</span></h3>
+      <div class="op-agents">${[...members].map(aid => { const a = S.agents.find(x => x.id === aid); return a ? `<span class="op-chip">${esc(a.full_name)}${edit ? `<button type="button" data-rm="${aid}" aria-label="Remove ${esc(a.full_name)}">×</button>` : ''}</span>` : ''; }).join('') || '<p class="muted" style="margin:0">No agents yet.</p>'}</div>
+      ${edit ? `<select id="coAdd" style="max-width:420px"><option value="">+ Add an agent…</option>${S.agents.filter(a => !members.has(a.id)).map(a => `<option value="${a.id}">${esc(a.full_name)}${a.company_id ? ` (now: ${esc(coName(a.company_id))})` : a.brokerage ? ' · ' + esc(a.brokerage) : ''}</option>`).join('')}</select>
+        <p class="muted bk-hint">An agent is in one company at a time. Adding someone from another company moves them here.</p>` : ''}
+      <div class="actions">${id && edit ? '<button type="button" class="btn danger" id="coDel" style="margin-right:auto">Delete</button>' : ''}<button type="button" class="btn" id="coCancel">${edit ? 'Cancel' : 'Close'}</button>${edit ? `<button class="btn primary" id="coSave">${id ? 'Save' : 'Add company'}</button>` : ''}</div></form></div>`;
+    const f = $('#coForm');
+    $('#ov').onclick = $('#coCancel').onclick = closeLayer;
+    if (!edit) { f.querySelectorAll('input,select,textarea').forEach(x => x.disabled = true); return; }
+    const keep = () => { for (const k of ['name','brokerage','team_name','address','admin_phone','admin_email','delivery_cc','notes','custom_order_page_id']) if (f[k]) c[k] = f[k].value; };
+    f.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { keep(); members.delete(b.dataset.rm); draw(); });
+    $('#coAdd').onchange = e => { if (e.target.value) { keep(); members.add(e.target.value); draw(); } };
+    $('#coLogo').onchange = async e => {
+      const file = e.target.files[0]; if (!file) return;
+      if (!/^image\//.test(file.type)) return toast('Choose an image');
+      keep(); toast('Uploading logo…');
+      const path = `${id || 'new'}/${Date.now()}-${file.name.replace(/[^\w.-]+/g, '-').slice(-60)}`;
+      const up = await sb.storage.from('company-logos').upload(path, file, { contentType: file.type, upsert: false });
+      if (up.error) return fail(up.error);
+      logo = sb.storage.from('company-logos').getPublicUrl(path).data.publicUrl; draw();
+    };
+    const lx = $('#coLogoX'); if (lx) lx.onclick = () => { keep(); logo = ''; draw(); };
+    const del = $('#coDel');
+    if (del) del.onclick = async () => {
+      const n = coAgents(id).length;
+      if (!confirm(`Delete ${c.name}?${n ? ` Its ${n} agent${n === 1 ? '' : 's'} stay in HQ, just without a company.` : ''}`)) return;
+      const { error } = await sb.from('companies').delete().eq('id', id); if (error) return fail(error);
+      S.agents.forEach(a => { if (a.company_id === id) a.company_id = null; });
+      S.companies = S.companies.filter(x => x.id !== id); closeLayer(); toast('Company deleted'); render();
+    };
+    f.onsubmit = async e => {
+      e.preventDefault(); keep();
+      const row = { name: c.name.trim(), brokerage: c.brokerage?.trim() || null, team_name: c.team_name?.trim() || null, address: c.address?.trim() || null, admin_phone: c.admin_phone?.trim() || null,
+        admin_email: c.admin_email?.trim() || null, delivery_cc: c.delivery_cc?.trim() || null, notes: c.notes?.trim() || null, logo_url: logo || null, updated_at: new Date().toISOString() };
+      if (pages) row.custom_order_page_id = c.custom_order_page_id || null;
+      if (!row.name) return toast('Add a company name');
+      $('#coSave').disabled = true;
+      try {
+        const r = id ? await sb.from('companies').update(row).eq('id', id).select().single() : await sb.from('companies').insert(row).select().single();
+        if (r.error) throw r.error;
+        const cid = r.data.id, before = new Set(coAgents(cid).map(a => a.id));
+        const add = [...members].filter(x => !before.has(x)), drop = [...before].filter(x => !members.has(x));
+        if (add.length) { const u = await sb.from('agents').update({ company_id: cid }).in('id', add); if (u.error) throw u.error; }
+        if (drop.length) { const u = await sb.from('agents').update({ company_id: null }).in('id', drop); if (u.error) throw u.error; }
+        S.agents.forEach(a => { if (add.includes(a.id)) a.company_id = cid; if (drop.includes(a.id)) a.company_id = null; });
+        await loadCompanies(); closeLayer(); toast(id ? 'Company saved' : 'Company added'); render();
+      } catch (err) { $('#coSave').disabled = false; fail(err); }
+    };
+  };
+  draw();
+}
+
 /* ===================== ORDER PAGES =====================
    Custom order pages for agents in the client portal. A page has its own services: default ones at the normal price or a
    custom price, plus services made only for custom pages (booking_services.public = false). Each agent has at most one page
@@ -5258,19 +5393,20 @@ async function loadOrderPages(force){
   if (p.error || i.error) throw p.error || i.error;
   OP.pages = p.data || []; OP.items = i.data || []; OP.loaded = true;
 }
-const opAgents = id => S.agents.filter(a => a.custom_order_page_id === id);
+const opAgents = id => S.agents.filter(a => agentPageId(a) === id); // everyone who gets the page (own or via company)
+const opOwn = id => S.agents.filter(a => a.custom_order_page_id === id); // assigned one by one
 async function renderOrderPages(){
   const root = $('#orderPagesView');
-  if (!OP.loaded || !BK.loaded) { root.innerHTML = '<p class="muted">Loading order pages…</p>'; try { await Promise.all([loadOrderPages(), loadBookingData()]); } catch (e) { return fail(e); } if (S.view !== 'orderpages') return; }
+  if (!OP.loaded || !BK.loaded || !S.companiesLoaded) { root.innerHTML = '<p class="muted">Loading order pages…</p>'; try { await Promise.all([loadOrderPages(), loadBookingData(), loadCompanies().then(() => { S.companiesLoaded = true; })]); } catch (e) { return fail(e); } if (S.view !== 'orderpages') return; }
   if (OP.sub) return renderOrderPageEdit(OP.sub === 'new' ? null : OP.pages.find(p => p.id === OP.sub));
   OP.draft = null;
   root.innerHTML = `<div class="page-head"><div><h1>Order Pages</h1><p>Custom order pages for agents in the client portal. Everyone else gets the default order page.</p></div>
       <div><button class="btn primary" id="opNew">+ New order page</button></div></div>
-    ${(() => { const svcs = BK.services.filter(x => x.active && x.public !== false), pk = svcs.filter(x => x.kind === 'package').length, n = S.agents.filter(a => !a.custom_order_page_id || !OP.pages.some(p => p.id === a.custom_order_page_id && p.active)).length; return `
+    ${(() => { const svcs = BK.services.filter(x => x.active && x.public !== false), pk = svcs.filter(x => x.kind === 'package').length, n = S.agents.filter(a => { const pid = agentPageId(a); return !pid || !OP.pages.some(p => p.id === pid && p.active) || a.show_default_order_page !== false; }).length; return `
       <div class="op-grid" style="margin-bottom:14px"><button type="button" class="op-card op-default" id="opDefault">
         <span class="op-cover"><img src="${PORTAL_URL}/img/type-listing.jpg?v=2" alt=""></span>
         <span class="op-body"><b>Default Order Page <span class="op-tag">Everyone</span></b><small>Clients see: Listing Media · Land Media · STR Media</small>
-          <small>${pk} package${pk === 1 ? '' : 's'} · ${svcs.length - pk} add-on${svcs.length - pk === 1 ? '' : 's'} · ${n} agent${n === 1 ? '' : 's'} (everyone without a custom page)</small>
+          <small>${pk} package${pk === 1 ? '' : 's'} · ${svcs.length - pk} add-on${svcs.length - pk === 1 ? '' : 's'} · ${n} agent${n === 1 ? '' : 's'} see it</small>
           <small class="op-who">Edit packages, prices and booking settings</small></span></button>
         <a class="op-card op-default" href="${PORTAL_URL}/#order" target="_blank" rel="noopener"><span class="op-cover"><span>Preview the default order page ↗</span></span>
           <span class="op-body"><b>Preview</b><small>Opens the client portal's order page in a new tab</small></span></a></div>
@@ -5279,7 +5415,7 @@ async function renderOrderPages(){
       <a class="op-card ${pg.active ? '' : 'off'}" href="#/orderpages/${pg.id}">
         <span class="op-cover">${pg.cover_url ? `<img src="${esc(pg.cover_url)}" alt="">` : `<span>${esc(pg.title)}</span>`}</span>
         <span class="op-body"><b>${esc(pg.name)}</b><small>Clients see: “${esc(pg.title)}”</small>
-          <small>${n} service${n === 1 ? '' : 's'} · ${ag.length} agent${ag.length === 1 ? '' : 's'}${pg.show_default ? ' · default page shown too' : ' · custom page only'}${pg.active ? '' : ' · <b>Off</b>'}</small>
+          <small>${n} service${n === 1 ? '' : 's'} · ${ag.length} agent${ag.length === 1 ? '' : 's'}${S.companies.some(c => c.custom_order_page_id === pg.id) ? ` · ${S.companies.filter(c => c.custom_order_page_id === pg.id).length} compan${S.companies.filter(c => c.custom_order_page_id === pg.id).length === 1 ? 'y' : 'ies'}` : ''}${pg.active ? '' : ' · <b>Off</b>'}</small>
           ${ag.length ? `<small class="op-who">${esc(ag.slice(0, 4).map(a => a.full_name).join(', '))}${ag.length > 4 ? ` +${ag.length - 4} more` : ''}</small>` : ''}</span></a>`; }).join('')}</div>`
     : `<div class="panel" style="text-align:center;padding:34px"><p style="margin:0 0 6px"><b>No custom order pages yet</b></p><p class="muted" style="margin:0 0 14px">Make one for a team or an agent with special packages or pricing, then assign it to their account.</p><button class="btn primary" id="opNew2">+ New order page</button></div>`}`;
   const go = () => { location.hash = '#/orderpages/new'; };
@@ -5292,8 +5428,8 @@ function renderOrderPageEdit(pg){
   const key = pg?.id || 'new';
   if (!OP.draft || OP.draft.key !== key) {
     const items = new Map(OP.items.filter(i => pg && i.page_id === pg.id).map(i => [i.service_id, i.price == null ? '' : String(+i.price)]));
-    OP.draft = { key, name: pg?.name || '', title: pg?.title || 'Custom Order Page', cover_url: pg?.cover_url || '', show_default: pg ? pg.show_default : true, active: pg ? pg.active : true, notes: pg?.notes || '',
-      items, agents: new Set(pg ? opAgents(pg.id).map(a => a.id) : []) };
+    OP.draft = { key, name: pg?.name || '', title: pg?.title || 'Custom Order Page', cover_url: pg?.cover_url || '', welcome: pg?.welcome || '', active: pg ? pg.active : true, notes: pg?.notes || '',
+      items, agents: new Set(pg ? opOwn(pg.id).map(a => a.id) : []), cos: new Set(pg ? S.companies.filter(c => c.custom_order_page_id === pg.id).map(c => c.id) : []) };
   }
   const d = OP.draft;
   const svcRow = s => { const on = d.items.has(s.id); return `<div class="op-svc ${on ? 'on' : ''} ${s.active ? '' : 'off'}">
@@ -5312,8 +5448,9 @@ function renderOrderPageEdit(pg){
         <div><label>Card title clients see</label><input name="title" required maxlength="40" value="${esc(d.title)}" placeholder="Custom Order Page" /></div>
         <div class="full"><label>Card photo</label><div class="op-photo"><span class="op-cover sm">${d.cover_url ? `<img src="${esc(d.cover_url)}" alt="">` : `<span>${esc(d.title)}</span>`}</span>
           <div><label class="btn small" style="cursor:pointer">${d.cover_url ? 'Change photo' : 'Add a photo'}<input type="file" id="opPhoto" accept="image/*" hidden /></label>${d.cover_url ? ' <button type="button" class="btn small" id="opPhotoX">Remove</button>' : ''}<p class="muted bk-hint">Shown next to Listing / Land / STR Media. A wide photo works best.</p></div></div></div>
-        <div class="full"><label class="check"><input type="checkbox" name="show_default" ${d.show_default ? 'checked' : ''} /> Also show the default order page <span class="muted">(Listing / Land / STR Media next to this one)</span></label>
-          <label class="check"><input type="checkbox" name="active" ${d.active ? 'checked' : ''} /> On <span class="muted">(off = assigned agents get the default order page)</span></label></div>
+        <div class="full"><label>Welcome line <span class="muted">(on their card, e.g. "Welcome back, Blevins Group! Your team's packages are below.")</span></label><textarea name="welcome" maxlength="220" style="min-height:56px">${esc(d.welcome)}</textarea></div>
+        <div class="full"><label class="check"><input type="checkbox" name="active" ${d.active ? 'checked' : ''} /> On <span class="muted">(off = everyone on it gets the default order page)</span></label>
+          <p class="muted bk-hint">Whether someone also sees the default order page is set per client, in the agent's window (“Show default order page”).</p></div>
         <div class="full"><label>Notes <span class="muted">(only in HQ)</span></label><textarea name="notes" style="min-height:60px">${esc(d.notes)}</textarea></div>
       </div></section>
       <section class="panel"><h2 class="op-h">Services on this page <span class="muted" style="font-weight:400;font-size:13px">${d.items.size} picked</span></h2>
@@ -5321,19 +5458,25 @@ function renderOrderPageEdit(pg){
         ${group('Packages', pub.filter(s => s.kind === 'package'))}${group('Add-ons & à la carte', pub.filter(s => s.kind !== 'package'))}
         ${group('Custom-only services', only, '(not on the default order page)')}
         <button type="button" class="btn" id="opSvcNew" style="margin-top:12px">+ New custom-only service</button></section>
-      <section class="panel"><h2 class="op-h">Agents <span class="muted" style="font-weight:400;font-size:13px">${d.agents.size} assigned</span></h2>
+      <section class="panel"><h2 class="op-h">Companies <span class="muted" style="font-weight:400;font-size:13px">${d.cos.size} · every agent in them gets this page</span></h2>
+        <div class="op-agents">${[...d.cos].map(cid => `<span class="op-chip">${esc(coName(cid))} <small>${coAgents(cid).length} agents</small><button type="button" data-unco="${cid}" aria-label="Remove">×</button></span>`).join('') || '<p class="muted" style="margin:0">No companies yet.</p>'}</div>
+        <div class="op-add"><select id="opCoAdd"><option value="">+ Assign a company…</option>${S.companies.filter(c => !d.cos.has(c.id)).map(c => `<option value="${c.id}">${esc(c.name)}${c.custom_order_page_id && c.custom_order_page_id !== pg?.id ? ` (now: ${esc(OP.pages.find(p => p.id === c.custom_order_page_id)?.name || '')})` : ''}</option>`).join('')}</select></div>
+        <p class="muted bk-hint">Manage companies under Clients → Companies.</p></section>
+      <section class="panel"><h2 class="op-h">Individual agents <span class="muted" style="font-weight:400;font-size:13px">${d.agents.size} assigned</span></h2>
         <div class="op-agents">${[...d.agents].map(id => { const a = S.agents.find(x => x.id === id); return a ? `<span class="op-chip">${esc(a.full_name)}${a.team_name ? ` <small>${esc(a.team_name)}</small>` : ''}<button type="button" data-unassign="${id}" aria-label="Remove ${esc(a.full_name)}">×</button></span>` : ''; }).join('') || '<p class="muted" style="margin:0">No agents yet.</p>'}</div>
         <div class="op-add"><select id="opAgentAdd"><option value="">+ Assign an agent…</option>${S.agents.filter(a => !d.agents.has(a.id)).map(a => `<option value="${a.id}">${esc(a.full_name)}${a.team_name ? ' · ' + esc(a.team_name) : ''}${others(a.id) ? ` (now: ${esc(others(a.id))})` : ''}</option>`).join('')}</select></div>
-        <p class="muted bk-hint">An agent has one order page at a time. Assigning someone who has another page moves them to this one. You can also change it from the agent's window.</p></section>
+        <p class="muted bk-hint">An agent's own page wins over their company's. An agent has one order page at a time; assigning someone who has another moves them here. You can also change it in the agent's window.</p></section>
       <div class="actions op-actions">${pg ? '<button type="button" class="btn danger" id="opDel" style="margin-right:auto">Delete page</button>' : ''}<a class="btn" href="#/orderpages">Cancel</a><button class="btn primary" id="opSave">${pg ? 'Save order page' : 'Create order page'}</button></div>
     </form>`;
   const f = $('#opForm');
-  const keep = () => { d.name = f.name.value; d.title = f.title.value; d.show_default = f.show_default.checked; d.active = f.active.checked; d.notes = f.notes.value; };
+  const keep = () => { d.name = f.name.value; d.title = f.title.value; d.welcome = f.welcome.value; d.active = f.active.checked; d.notes = f.notes.value; };
   const redraw = () => { keep(); const y = window.scrollY; renderOrderPageEdit(pg); window.scrollTo(0, y); };
   f.querySelectorAll('[data-inc]').forEach(c => c.onchange = () => { if (c.checked) d.items.set(c.dataset.inc, ''); else d.items.delete(c.dataset.inc); redraw(); });
   f.querySelectorAll('[data-price]').forEach(i => i.oninput = () => d.items.set(i.dataset.price, i.value));
   f.querySelectorAll('[data-unassign]').forEach(b => b.onclick = () => { d.agents.delete(b.dataset.unassign); redraw(); });
   $('#opAgentAdd').onchange = e => { if (e.target.value) { d.agents.add(e.target.value); redraw(); } };
+  $('#opCoAdd').onchange = e => { if (e.target.value) { d.cos.add(e.target.value); redraw(); } };
+  f.querySelectorAll('[data-unco]').forEach(b => b.onclick = () => { d.cos.delete(b.dataset.unco); redraw(); });
   f.querySelectorAll('[data-svcedit]').forEach(b => b.onclick = () => { keep(); openServiceEdit(bkSvc(b.dataset.svcedit), { onSaved: row => { if (!row) d.items.delete(b.dataset.svcedit); redraw(); } }); });
   $('#opSvcNew').onclick = () => { keep(); openServiceEdit(null, { public: false, onSaved: row => { if (row) d.items.set(row.id, ''); redraw(); } }); };
   $('#opPhoto').onchange = async e => {
@@ -5351,6 +5494,7 @@ function renderOrderPageEdit(pg){
   if (delBtn) delBtn.onclick = async () => {
     const n = opAgents(pg.id).length;
     if (!confirm(`Delete "${pg.name}"?${n ? ` ${n} agent${n === 1 ? '' : 's'} will go back to the default order page.` : ''} Past orders keep their prices.`)) return;
+    S.companies.forEach(c => { if (c.custom_order_page_id === pg.id) c.custom_order_page_id = null; });
     const { error } = await sb.from('custom_order_pages').delete().eq('id', pg.id); if (error) return fail(error);
     S.agents.forEach(a => { if (a.custom_order_page_id === pg.id) a.custom_order_page_id = null; });
     OP.pages = OP.pages.filter(p => p.id !== pg.id); OP.items = OP.items.filter(i => i.page_id !== pg.id); OP.draft = null;
@@ -5363,14 +5507,18 @@ function renderOrderPageEdit(pg){
     for (const [id, v] of d.items) if (v !== '' && !(Number(v) >= 0)) return toast(`Check the price for ${bkSvc(id)?.name || 'a service'}`);
     const btn = $('#opSave'); btn.disabled = true;
     try {
-      const row = { name: d.name.trim(), title: d.title.trim(), cover_url: d.cover_url || null, show_default: d.show_default, active: d.active, notes: d.notes.trim() || null, updated_at: new Date().toISOString() };
+      const row = { name: d.name.trim(), title: d.title.trim(), cover_url: d.cover_url || null, welcome: d.welcome.trim() || null, active: d.active, notes: d.notes.trim() || null, updated_at: new Date().toISOString() };
       const r = pg ? await sb.from('custom_order_pages').update(row).eq('id', pg.id).select().single() : await sb.from('custom_order_pages').insert(row).select().single();
       if (r.error) throw r.error;
       const id = r.data.id;
       const rm = await sb.from('custom_order_page_items').delete().eq('page_id', id); if (rm.error) throw rm.error;
       const items = [...d.items].map(([sid, v]) => ({ page_id: id, service_id: sid, price: v === '' ? null : Math.round(Number(v) * 100) / 100, sort_order: bkSvc(sid)?.sort_order ?? 0 }));
       const ins = await sb.from('custom_order_page_items').insert(items); if (ins.error) throw ins.error;
-      const before = new Set(opAgents(id).map(a => a.id)), add = [...d.agents].filter(x => !before.has(x)), drop = [...before].filter(x => !d.agents.has(x));
+      const cb = new Set(S.companies.filter(c => c.custom_order_page_id === id).map(c => c.id)), cAdd = [...d.cos].filter(x => !cb.has(x)), cDrop = [...cb].filter(x => !d.cos.has(x));
+      if (cAdd.length) { const u = await sb.from('companies').update({ custom_order_page_id: id }).in('id', cAdd); if (u.error) throw u.error; }
+      if (cDrop.length) { const u = await sb.from('companies').update({ custom_order_page_id: null }).in('id', cDrop); if (u.error) throw u.error; }
+      S.companies.forEach(c => { if (cAdd.includes(c.id)) c.custom_order_page_id = id; if (cDrop.includes(c.id)) c.custom_order_page_id = null; });
+      const before = new Set(opOwn(id).map(a => a.id)), add = [...d.agents].filter(x => !before.has(x)), drop = [...before].filter(x => !d.agents.has(x));
       if (add.length) { const u = await sb.from('agents').update({ custom_order_page_id: id }).in('id', add); if (u.error) throw u.error; }
       if (drop.length) { const u = await sb.from('agents').update({ custom_order_page_id: null }).in('id', drop); if (u.error) throw u.error; }
       S.agents.forEach(a => { if (add.includes(a.id)) a.custom_order_page_id = id; if (drop.includes(a.id)) a.custom_order_page_id = null; });
