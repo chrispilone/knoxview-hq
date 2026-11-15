@@ -5322,6 +5322,7 @@ async function openCompany(id){
         <div><label>Brokerage</label><input name="brokerage" value="${esc(c.brokerage || '')}" placeholder="Realty Executives" /></div>
         <div><label>Team</label><input name="team_name" value="${esc(c.team_name || '')}" placeholder="Blevins Group" /></div>
         <div class="full"><label>Address</label><input name="address" value="${esc(c.address || '')}" /></div>
+        <div class="full"><label>Website</label><input type="url" name="website_url" value="${esc(c.website_url || '')}" placeholder="https://" /></div>
         <div><label>Office phone</label><input name="admin_phone" value="${esc(c.admin_phone || '')}" /></div>
         <div><label>Office email</label><input type="email" name="admin_email" value="${esc(c.admin_email || '')}" /></div>
         <div class="full"><label>Media delivery CC <span class="muted">(emails, comma separated)</span></label><input name="delivery_cc" value="${esc(c.delivery_cc || '')}" /></div>
@@ -5337,7 +5338,7 @@ async function openCompany(id){
     const f = $('#coForm');
     $('#ov').onclick = $('#coCancel').onclick = closeLayer;
     if (!edit) { f.querySelectorAll('input,select,textarea').forEach(x => x.disabled = true); return; }
-    const keep = () => { for (const k of ['name','brokerage','team_name','address','admin_phone','admin_email','delivery_cc','notes','custom_order_page_id']) if (f[k]) c[k] = f[k].value; };
+    const keep = () => { for (const k of ['name','brokerage','team_name','address','website_url','admin_phone','admin_email','delivery_cc','notes','custom_order_page_id']) if (f[k]) c[k] = f[k].value; };
     f.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { keep(); members.delete(b.dataset.rm); draw(); });
     $('#coAdd').onchange = e => { if (e.target.value) { keep(); members.add(e.target.value); draw(); } };
     $('#coLogo').onchange = async e => {
@@ -5360,7 +5361,7 @@ async function openCompany(id){
     };
     f.onsubmit = async e => {
       e.preventDefault(); keep();
-      const row = { name: c.name.trim(), brokerage: c.brokerage?.trim() || null, team_name: c.team_name?.trim() || null, address: c.address?.trim() || null, admin_phone: c.admin_phone?.trim() || null,
+      const row = { name: c.name.trim(), brokerage: c.brokerage?.trim() || null, team_name: c.team_name?.trim() || null, address: c.address?.trim() || null, website_url: c.website_url?.trim() || null, admin_phone: c.admin_phone?.trim() || null,
         admin_email: c.admin_email?.trim() || null, delivery_cc: c.delivery_cc?.trim() || null, notes: c.notes?.trim() || null, logo_url: logo || null, updated_at: new Date().toISOString() };
       if (pages) row.custom_order_page_id = c.custom_order_page_id || null;
       if (!row.name) return toast('Add a company name');
