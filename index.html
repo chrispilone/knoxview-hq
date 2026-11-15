@@ -1111,6 +1111,15 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 @media (max-width:860px){ .hr-grid{grid-template-columns:1fr} .hr-pdf{height:420px} }
 @media (max-width:640px){ .hr-row{flex-wrap:wrap} .hr-right{width:100%;justify-content:flex-start;padding-left:48px} }
 .agent-photo{display:flex;align-items:center;gap:14px;margin:0 0 16px}.agent-photo img{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none}.agent-photo b,.agent-photo small,.agent-photo a{display:block}.agent-photo small{opacity:.7;margin:2px 0 4px}
+.credits-box{border:1px solid var(--line,#e3e7ee);border-radius:10px;padding:12px 14px;margin:0 0 16px}
+.cr-head label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+.cr-bal{font-size:20px}
+.cr-form{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.cr-form input[name=amount]{max-width:120px}.cr-form input[name=note]{flex:1;min-width:160px}
+.cr-list{margin-top:8px;max-height:180px;overflow:auto;font-size:13px}
+.cr-list>div{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line,#e3e7ee)}
+.cr-list>div span:first-child{white-space:nowrap;opacity:.7}.cr-list>div span:nth-child(2){flex:1}
+.cr-pos{color:#2f7a55}
 </style>
 </head>
 <body>
@@ -2454,6 +2463,32 @@ function renderAgentLogos(agentId){
   const bg = $('#logoBg'); if (bg) bg.onclick = () => { box.dataset.dark = dark ? '0' : '1'; renderAgentLogos(agentId); };
   const up = $('#logoUpload'); if (up) up.onchange = async () => { if (up.files.length) { await uploadLogos(agentId, [...up.files]); renderAgentLogos(agentId); } };
 }
+/* ----- Account credits (client portal uses them first when the client pays) ----- */
+async function renderAgentCredits(agentId){
+  const box = $('#agentCredits'); if (!box) return;
+  const m2 = v => (v < 0 ? '−' : '') + '$' + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  box.innerHTML = '<p class="muted">Loading credits…</p>';
+  const { data, error } = await sb.from('client_credits').select('id, amount, kind, note, created_at, booking:bookings(number)').eq('agent_id', agentId).order('created_at', { ascending: false }).limit(100);
+  if (error) { box.innerHTML = `<p class="muted">Couldn't load credits: ${esc(error.message)}</p>`; return; }
+  const bal = Math.round((data || []).reduce((t, c) => t + Number(c.amount), 0) * 100) / 100;
+  const KIND = { added: 'Added', applied: 'Used', removed: 'Removed', returned: 'Returned' };
+  box.innerHTML = `<div class="cr-head"><div><label>Account credit</label><b class="cr-bal">${m2(bal)}</b><span class="muted"> · used first when they pay an invoice in the portal</span></div></div>
+    <form id="crForm" class="cr-form"><input name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="$ amount" required />
+      <input name="note" maxlength="200" placeholder="Reason (the client sees this as credit)" />
+      <select name="kind"><option value="added">Add credit</option>${bal > 0 ? '<option value="removed">Remove credit</option>' : ''}</select>
+      <button class="btn small primary">Save</button></form>
+    ${(data || []).length ? `<div class="cr-list">${data.map(c => `<div><span>${esc(fmtDate(c.created_at))}</span><span>${KIND[c.kind] || esc(c.kind)}${c.booking?.number ? ` · invoice #${c.booking.number}` : ''}${c.note ? ` · <span class="muted">${esc(c.note)}</span>` : ''}</span><b class="${Number(c.amount) > 0 ? 'cr-pos' : ''}">${Number(c.amount) > 0 ? '+' : ''}${m2(Number(c.amount))}</b></div>`).join('')}</div>` : '<p class="muted" style="margin:6px 0 0">No credits yet.</p>'}`;
+  $('#crForm').onsubmit = async e => {
+    e.preventDefault(); e.stopPropagation();
+    const f = new FormData(e.target), kind = f.get('kind'), amt = Math.round(Number(f.get('amount')) * 100) / 100;
+    if (!(amt > 0)) return toast('Enter an amount');
+    if (kind === 'removed' && amt > bal) return toast(`They only have ${m2(bal)} in credit`);
+    const ins = await sb.from('client_credits').insert({ agent_id: agentId, amount: kind === 'removed' ? -amt : amt, kind, note: String(f.get('note') || '').trim() || null });
+    if (ins.error) return fail(ins.error);
+    toast(kind === 'removed' ? `${m2(amt)} credit removed` : `${m2(amt)} credit added`);
+    renderAgentCredits(agentId);
+  };
+}
 function openAgent(id){
   const a = S.agents.find(x => x.id === id) || {};
   document.body.style.overflow = 'hidden';
@@ -2461,6 +2496,7 @@ function openAgent(id){
   <div class="modal ${id ? 'wide' : ''}"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>
     ${id && a.photo_url ? `<div class="agent-photo"><img src="${esc(a.photo_url)}" alt="${esc(a.full_name || '')} profile photo"><div><b>Profile photo</b><small>Added by the client in their portal · used on property websites</small><a href="${esc(a.photo_url)}" target="_blank" rel="noopener" download>Open full size</a></div></div>` : ''}
     ${id ? `<div id="agentLogos"></div>` : ''}
+    ${id && isSuperAdmin() ? `<div id="agentCredits" class="credits-box"></div>` : ''}
     <form id="aForm"><div class="grid2">
       <div><label>First name</label><input name="first_name" required autocomplete="off" value="${esc(a.first_name || '')}" /></div>
       <div><label>Last name</label><input name="last_name" required autocomplete="off" value="${esc(a.last_name || '')}" /></div>
@@ -2475,6 +2511,7 @@ function openAgent(id){
     <div class="actions"><button type="button" class="btn" id="aCancel">${can('manage_agents') ? 'Cancel' : 'Close'}</button>${can('manage_agents') ? `<button class="btn primary">${id ? 'Save' : 'Add agent'}</button>` : ''}</div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
+  if (id && isSuperAdmin()) renderAgentCredits(id);
   $('#aForm').onsubmit = async e => {
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
@@ -4718,11 +4755,15 @@ function renderBookingDetail(id){
         ${a ? `<button class="btn small" id="bkAgent">Agent file</button>` : ''}
       </div>
       <div class="panel"><h2>Order</h2>
-        <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)} <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button></span></div>`).join('')}
+        <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('')}
           ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
           ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
-          <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div></div>
-        <div class="bk-addline">
+          <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div>
+          ${Number(b.credit_applied) ? `<div><span>Account credit applied</span><span>−${money(b.credit_applied)}</span></div>` : ''}
+          <div class="bk-total"><span>Amount due</span><span>${money(b.paid ? 0 : Math.max(0, Number(b.total) - Number(b.credit_applied || 0)))}</span></div></div>
+        ${Number(b.credit_applied) && !b.paid ? `<p class="muted bk-hint" style="margin:6px 0 0">${money(b.credit_applied)} of the client's account credit is on this invoice. <button type="button" class="btn small" id="bkCreditBack">Return credit to their account</button></p>` : ''}
+        <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}</p>
+        ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">🔒 This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
           <label>Add a service</label>
           <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
               ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
@@ -4733,7 +4774,7 @@ function renderBookingDetail(id){
           <div class="bk-addrow"><input id="bkCustName" placeholder="e.g. Extra twilight edit" maxlength="120" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$0.00" style="max-width:110px" />
             <button type="button" class="btn small" id="bkAddCust">Add</button></div>
           <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
-        </div>
+        </div>`}
         <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
         ${b.paid && b.paid_note ? `<p class="muted bk-hint" style="margin:6px 0 0">Note: ${esc(b.paid_note)}</p>` : ''}
         <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
@@ -4836,7 +4877,7 @@ function renderBookingDetail(id){
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   // --- order lines: add from services, custom items, remove ---
   const saveLines = async (items, msg) => {
-    if (b.paid && !confirm(`Order #${b.number} is already marked paid. Change its line items anyway? The total will no longer match what was paid.`)) return;
+    if (b.paid) return toast('This invoice is paid. Mark it unpaid first to change it.');
     const subtotal = Math.round(items.reduce((t, i) => t + (Number(i.price) || 0), 0) * 100) / 100;
     const total = Math.round((subtotal - (Number(b.discount) || 0) + (Number(b.tax) || 0)) * 100) / 100;
     save({ items, subtotal, total }, msg);
@@ -4854,6 +4895,13 @@ function renderBookingDetail(id){
   document.querySelectorAll('#bookingsView [data-rmline]').forEach(x => x.onclick = () => {
     const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from order #${b.number}?`)) return;
     saveLines((b.items || []).filter((_, j) => j !== k), `${it.name} removed`);
+  });
+  on('bkCreditBack', async () => {
+    const amt = Number(b.credit_applied || 0); if (!amt || b.paid) return;
+    if (!confirm(`Take ${money(amt)} of credit off invoice #${b.number} and put it back on the client's account?`)) return;
+    const ins = await sb.from('client_credits').insert({ agent_id: b.agent_id, amount: amt, kind: 'returned', booking_id: b.id, note: `Returned from invoice #${b.number}` });
+    if (ins.error) return fail(ins.error);
+    save({ credit_applied: 0 }, 'Credit returned to the client\'s account');
   });
   // --- open the client portal as this client: delivery page or invoice ---
   const openAsClient = async (btnId, go) => {
