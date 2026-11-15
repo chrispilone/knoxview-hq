@@ -4775,7 +4775,7 @@ function renderBookingDetail(id){
             <button type="button" class="btn small" id="bkAddCust">Add</button></div>
           <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
         </div>`}
-        <div class="bk-actions"><button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn">${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
+        <div class="bk-actions">${b.paid && !isOwner() ? '' : `<button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
         ${b.paid && b.paid_note ? `<p class="muted bk-hint" style="margin:6px 0 0">Note: ${esc(b.paid_note)}</p>` : ''}
         <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
         <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>
@@ -4857,7 +4857,7 @@ function renderBookingDetail(id){
   const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
   on('bkAgent', () => openAgent(a.id));
   on('bkPaidBtn', () => {
-    if (b.paid) { if (confirm(`Mark order #${b.number} as unpaid?`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
+    if (b.paid) { if (confirm(`Mark order #${b.number} as unpaid?\n\nThis unlocks a paid invoice so it can be corrected. It's logged. For extra work after payment, create a new order instead.`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
     openMarkPaid(b, (method, note) => save({ paid: true, paid_at: new Date().toISOString(), paid_method: method, paid_note: note || null }, `Marked paid · ${PAY_METHODS[method]}`));
   });
   on('bkDone', async () => { if (await save({ status: 'completed' }, 'Shoot marked complete')) dbxAutoFolders(b); });
