@@ -1004,6 +1004,14 @@ main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.ag-media{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
+.ag-tile{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:0}
+.ag-tile b{display:block}.ag-tile small{display:block;color:var(--muted);font-size:12px;margin:2px 0 6px}
+.ag-acts{display:flex;gap:6px;flex-wrap:wrap}.ag-acts label{cursor:pointer}
+.ag-prev{flex:none;display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:12px;font-weight:600}
+.ag-prev.photo{width:64px;height:64px;border-radius:50%;background:var(--panel-2)}.ag-prev.photo img{width:100%;height:100%;object-fit:cover}
+.ag-prev.logo{width:96px;height:64px;border-radius:8px;border:1px dashed var(--border);background:#fff;padding:4px}.ag-prev.logo img{max-width:100%;max-height:100%;object-fit:contain}
+@media(max-width:640px){.ag-media{grid-template-columns:1fr}}
 .agent-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}.agent-head h2{margin:0}
 nav.tabs .nav-group{display:flex;align-items:center;gap:14px;min-height:46px;padding:11px 14px;border-radius:10px;border:0;background:none;color:var(--muted);font:inherit;font-weight:500;font-size:15px;cursor:pointer;text-align:left;width:100%}
 nav.tabs .nav-group:hover{background:var(--panel-2);color:var(--text)}nav.tabs .nav-group.in{color:var(--accent);font-weight:600}
@@ -2436,6 +2444,62 @@ function renderAgents(){
   hydrateLogoImgs($('#agentsGrid'));
 }
 
+/* ----- Agent profile photo + logo (same fields the client edits in their portal profile; used on property websites) ----- */
+function renderAgentMedia(a){
+  const box = $('#agMedia'); if (!box) return;
+  const edit = can('upload_logos') && can('manage_agents');
+  const tile = (kind, url, label, hint) => `<div class="ag-tile"><span class="ag-prev ${kind}">${url ? `<img src="${esc(url)}" alt="${esc(label)}">` : `<span>${kind === 'photo' ? esc((a.full_name || '?').split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()) : 'No logo'}</span>`}</span>
+    <div><b>${label}</b><small>${hint}</small>
+      ${edit ? `<div class="ag-acts"><label class="btn small">${url ? 'Change' : 'Add'}<input type="file" accept="image/png,image/jpeg,image/webp" data-up="${kind}" hidden /></label>${url ? `<button type="button" class="btn small" data-rm="${kind}">Remove</button>` : ''}${url ? `<a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">Open</a>` : ''}</div>` : url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open full size</a>` : ''}</div></div>`;
+  box.innerHTML = tile('photo', a.photo_url, 'Profile photo', 'Shown on their account and property websites') + tile('logo', a.brand_logo_url, 'Logo', 'PNG with transparency kept · property websites');
+  const save = async (patch, oldPaths) => {
+    const { error } = await sb.from('agents').update(patch).eq('id', a.id); if (error) throw error;
+    Object.assign(a, patch); const ag = S.agents.find(x => x.id === a.id); if (ag) Object.assign(ag, patch);
+    const stale = oldPaths.filter(Boolean); if (stale.length) sb.storage.from('agent-photos').remove(stale).catch(() => {});
+    renderAgentMedia(a);
+  };
+  const load = file => new Promise((ok, no) => { const img = new Image(), u = URL.createObjectURL(file); img.onload = () => ok(img); img.onerror = () => no(new Error("That image couldn't be opened. Try a PNG or JPG.")); img.src = u; });
+  const blob = (c, type, q) => new Promise((ok, no) => c.toBlob(b => b ? ok(b) : no(new Error("Couldn't prepare the image")), type, q));
+  box.querySelectorAll('[data-up]').forEach(inp => inp.onchange = async () => {
+    const file = inp.files[0], kind = inp.dataset.up; inp.value = ''; if (!file) return;
+    if (file.size > 15e6) return toast('That file is over 15 MB');
+    try {
+      toast(kind === 'photo' ? 'Uploading photo…' : 'Uploading logo…');
+      const img = await load(file), W = img.naturalWidth, H = img.naturalHeight, t = Date.now().toString(36), dir = `hq/${a.id}`;
+      const up = async (path, b, type) => { const r = await sb.storage.from('agent-photos').upload(path, b, { contentType: type, cacheControl: '31536000', upsert: false }); if (r.error) throw r.error; return sb.storage.from('agent-photos').getPublicUrl(path).data.publicUrl; };
+      if (kind === 'photo') { // centered square, 1000px (the client can re-crop it in their portal)
+        const side = Math.min(W, H), sq = document.createElement('canvas'); sq.width = sq.height = 1000;
+        const g = sq.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 1000, 1000); g.imageSmoothingQuality = 'high'; g.drawImage(img, (W - side) / 2, (H - side) / 2, side, side, 0, 0, 1000, 1000);
+        const k = Math.min(1, 2400 / Math.max(W, H)), og = document.createElement('canvas'); og.width = Math.round(W * k); og.height = Math.round(H * k);
+        const o = og.getContext('2d'); o.fillStyle = '#fff'; o.fillRect(0, 0, og.width, og.height); o.drawImage(img, 0, 0, og.width, og.height);
+        const path = `${dir}/photo-${t}.jpg`, orig = `${dir}/original-${t}.jpg`;
+        const url = await up(path, await blob(sq, 'image/jpeg', 0.9), 'image/jpeg'); await up(orig, await blob(og, 'image/jpeg', 0.88), 'image/jpeg').catch(() => null);
+        await save({ photo_url: url, photo_path: path, photo_original_path: orig, photo_updated_at: new Date().toISOString() }, [a.photo_path, a.photo_original_path]);
+      } else { // max 1600px, empty margins trimmed, PNG keeps transparency
+        const k = Math.min(1, 1600 / Math.max(W, H)), w = Math.max(1, Math.round(W * k)), h = Math.max(1, Math.round(H * k));
+        const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
+        const d = g.getImageData(0, 0, w, h).data, empty = i => d[i + 3] < 12 || (d[i] > 248 && d[i + 1] > 248 && d[i + 2] > 248);
+        let x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!empty((y * w + x) * 4)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        let out = c;
+        if (x1 >= 0) { const p = Math.round(Math.max(x1 - x0, y1 - y0) * 0.02); x0 = Math.max(0, x0 - p); y0 = Math.max(0, y0 - p); x1 = Math.min(w - 1, x1 + p); y1 = Math.min(h - 1, y1 + p);
+          out = document.createElement('canvas'); out.width = x1 - x0 + 1; out.height = y1 - y0 + 1; out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height); }
+        const path = `${dir}/logo-${t}.png`, url = await up(path, await blob(out, 'image/png'), 'image/png');
+        await save({ brand_logo_url: url, brand_logo_path: path }, [a.brand_logo_path]);
+      }
+      toast(kind === 'photo' ? 'Photo saved' : 'Logo saved');
+    } catch (e) { fail(e); }
+  });
+  box.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
+    const kind = b.dataset.rm;
+    if (!confirm(kind === 'photo' ? 'Remove their profile photo?' : 'Remove their logo?')) return;
+    try {
+      if (kind === 'photo') await save({ photo_url: null, photo_path: null, photo_original_path: null, photo_updated_at: new Date().toISOString() }, [a.photo_path, a.photo_original_path]);
+      else await save({ brand_logo_url: null, brand_logo_path: null }, [a.brand_logo_path]);
+    } catch (e) { fail(e); }
+  });
+}
+
 /* ----- Agent logos (Supabase Storage bucket: agent-logos) ----- */
 const LOGO_BUCKET = 'agent-logos';
 const logoUrlCache = new Map(); // path -> { url, exp }
@@ -2550,7 +2614,7 @@ function openAgent(id){
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal ${id ? 'wide' : ''}"><div class="agent-head"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>${id && isSuperAdmin() && BOOKINGS_ENABLED ? `<button type="button" class="btn small primary" id="aAccess" title="Open the client portal signed in as ${esc(a.full_name || 'this client')}">Access agent ↗</button>` : ''}</div>
-    ${id && a.photo_url ? `<div class="agent-photo"><img src="${esc(a.photo_url)}" alt="${esc(a.full_name || '')} profile photo"><div><b>Profile photo</b><small>Added by the client in their portal · used on property websites</small><a href="${esc(a.photo_url)}" target="_blank" rel="noopener" download>Open full size</a></div></div>` : ''}
+    ${id ? `<div class="ag-media" id="agMedia"></div>` : ''}
     ${id ? `<div id="agentLogos"></div>` : ''}
     ${id && isSuperAdmin() ? `<div id="agentCredits" class="credits-box"></div>` : ''}
     <form id="aForm"><div class="grid2">
@@ -2573,6 +2637,7 @@ function openAgent(id){
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
   if (id) renderAgentLogos(id);
   if (id && isSuperAdmin()) renderAgentCredits(id);
+  if (id) renderAgentMedia(a);
   // "Access agent": open the client portal signed in as this client (same as the order's "Client's download page")
   if ($('#aAccess')) $('#aAccess').onclick = async () => {
     const btn = $('#aAccess'), win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
