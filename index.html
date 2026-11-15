@@ -5246,6 +5246,7 @@ function openServiceEdit(s, o = {}){
       <div><label>Video tier</label><select name="video_tier">${opt(VIDEO_TIERS, s.video_tier || '', '—')}</select></div>
       <div><label>Order on the form</label><input name="sort_order" type="number" value="${s.sort_order}" /></div>
       <div><label>Badge <span class="muted">(e.g. Most popular)</span></label><input name="badge" value="${esc(s.badge || '')}" /></div>
+      <div class="bk-covers" ${s.kind === 'package' ? '' : 'style="display:none"'}><label>Large property fee ($) <span class="muted">(blank = normal fee, ${money(BK.settings?.large_fee ?? 75)})</span></label><input name="large_fee" type="number" min="0" step="0.01" value="${s.large_fee ?? ''}" /></div>
       <div class="full bk-covers" ${s.kind === 'package' ? '' : 'style="display:none"'}><label>Add-ons this package already includes <span class="muted">(clients can't add these on top)</span></label>
         <div class="bk-typepick">${BK.services.filter(x => x.kind === 'addon').sort((a, b) => a.sort_order - b.sort_order).map(x => `<label class="check"><input type="checkbox" name="cv" value="${x.id}" ${(s.covers || []).includes(x.id) ? 'checked' : ''} /> ${esc(x.name)}</label>`).join('')}</div></div>
       <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
@@ -5256,14 +5257,14 @@ function openServiceEdit(s, o = {}){
   document.body.appendChild(box);
   const close = () => box.remove();
   box.querySelector('.overlay').onclick = close; box.querySelector('#svcCancel').onclick = close;
-  box.querySelector('[name=kind]').onchange = e => { box.querySelector('.bk-covers').style.display = e.target.value === 'package' ? '' : 'none'; };
+  box.querySelector('[name=kind]').onchange = e => { box.querySelectorAll('.bk-covers').forEach(x => x.style.display = e.target.value === 'package' ? '' : 'none'); };
   const back = row => { close(); if (o.onSaved) o.onSaved(row); else openBookingSettings(); };
   box.querySelector('#svcForm').onsubmit = async e => {
     e.preventDefault();
     const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
       includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: [...f.querySelectorAll('[name=pt]:checked')].map(x => x.value).join(', ') || null, video_type: [...f.querySelectorAll('[name=vt]:checked')].map(x => x.value).join(', ') || null,
       video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked,
-      public: f.public.checked, badge: f.badge.value.trim() || null, covers: f.kind.value === 'package' ? [...f.querySelectorAll('[name=cv]:checked')].map(x => x.value) : [], updated_at: new Date().toISOString() };
+      public: f.public.checked, badge: f.badge.value.trim() || null, large_fee: f.kind.value === 'package' && f.large_fee.value !== '' ? +f.large_fee.value : null, covers: f.kind.value === 'package' ? [...f.querySelectorAll('[name=cv]:checked')].map(x => x.value) : [], updated_at: new Date().toISOString() };
     const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
     if (r.error) return fail(r.error);
     if (isNew) BK.services.push(r.data); else Object.assign(bkSvc(s.id), r.data);
