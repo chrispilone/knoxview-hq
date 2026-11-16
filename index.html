@@ -1405,7 +1405,66 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
 @media(max-width:640px){.op-svc{flex-wrap:wrap}.op-price{margin-left:26px}.op-cover.sm{width:110px}}
 
 .bk-check{color:var(--text);font-size:14px}
-.bk-agent-pick{display:flex;gap:8px}.bk-agent-pick input{flex:1;min-width:0}
+.bk-agent-pick{display:flex;gap:8px;align-items:flex-start}.bk-agent-pick input{width:100%;min-width:0}
+.bk-ac{position:relative;flex:1;min-width:0}
+.bk-ac-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--border);border-radius:9px;box-shadow:0 10px 28px rgba(20,40,70,.14);max-height:320px;overflow:auto;padding:4px}
+.bk-ac-o{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text)}
+.bk-ac-o small{color:var(--muted);font-size:12.5px}
+.bk-ac-o.hi,.bk-ac-o:hover{background:var(--accent-soft)}
+.bk-ac-new{color:var(--accent);font-weight:600;border-top:1px solid var(--border);border-radius:0 0 6px 6px;margin-top:2px}
+.bk-ac-none{padding:8px 10px;font-size:13px}
+.bk-agent-sel{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin:0}
+.bk-agent-sel>div{display:flex;flex-direction:column;gap:2px}.bk-agent-sel small{color:var(--muted);font-size:12.5px}
+.bk-pgtag{display:inline-flex;align-items:center;gap:5px;color:var(--accent)!important;font-weight:600}.bk-pgtag svg{width:13px;height:13px}
+.bk-req{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-left:4px}
+.bk-custom-tog{padding:10px 12px;border:1px dashed var(--border);border-radius:9px;margin:0 0 14px;color:var(--text);font-size:14px;align-items:flex-start}
+.bk-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:340px){ .bk-mode{grid-template-columns:1fr} }
+.bk-mode-b{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--panel);color:var(--text);cursor:pointer;font:inherit}
+.bk-mode-b b{font-size:15px}.bk-mode-b small{color:var(--muted);font-size:12.5px}
+.bk-mode-b.on{border-color:var(--accent);background:var(--accent-soft)}
+button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
+.bk-ala{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.bk-chosen-adds{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.bk-cadd{display:flex;align-items:center;gap:10px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:9px;padding:6px 6px 6px 12px;font-size:14px}
+.bk-cadd span:first-child{flex:1;font-weight:600}.bk-cadd .p{font-weight:600}
+.bk-lines-ed{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.bk-line-ed{display:grid;grid-template-columns:1fr 120px auto;gap:8px;align-items:center}
+.bk-money{position:relative}.bk-money::before{content:'$';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}.bk-money input{padding-left:22px;width:100%}
+.bk-dur{margin:0 0 12px}
+.bk-sg-q{margin:0 0 8px;font-weight:600}
+.bk-sg-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bk-sg{display:flex;flex-direction:column;border:1.5px solid var(--border);border-radius:10px;background:var(--panel);overflow:hidden;cursor:pointer;padding:0;font:inherit;color:var(--text)}
+.bk-sg-h{background:var(--panel-2);font-size:12.5px;font-weight:600;padding:6px 8px;color:var(--muted)}
+.bk-sg-b{display:flex;flex-direction:column;gap:1px;padding:10px 8px}.bk-sg-b b{font-size:20px}.bk-sg-b small{color:var(--muted);font-size:12.5px}
+.bk-sg.on{border-color:var(--accent);background:var(--accent-soft)}.bk-sg.on .bk-sg-h{background:var(--accent);color:var(--on-accent)}
+.bk-cal-tog{display:block;margin:14px auto 0;border:0;background:none;font:inherit;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
+.bk-cal{margin-top:10px;border-top:1px solid var(--border);padding-top:12px}
+.bk-cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;font-size:13.5px}
+.bk-cal-nav .link{border:0;background:none;font:inherit;color:var(--accent);font-weight:600;cursor:pointer;padding:4px 0}.bk-cal-nav .link:disabled{color:var(--muted);opacity:.5;cursor:default}
+.bk-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.bk-cal-w{text-align:center;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 0;background:var(--panel-2);border-radius:4px}
+.bk-cal-d{height:46px;border:1px solid var(--border);border-radius:6px;background:var(--panel);font:inherit;font-size:16px;font-weight:600;color:var(--text);cursor:pointer}
+.bk-cal-d:disabled{color:var(--muted);opacity:.45;cursor:default}.bk-cal-d.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.bk-cal-t{margin:14px 0 4px;font-weight:600;text-align:center}
+.bk-cal-g{margin-top:8px}.bk-cal-g small{display:block;color:var(--muted);font-size:12.5px;margin-bottom:6px}
+.bk-pills{display:flex;flex-wrap:wrap;gap:6px}
+.bk-pill{padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);font:inherit;font-weight:500;cursor:pointer;color:var(--text)}
+.bk-pill:hover{background:var(--panel-2)}.bk-pill.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.bk-opts .check span small{display:block;font-weight:400}
+.bk-step .check input[type=checkbox],.bk-opts input[type=checkbox]{width:20px;height:20px;flex:none;margin:1px 0 0}
+.bk-step .check,.bk-opts .check{gap:10px;line-height:1.35}
+.bk-mbar{display:none}
+@media (max-width:900px){
+  .bk-mbar{display:flex;align-items:center;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--panel);border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(20,40,70,.1);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .bk-mbar>div{flex:1;min-width:0;display:flex;flex-direction:column}.bk-mbar b{font-size:18px}.bk-mbar small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bk-mbar .btn{flex:none;padding:12px 18px;font-size:15px}.bk-mbar .btn:disabled{opacity:.5}
+  #bkForm{padding-bottom:88px}
+  .bk-ac-list{max-height:min(320px,48vh)}
+}
+@media (pointer:coarse){ .bk-pill{min-height:42px;padding:9px 14px} .bk-ac-o{padding:11px 12px} .bk-cal-nav .link{padding:10px 0} .bk-mode-b,.bk-pkg{min-height:56px} .bk-step .btn.small{min-height:38px;min-width:38px} }
+@media (max-width:420px){ .bk-sg-b{padding:8px 6px} .bk-sg-b b{font-size:16px} .bk-sg-h{font-size:11.5px;padding:5px 6px} .bk-cal-d{font-size:14px} .bk-cal-nav{font-size:12.5px} .bk-pkgs{grid-template-columns:1fr} .bk-ala{grid-template-columns:1fr} }
+@media (max-width:640px){ .bk-mode-b small{font-size:12px} .bk-cal-d{height:42px} .bk-sg-row{gap:6px} .bk-sg-b b{font-size:17px} .bk-line-ed{grid-template-columns:1fr 96px auto} }
 .bk-agent-card{margin:10px 0 0;padding:10px 12px;background:var(--panel-2);border-radius:8px;font-size:13.5px}
 .bk-pkgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
 .bk-pkg{position:relative;display:flex;flex-direction:column;gap:4px;border:1.5px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;color:var(--text);font-size:13.5px;font-weight:400;margin:0}
@@ -3192,7 +3251,7 @@ async function renderAgentProfile(id){
   const co = S.companies.find(c => c.id === a.company_id);
   const orders = admin ? BK.list.filter(b => b.agent_id === id).sort((x, y) => String(y.shoot_start || y.created_at).localeCompare(String(x.shoot_start || x.created_at))) : [];
   const live = orders.filter(b => b.status !== 'cancelled');
-  const invoices = live.filter(b => !(b.status === 'requested' && b.payment_status === 'unpaid'));
+  const invoices = live.filter(b => b.invoice !== false && !(b.status === 'requested' && b.payment_status === 'unpaid')); // invoice false = placed with "No invoice"
   const projects = S.projects.filter(p => p.agent_id === id && can(p.media)).sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)));
   const yr = new Date().getFullYear(), inYr = y => live.filter(b => new Date(b.shoot_start || b.created_at).getFullYear() === y);
   const avg = l => l.length ? money(Math.round(l.reduce((t, b) => t + Number(b.total || 0), 0) / l.length)) : '—';
@@ -5721,7 +5780,7 @@ const ordDate = (d, yr) => d ? new Date(d).toLocaleDateString(undefined, { month
 const ORD_TABS = [
   ['upcoming', 'Upcoming', (b, now) => b.status !== 'cancelled' && b.status !== 'completed' && (!b.shoot_start || b.shoot_end >= now)],
   ['deliver', 'To deliver', (b, now) => b.status !== 'cancelled' && !b.delivered_at && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now))],
-  ['unpaid', 'Unpaid', b => b.status !== 'cancelled' && !b.paid],
+  ['unpaid', 'Unpaid', b => b.status !== 'cancelled' && !b.paid && b.invoice !== false],
   ['delivered', 'Delivered', b => b.status !== 'cancelled' && !!b.delivered_at],
   ['cancelled', 'Cancelled', b => b.status === 'cancelled'],
   ['all', 'All', () => true],
@@ -5737,7 +5796,7 @@ function renderBookingList(){
   const key = st.sort || 'shoot', dir = st.sort ? st.dir : (BK.tab === 'upcoming' ? 1 : -1);
   const val = { address: b => b.address, agent: bkClient, status: b => b.status !== 'cancelled' && b.delivered_at ? 'delivered' : b.status, shoot: b => b.shoot_start || '', submitted: b => b.created_at, shot: b => ordShot(b) || '' }[key];
   rows.sort(dirCmp({ dir }, val));
-  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now), unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid);
+  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now), unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid && b.invoice !== false);
   const weekEnd = addDays(new Date(), 7).toISOString();
   const pager = rows.length ? dirPager(st, rows.length, 'orders') : '', page = rows.slice(st.page * st.size, (st.page + 1) * st.size);
   const th = (k, l, cls = '') => dirTh({ sort: st.sort || 'shoot', dir }, k, l, cls);
@@ -5821,17 +5880,23 @@ function openDeliveryModal(id){
 
 /* ----- Pricing ----- */
 function bkQuote(d){
-  const set = BK.settings || {};
-  const pkg = bkSvc(d.pkg), adds = [...d.addons].map(bkSvc).filter(Boolean);
-  const items = [];
-  if (pkg) items.push({ service_id: pkg.id, name: pkg.name, kind: 'package', price: Number(pkg.price) });
-  adds.forEach(a => items.push({ service_id: a.id, name: a.name, kind: 'addon', price: Number(a.price) }));
-  const large = !!d.adu || (Number(d.sqft) > 0 && Number(d.sqft) > Number(set.large_sqft || 3500));
-  if (large && Number(set.large_fee) > 0) items.push({ name: 'Large property fee', kind: 'fee', price: Number(set.large_fee) });
+  const set = BK.settings || {}, items = [];
+  let pkg = null, adds = [];
+  if (d.custom) (d.lines || []).forEach(l => { const n = String(l.name || '').trim(); if (n) items.push({ name: n, kind: 'custom', price: Math.max(0, Number(l.price) || 0) }); });
+  else {
+    pkg = d.mode === 'pkg' && d.pkg ? bkSvc(d.pkg) || null : null;
+    adds = [...(d.addons || [])].map(bkSvc).filter(Boolean);
+    if (pkg) items.push({ service_id: pkg.id, name: pkg.name, kind: 'package', price: bkPrice(pkg, d) });
+    adds.forEach(a => items.push({ service_id: a.id, name: a.name, kind: 'addon', price: bkPrice(a, d) }));
+  }
+  const large = !d.custom && items.length > 0 && Number(d.sqft) > 0 && Number(d.sqft) > Number(set.large_sqft || 3500);
+  const fee = pkg && pkg.large_fee != null ? Number(pkg.large_fee) : Number(set.large_fee);
+  if (large && fee > 0) items.push({ name: 'Large property fee', kind: 'fee', price: fee });
   const subtotal = items.reduce((t, i) => t + i.price, 0);
   const discount = Math.min(subtotal, Math.max(0, Number(d.discount) || 0));
-  const duration = (pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + (large ? 30 : 0);
-  return { items, subtotal, discount, total: subtotal - discount, duration: duration || 60, large, pkg, adds };
+  const duration = d.custom ? (Number(d.customMin) || 60)
+    : ((pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + (large ? Number(set.large_minutes ?? 30) : 0)) || 60;
+  return { items, subtotal, discount, total: subtotal - discount, duration, large, pkg, adds };
 }
 
 /* ----- Openings: working hours minus anything on your Google Calendar (all-day events block the whole day) ----- */
@@ -5910,12 +5975,27 @@ async function bkPaintPicker(st, duration, ignoreEvent, onChange){
 }
 
 /* ----- Order form ----- */
-function bkNewDraft(){ const pre = BK.preAgent || ''; BK.preAgent = null; return { agent_id:pre, newClient:false, client:{ name:'', email:'', phone:'', brokerage:'' }, address:'', city:'', sqft:'', adu:false,
-  occupancy:'', entry:'', access_notes:'', notes:'', pkg: bkActive('package')[0]?.id || '', addons: new Set(), discount:'', pick:{ start:null, override:false, day:'' },
-  mkCal:true, mkProjects:true, postChat:false, paid:false }; }
+// Nothing is picked for you: choose a package or à la carte services (plus add-ons), or tick Custom order and type your own line items.
+function bkNewDraft(){ const pre = BK.preAgent || ''; BK.preAgent = null; const a = S.agents.find(x => x.id === pre);
+  return { agent_id:pre, newClient:false, client:{ name:'', email:'', phone:'', brokerage:'' }, address:'', city:'', sqft:'',
+  occupancy:'', entry:'', access_notes:'', notes:'', mode:'', pkg:'', addons: new Set(), custom:false, lines:[{ name:'', price:'' }], customMin:'', discount:'',
+  invoice:'', paid:false, pick:{ start:null, override:false, day:'', calOpen:false, calFrom:'' },
+  mkCal:true, sendEmail: !!a?.email, sendSms: !!(a?.phone && a?.sms_appointment_reminders), mkProjects:true, postChat:false }; }
+// The selected agent's custom order page (their own, or their company's), if it's turned on
+function bkAgentPage(d){ const a = S.agents.find(x => x.id === d.agent_id), pid = a && agentPageId(a); return (pid && OP.pages.find(p => p.id === pid && p.active)) || null; }
+function bkPageItems(pg){ return pg ? OP.items.filter(i => i.page_id === pg.id).sort((x, y) => (x.sort_order || 0) - (y.sort_order || 0)).map(i => ({ svc: bkSvc(i.service_id), price: i.price })).filter(x => x.svc?.active) : []; }
+function bkPrice(s, d){ const it = bkPageItems(bkAgentPage(d)).find(x => x.svc.id === s.id); return it && it.price != null ? Number(it.price) : Number(s.price); }
+// What can be picked for this client: the default catalog, plus anything on their custom page
+function bkCatalog(d){
+  const page = bkPageItems(bkAgentPage(d)).map(x => x.svc), pageIds = new Set(page.map(s => s.id));
+  const pub = BK.services.filter(s => s.active && s.public !== false && !pageIds.has(s.id)).sort((a, b) => a.sort_order - b.sort_order);
+  return { page, pagePkgs: page.filter(s => s.kind === 'package'), listing: pub.filter(s => s.kind === 'package' && s.category !== 'land'), land: pub.filter(s => s.kind === 'package' && s.category === 'land'),
+    alacarte: [...page, ...pub].filter(s => s.kind === 'addon' && s.category === 'alacarte'), addons: [...page, ...pub].filter(s => s.kind === 'addon' && s.category !== 'alacarte') };
+}
 function renderOrderForm(){
   if (!BK.draft) BK.draft = bkNewDraft();
-  const d = BK.draft, pk = bkActive('package'), ad = bkActive('addon');
+  const d = BK.draft;
+  if (!OP.loaded) loadOrderPages().then(() => { if (BK.draft === d && $('#bkSvcBox')) { bkPaintServices(); bkPaintSummary(); } }).catch(console.warn);
   $('#bookingsView').innerHTML = `
     <div class="page-head"><div><a href="#/bookings" class="bk-back">← Orders</a><h1>New order</h1></div></div>
     <form id="bkForm" class="bk-layout" autocomplete="off">
@@ -5930,45 +6010,49 @@ function renderOrderForm(){
               <input name="media_title" class="${d.mt_on ? '' : 'hidden'}" value="${esc(d.media_title || '')}" placeholder="e.g. Lot 12 · Smoky Ridge Estates" maxlength="120" style="margin-top:6px" /></div>
             <div><label>City</label><input name="city" value="${esc(d.city)}" placeholder="Knoxville" /></div>
             <div><label>Square feet</label><input name="sqft" type="number" min="0" inputmode="numeric" value="${esc(d.sqft)}" placeholder="2,400" /></div>
-            <div class="full"><label class="check bk-check"><input type="checkbox" name="adu" ${d.adu ? 'checked' : ''} /> ADU, guest house or other extra structure</label>
-              <p class="muted bk-hint">Homes over ${Number(BK.settings?.large_sqft || 3500).toLocaleString()} sq ft or with extra structures add the ${money(BK.settings?.large_fee)} large property fee (includes extra photos).</p></div>
+            <div class="full"><p class="muted bk-hint" style="margin-top:0">Homes over ${Number(BK.settings?.large_sqft || 3500).toLocaleString()} sq ft add the ${money(BK.settings?.large_fee)} large property fee (includes extra photos).</p></div>
             <div><label>Occupied or vacant?</label><select name="occupancy">${opt([['Occupied','Occupied'],['Vacant','Vacant'],['Staged','Vacant, staged']], d.occupancy, '—')}</select></div>
             <div><label>How do we get in?</label><select name="entry">${opt([['Agent will meet','Agent will meet'],['Owner will be home','Owner will be home'],['Lockbox','Lockbox'],['Door code','Door code'],['Other','Other (see notes)']], d.entry, '—')}</select></div>
             <div class="full"><label>Access details</label><input name="access_notes" value="${esc(d.access_notes)}" placeholder="Lockbox / gate / door code, pets, parking…" /></div>
           </div>
         </section>
-        <section class="panel bk-step"><h2><span class="n">3</span> Package</h2>
-          <div class="bk-pkgs">${pk.map(p => `<label class="bk-pkg ${d.pkg === p.id ? 'on' : ''}"><input type="radio" name="pkg" value="${p.id}" ${d.pkg === p.id ? 'checked' : ''} />
-            <span class="bk-pkg-h"><b>${esc(p.name)}</b><span>${money(p.price)}</span></span>
-            ${p.description ? `<small>${esc(p.description)}</small>` : ''}
-            ${p.includes?.length ? `<ul>${p.includes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</label>`).join('')}
-            <label class="bk-pkg ${!d.pkg ? 'on' : ''}"><input type="radio" name="pkg" value="" ${!d.pkg ? 'checked' : ''} /><span class="bk-pkg-h"><b>No package</b><span></span></span><small>Add-ons only</small></label></div>
-          ${ad.length ? `<h4 class="bk-sub">Add-ons</h4><div class="bk-adds">${ad.map(a => `<label class="check bk-add ${d.addons.has(a.id) ? 'on' : ''}"><input type="checkbox" data-add="${a.id}" ${d.addons.has(a.id) ? 'checked' : ''} /><span><b>${esc(a.name)}</b>${a.description ? `<small>${esc(a.description)}</small>` : ''}</span><span class="p">+${money(a.price)}</span></label>`).join('')}</div>` : ''}
+        <section class="panel bk-step"><h2><span class="n">3</span> Services</h2><div id="bkSvcBox"></div></section>
+        <section class="panel bk-step"><h2><span class="n">4</span> Invoice</h2>
+          <div class="grid2"><div><label>Create an invoice? <span class="bk-req">Required</span></label>
+            <select id="bkInvoice" required>${opt([['yes','Yes, create an invoice'],['no','No invoice']], d.invoice, 'Choose…')}</select></div></div>
+          <p class="muted bk-hint" id="bkInvHint">${bkInvHint(d)}</p>
+          <label class="check bk-check ${d.invoice === 'yes' ? '' : 'hidden'}" id="bkPaidWrap"><input type="checkbox" id="bkPaid" ${d.paid ? 'checked' : ''} /> Already paid</label>
         </section>
-        <section class="panel bk-step"><h2><span class="n">4</span> Date & time</h2>${bkPickerHTML()}</section>
-        <section class="panel bk-step"><h2><span class="n">5</span> Notes</h2>
+        <section class="panel bk-step"><h2><span class="n">5</span> Date & time</h2><div id="bkPicker"><p class="muted">Checking your calendar…</p></div></section>
+        <section class="panel bk-step"><h2><span class="n">6</span> Notes</h2>
           <label>Notes for the shoot and the editors</label><textarea name="notes" placeholder="Special requests, rooms to skip, twilight timing…">${esc(d.notes)}</textarea>
         </section>
+        <section class="panel bk-step"><h2><span class="n">7</span> Confirmation</h2><div id="bkNotify"></div></section>
       </div>
       <aside class="bk-summary panel" id="bkSummary"></aside>
-    </form>`;
-  bkPaintClient();
+    </form>
+    <div class="bk-mbar" id="bkMbar"></div>`;
+  bkPaintClient(); bkPaintServices(); bkPaintNotify();
   const form = $('#bkForm');
   form.oninput = form.onchange = e => {
     const t = e.target;
-    if (t.closest('#bkSummary') || t.closest('#bkPicker') || t.closest('#bkClientBox')) return;
+    if (t.closest('#bkSummary') || t.closest('#bkPicker') || t.closest('#bkClientBox') || t.closest('#bkSvcBox') || t.closest('#bkNotify')) return;
     if (['address','city','sqft','occupancy','entry','access_notes','notes','media_title'].includes(t.name)) d[t.name] = t.value;
     if (t.name === 'mt_on') { d.mt_on = t.checked; const mi = form.querySelector('[name=media_title]'); mi.classList.toggle('hidden', !t.checked); if (t.checked) mi.focus(); }
-    if (t.name === 'adu') d.adu = t.checked;
-    if (t.name === 'pkg') { d.pkg = t.value; document.querySelectorAll('.bk-pkg').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); bkDurationChanged(); }
-    if (t.dataset.add) { t.checked ? d.addons.add(t.dataset.add) : d.addons.delete(t.dataset.add); t.closest('.bk-add').classList.toggle('on', t.checked); bkDurationChanged(); }
-    if (t.name === 'sqft' || t.name === 'adu') bkDurationChanged();
+    if (t.id === 'bkInvoice') { d.invoice = t.value; if (d.invoice !== 'yes') d.paid = false; $('#bkPaid').checked = d.paid; $('#bkPaidWrap').classList.toggle('hidden', d.invoice !== 'yes'); $('#bkInvHint').innerHTML = bkInvHint(d); }
+    if (t.id === 'bkPaid') d.paid = t.checked;
+    if (t.name === 'sqft' && e.type === 'input') bkDurationChanged(); // only the summary changes; don't redraw the services under the user's finger
     bkPaintSummary();
   };
   form.onsubmit = e => { e.preventDefault(); bkSubmit(); };
   BK.pickDur = bkQuote(d).duration;
-  bkPaintPicker(d.pick, BK.pickDur, null, bkPaintSummary);
+  bkSchedPicker(d.pick, BK.pickDur);
   bkPaintSummary();
+}
+function bkInvHint(d){
+  return d.invoice === 'yes' ? 'The order shows in the client\'s portal under Invoices, and they can pay it online.'
+    : d.invoice === 'no' ? 'No invoice: nothing shows as due in the client\'s portal, and their downloads open as soon as media is delivered.'
+    : 'Choose whether this order gets an invoice.';
 }
 function bkDurationChanged(){
   const dur = bkQuote(BK.draft).duration;
@@ -5976,64 +6060,237 @@ function bkDurationChanged(){
   BK.pickDur = dur;
   const st = BK.draft.pick;
   if (st.start && !st.override && bkCheck(st.start, dur).length) { st.start = null; toast('The shoot got longer, so pick a time again'); }
-  bkPaintPicker(st, dur, null, bkPaintSummary);
+  bkSchedPicker(st, dur);
+}
+/* Client: type a name, email or phone and pick from the agents already in HQ */
+function bkAgentMatches(q){
+  const t = q.trim().toLowerCase(), dg = t.replace(/\D/g, '');
+  const all = S.agents.filter(a => a.full_name).slice().sort((x, y) => x.full_name.localeCompare(y.full_name));
+  if (!t) return all.slice(0, 8);
+  const score = a => { const n = a.full_name.toLowerCase();
+    if (n.startsWith(t)) return 0; if (n.split(/\s+/).some(w => w.startsWith(t))) return 1; if (n.includes(t)) return 2;
+    if ([a.email, a.brokerage, a.team_name].join(' ').toLowerCase().includes(t)) return 3;
+    if (dg.length >= 3 && String(a.phone || '').replace(/\D/g, '').includes(dg)) return 4; return 9; };
+  return all.map(a => [score(a), a]).filter(x => x[0] < 9).sort((x, y) => x[0] - y[0]).slice(0, 8).map(x => x[1]);
+}
+function bkPickAgent(id){
+  const d = BK.draft, a = S.agents.find(x => x.id === id);
+  d.agent_id = id; d.newClient = false;
+  d.sendEmail = !!a?.email; d.sendSms = !!(a?.phone && a?.sms_appointment_reminders);
+  // a package from someone else's custom page doesn't carry over
+  const ok = new Set(Object.values(bkCatalog(d)).flat().map(s => s.id));
+  if (d.pkg && !ok.has(d.pkg)) d.pkg = '';
+  [...d.addons].forEach(x => { if (!ok.has(x)) d.addons.delete(x); });
+  bkPaintClient(); bkPaintServices(); bkPaintNotify(); bkDurationChanged(); bkPaintSummary();
 }
 function bkPaintClient(){
   const d = BK.draft, box = $('#bkClientBox'); if (!box) return;
   const a = S.agents.find(x => x.id === d.agent_id);
-  box.innerHTML = d.newClient ? `
-    <div class="grid2">
+  if (d.newClient) {
+    box.innerHTML = `<div class="grid2">
       <div><label>Name</label><input id="bkcName" value="${esc(d.client.name)}" placeholder="Jane Smith" /></div>
       <div><label>Brokerage</label><input id="bkcBrk" value="${esc(d.client.brokerage)}" placeholder="Realty Executives" /></div>
       <div><label>Email</label><input id="bkcEmail" type="email" value="${esc(d.client.email)}" /></div>
-      <div><label>Phone</label><input id="bkcPhone" type="tel" value="${esc(d.client.phone)}" /></div>
+      <div><label>Mobile</label><input id="bkcPhone" type="tel" value="${esc(d.client.phone)}" /></div>
     </div>
-    <p class="muted bk-hint">They'll be added to Agents when you place the order. <a href="#" id="bkPickExisting">Pick an existing agent instead</a></p>`
-  : `<label>Agent</label>
-    <div class="bk-agent-pick"><input id="bkAgentSearch" list="bkAgentList" placeholder="Start typing a name…" value="${esc(a?.full_name || '')}" />
-      <datalist id="bkAgentList">${S.agents.slice().sort((x, y) => x.full_name.localeCompare(y.full_name)).map(x => `<option value="${esc(x.full_name)}">${esc([x.team_name, x.brokerage].filter(Boolean).join(' · '))}</option>`).join('')}</datalist>
-      <button type="button" class="btn" id="bkNewClient">+ New client</button></div>
-    ${a ? `<p class="bk-agent-card"><b>${esc(a.full_name)}</b>${[a.brokerage, a.phone, a.email].filter(Boolean).map(x => ' · ' + esc(x)).join('')}${a.preferences ? `<br><span class="muted">Preferences: ${esc(a.preferences)}</span>` : ''}</p>` : ''}`;
-  if (d.newClient) {
-    [['bkcName','name'],['bkcBrk','brokerage'],['bkcEmail','email'],['bkcPhone','phone']].forEach(([id, k]) => { $('#' + id).oninput = e => { d.client[k] = e.target.value; bkPaintSummary(); }; });
-    $('#bkPickExisting').onclick = e => { e.preventDefault(); d.newClient = false; bkPaintClient(); bkPaintSummary(); };
-  } else {
-    const inp = $('#bkAgentSearch');
-    inp.onchange = () => {
-      const v = inp.value.trim().toLowerCase(), m = S.agents.find(x => x.full_name.toLowerCase() === v);
-      d.agent_id = m?.id || '';
-      if (!m && v) { d.newClient = true; d.client.name = inp.value.trim(); }
-      bkPaintClient(); bkPaintSummary();
-    };
-    $('#bkNewClient').onclick = () => { d.newClient = true; d.agent_id = ''; bkPaintClient(); bkPaintSummary(); setTimeout(() => $('#bkcName')?.focus(), 20); };
+    <p class="muted bk-hint">They'll be added to Agents when you place the order. <a href="#" id="bkPickExisting">Pick an existing agent instead</a></p>`;
+    [['bkcName','name'],['bkcBrk','brokerage'],['bkcEmail','email'],['bkcPhone','phone']].forEach(([id, k]) => { $('#' + id).oninput = e => { d.client[k] = e.target.value; if (k === 'email' || k === 'phone') bkPaintNotify(); bkPaintSummary(); }; });
+    $('#bkPickExisting').onclick = e => { e.preventDefault(); d.newClient = false; bkPaintClient(); bkPaintNotify(); bkPaintSummary(); setTimeout(() => $('#bkAgentSearch')?.focus(), 20); };
+    return;
   }
+  if (a) {
+    const pg = bkAgentPage(d);
+    box.innerHTML = `<div class="bk-agent-card bk-agent-sel"><div><b>${esc(a.full_name)}</b><small>${esc([a.team_name, a.brokerage].filter(Boolean).join(' · '))}</small><small>${esc([a.phone, a.email].filter(Boolean).join(' · '))}</small>
+        ${pg ? `<small class="bk-pgtag">${hqi('tag')} Custom order page: ${esc(pg.name)}</small>` : ''}
+        ${a.preferences && !/^Created by/i.test(a.preferences) ? `<small class="muted">Preferences: ${esc(a.preferences)}</small>` : ''}</div>
+      <button type="button" class="btn small ghost" id="bkAgentChange">Change</button></div>`;
+    $('#bkAgentChange').onclick = () => { d.agent_id = ''; bkPaintClient(); bkPaintServices(); bkPaintNotify(); bkPaintSummary(); setTimeout(() => $('#bkAgentSearch')?.focus(), 20); };
+    return;
+  }
+  box.innerHTML = `<label for="bkAgentSearch">Agent</label>
+    <div class="bk-agent-pick"><div class="bk-ac"><input id="bkAgentSearch" placeholder="Start typing a name, email or phone…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="bkAcList" />
+      <div class="bk-ac-list hidden" id="bkAcList" role="listbox"></div></div>
+      <button type="button" class="btn" id="bkNewClient">+ New client</button></div>`;
+  const inp = $('#bkAgentSearch'), list = $('#bkAcList'); let hi = 0, rows = [];
+  const show = () => {
+    rows = bkAgentMatches(inp.value); const q = inp.value.trim();
+    if (hi >= rows.length + (q ? 1 : 0)) hi = 0;
+    list.innerHTML = rows.map((x, i) => `<div class="bk-ac-o ${i === hi ? 'hi' : ''}" role="option" data-i="${i}"><b>${esc(x.full_name)}</b><small>${esc([[x.team_name, x.brokerage].filter(Boolean).join(' · '), x.email || x.phone].filter(Boolean).join(' — '))}</small></div>`).join('')
+      + (!rows.length && q ? `<div class="bk-ac-none muted">No agents match "${esc(q)}"</div>` : '')
+      + (q ? `<div class="bk-ac-o bk-ac-new ${hi === rows.length ? 'hi' : ''}" role="option" data-new="1">+ Add "${esc(q)}" as a new client</div>` : '');
+    list.classList.remove('hidden'); inp.setAttribute('aria-expanded', 'true');
+  };
+  const hide = () => { list.classList.add('hidden'); inp.setAttribute('aria-expanded', 'false'); };
+  const choose = i => { if (i < rows.length) return bkPickAgent(rows[i].id);
+    d.newClient = true; d.agent_id = ''; d.client.name = inp.value.trim(); bkPaintClient(); bkPaintNotify(); bkPaintSummary(); setTimeout(() => $('#bkcEmail')?.focus(), 20); };
+  inp.oninput = () => { hi = 0; show(); };
+  inp.onfocus = () => { show(); if (matchMedia('(pointer:coarse)').matches) setTimeout(() => inp.scrollIntoView({ block:'start', behavior:'smooth' }), 250); };
+  inp.onblur = () => setTimeout(hide, 150);
+  inp.onkeydown = e => {
+    const n = rows.length + (inp.value.trim() ? 1 : 0);
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (list.classList.contains('hidden')) return show(); hi = (hi + 1) % Math.max(n, 1); show(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); hi = (hi - 1 + Math.max(n, 1)) % Math.max(n, 1); show(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (n) choose(hi); }
+    else if (e.key === 'Escape') hide();
+  };
+  list.onmousedown = e => { e.preventDefault(); const o = e.target.closest('.bk-ac-o'); if (!o) return; choose(o.dataset.new ? rows.length : +o.dataset.i); };
+  $('#bkNewClient').onclick = () => { d.newClient = true; d.agent_id = ''; bkPaintClient(); bkPaintNotify(); bkPaintSummary(); setTimeout(() => $('#bkcName')?.focus(), 20); };
+}
+/* Services: Package or À la carte, then add-ons — or a custom order with your own line items */
+function bkPaintServices(){
+  const d = BK.draft, box = $('#bkSvcBox'); if (!box) return;
+  const c = bkCatalog(d), pkg = d.mode === 'pkg' ? bkSvc(d.pkg) : null, covers = new Set(pkg?.covers || []);
+  const card = (s, page) => { const on = d.pkg === s.id;
+    return `<button type="button" class="bk-pkg ${on ? 'on' : ''}" data-pkg="${s.id}" aria-pressed="${on}">
+      <span class="bk-pkg-h"><b>${esc(s.name)}</b><span>${money(bkPrice(s, d))}</span></span>
+      ${s.includes?.length ? `<ul>${s.includes.slice(0, 6).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : s.description ? `<small>${esc(s.description)}</small>` : ''}
+      ${page ? '<small class="bk-pgtag">Custom page</small>' : ''}</button>`; };
+  const group = (title, list, page) => list.length ? `<h4 class="bk-sub">${esc(title)}</h4><div class="bk-pkgs">${list.map(s => card(s, page)).join('')}</div>` : '';
+  const alaIds = new Set(c.alacarte.map(s => s.id));
+  // add-on dropdown: in Package mode à la carte services can be added too (unless the package already includes them)
+  const addable = [...(d.mode === 'pkg' ? c.alacarte : []), ...c.addons].filter(s => !d.addons.has(s.id) && !covers.has(s.id));
+  const chosen = [...d.addons].map(bkSvc).filter(s => s && !(d.mode === 'ala' && alaIds.has(s.id)));
+  box.innerHTML = `
+    <label class="check bk-check bk-custom-tog"><input type="checkbox" id="bkCustom" ${d.custom ? 'checked' : ''} /> <span><b>Custom order</b> <span class="muted">— skip the packages and type your own line items</span></span></label>
+    ${d.custom ? `
+      <div class="bk-lines-ed">${d.lines.map((l, i) => `<div class="bk-line-ed">
+        <input data-ln="${i}" data-k="name" value="${esc(l.name)}" placeholder="Service, e.g. Photos + drone for 3 lots" maxlength="160" />
+        <span class="bk-money"><input data-ln="${i}" data-k="price" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(l.price)}" placeholder="0" /></span>
+        <button type="button" class="btn small ghost" data-rmln="${i}" aria-label="Remove line" ${d.lines.length < 2 ? 'disabled' : ''}>✕</button></div>`).join('')}</div>
+      <button type="button" class="btn small" id="bkAddLine">+ Add line item</button>
+      <div class="grid2" style="margin-top:12px"><div><label>Time on site (minutes) <span class="bk-req">Required</span></label><input id="bkCustomMin" type="number" min="15" step="15" inputmode="numeric" value="${esc(d.customMin)}" placeholder="90" /></div></div>
+      <p class="muted bk-hint">Used to find open times on your calendar. Custom orders don't add the large property fee or create projects.</p>`
+    : `
+      <div class="bk-mode">
+        <button type="button" class="bk-mode-b ${d.mode === 'pkg' ? 'on' : ''}" data-mode="pkg"><b>Package</b><small>Bundled photo, drone, video and tour</small></button>
+        <button type="button" class="bk-mode-b ${d.mode === 'ala' ? 'on' : ''}" data-mode="ala"><b>À la carte</b><small>Pick individual services</small></button>
+      </div>
+      ${d.mode === 'pkg' ? `${c.pagePkgs.length ? group(bkAgentPage(d)?.name || 'Custom page', c.pagePkgs, true) : ''}${group('Listing packages', c.listing)}${group('Land packages', c.land)}` : ''}
+      ${d.mode === 'ala' ? `<h4 class="bk-sub">À la carte services</h4><div class="bk-adds bk-ala">${c.alacarte.map(s => `<label class="check bk-add ${d.addons.has(s.id) ? 'on' : ''}"><input type="checkbox" data-ala="${s.id}" ${d.addons.has(s.id) ? 'checked' : ''} /><span><b>${esc(s.name)}</b>${s.description ? `<small>${esc(s.description)}</small>` : ''}</span><span class="p">${money(bkPrice(s, d))}</span></label>`).join('')}</div>` : ''}
+      ${d.mode ? `<h4 class="bk-sub">Add-ons</h4>
+        ${chosen.length ? `<div class="bk-chosen-adds">${chosen.map(s => `<div class="bk-cadd"><span>${esc(s.name)}</span><span class="p">+${money(bkPrice(s, d))}</span><button type="button" class="btn small ghost" data-rmadd="${s.id}" aria-label="Remove ${esc(s.name)}">✕</button></div>`).join('')}</div>` : ''}
+        ${addable.length ? `<select id="bkAddSel"><option value="">+ Add an add-on…</option>${addable.map(s => `<option value="${s.id}">${esc(s.name)} · +${money(bkPrice(s, d))}</option>`).join('')}</select>` : '<p class="muted bk-hint">No other add-ons.</p>'}` : ''}`}`;
+  const after = () => { bkPaintServices(); bkDurationChanged(); bkPaintSummary(); };
+  $('#bkCustom').onchange = e => { d.custom = e.target.checked; after(); if (d.custom) setTimeout(() => box.querySelector('[data-k=name]')?.focus(), 20); };
+  box.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (d.mode === b.dataset.mode) return; d.mode = b.dataset.mode; if (d.mode === 'ala') d.pkg = ''; else [...d.addons].forEach(x => { if (alaIds.has(x)) d.addons.delete(x); }); after(); });
+  box.querySelectorAll('[data-pkg]').forEach(b => b.onclick = () => { d.pkg = d.pkg === b.dataset.pkg ? '' : b.dataset.pkg; const cv = new Set(bkSvc(d.pkg)?.covers || []); [...d.addons].forEach(x => { if (cv.has(x)) d.addons.delete(x); }); after(); });
+  box.querySelectorAll('[data-ala]').forEach(i => i.onchange = () => { i.checked ? d.addons.add(i.dataset.ala) : d.addons.delete(i.dataset.ala); after(); });
+  box.querySelectorAll('[data-rmadd]').forEach(b => b.onclick = () => { d.addons.delete(b.dataset.rmadd); after(); });
+  const sel = $('#bkAddSel'); if (sel) sel.onchange = () => { if (sel.value) { d.addons.add(sel.value); after(); } };
+  box.querySelectorAll('[data-ln]').forEach(i => i.oninput = () => { d.lines[+i.dataset.ln][i.dataset.k] = i.value; bkPaintSummary(); });
+  box.querySelectorAll('[data-rmln]').forEach(b => b.onclick = () => { d.lines.splice(+b.dataset.rmln, 1); after(); });
+  const al = $('#bkAddLine'); if (al) al.onclick = () => { d.lines.push({ name:'', price:'' }); bkPaintServices(); bkPaintSummary(); setTimeout(() => [...box.querySelectorAll('[data-k=name]')].pop()?.focus(), 20); };
+  const cm = $('#bkCustomMin'); if (cm) cm.onchange = () => { d.customMin = cm.value; bkDurationChanged(); bkPaintSummary(); };
+}
+/* Confirmation: text, email, Google Calendar */
+function bkPaintNotify(){
+  const d = BK.draft, box = $('#bkNotify'); if (!box) return;
+  const a = S.agents.find(x => x.id === d.agent_id);
+  const email = (d.newClient ? d.client.email : a?.email || '').trim(), phone = (d.newClient ? d.client.phone : a?.phone || '').trim();
+  if (!email) d.sendEmail = false; if (!phone) d.sendSms = false; if (!S.cal.status?.connected) d.mkCal = false;
+  box.innerHTML = `<div class="bk-opts" style="margin:0">
+    <label class="check"><input type="checkbox" id="bkSendSms" ${d.sendSms ? 'checked' : ''} ${phone ? '' : 'disabled'} /> <span>Send a text confirmation to the client <small class="muted">${phone ? esc(phone) : '(no mobile number on file)'}</small></span></label>
+    <label class="check"><input type="checkbox" id="bkSendEmail" ${d.sendEmail ? 'checked' : ''} ${email ? '' : 'disabled'} /> <span>Send an email confirmation to the client <small class="muted">${email ? esc(email) : '(no email on file)'}</small></span></label>
+    <label class="check"><input type="checkbox" id="bkMkCal" ${d.mkCal ? 'checked' : ''} ${S.cal.status?.connected ? '' : 'disabled'} /> <span>Add to Google Calendar ${S.cal.status?.connected ? '' : '<small class="muted">(connect it on the Calendar tab)</small>'}</span></label>
+  </div>`;
+  $('#bkSendSms').onchange = e => { d.sendSms = e.target.checked; };
+  $('#bkSendEmail').onchange = e => { d.sendEmail = e.target.checked; };
+  $('#bkMkCal').onchange = e => { d.mkCal = e.target.checked; };
+}
+/* Date & time, laid out like the client order page: three suggested times, a full two-week calendar, or any time (override) */
+async function bkSchedPicker(st, duration){
+  const box = $('#bkPicker'); if (!box) return;
+  let calOk = !!S.cal.status?.connected, why0 = '';
+  if (calOk) { try { await bkLoadBusy(); } catch (e) { calOk = false; why0 = e.message; } }
+  if (!calOk) st.override = true;
+  const ds = d => isoDay(d), dd = s => new Date(s + 'T12:00:00');
+  const paint = () => {
+    if (!$('#bkPicker')) return;
+    const days = calOk ? bkOpenings(duration) : [], byDay = new Map(days.map(x => [ds(x.day), x])), open = days.filter(x => x.slots.length);
+    const mins = duration, dur = mins >= 60 ? `${Math.floor(mins / 60)} hr${mins % 60 ? ` ${mins % 60} min` : ''}` : `${mins} min`;
+    const rel = day => { const n = Math.round((startOfDay(day) - startOfDay(new Date())) / 864e5); return n <= 0 ? 'Today' : n === 1 ? 'Tomorrow' : n < 7 ? `In ${n} days` : n < 14 ? 'Next week' : `In ${Math.round(n / 7)} weeks`; };
+    const sugg = []; if (open[0]) sugg.push({ d: open[0], s: open[0].slots[0] });
+    if (open[1]) sugg.push({ d: open[1], s: open[1].slots[Math.floor(open[1].slots.length / 2)] });
+    const later = open.find(x => x.day >= addDays(open[0]?.day || new Date(), 5) && !sugg.some(p => p.d === x)) || open.find(x => !sugg.some(p => p.d === x));
+    if (later) sugg.push({ d: later, s: later.slots[Math.min(1, later.slots.length - 1)] });
+    const isSel = s => st.start && +st.start === +s;
+    let cal = '';
+    if (st.calOpen && days.length) {
+      const sun = x => { const y = startOfDay(x); return addDays(y, -y.getDay()); };
+      const first = sun(open[0]?.day || days[0].day), last = days[days.length - 1].day;
+      const from = st.calFrom ? dd(st.calFrom) : first, grid = Array.from({ length: 14 }, (_, i) => addDays(from, i));
+      const act = st.day && byDay.get(st.day)?.slots.length && grid.some(g => ds(g) === st.day) ? st.day : ds(grid.find(g => byDay.get(ds(g))?.slots.length) || grid[0]);
+      const day = byDay.get(act), hr = s => s.getHours();
+      const groups = day ? [['Morning', h => h < 12], ['Afternoon', h => h >= 12 && h < 17], ['Evening', h => h >= 17]].map(([n, f]) => [n, day.slots.filter(s => f(hr(s)))]).filter(([, x]) => x.length) : [];
+      const md = x => x.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+      cal = `<div class="bk-cal">
+        <div class="bk-cal-nav"><button type="button" class="link" data-shift="-14" ${from <= first ? 'disabled' : ''}>‹ Previous 2 weeks</button><b>${md(grid[0])} – ${md(grid[13])}</b><button type="button" class="link" data-shift="14" ${addDays(from, 14) > last ? 'disabled' : ''}>Next 2 weeks ›</button></div>
+        <div class="bk-cal-grid">${BK_DAYS.map(w => `<span class="bk-cal-w">${w}</span>`).join('')}
+          ${grid.map(g => { const ok = byDay.get(ds(g))?.slots.length; return `<button type="button" class="bk-cal-d ${ds(g) === act && ok ? 'on' : ''}" data-cday="${ds(g)}" ${ok ? '' : 'disabled'}>${g.getDate()}</button>`; }).join('')}</div>
+        ${day?.slots.length ? `<p class="bk-cal-t">${esc(dd(act).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }))} · open times</p>
+          ${groups.map(([n, ss]) => `<div class="bk-cal-g"><small>${n}</small><div class="bk-pills">${ss.map(s => `<button type="button" class="bk-pill ${isSel(s) ? 'on' : ''}" data-s="${s.toISOString()}">${fmtT(s)}</button>`).join('')}</div></div>`).join('')}`
+          : '<p class="muted bk-hint">No open times these two weeks.</p>'}
+      </div>`;
+    }
+    const why = st.start ? bkCheck(st.start, duration) : [];
+    const q = bkQuote(BK.draft), twi = [q.pkg, ...q.adds].some(s => s?.twilight || /twilight|luxury/i.test(s?.name || ''));
+    box.innerHTML = `
+      <p class="bk-dur">Estimated time on site: <b>${dur}</b></p>
+      ${!calOk ? `<p class="bk-warn">${why0 ? `Couldn't read your calendar (${esc(why0)}).` : "Google Calendar isn't connected, so openings can't be checked."} Pick a date and time below.</p>` : ''}
+      ${calOk && !st.override ? `
+        ${sugg.length ? `<p class="bk-sg-q">Suggested times</p><div class="bk-sg-row">${sugg.map(({ d: x, s }) => `<button type="button" class="bk-sg ${isSel(s) ? 'on' : ''}" data-s="${s.toISOString()}">
+            <span class="bk-sg-h">${rel(x.day)}</span><span class="bk-sg-b"><b>${x.day.toLocaleDateString(undefined, { month:'short', day:'numeric' })}</b><small>${BK_DAYS[x.day.getDay()]}</small><small>${fmtT(s)}</small></span></button>`).join('')}</div>`
+          : `<p class="muted">No openings in the next ${BK.settings?.horizon_days || 21} days for a ${dur} shoot. Use "Pick any time" below.</p>`}
+        ${open.length ? `<button type="button" class="bk-cal-tog" id="bkCalTog" aria-expanded="${!!st.calOpen}">${st.calOpen ? 'Hide full calendar ▴' : 'Show full calendar ▾'}</button>${cal}` : ''}` : ''}
+      <label class="check" style="margin-top:12px"><input type="checkbox" id="bkOverride" ${st.override ? 'checked' : ''} ${calOk ? '' : 'disabled'} /> Pick any time (override)</label>
+      ${st.override ? `<div class="grid2" style="margin-top:8px"><div><label>Date</label><input type="date" id="bkOvDate" value="${st.start ? isoDay(st.start) : st.day || ''}" /></div><div><label>Start time</label><input type="time" id="bkOvTime" step="900" value="${st.start ? toLocalTime(st.start) : ''}" /></div></div>` : ''}
+      ${st.start ? `<p class="bk-chosen">✓ ${esc(st.start.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }))} · ${fmtT(st.start)}–${fmtT(new Date(st.start.getTime() + duration * 60000))}</p>
+        ${why.length ? `<div class="bk-warn"><b>Heads up, this time doesn't fit your rules:</b><ul>${why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>You can still book it.</div>` : ''}` : ''}
+      ${twi ? '<p class="muted bk-hint">Twilight photos are shot at sunset. Confirm the twilight time with the client.</p>' : ''}`;
+    box.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { st.start = new Date(b.dataset.s); st.day = isoDay(st.start); paint(); bkPaintSummary(); });
+    box.querySelectorAll('[data-cday]').forEach(b => b.onclick = () => { st.day = b.dataset.cday; paint(); });
+    box.querySelectorAll('[data-shift]').forEach(b => b.onclick = () => { const sun = x => { const y = startOfDay(x); return addDays(y, -y.getDay()); };
+      const base = st.calFrom ? dd(st.calFrom) : sun(open[0]?.day || new Date()); st.calFrom = isoDay(addDays(base, +b.dataset.shift)); st.day = ''; paint(); });
+    const tg = $('#bkCalTog'); if (tg) tg.onclick = () => { st.calOpen = !st.calOpen; if (st.calOpen && st.start) { st.day = isoDay(st.start); } paint(); };
+    const ov = $('#bkOverride'); if (ov) ov.onchange = () => { st.override = ov.checked; if (!st.override && st.start && bkCheck(st.start, duration).length) st.start = null; paint(); bkPaintSummary(); };
+    const setOv = () => { const a = $('#bkOvDate').value, t = $('#bkOvTime').value; st.start = a && t ? new Date(`${a}T${t}`) : null; if (a) st.day = a; paint(); bkPaintSummary(); };
+    if ($('#bkOvDate')) { $('#bkOvDate').onchange = setOv; $('#bkOvTime').onchange = setOv; }
+  };
+  st.repaint = paint;
+  paint();
+}
+function bkMissing(d, q){
+  const client = d.newClient ? d.client.name.trim() : agentName(d.agent_id);
+  return [!client && 'a client', !d.address.trim() && 'the address',
+    d.custom ? (!d.lines.some(l => l.name.trim()) && 'a custom line item') : (!q.items.length && (d.mode ? 'a package or service' : 'Package or À la carte')),
+    d.custom && !(Number(d.customMin) > 0) && 'the time on site',
+    !d.invoice && 'invoice yes or no', !d.pick.start && 'a date and time'].filter(Boolean);
 }
 function bkPaintSummary(){
   const d = BK.draft, q = bkQuote(d), box = $('#bkSummary'); if (!box) return;
-  const client = d.newClient ? d.client.name : agentName(d.agent_id);
-  const missing = [!client && 'a client', !d.address.trim() && 'the address', !q.items.length && 'a package or add-on', !d.pick.start && 'a date and time'].filter(Boolean);
+  const missing = bkMissing(d, q);
   const hasPhoto = [q.pkg, ...q.adds].some(s => s?.photo_type), vids = [q.pkg, ...q.adds].flatMap(s => bkTypes(s?.video_type));
+  const canProj = hasPhoto || vids.length;
   box.innerHTML = `<h2>Order summary</h2>
     ${q.items.length ? `<div class="bk-lines">${q.items.map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
       <div class="bk-disc"><span>Discount</span><span><input id="bkDisc" type="number" min="0" step="1" inputmode="decimal" value="${esc(d.discount)}" placeholder="0" /></span></div>
-      <div class="bk-total"><span>Total</span><span>${money(q.total)}</span></div></div>` : '<p class="muted">Choose a package to see the price.</p>'}
-    <p class="muted bk-hint">Shoot length: about ${q.duration} minutes</p>
+      <div class="bk-total"><span>Total</span><span>${money(q.total)}</span></div></div>` : '<p class="muted">Pick services to see the price.</p>'}
+    <p class="muted bk-hint">Shoot length: about ${q.duration} minutes${d.invoice === 'no' ? ' · No invoice' : d.invoice === 'yes' ? (d.paid ? ' · Invoice, paid' : ' · Invoice') : ''}</p>
     <div class="bk-opts">
-      <label class="check"><input type="checkbox" id="bkMkCal" ${d.mkCal ? 'checked' : ''} ${S.cal.status?.connected ? '' : 'disabled'} /> Add the shoot to my Google Calendar</label>
-      <label class="check"><input type="checkbox" id="bkMkProj" ${d.mkProjects ? 'checked' : ''} /> Create projects${hasPhoto || vids.length ? ` (${[hasPhoto && 'photo', vids.length && (vids.length > 1 ? vids.length + ' videos' : 'video')].filter(Boolean).join(' + ')})` : ''}</label>
-      <label class="check ${d.mkProjects ? '' : 'hidden'}"><input type="checkbox" id="bkChat" ${d.postChat ? 'checked' : ''} /> Post the new projects in the team chat</label>
-      <label class="check"><input type="checkbox" id="bkPaid" ${d.paid ? 'checked' : ''} /> Already paid</label>
+      ${canProj ? `<label class="check"><input type="checkbox" id="bkMkProj" ${d.mkProjects ? 'checked' : ''} /> Create projects (${[hasPhoto && 'photo', vids.length && (vids.length > 1 ? vids.length + ' videos' : 'video')].filter(Boolean).join(' + ')})</label>
+      <label class="check ${d.mkProjects ? '' : 'hidden'}"><input type="checkbox" id="bkChat" ${d.postChat ? 'checked' : ''} /> Post the new projects in the team chat</label>` : ''}
     </div>
     ${missing.length ? `<p class="muted bk-hint">Still needed: ${missing.join(', ')}</p>` : ''}
     <button class="btn primary bk-place" id="bkPlace" ${missing.length ? 'disabled' : ''}>Place order${q.items.length ? ' · ' + money(q.total) : ''}</button>
     <button type="button" class="btn ghost bk-clear" id="bkClear">Clear form</button>`;
+  const mb = $('#bkMbar');
+  if (mb) { mb.innerHTML = `<div><b>${q.items.length ? money(q.total) : '$0'}</b><small>${missing.length ? 'Still needed: ' + esc(missing[0]) + (missing.length > 1 ? ` +${missing.length - 1} more` : '') : esc(d.pick.start ? d.pick.start.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }) + ' · ' + fmtT(d.pick.start) : '')}</small></div>
+      <button type="button" class="btn primary" id="bkMPlace" ${missing.length ? 'disabled' : ''}>Place order</button>`;
+    $('#bkMPlace').onclick = () => bkSubmit(); }
   const disc = $('#bkDisc'); if (disc) disc.onchange = () => { d.discount = disc.value; bkPaintSummary(); };
-  $('#bkMkCal').onchange = e => { d.mkCal = e.target.checked; };
-  $('#bkMkProj').onchange = e => { d.mkProjects = e.target.checked; bkPaintSummary(); };
-  $('#bkChat').onchange = e => { d.postChat = e.target.checked; };
-  $('#bkPaid').onchange = e => { d.paid = e.target.checked; };
+  const mp = $('#bkMkProj'); if (mp) mp.onchange = e => { d.mkProjects = e.target.checked; bkPaintSummary(); };
+  const ch = $('#bkChat'); if (ch) ch.onchange = e => { d.postChat = e.target.checked; };
   $('#bkClear').onclick = () => { if (!confirm('Clear this order and start over?')) return; BK.draft = null; renderOrderForm(); };
-  if (!S.cal.status?.connected) d.mkCal = false;
 }
 function bkEventBody(b){
   const lines = [`Knox View order ${ordNo(b)}`, '',
@@ -6050,9 +6307,10 @@ function bkEventBody(b){
     extendedProperties: { private: { kvhq: 'shoot', kvhq_booking: b.id } } };
 }
 async function bkSubmit(){
-  const d = BK.draft, q = bkQuote(d), btn = $('#bkPlace');
-  if (btn.disabled) return;
+  const d = BK.draft, q = bkQuote(d), btn = $('#bkPlace'), mbtn = $('#bkMPlace');
+  if (btn.disabled || bkMissing(d, q).length) return;
   if (d.pick.start && bkCheck(d.pick.start, q.duration).length && !confirm("This time doesn't fit your booking rules. Book it anyway?")) return;
+  if (mbtn) { mbtn.disabled = true; mbtn.textContent = 'Placing…'; }
   btn.disabled = true; btn.textContent = 'Placing order…';
   const warn = [];
   try {
@@ -6066,26 +6324,37 @@ async function bkSubmit(){
     const row = { agent_id: agentId, client_name: d.newClient ? d.client.name.trim() : null, client_email: d.newClient ? d.client.email.trim() || null : null, client_phone: d.newClient ? d.client.phone.trim() || null : null,
       address: d.address.trim(), media_title: d.mt_on && (d.media_title || '').trim() ? d.media_title.trim().slice(0, 120) : null, city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
       occupancy: d.occupancy || null, entry: d.entry || null, access_notes: d.access_notes.trim() || null, notes: d.notes.trim() || null,
-      items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, paid: d.paid, paid_at: d.paid ? new Date().toISOString() : null,
+      items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, invoice: d.invoice === 'yes', paid: d.invoice === 'yes' && d.paid, paid_at: d.invoice === 'yes' && d.paid ? new Date().toISOString() : null,
+      order_page_id: [q.pkg, ...q.adds].some(x => x && bkPageItems(bkAgentPage(d)).some(i => i.svc.id === x.id)) ? bkAgentPage(d)?.id || null : null,
       shoot_start: start.toISOString(), shoot_end: end.toISOString(), duration_min: q.duration, created_by: S.me.id };
     const { data: b, error } = await sb.from('bookings').insert(row).select().single();
     if (error) throw error;
     const upd = {};
+    if (d.invoice === 'no') upd.require_payment = false; // nothing to pay, so downloads open on delivery
     if (d.mkCal && S.cal.status?.connected) {
       try { const ev = await gcal('create', { event: bkEventBody(b) }); upd.gcal_event_id = ev.id; clearCalCache(); BK.busy = null; }
       catch (e) { warn.push('the calendar event (' + e.message + ')'); }
     }
-    if (d.mkProjects) {
+    if (d.mkProjects && (q.pkg || q.adds.length)) {
       try { upd.project_ids = await bkCreateProjects(b, q, d.postChat); }
       catch (e) { warn.push('the projects (' + e.message + ')'); }
     }
     if (Object.keys(upd).length) { const { error: uErr } = await sb.from('bookings').update(upd).eq('id', b.id); if (uErr) warn.push('linking (' + uErr.message + ')'); }
+    let sent = [];
+    if (d.sendEmail || d.sendSms) {
+      try {
+        const { data: r, error: cErr } = await sb.functions.invoke('deliver', { body: { action: 'confirm', bookingId: b.id, email: !!d.sendEmail, sms: !!d.sendSms } });
+        if (cErr) { let m = cErr.message; try { m = (await cErr.context.json()).error || m; } catch (_) {} throw new Error(m); }
+        if (r?.email) r.email.ok ? sent.push('email') : warn.push('the confirmation email (' + r.email.error + ')');
+        if (r?.sms) r.sms.ok ? sent.push('text') : warn.push('the confirmation text (' + r.sms.error + ')');
+      } catch (e) { warn.push('the confirmation (' + e.message + ')'); }
+    }
     BK.draft = null;
     await reloadBookings();
     if (d.mkProjects) reloadProjects();
-    toast(warn.length ? `Order ${ordNo(b)} saved, but couldn't create ${warn.join(' and ')}` : `Order ${ordNo(b)} booked`);
+    toast(warn.length ? `Order ${ordNo(b)} saved, but couldn't send or create ${warn.join(' and ')}` : `Order ${ordNo(b)} booked${sent.length ? ' · confirmation ' + sent.join(' and ') + ' sent' : ''}`);
     location.hash = `#/bookings/${b.id}`;
-  } catch (e) { btn.disabled = false; btn.textContent = 'Place order'; fail(e); }
+  } catch (e) { btn.disabled = false; btn.textContent = 'Place order'; if (mbtn) { mbtn.disabled = false; mbtn.textContent = 'Place order'; } fail(e); }
 }
 async function bkCreateProjects(b, q, postChat){
   const services = [q.pkg, ...q.adds].filter(Boolean);
