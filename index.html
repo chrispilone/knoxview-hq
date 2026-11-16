@@ -1168,6 +1168,7 @@ html,body{overscroll-behavior-y:none}
 /* ----- Bookings ----- */
 #bookingsView a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .bk-back{display:inline-block;font-size:13px;text-decoration:none;margin-bottom:4px}
+.od-page{margin:2px 0 12px;font-family:var(--font-display);font-size:24px;font-weight:600;line-height:1.2}
 .bk-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .kpi-mini{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:baseline;gap:8px;flex:1 1 160px}
 .kpi-mini{border-left:3px solid var(--sec)}.kpi-mini b{font-size:20px;color:var(--sec)}.kpi-mini span{color:var(--muted);font-size:12.5px}
@@ -6321,6 +6322,7 @@ function renderBookingDetail(id){
 
   $('#bookingsView').innerHTML = `<div class="od">
     <a href="#/bookings" class="bk-back">← Orders</a>
+    <h2 class="od-page">Order Overview</h2>
     <section class="panel od-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title">
@@ -6875,7 +6877,7 @@ function renderOrderMedia(id){
   const sec = (k, title, body) => `<details class="ap-sec od-sec om-sec" data-k="${k}" ${open.has(k) ? 'open' : ''}><summary><span class="om-ic">${OM_IC[k]}</span><span class="ap-st">${title}</span><span class="om-count"></span>${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
   const thumb = ordThumb(b);
   $('#bookingsView').innerHTML = `<div class="od om">
-    <a href="#/bookings/${b.id}" class="bk-back">← Order #${b.number}</a>
+    <a href="#/bookings/${b.id}" class="bk-back">← Order Overview</a>
     <section class="panel om-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title"><h1>Media Library</h1>
