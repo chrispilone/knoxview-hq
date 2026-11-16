@@ -1027,7 +1027,7 @@ body.gs-open{overflow:hidden}
 .hqi-lg{width:28px;height:28px;color:var(--ok);margin-bottom:6px}
 .note .ic .hqi,.act-ic .hqi{width:16px;height:16px;vertical-align:middle}
 .od-ics a .hqi{width:15px;height:15px}
-/* Order media page */
+/* Media Hub (order media page) */
 .om-head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .om-head>.od-thumb,.om-head>.od-title,.om-head>.om-acts{grid-area:auto}
 .om-head .od-thumb{width:96px;height:68px}
@@ -5719,7 +5719,7 @@ function renderBookingList(){
   const agentCell = b => { const a = S.agents.find(x => x.id === b.agent_id); return `<div class="dir-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${esc(bkClient(b))}</span></div>`; };
   const icons = b => `<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
     <span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' + (b.paid_at ? ' ' + esc(ordDate(b.paid_at, true)) : '') : 'Unpaid · ' + esc(money(b.total))}">${ORD_ICON.paid}</span>`;
-  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${b.number}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Delivered media · ${esc(omSummary(b))}" aria-label="Delivered media for order ${b.number}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${b.number}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${b.number}">${ORD_ICON.more}</button></div>`;
+  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${b.number}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Media Hub · ${esc(omSummary(b))}" aria-label="Media Hub for order ${b.number}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${b.number}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${b.number}">${ORD_ICON.more}</button></div>`;
   const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
   const time = b => b.shoot_start ? fmtT(b.shoot_start) : '';
   $('#bookingsView').innerHTML = `
@@ -5772,7 +5772,7 @@ function ordMenu(btn, b){
   document.querySelector('.ord-menu')?.remove();
   if (!b) return;
   const m = document.createElement('div'); m.className = 'ord-menu';
-  m.innerHTML = `<button data-m="edit">Manage order</button><button data-m="media">Delivered media</button>${b.status !== 'cancelled' ? '<button data-m="send">Send delivery email</button>' : ''}<button data-m="del" class="danger">Delete order</button>`;
+  m.innerHTML = `<button data-m="edit">Manage order</button><button data-m="media">Media Hub</button>${b.status !== 'cancelled' ? '<button data-m="send">Send delivery email</button>' : ''}<button data-m="del" class="danger">Delete order</button>`;
   document.body.appendChild(m);
   const r = btn.getBoundingClientRect(); m.style.top = `${Math.min(r.bottom + 4, innerHeight - m.offsetHeight - 8)}px`; m.style.left = `${Math.max(8, r.right - m.offsetWidth)}px`;
   const close = () => { m.remove(); document.removeEventListener('click', close, true); };
@@ -6320,7 +6320,7 @@ function renderBookingDetail(id){
             ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark shoot complete</button>' : ''}
             ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark not complete</button>' : ''}
             ${live && !b.delivered_at ? '<button type="button" id="odDelivered">' + hqi('package') + ' Promote to delivered</button>' : ''}
-            <button type="button" data-act="media">${hqi('image')} Media</button>
+            <button type="button" data-act="media">${hqi('image')} Media Hub</button>
             <button type="button" data-act="dlpage">${hqi('eye')} Download page</button>
             ${b.public_token ? '<button type="button" data-act="copylink">' + hqi('link') + ' Copy download link</button>' : ''}
             <button type="button" data-act="pdf">${hqi('file')} View PDF</button>
@@ -6356,7 +6356,7 @@ function renderBookingDetail(id){
       <div class="panel od-card"><label>Delivery</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
-        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Everything delivered on this order: photos, videos, 3D tour, floor plans, websites">${ORD_ICON.media} Media</a></div></div>
+        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Hub: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Hub</a></div></div>
     </div>
     <div id="bkResched"></div>
 
@@ -6399,13 +6399,13 @@ function renderBookingDetail(id){
           <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
           <div class="bk-actions"><button type="button" class="btn" id="bkSaveNotes">Save notes</button><span class="muted bk-hint" style="margin:0">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</span></div>`)}
 
-        ${sec('media', 'Delivered media', esc(omSummary(b)), `
+        ${sec('media', 'Media Hub', esc(omSummary(b)), `
           <div class="om-chips">${(() => { const s = omStats(b); return [
             ['photos', 'Photos', s.photos ? String(s.photos) : s.linkPhotos ? 'Link' : ''], ['videos', 'Videos', s.videos ? String(s.videos) : ''], ['tour', '3D tour', s.tour ? '✓' : ''],
             ['plans', 'Floor plans', s.plans ? String(s.plans) : ''], ['site', 'Websites', b.websites_enabled === false ? 'Off' : s.sites ? String(s.sites) : '']]
             .map(([k, l, v]) => `<a class="om-chip ${v ? 'on' : ''}" href="#/bookings/${b.id}/media" data-omk="${k}">${OM_IC[k]}<span>${l}</span><b>${v || '—'}</b></a>`).join(''); })()}</div>
-          <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media on the media page.</p>
-          <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open media page</a></div>`)}
+          <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Hub.</p>
+          <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Hub</a></div>`)}
 
         ${live ? sec('send', 'Send delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
@@ -6571,7 +6571,8 @@ function renderBookingDetail(id){
   });
 }
 
-/* ===================== ORDER MEDIA PAGE (#/bookings/<id>/media) =====================
+/* ===================== MEDIA HUB (#/bookings/<id>/media) =====================
+   (Called "Media Hub" everywhere in HQ: the order's media page.)
    Everything delivered for an order, in one place: photos (upload or Dropbox), videos, 3D tour, floor plans,
    property websites and marketing. Whatever is here is what the client's download page shows (and, later,
    the single property website). Add or remove media here. */
@@ -6585,7 +6586,7 @@ const OM_IC = {
   site: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/></svg>',
 };
 ORD_ICON.media = OM_IC.photos;
-// What's delivered on an order (counts used on the media page, the order page and the order list)
+// What's delivered on an order (counts used in the Media Hub, the order page and the order list)
 function omStats(b){
   const up = (b.media_files || []).filter(f => (f.kind || 'photo') === 'photo').length, synced = (b.photo_files || []).length;
   const videos = (b.videos || []).filter(v => v && v.url).length;
@@ -6626,7 +6627,7 @@ async function ordViewPdf(b, btn){
   } catch (e) { if (win) win.close(); fail(e); }
   if (btn) { btn.disabled = false; btn.innerHTML = label; }
 }
-// Link fields on the media page -> one save (photos, plans and uploads save on their own)
+// Link fields in the Media Hub -> one save (photos, plans and uploads save on their own)
 function omCollect(b){
   const val = id => { const el = $('#' + id); if (!el) return undefined; const v = el.value.trim(); return v || null; };
   const ids = ['dvPhotos', 'dvTour', 'dvPlan', 'dvSite', 'dvSite2', 'dvMkt', 'dvCover'];
@@ -6737,7 +6738,7 @@ function renderOrderMedia(id){
     <a href="#/bookings/${b.id}" class="bk-back">← Order #${b.number}</a>
     <section class="panel om-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
-      <div class="od-title"><h1>Delivered media</h1>
+      <div class="od-title"><h1>Media Hub</h1>
         <p class="od-sub">${esc([b.address, b.city].filter(Boolean).join(', '))} · #${b.number}</p>
         <p class="om-sum" id="omSum"></p></div>
       <div class="om-acts">
@@ -6746,7 +6747,7 @@ function renderOrderMedia(id){
         ${live ? `<button type="button" class="btn small primary" id="omSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Deliver'}</span></button>` : ''}
       </div>
     </section>
-    <p class="muted bk-hint om-note">Everything on this page shows on the client's download page${b.paid || b.require_payment === false ? '' : ' (watermarked previews until the order is paid)'} and will feed the property website. Add or remove media here.</p>
+    <p class="muted bk-hint om-note">Everything in the Media Hub shows on the client's download page${b.paid || b.require_payment === false ? '' : ' (watermarked previews until the order is paid)'} and will feed the property website. Add or remove media here.</p>
     <div class="ap-secs om-secs">
       ${sec('photos', 'Photos', `
         <div class="dv-drop" id="omPhDrop" tabindex="0" role="button" aria-label="Upload photos">
