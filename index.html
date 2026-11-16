@@ -1020,6 +1020,8 @@ body.gs-open{overflow:hidden}
 .gs-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
 .od-photog{display:flex!important;align-items:center;gap:6px;margin-top:6px;color:var(--text)!important}.od-photog .hqi{color:var(--muted)}
 .od-cstack{flex-direction:column;align-items:flex-start;gap:8px}.od-elink{display:inline-flex;align-items:center;gap:6px}
+.od-card .od-cbtns .btn{min-height:34px;max-width:100%;white-space:normal;text-align:left}
+.od-card .od-cbtns .od-ib{width:38px;padding:0;justify-content:center}.od-card .od-cbtns .od-ib .hqi{width:16px;height:16px}
 .od-cbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:auto;padding-top:6px}
 .od-cbtns .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}.od-cbtns svg{width:14px;height:14px}
 .od-card .od-ics{flex-wrap:wrap}
@@ -6333,28 +6335,28 @@ function renderBookingDetail(id){
         <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
       <div class="od-cta">
-        ${live ? `<button type="button" class="btn primary" id="odSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Send delivery'}</span></button>` : ''}
+        ${live ? `<button type="button" class="btn primary" id="odSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend Delivery' : 'Send Delivery'}</span></button>` : ''}
         <div class="od-more"><button type="button" class="btn" id="odMoreBtn" aria-haspopup="menu" aria-expanded="false">Actions <span aria-hidden="true">▾</span></button>
           <div class="od-menu hidden" id="odMenu" role="menu">
             ${live ? '<button type="button" data-act="resched">' + hqi('calendar') + ' Reschedule</button>' : ''}
-            ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark shoot complete</button>' : ''}
-            ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark not complete</button>' : ''}
-            ${live && !b.delivered_at ? '<button type="button" id="odDelivered">' + hqi('package') + ' Promote to delivered</button>' : ''}
+            ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark Shoot Complete</button>' : ''}
+            ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark Not Complete</button>' : ''}
+            ${live && !b.delivered_at ? '<button type="button" id="odDelivered">' + hqi('package') + ' Promote to Delivered</button>' : ''}
             <button type="button" data-act="media">${hqi('image')} Media Library</button>
-            <button type="button" data-act="dlpage">${hqi('eye')} Download page</button>
-            ${b.public_token ? '<button type="button" data-act="copylink">' + hqi('link') + ' Copy download link</button>' : ''}
-            ${site ? `<a href="${esc(site)}" target="_blank" rel="noopener" class="od-mlink">${hqi('globe')} Property website</a>` : ''}
-            ${dbxUrl ? `<a href="${esc(dbxUrl)}" target="_blank" rel="noopener" class="od-mlink" title="${esc(b.dropbox_path)}">${hqi('folder')} Dropbox folder</a>` : ''}
+            <button type="button" data-act="dlpage">${hqi('eye')} Download Page</button>
+            ${b.public_token ? '<button type="button" data-act="copylink">' + hqi('link') + ' Copy Download Link</button>' : ''}
+            ${site ? `<a href="${esc(site)}" target="_blank" rel="noopener" class="od-mlink">${hqi('globe')} Property Website</a>` : ''}
+            ${dbxUrl ? `<a href="${esc(dbxUrl)}" target="_blank" rel="noopener" class="od-mlink" title="${esc(b.dropbox_path)}">${hqi('folder')} Dropbox Folder</a>` : ''}
             <button type="button" data-act="pdf">${hqi('file')} View Invoice PDF</button>
-            <button type="button" data-act="email-inv">${hqi('mail')} Email invoice</button>
-            <button type="button" data-act="paylink">${hqi('link')} Copy payment link</button>
-            ${a?.email ? '<button type="button" data-act="access">' + hqi('key') + ' Access agent</button>' : ''}
+            <button type="button" data-act="email-inv">${hqi('mail')} Email Invoice</button>
+            <button type="button" data-act="paylink">${hqi('link')} Copy Payment Link</button>
+            ${a?.email ? '<button type="button" data-act="access">' + hqi('key') + ' Access Agent</button>' : ''}
             <hr>
-            <button type="button" id="odSwitch">⇄ Switch agent</button>
-            ${a ? `<button type="button" data-act="agent">${hqi('user')} Agent profile</button>` : ''}
+            <button type="button" id="odSwitch">⇄ Switch Agent</button>
+            ${a ? `<button type="button" data-act="agent">${hqi('user')} Agent Profile</button>` : ''}
             <hr>
-            ${live ? '<button type="button" id="bkCancel" class="danger">Cancel order</button>' : '<button type="button" id="bkRestore">Restore order</button>'}
-            <button type="button" id="odDelete" class="danger">Delete order</button>
+            ${live ? '<button type="button" id="bkCancel" class="danger">Cancel Order</button>' : '<button type="button" id="bkRestore">Restore Order</button>'}
+            <button type="button" id="odDelete" class="danger">Delete Order</button>
           </div></div>
       </div>
     </section>
@@ -6362,27 +6364,34 @@ function renderBookingDetail(id){
     <div class="od-strip">
       <div class="panel od-card"><label>Client</label>
         <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
-        <span class="od-ics">${phone ? `<a href="tel:${esc(tel)}" title="Call ${esc(phone)}">${hqi('phone')}</a><a href="sms:${esc(tel)}" title="Text ${esc(phone)}">${hqi('chat')}</a>` : ''}${email ? `<a href="mailto:${esc(email)}" title="${esc(email)}">${ORD_ICON.mail}</a>` : ''}${!phone && !email ? '<span class="muted">No contact info</span>' : ''}${a?.email ? `<button type="button" class="btn small od-access" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${DIR_ICON.key} Access agent</button>` : ''}</span></div>
+        <div class="od-cbtns">
+          ${phone ? `<a class="btn small od-ib" href="tel:${esc(tel)}" title="Call ${esc(phone)}" aria-label="Call">${hqi('phone')}</a><a class="btn small od-ib" href="sms:${esc(tel)}" title="Text ${esc(phone)}" aria-label="Text">${hqi('chat')}</a>` : ''}
+          ${email ? `<a class="btn small od-ib" href="mailto:${esc(email)}" title="${esc(email)}" aria-label="Email">${hqi('mail')}</a>` : ''}
+          ${!phone && !email ? '<span class="muted">No contact info</span>' : ''}
+          ${a?.email ? `<button type="button" class="btn small" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${hqi('key')} Access Agent</button>` : ''}</div></div>
       <div class="panel od-card"><label>Scheduling</label>
-        <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not scheduled'}</b>
+        <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not Scheduled'}</b>
         <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
-        <span class="od-photog">${hqi('camera')} ${b.photographer_id ? esc(memberName(b.photographer_id)) : '<button type="button" class="ap-link" data-goto="schedule">Assign photographer</button>'}</span>
-        ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
+        <span class="od-photog">${hqi('camera')} ${b.photographer_id ? esc(memberName(b.photographer_id)) : '<span class="muted">Unassigned</span>'}</span>
+        <div class="od-cbtns">
+          ${live ? `<button type="button" class="btn small" id="bkReschedBtn">${hqi('calendar')} Reschedule</button>` : '<span class="muted">Cancelled</span>'}
+          ${b.photographer_id ? '' : `<button type="button" class="btn small" data-goto="schedule" title="Assign a photographer">${hqi('user')} Assign</button>`}</div></div>
       <div class="panel od-card"><label>Invoice</label>
-        <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
-        <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
-        <div class="od-cbtns od-cstack">${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : 'title="Record a payment made outside Stripe (check, Venmo, cash…)"'}>${b.paid ? 'Mark unpaid' : `${hqi('dollar')} Pay Invoice`}</button>`}
-          <button type="button" class="ap-link od-elink" data-inv="email">${hqi('mail')} Email Invoice</button></div></div>
+        <b>${money(b.total)}</b>
+        <span>${b.paid ? `<span style="color:var(--ok);font-weight:600">Paid</span>${b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) : ''}${b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : ''}` : Number(b.credit_applied) ? `Unpaid · ${money(due)} due after credit` : 'Unpaid'}</span>
+        <div class="od-cbtns">
+          ${b.paid ? (isOwner() ? `<button type="button" class="btn small" id="bkPaidBtn" title="Owner only: unlocks this paid invoice (logged)">${hqi('lock')} Mark Unpaid</button>` : '') : `<button type="button" class="btn small" id="bkPaidBtn" title="Record a payment made outside Stripe (check, Venmo, cash…)">${hqi('dollar')} Pay Invoice</button>`}
+          <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email Invoice</button></div></div>
       <div class="panel od-card"><label>Status</label>
-        <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
+        <b>${b.delivered_at ? 'Delivered' : live ? 'Not Delivered' : 'Cancelled'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
-        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a><button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">${hqi('eye')} Download page</button></div></div>
+        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a><button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">${hqi('eye')} Download Page</button></div></div>
     </div>
     <div id="bkResched"></div>
 
     <div class="od-grid">
       <div class="od-main ap-secs">
-        ${sec('details', 'Order details', esc([bkPkgName(b), b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label].filter(Boolean).join(' · ')), `
+        ${sec('details', 'Order Details', esc([bkPkgName(b), b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label].filter(Boolean).join(' · ')), `
           <p class="od-loc">${hqi('pin')} ${esc([b.address, b.unit ? '#' + String(b.unit).replace(/^#/, '') : '', [b.city, [b.state, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(' '))} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
           <h4 class="od-h">Listing address</h4>
           <div class="od-addr">
@@ -6410,7 +6419,7 @@ function renderBookingDetail(id){
             <div><label>Created</label><span>${esc(fmtDateTime(b.created_at))}</span></div>
           </div>
           ${(b.client_files || []).length ? `<p style="margin:10px 0 0"><b>Attachments:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">${hqi('clip')} ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : `<p class="muted bk-hint" style="margin:10px 0 0">No attachments.</p>`}
-          <div class="bk-actions"><button type="button" class="btn primary" id="odSaveDetails">Save order details</button></div>`)}
+          <div class="bk-actions"><button type="button" class="btn primary" id="odSaveDetails">Save Order Details</button></div>`)}
 
         ${sec('schedule', 'Scheduling', b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + fmtT(b.shoot_start)) : 'Not scheduled', `
           <div class="od-kv">
@@ -6428,9 +6437,9 @@ function renderBookingDetail(id){
         ${sec('invoice', 'Invoicing', `${money(b.total)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}`, `
           <div class="od-invbtns">
             <button type="button" class="btn small" data-inv="pdf">${hqi('file')} View Invoice PDF</button>
-            <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email invoice</button>
-            ${b.public_token ? `<a class="btn small" href="${PORTAL_URL}/pay/${b.public_token}" target="_blank" rel="noopener" title="The invoice anyone can pay, no sign-in">${hqi('dollar')} Payment link</a>
-            <button type="button" class="btn small" data-inv="copypay">${hqi('link')} Copy payment link</button>` : ''}
+            <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email Invoice</button>
+            ${b.public_token ? `<a class="btn small" href="${PORTAL_URL}/pay/${b.public_token}" target="_blank" rel="noopener" title="The invoice anyone can pay, no sign-in">${hqi('dollar')} Payment Link</a>
+            <button type="button" class="btn small" data-inv="copypay">${hqi('link')} Copy Payment Link</button>` : ''}
           </div>
           <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
             ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
@@ -6463,18 +6472,18 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Library.</p>
           <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
 
-        ${live ? sec('send', 'Send delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
+        ${live ? sec('send', 'Send Delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
       <div class="od-side ap-secs">
-        ${sec('projects', 'Projects & calendar', projs.length ? String(projs.length) : '', `
+        ${sec('projects', 'Projects & Calendar', projs.length ? String(projs.length) : '', `
           ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
             : `<p class="muted" style="margin:0">No projects linked.</p>`}
           <div class="bk-actions">
             ${!projs.length && live ? `<button type="button" class="btn small" id="bkMkProj">Create projects</button>` : ''}
             ${b.gcal_event_id ? `<span class="muted bk-hint" style="margin:0">✓ On your Google Calendar</span>` : live && b.shoot_start && S.cal.status?.connected ? `<button type="button" class="btn small" id="bkMkCal">Add to Google Calendar</button>` : ''}
           </div>`)}
-        ${sec('zillow', 'Zillow stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
-        ${sec('activity', 'Order activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
+        ${sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
+        ${sec('activity', 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
       </div>
     </div></div>`;
 
