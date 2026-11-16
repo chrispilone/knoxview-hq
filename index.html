@@ -6353,6 +6353,7 @@ function renderBookingDetail(id){
             <button type="button" data-act="pdf">${hqi('file')} View Invoice PDF</button>
             <button type="button" data-act="email-inv">${hqi('mail')} Email Invoice</button>
             <button type="button" data-act="paylink">${hqi('link')} Copy Payment Link</button>
+            ${b.paid ? (isOwner() ? `<button type="button" id="bkPaidBtn" title="Owner only: unlocks this paid invoice (logged)">${hqi('lock')} Mark Unpaid</button>` : '') : `<button type="button" id="bkPaidBtn" title="Record a payment made outside Stripe (check, Venmo, cash…)">${hqi('dollar')} Mark as Paid</button>`}
             ${a?.email ? '<button type="button" data-act="access">' + hqi('key') + ' Access Agent</button>' : ''}
             <hr>
             <button type="button" id="odSwitch">⇄ Switch Agent</button>
@@ -6369,27 +6370,22 @@ function renderBookingDetail(id){
         <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
         ${(a?.email || b.client_email) ? `<a class="od-email" href="mailto:${esc(a?.email || b.client_email)}" title="Email on file · delivery emails go here">${hqi('mail')} ${esc(a?.email || b.client_email)}</a>` : '<span class="muted od-email">No email on file</span>'}
         <div class="od-cbtns">
-          ${phone ? `<a class="btn small od-ib" href="tel:${esc(tel)}" title="Call ${esc(phone)}" aria-label="Call">${hqi('phone')}</a><a class="btn small od-ib" href="sms:${esc(tel)}" title="Text ${esc(phone)}" aria-label="Text">${hqi('chat')}</a>` : ''}
-          ${email ? `<a class="btn small od-ib" href="mailto:${esc(email)}" title="${esc(email)}" aria-label="Email">${hqi('mail')}</a>` : ''}
-          ${!phone && !email ? '<span class="muted">No contact info</span>' : ''}
           ${a?.email ? `<button type="button" class="btn small" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${hqi('key')} Access Agent</button>` : ''}</div></div>
       <div class="panel od-card"><label>Scheduling</label>
         <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not Scheduled'}</b>
         <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
         <span class="od-photog">${hqi('camera')} ${b.photographer_id ? esc(memberName(b.photographer_id)) : '<span class="muted">Unassigned</span>'}</span>
         <div class="od-cbtns">
-          ${live ? `<button type="button" class="btn small" id="bkReschedBtn">${hqi('calendar')} Reschedule</button>` : '<span class="muted">Cancelled</span>'}
-          ${b.photographer_id ? '' : `<button type="button" class="btn small" data-goto="schedule" title="Assign a photographer">${hqi('user')} Assign</button>`}</div></div>
+          ${live ? `<button type="button" class="btn small" id="bkReschedBtn">${hqi('calendar')} Reschedule</button>` : '<span class="muted">Cancelled</span>'}</div></div>
       <div class="panel od-card"><label>Invoice</label>
         <b>${money(b.total)}</b>
         <span>${b.paid ? `<span style="color:var(--ok);font-weight:600">Paid</span>${b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) : ''}${b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : ''}` : Number(b.credit_applied) ? `Unpaid · ${money(due)} due after credit` : 'Unpaid'}</span>
         <div class="od-cbtns">
-          ${b.paid ? (isOwner() ? `<button type="button" class="btn small" id="bkPaidBtn" title="Owner only: unlocks this paid invoice (logged)">${hqi('lock')} Mark Unpaid</button>` : '') : `<button type="button" class="btn small" id="bkPaidBtn" title="Record a payment made outside Stripe (check, Venmo, cash…)">${hqi('dollar')} Pay Invoice</button>`}
           <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email Invoice</button></div></div>
       <div class="panel od-card"><label>Status</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not Delivered' : 'Cancelled'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
-        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a><button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">${hqi('eye')} Download Page</button></div></div>
+        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a></div></div>
     </div>
     <div id="bkResched"></div>
 
