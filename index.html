@@ -6358,18 +6358,18 @@ function renderBookingDetail(id){
     </section>
 
     <div class="od-strip">
-      <div class="panel od-card"><label>Shoot</label>
-        <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not scheduled'}</b>
-        <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
-        ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
       <div class="panel od-card"><label>Client</label>
         <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
         <span class="od-ics">${phone ? `<a href="tel:${esc(tel)}" title="Call ${esc(phone)}">${hqi('phone')}</a><a href="sms:${esc(tel)}" title="Text ${esc(phone)}">${hqi('chat')}</a>` : ''}${email ? `<a href="mailto:${esc(email)}" title="${esc(email)}">${ORD_ICON.mail}</a>` : ''}${!phone && !email ? '<span class="muted">No contact info</span>' : ''}${a?.email ? `<button type="button" class="btn small od-access" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${DIR_ICON.key} Access agent</button>` : ''}</span></div>
+      <div class="panel od-card"><label>Scheduling</label>
+        <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not scheduled'}</b>
+        <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
+        ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
       <div class="panel od-card"><label>Invoice</label>
         <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
         <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
         <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">${hqi('file')} View Invoice PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
-      <div class="panel od-card"><label>Delivery</label>
+      <div class="panel od-card"><label>Status</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
         <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a><button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">${hqi('eye')} Download page</button></div></div>
