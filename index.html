@@ -3155,7 +3155,7 @@ async function renderAgentCredits(agentId){
   const box = $('#agentCredits'); if (!box) return;
   const m2 = v => (v < 0 ? '−' : '') + '$' + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   box.innerHTML = '<p class="muted">Loading credits…</p>';
-  const { data, error } = await sb.from('client_credits').select('id, amount, kind, note, created_at, booking:bookings(number)').eq('agent_id', agentId).order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await sb.from('client_credits').select('id, amount, kind, note, created_at, booking:bookings(number, order_no)').eq('agent_id', agentId).order('created_at', { ascending: false }).limit(100);
   if (error) { box.innerHTML = `<p class="muted">Couldn't load credits: ${esc(error.message)}</p>`; return; }
   const bal = Math.round((data || []).reduce((t, c) => t + Number(c.amount), 0) * 100) / 100;
   const KIND = { added: 'Added', applied: 'Used', removed: 'Removed', returned: 'Returned' };
@@ -3164,7 +3164,7 @@ async function renderAgentCredits(agentId){
       <input name="note" maxlength="200" placeholder="Reason (the client sees this as credit)" />
       <select name="kind"><option value="added">Add credit</option>${bal > 0 ? '<option value="removed">Remove credit</option>' : ''}</select>
       <button class="btn small primary">Save</button></form>
-    ${(data || []).length ? `<div class="cr-list">${data.map(c => `<div><span>${esc(fmtDate(c.created_at))}</span><span>${KIND[c.kind] || esc(c.kind)}${c.booking?.number ? ` · invoice #${c.booking.number}` : ''}${c.note ? ` · <span class="muted">${esc(c.note)}</span>` : ''}</span><b class="${Number(c.amount) > 0 ? 'cr-pos' : ''}">${Number(c.amount) > 0 ? '+' : ''}${m2(Number(c.amount))}</b></div>`).join('')}</div>` : '<p class="muted" style="margin:6px 0 0">No credits yet.</p>'}`;
+    ${(data || []).length ? `<div class="cr-list">${data.map(c => `<div><span>${esc(fmtDate(c.created_at))}</span><span>${KIND[c.kind] || esc(c.kind)}${c.booking?.number ? ` · invoice ${c.booking.order_no || '#' + c.booking.number}` : ''}${c.note ? ` · <span class="muted">${esc(c.note)}</span>` : ''}</span><b class="${Number(c.amount) > 0 ? 'cr-pos' : ''}">${Number(c.amount) > 0 ? '+' : ''}${m2(Number(c.amount))}</b></div>`).join('')}</div>` : '<p class="muted" style="margin:6px 0 0">No credits yet.</p>'}`;
   $('#crForm').onsubmit = async e => {
     e.preventDefault(); e.stopPropagation();
     const f = new FormData(e.target), kind = f.get('kind'), amt = Math.round(Number(f.get('amount')) * 100) / 100;
@@ -3204,7 +3204,7 @@ async function renderAgentProfile(id){
   const kv = (k, v) => `<div class="ap-kv"><span>${k}</span><b>${v || '<span class="muted">—</span>'}</b></div>`;
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const orderRow = b => `<a class="ap-row" href="#/bookings/${b.id}"><span class="ord-thumb">${ordThumb(b) ? `<img src="${esc(ordThumb(b))}" alt="" loading="lazy">` : ORD_ICON.house}</span>
-      <span class="ap-rmain"><b>${esc(b.address)}</b><small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'} · #${b.number}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''}</small></span>
+      <span class="ap-rmain"><b>${esc(b.address)}</b><small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'} · ${ordNo(b)}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''}</small></span>
       <span class="ap-rside">${ordPill(b)}<span class="ord-ics">${`<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered' : 'Not delivered'}">${ORD_ICON.send}</span><span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' : 'Unpaid'}">${ORD_ICON.paid}</span>`}</span></span></a>`;
 
   root.innerHTML = `<a class="bk-back" href="#/agents">← Agents</a>
@@ -3245,7 +3245,7 @@ async function renderAgentProfile(id){
       ${sec('projects', 'Projects', projects.length, projects.length ? `<div class="ap-rows">${projects.slice(0, 30).map(p => `<button type="button" class="ap-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="ap-rmain"><b>${esc(p.name)}</b><small>${esc(typeName(p.project_type_id))}${p.due_date ? ' · due ' + esc(fmtShort(p.due_date)) : ''}</small></span><span class="ap-rside"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></button>`).join('')}</div>` : '<p class="muted">No projects yet.</p>')}
       ${admin ? sec('pages', 'Custom order pages', '<span id="apPageCount">…</span>', '<div id="apPages"><p class="muted">Loading…</p></div>', '<a class="ap-link" href="#/orderpages">Order pages</a>') : ''}
       ${admin ? sec('credits', 'Credit management', '<span id="apCredCount">…</span>', '<div id="agentCredits" class="credits-box" style="margin:0"></div>') : ''}
-      ${admin ? sec('invoices', 'Invoices', invoices.length, invoices.length ? `<div class="ap-rows">${invoices.slice(0, 40).map(b => `<div class="ap-row ap-inv"><span class="ap-rmain"><b>#${b.number} · ${esc(b.address)}</b><small>${esc(ordDate(b.invoice_sent_at || b.created_at, true))}${b.paid && b.paid_at ? ' · paid ' + esc(ordDate(b.paid_at, true)) : ''}</small></span>
+      ${admin ? sec('invoices', 'Invoices', invoices.length, invoices.length ? `<div class="ap-rows">${invoices.slice(0, 40).map(b => `<div class="ap-row ap-inv"><span class="ap-rmain"><b>${ordNo(b)} · ${esc(b.address)}</b><small>${esc(ordDate(b.invoice_sent_at || b.created_at, true))}${b.paid && b.paid_at ? ' · paid ' + esc(ordDate(b.paid_at, true)) : ''}</small></span>
             <span class="ap-rside"><b>${money(b.total)}</b>${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Due</span>'}<button type="button" class="btn small" data-inv="${b.number}" data-paid="${b.paid ? 1 : ''}">View</button></span></div>`).join('')}</div>` : '<p class="muted">No invoices yet.</p>') : ''}
       ${sec('docs', 'Documents & logos', logos.length, '<div id="agentLogos"></div>')}
       ${admin ? sec('activity', 'Activity history', null, '<div id="apAct"><p class="muted">Open to load…</p></div>') : ''}
@@ -4737,10 +4737,10 @@ function gsBuild(){
   if (viewAllowed('bookings')) for (const b of BK.list || []) {
     const agent = agentName(b.agent_id) || b.client_name || '';
     out.push({ kind:'order', id:b.id, base:1.25, num:String(b.number || ''), rec: recent(b.shoot_start || b.created_at), agentId:b.agent_id,
-      title: b.media_title ? `${b.media_title} · ${gsAddr(b.address, b.unit, b.city)}` : gsAddr(b.address, b.unit, b.city) || `Order #${b.number}`,
-      sub: [`#${b.number}`, agent, b.shoot_start ? gsDate(b.shoot_start) : 'Not scheduled'].filter(Boolean).join(' · '),
+      title: b.media_title ? `${b.media_title} · ${gsAddr(b.address, b.unit, b.city)}` : gsAddr(b.address, b.unit, b.city) || `Order ${ordNo(b)}`,
+      sub: [`${ordNo(b)}`, agent, b.shoot_start ? gsDate(b.shoot_start) : 'Not scheduled'].filter(Boolean).join(' · '),
       meta: BK_STATUS[b.status] ? `<span class="gs-dot" style="background:${BK_STATUS[b.status][1]}"></span>${BK_STATUS[b.status][0]}` : '',
-      f: [[b.address, 3], [b.media_title, 3], [b.unit, 1], [b.city, 1], [b.zip, 1], [agent, 1.5], [b.client_email, 1], [bkPkgName(b), .6]],
+      f: [[b.address, 3], [b.media_title, 3], [b.order_no, 2.5], [b.unit, 1], [b.city, 1], [b.zip, 1], [agent, 1.5], [b.client_email, 1], [bkPkgName(b), .6]],
       dg: [gsDigits(b.client_phone)].filter(Boolean),
       when: b.shoot_start || b.created_at });
   }
@@ -5707,6 +5707,8 @@ const ORD_ICON = {
 // First photo of the delivery (cover photo if set), else none yet
 const ordThumb = b => b.cover_url || (b.media_files || []).filter(f => f.kind === 'photo').map(f => f.preview || f.url).find(u => u && !u.includes('/storage/v1/object/delivery/')) || ''; // uploaded photos are private: no thumbnail from them
 // Media title: what the listing is called on listing cards (HQ + client portal) and the download page. Defaults to the address.
+// Order / invoice number shown to people: KV-YYMM-### (bookings.order_no). b.number stays the internal key.
+const ordNo = b => b?.order_no || (b?.number ? '#' + b.number : '');
 const ordTitle = b => (b.media_title || '').trim() || b.address || '';
 const ordShot = b => b.shoot_start && (b.status === 'completed' || b.delivered_at) ? b.shoot_start : null; // "Date shot" fills in once the shoot is marked complete
 // Status shown in the list: a sent delivery reads as Delivered
@@ -5726,7 +5728,7 @@ function renderBookingList(){
   if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'upcoming';
   const tabFn = ORD_TABS.find(t => t[0] === BK.tab)[2];
   const count = k => BK.list.filter(b => ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
-  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
+  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), b.order_no, '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
   // Default order: upcoming soonest first, everything else newest shoot first. Column headers override it.
   const key = st.sort || 'shoot', dir = st.sort ? st.dir : (BK.tab === 'upcoming' ? 1 : -1);
   const val = { address: b => b.address, agent: bkClient, status: b => b.status !== 'cancelled' && b.delivered_at ? 'delivered' : b.status, shoot: b => b.shoot_start || '', submitted: b => b.created_at, shot: b => ordShot(b) || '' }[key];
@@ -5738,7 +5740,7 @@ function renderBookingList(){
   const agentCell = b => { const a = S.agents.find(x => x.id === b.agent_id); return `<div class="dir-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${esc(bkClient(b))}</span></div>`; };
   const icons = b => `<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
     <span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' + (b.paid_at ? ' ' + esc(ordDate(b.paid_at, true)) : '') : 'Unpaid · ' + esc(money(b.total))}">${ORD_ICON.paid}</span>`;
-  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${b.number}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Media Library · ${esc(omSummary(b))}" aria-label="Media Library for order ${b.number}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${b.number}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${b.number}">${ORD_ICON.more}</button></div>`;
+  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${ordNo(b)}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Media Library · ${esc(omSummary(b))}" aria-label="Media Library for order ${ordNo(b)}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${ordNo(b)}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${ordNo(b)}">${ORD_ICON.more}</button></div>`;
   const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
   const time = b => b.shoot_start ? fmtT(b.shoot_start) : '';
   $('#bookingsView').innerHTML = `
@@ -5758,7 +5760,7 @@ function renderBookingList(){
         <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
       ${page.map(b => `<tr data-id="${b.id}" class="${b.status === 'cancelled' ? 'ord-x' : ''}">
         <td class="ord-td-thumb">${thumb(b)}</td>
-        <td class="ord-addr"><b>${esc(ordTitle(b))}</b><small>${esc([b.city, '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
+        <td class="ord-addr"><b>${esc(ordTitle(b))}</b><small>${esc([b.city, ordNo(b), bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
         <td class="trunc" style="max-width:200px">${agentCell(b)}</td>
         <td class="m-hide">${ordPill(b)}</td>
         <td>${b.shoot_start ? esc(ordDate(b.shoot_start)) : '<span class="muted">Not set</span>'}</td>
@@ -5770,7 +5772,7 @@ function renderBookingList(){
       <div class="ord-cards">${page.map(b => `<div class="ord-card ${b.status === 'cancelled' ? 'ord-x' : ''}" data-id="${b.id}">
         ${thumb(b)}
         <div class="ord-cmain"><b>${esc(ordTitle(b))}</b><small>${esc(bkClient(b))}</small>
-          <small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'} · #${b.number}</small>
+          <small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'} · ${ordNo(b)}</small>
           <div class="ord-cfoot">${ordPill(b)}<span class="ord-ics">${icons(b)}</span></div></div>
         ${acts(b)}</div>`).join('')}</div>${pager}`
       : `<div class="panel bk-empty"><p>${BK.list.length ? (q ? 'No orders match.' : 'Nothing here.') : 'No orders yet.'}</p>${BK.list.length ? '' : '<a class="btn primary" href="#/bookings/new">Place your first order</a>'}</div>`}`;
@@ -5811,7 +5813,7 @@ function openDeliveryModal(id){
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal ord-ds"><div class="ord-ds-head"><h2>Send delivery · ${esc(b.address)}</h2><button class="btn small ghost" id="dsX" aria-label="Close">✕</button></div>
-    <p class="muted bk-hint" style="margin:-10px 0 12px">Order #${b.number} · ${esc(bkClient(b))}${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</p>
+    <p class="muted bk-hint" style="margin:-10px 0 12px">Order ${ordNo(b)} · ${esc(bkClient(b))}${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</p>
     ${dsFormHTML(b, a)}</div>`;
   $('#ov').onclick = $('#dsX').onclick = closeLayer;
   dsWire(b, a, () => { closeLayer(); if (S.view === 'bookings' && !S.bkSub) renderBookingList(); });
@@ -6034,7 +6036,7 @@ function bkPaintSummary(){
   if (!S.cal.status?.connected) d.mkCal = false;
 }
 function bkEventBody(b){
-  const lines = [`Knox View order #${b.number}`, '',
+  const lines = [`Knox View order ${ordNo(b)}`, '',
     `Client: ${bkClient(b)}`,
     ...(b.client_phone || S.agents.find(a => a.id === b.agent_id)?.phone ? [`Phone: ${b.client_phone || S.agents.find(a => a.id === b.agent_id)?.phone}`] : []),
     ...(b.client_email || S.agents.find(a => a.id === b.agent_id)?.email ? [`Email: ${b.client_email || S.agents.find(a => a.id === b.agent_id)?.email}`] : []),
@@ -6081,7 +6083,7 @@ async function bkSubmit(){
     BK.draft = null;
     await reloadBookings();
     if (d.mkProjects) reloadProjects();
-    toast(warn.length ? `Order #${b.number} saved, but couldn't create ${warn.join(' and ')}` : `Order #${b.number} booked`);
+    toast(warn.length ? `Order ${ordNo(b)} saved, but couldn't create ${warn.join(' and ')}` : `Order ${ordNo(b)} booked`);
     location.hash = `#/bookings/${b.id}`;
   } catch (e) { btn.disabled = false; btn.textContent = 'Place order'; fail(e); }
 }
@@ -6089,7 +6091,7 @@ async function bkCreateProjects(b, q, postChat){
   const services = [q.pkg, ...q.adds].filter(Boolean);
   const typeId = (media, name) => S.types.find(t => t.media === media && t.name.toLowerCase() === String(name || '').toLowerCase())?.id || S.types.find(t => t.media === media && t.active)?.id || null;
   const base = { name: b.address, address: [b.address, b.city].filter(Boolean).join(', '), city: b.city, agent_id: b.agent_id, delivery_method: 'spiro', submitted_by: S.me.id, notify_slack: !!postChat,
-    notes: [`From order #${b.number} (shoot ${new Date(b.shoot_start).toLocaleDateString(undefined, { month:'short', day:'numeric' })})`, b.notes].filter(Boolean).join('\n') };
+    notes: [`From order ${ordNo(b)} (shoot ${new Date(b.shoot_start).toLocaleDateString(undefined, { month:'short', day:'numeric' })})`, b.notes].filter(Boolean).join('\n') };
   const ids = []; let photoId = null;
   const photoTypes = [...new Set(services.flatMap(s => bkTypes(s.photo_type)))];
   for (const [i, pt] of photoTypes.entries()) {
@@ -6209,7 +6211,7 @@ async function dbxWire(b){
 const PAY_METHODS = { check: 'Check', venmo: 'Venmo', zelle: 'Zelle', cash: 'Cash', card: 'Card (in person)', other: 'Other' };
 function openMarkPaid(b, done){
   const box = document.createElement('div');
-  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Pay invoice #${b.number}</h2>
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Pay invoice ${ordNo(b)}</h2>
     <p class="muted bk-hint" style="margin-top:-6px">${money(b.total)} · ${esc(b.address || '')}. Downloads unlock for the client right away.</p>
     <form id="mpForm"><label>How was it paid?</label>
       <div class="mp-opts">${Object.entries(PAY_METHODS).map(([k, l], i) => `<label class="mp-opt"><input type="radio" name="m" value="${k}" ${i === 0 ? 'checked' : ''} /><span>${l}</span></label>`).join('')}</div>
@@ -6298,11 +6300,11 @@ const OD_CHEV = '<svg class="ap-chev" viewBox="0 0 24 24" fill="none" stroke="cu
 // Delete an order for good (shared by the order list ⋯ menu and the order page). Resolves true when deleted.
 async function ordDelete(b){
   if (b.paid) { toast('Paid orders can\'t be deleted, so the payment record stays. Cancel it instead.'); return false; }
-  if (!confirm(`Delete order #${b.number} (${b.address})?\n\nThis removes the order, its invoice and delivery history for good.${b.gcal_event_id ? ' The shoot is also removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return false;
+  if (!confirm(`Delete order ${ordNo(b)} (${b.address})?\n\nThis removes the order, its invoice and delivery history for good.${b.gcal_event_id ? ' The shoot is also removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return false;
   if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (err) { if (!/404|410|not found|deleted/i.test(err.message)) { fail(err); return false; } } }
   const { error } = await sb.from('bookings').delete().eq('id', b.id);
   if (error) { fail(error); return false; }
-  BK.list = BK.list.filter(x => x.id !== b.id); toast(`Order #${b.number} deleted`); return true;
+  BK.list = BK.list.filter(x => x.id !== b.id); toast(`Order ${ordNo(b)} deleted`); return true;
 }
 /* ----- Order page (#/bookings/<id>): header card + quick links, at-a-glance strip, then dropdown sections ----- */
 function renderBookingDetail(id){
@@ -6332,7 +6334,7 @@ function renderBookingDetail(id){
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title">
         <h1>${esc(ordTitle(b))}</h1>
-        <p class="od-sub">${esc([b.media_title ? b.address : '', [b.city, b.zip].filter(Boolean).join(' '), '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</p>
+        <p class="od-sub">${esc([b.media_title ? b.address : '', [b.city, b.zip].filter(Boolean).join(' '), ordNo(b), bkPkgName(b)].filter(Boolean).join(' · '))}</p>
         <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
       <div class="od-cta">
@@ -6496,7 +6498,7 @@ function renderBookingDetail(id){
   document.querySelectorAll('#bookingsView [data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
   const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
   on('bkPaidBtn', () => {
-    if (b.paid) { if (confirm(`Mark order #${b.number} as unpaid?\n\nThis unlocks a paid invoice so it can be corrected. It's logged. For extra work after payment, create a new order instead.`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
+    if (b.paid) { if (confirm(`Mark order ${ordNo(b)} as unpaid?\n\nThis unlocks a paid invoice so it can be corrected. It's logged. For extra work after payment, create a new order instead.`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
     openMarkPaid(b, (method, note) => save({ paid: true, paid_at: new Date().toISOString(), paid_method: method, paid_note: note || null }, `Marked paid · ${PAY_METHODS[method]}`));
   });
   on('bkDone', async () => { if (await save({ status: 'completed' }, 'Shoot marked complete')) dbxAutoFolders(b); });
@@ -6520,13 +6522,13 @@ function renderBookingDetail(id){
     saveLines([...(b.items || []), { id: 'custom-' + Date.now(), name, kind: 'custom', price }], `${name} added`);
   });
   document.querySelectorAll('#bookingsView [data-rmline]').forEach(x => x.onclick = () => {
-    const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from order #${b.number}?`)) return;
+    const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from order ${ordNo(b)}?`)) return;
     saveLines((b.items || []).filter((_, j) => j !== k), `${it.name} removed`);
   });
   on('bkCreditBack', async () => {
     const amt = Number(b.credit_applied || 0); if (!amt || b.paid) return;
-    if (!confirm(`Take ${money(amt)} of credit off invoice #${b.number} and put it back on the client's account?`)) return;
-    const ins = await sb.from('client_credits').insert({ agent_id: b.agent_id, amount: amt, kind: 'returned', booking_id: b.id, note: `Returned from invoice #${b.number}` });
+    if (!confirm(`Take ${money(amt)} of credit off invoice ${ordNo(b)} and put it back on the client's account?`)) return;
+    const ins = await sb.from('client_credits').insert({ agent_id: b.agent_id, amount: amt, kind: 'returned', booking_id: b.id, note: `Returned from invoice ${ordNo(b)}` });
     if (ins.error) return fail(ins.error);
     save({ credit_applied: 0 }, 'Credit returned to the client\'s account');
   });
@@ -6606,7 +6608,7 @@ function renderBookingDetail(id){
   });
   const pg = $('#odPhotog'); if (pg) pg.onchange = () => save({ photographer_id: pg.value || null }, pg.value ? `Photographer: ${memberName(pg.value)}` : 'Photographer cleared');
   on('bkCancel', async () => {
-    if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
+    if (!confirm(`Cancel order ${ordNo(b)}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
     if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (e) { if (!/404|410|not found|deleted/i.test(e.message)) return fail(e); } }
     save({ status: 'cancelled', cancelled_at: new Date().toISOString(), gcal_event_id: null }, 'Booking cancelled');
   });
@@ -6671,7 +6673,7 @@ function renderBookingDetail(id){
     if (x.dataset.act === 'access') $('#odAccess')?.click();
   }));
   on('odDelivered', () => {
-    if (!confirm(`Mark order #${b.number} as delivered without sending an email?\n\nUse Send delivery instead if the client should get the link.`)) return;
+    if (!confirm(`Mark order ${ordNo(b)} as delivered without sending an email?\n\nUse Send delivery instead if the client should get the link.`)) return;
     save({ status: 'completed', delivered_at: new Date().toISOString() }, 'Marked delivered');
   });
   on('odDelete', async () => { if (await ordDelete(b)) location.hash = '#/bookings'; });
@@ -6679,7 +6681,7 @@ function renderBookingDetail(id){
     const list = [...S.agents].sort((x, y) => String(x.full_name).localeCompare(String(y.full_name)));
     const box = document.createElement('div');
     box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Switch agent</h2>
-      <p class="muted bk-hint" style="margin:-6px 0 10px">Order #${b.number} · ${esc(b.address)}</p>
+      <p class="muted bk-hint" style="margin:-6px 0 10px">Order ${ordNo(b)} · ${esc(b.address)}</p>
       <input type="search" id="odAgQ" placeholder="Search agents…" autocomplete="off" />
       <select id="odAgPick" size="8" style="margin-top:8px;height:auto">${list.map(x => `<option value="${x.id}" ${x.id === b.agent_id ? 'selected' : ''}>${esc(x.full_name)}${x.email ? ' · ' + esc(x.email) : ''}</option>`).join('')}</select>
       <p class="muted bk-hint">The order, its invoice and delivery page move to this agent. Their email and phone become the order's contact info.</p>
@@ -6757,7 +6759,7 @@ async function ordViewPdf(b, btn){
 function ordEmailInvoice(b, a){
   const def = (a?.email || b.client_email || '').trim();
   const box = document.createElement('div');
-  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Email invoice #${b.number}</h2>
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Email invoice ${ordNo(b)}</h2>
     <p class="muted bk-hint" style="margin-top:-6px">${esc(ordTitle(b))} · ${money(Math.max(0, Number(b.total) - Number(b.credit_applied || 0)))} ${b.paid ? 'paid' : 'due'}. The PDF is attached${b.paid ? '' : ' and the email has a button to pay online (no sign-in)'}.</p>
     <form id="eiForm"><label>Send to</label><input type="email" id="eiTo" value="${esc(def)}" placeholder="client@email.com" required />
       <div id="eiMore"></div>
@@ -6895,7 +6897,7 @@ function renderOrderMedia(id){
     <section class="panel om-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title"><h1>Media Library</h1>
-        <p class="od-sub">${esc(ordTitle(b))}${b.media_title ? ' · ' + esc([b.address, b.city].filter(Boolean).join(', ')) : b.city ? ', ' + esc(b.city) : ''} · #${b.number}</p>
+        <p class="od-sub">${esc(ordTitle(b))}${b.media_title ? ' · ' + esc([b.address, b.city].filter(Boolean).join(', ')) : b.city ? ', ' + esc(b.city) : ''} · ${ordNo(b)}</p>
         <p class="om-sum" id="omSum"></p></div>
       <div class="om-acts">
         <button type="button" class="btn small" id="omPreview" title="Open the download page as the client sees it">${hqi('eye')} Preview</button>
@@ -6998,7 +7000,7 @@ async function deliverCall(body){
 }
 function dsFill(str, b, a){
   const name = String(a?.full_name || b.client_name || '').trim();
-  const v = { first_name: name.split(/\s+/)[0] || 'there', client_name: name || 'there', address: b.address || 'your listing', city: b.city || '', order_number: b.number ? String(b.number) : '', link: b.public_token ? `${PORTAL_URL}/d/${b.public_token}` : `${PORTAL_URL}/#delivery/${b.id}` };
+  const v = { first_name: name.split(/\s+/)[0] || 'there', client_name: name || 'there', address: b.address || 'your listing', city: b.city || '', order_number: b.order_no || (b.number ? String(b.number) : ''), link: b.public_token ? `${PORTAL_URL}/d/${b.public_token}` : `${PORTAL_URL}/#delivery/${b.id}` };
   return String(str || '').replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m);
 }
 function dsFormHTML(b, a){
