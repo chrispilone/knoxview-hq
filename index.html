@@ -1228,6 +1228,16 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .ap-rmain small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ap-rside{display:flex;align-items:center;gap:10px;flex:none}
 .ap-inline{display:flex;gap:8px}.ap-inline select{flex:1}
+.act-filter{margin-bottom:10px}.act-filter button.on{color:var(--on-accent)}
+.act-list{display:flex;flex-direction:column}
+.act-day{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 0 4px}
+.act-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+.act-day + .act-row{border-top:none}
+.act-ic{width:26px;text-align:center;flex:none;font-size:15px;line-height:22px}
+.act-main{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13.5px;line-height:1.4;overflow-wrap:anywhere}
+.act-main small{color:var(--muted);font-size:12px}
+.act-row.bad .act-main>span{color:var(--danger);font-weight:600}
+.act-go{font-size:12.5px;flex:none;margin-top:2px}
 @media (max-width:760px){
   .ap-top{grid-template-columns:1fr}
   .ap-card{flex-direction:column;align-items:center;text-align:center;gap:12px}
@@ -3057,6 +3067,7 @@ async function renderAgentProfile(id){
       ${admin ? sec('invoices', 'Invoices', invoices.length, invoices.length ? `<div class="ap-rows">${invoices.slice(0, 40).map(b => `<div class="ap-row ap-inv"><span class="ap-rmain"><b>#${b.number} · ${esc(b.address)}</b><small>${esc(ordDate(b.invoice_sent_at || b.created_at, true))}${b.paid && b.paid_at ? ' · paid ' + esc(ordDate(b.paid_at, true)) : ''}</small></span>
             <span class="ap-rside"><b>${money(b.total)}</b>${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Due</span>'}<button type="button" class="btn small" data-inv="${b.number}" data-paid="${b.paid ? 1 : ''}">View</button></span></div>`).join('')}</div>` : '<p class="muted">No invoices yet.</p>') : ''}
       ${sec('docs', 'Documents & logos', logos.length, '<div id="agentLogos"></div>')}
+      ${admin ? sec('activity', 'Activity history', null, '<div id="apAct"><p class="muted">Open to load…</p></div>') : ''}
       ${admin ? sec('payment', 'Payment settings', null, `<label class="check"><input type="checkbox" id="apReqPay" ${a.require_payment !== false ? 'checked' : ''} ${can('manage_agents') ? '' : 'disabled'} /> <b>Requires payment before delivery</b></label>
           <p class="muted bk-hint" style="margin:4px 0 0 26px">On: new orders show watermarked previews until paid. Turn off for trusted clients. You can still change it on any single order.</p>`) : ''}
     </div>`;
@@ -3115,6 +3126,35 @@ async function renderAgentProfile(id){
       const { error } = await sb.from('agents').update(patch).eq('id', id); if (error) return fail(error); Object.assign(a, patch); toast('Order page saved'); paintPages(); };
   }
   if (admin && OP.loaded) paintPages();
+  // Activity history loads when its dropdown is opened
+  const actSec = root.querySelector('details[data-k=activity]');
+  if (actSec) { const go = () => { if (actSec.open && !actSec.dataset.loaded) { actSec.dataset.loaded = '1'; renderAgentActivity(id); } }; actSec.addEventListener('toggle', go); go(); }
+}
+const ACT_GROUPS = [['all', 'All'], ['comms', 'Emails & texts'], ['orders', 'Orders & payments'], ['logins', 'Logins & downloads'], ['account', 'Account changes']];
+const ACT_KIND = {
+  signin: ['logins', '🔐'], visit: ['logins', '👀'], team_view: ['logins', '🛠'], download: ['logins', '⬇️'], signin_code: ['logins', '🔑'],
+  email: ['comms', '✉️'], sms: ['comms', '💬'], failed: ['comms', '⚠️'],
+  order: ['orders', '📅'], delivery: ['orders', '📦'], payment: ['orders', '💵'], invoice: ['orders', '🧾'], credit: ['orders', '🎟'],
+  account: ['account', '👤'],
+};
+async function renderAgentActivity(id, filter = 'all', limit = 100){
+  const box = $('#apAct'); if (!box) return;
+  box.innerHTML = '<p class="muted">Loading activity…</p>';
+  const { data, error } = await sb.from('agent_activity').select('kind, summary, device, actor, booking_id, created_at').eq('agent_id', id).order('created_at', { ascending: false }).limit(limit);
+  if (!$('#apAct')) return;
+  if (error) { box.innerHTML = `<p class="muted">Couldn't load activity: ${esc(error.message)}</p>`; return; }
+  const rows = (data || []).filter(r => filter === 'all' || (ACT_KIND[r.kind]?.[0] || 'account') === filter);
+  const day = d => new Date(d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(d).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' });
+  let last = '';
+  box.innerHTML = `<div class="cat-filter act-filter">${ACT_GROUPS.map(([k, l]) => `<button type="button" data-af="${k}" class="${k === filter ? 'on' : ''}">${l}</button>`).join('')}</div>
+    ${rows.length ? `<div class="act-list">${rows.map(r => { const d = day(r.created_at), head = d !== last ? `<div class="act-day">${esc(d)}</div>` : ''; last = d;
+      return head + `<div class="act-row ${r.kind === 'failed' ? 'bad' : ''}"><span class="act-ic">${ACT_KIND[r.kind]?.[1] || '•'}</span>
+        <span class="act-main"><span>${esc(r.summary)}</span><small>${esc(fmtT(r.created_at))}${r.device ? ' · ' + esc(r.device) : ''}${r.actor === 'team' ? ' · by Knox View' : r.actor === 'client' ? ' · by client' : ''}</small></span>
+        ${r.booking_id ? `<a class="ap-link act-go" href="#/bookings/${r.booking_id}">Order</a>` : ''}</div>`; }).join('')}</div>
+      ${(data || []).length >= limit ? `<button type="button" class="btn small" id="actMore" style="margin-top:10px">Show older</button>` : ''}`
+      : '<p class="muted" style="margin:6px 0 0">Nothing recorded yet. New activity shows up here automatically.</p>'}`;
+  box.querySelectorAll('[data-af]').forEach(b => b.onclick = () => renderAgentActivity(id, b.dataset.af, limit));
+  const more = $('#actMore'); if (more) more.onclick = () => renderAgentActivity(id, filter, limit + 200);
 }
 
 function editAgent(id){
