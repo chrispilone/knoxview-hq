@@ -1214,6 +1214,20 @@ nav.tabs .nav-group[aria-expanded="true"] .chev{transform:rotate(180deg)}nav.tab
 nav.tabs .nav-sub{display:none;flex-direction:column;gap:2px;padding-left:22px}nav.tabs .nav-sub.open{display:flex}
 nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .nav-sub a svg{width:18px;height:18px}
 @media (min-width:901px){body.side-mini nav.tabs .nav-group{display:none}body.side-mini nav.tabs .nav-sub{display:flex;padding-left:0}}
+/* Phone menu: the whole drawer scrolls as one (no squeezed inner list), dropdown headers match the links,
+   and no "stuck" hover highlight after a tap */
+@media (max-width:900px){
+  .side{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  nav.tabs{flex:none;overflow:visible}
+  .side-foot{margin-top:auto}
+  nav.tabs button.nav-group{min-height:52px;padding:13px 16px;font-size:16.5px;gap:16px;-webkit-tap-highlight-color:transparent}
+  nav.tabs button.nav-group>svg:first-child{width:23px;height:23px}
+  nav.tabs .nav-sub{padding-left:20px}
+}
+@media (hover:none){
+  nav.tabs a:not(.active):hover,nav.tabs button.nav-group:hover,.side-out:hover{background:none;color:var(--muted)}
+  nav.tabs button.nav-group.in:hover{color:var(--accent)}
+}
 .co-of{color:var(--text);font-weight:600}.co-pg{color:var(--accent)}
 .co-logo-row{display:flex;gap:14px;align-items:center;margin-bottom:12px}
 .co-logo{width:84px;height:84px;flex:none;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:grid;place-items:center;background:var(--panel-2);color:var(--muted);font-size:12px}
@@ -1699,9 +1713,9 @@ $('#signOut').onclick = doSignOut;
 /* Left menu: always shown on computers (collapsible to icons), slide-out drawer on phones */
 try { if (localStorage.getItem('kvhq.sideMini') === '1') document.body.classList.add('side-mini'); } catch (e) {}
 $('#sideCollapse').onclick = () => { const on = document.body.classList.toggle('side-mini'); try { localStorage.setItem('kvhq.sideMini', on ? '1' : '0'); } catch (e) {} };
-$('#menuBtn').onclick = () => document.body.classList.add('menu-open');
+$('#menuBtn').onclick = () => { document.body.classList.add('menu-open'); const act = document.querySelector('#tabs a.active:not(.hidden)'); const side = document.querySelector('.side'); side.scrollTop = 0; if (act) requestAnimationFrame(() => act.scrollIntoView({ block: 'nearest' })); };
 $('#sideClose').onclick = $('#sideScrim').onclick = () => document.body.classList.remove('menu-open');
-$('#tabs').addEventListener('click', () => document.body.classList.remove('menu-open'));
+$('#tabs').addEventListener('click', e => { if (e.target.closest('a[href]')) document.body.classList.remove('menu-open'); }); // dropdown headers keep the menu open
 /* Phones: swipe in from the left edge to open the menu, swipe it back to close (follows the finger) */
 (() => {
   if (!('ontouchstart' in window)) return;
