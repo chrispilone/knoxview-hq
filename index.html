@@ -1019,6 +1019,7 @@ body.gs-open{overflow:hidden}
 .gs-hint{padding:18px 12px;color:var(--muted);font-size:13.5px;line-height:1.5}
 .gs-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
 .od-photog{display:flex!important;align-items:center;gap:6px;margin-top:6px;color:var(--text)!important}.od-photog .hqi{color:var(--muted)}
+.od-cstack{flex-direction:column;align-items:flex-start;gap:8px}.od-elink{display:inline-flex;align-items:center;gap:6px}
 .od-cbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:auto;padding-top:6px}
 .od-cbtns .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}.od-cbtns svg{width:14px;height:14px}
 .od-card .od-ics{flex-wrap:wrap}
@@ -6205,13 +6206,13 @@ async function dbxWire(b){
 const PAY_METHODS = { check: 'Check', venmo: 'Venmo', zelle: 'Zelle', cash: 'Cash', card: 'Card (in person)', other: 'Other' };
 function openMarkPaid(b, done){
   const box = document.createElement('div');
-  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Mark order #${b.number} as paid</h2>
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Pay invoice #${b.number}</h2>
     <p class="muted bk-hint" style="margin-top:-6px">${money(b.total)} · ${esc(b.address || '')}. Downloads unlock for the client right away.</p>
     <form id="mpForm"><label>How was it paid?</label>
       <div class="mp-opts">${Object.entries(PAY_METHODS).map(([k, l], i) => `<label class="mp-opt"><input type="radio" name="m" value="${k}" ${i === 0 ? 'checked' : ''} /><span>${l}</span></label>`).join('')}</div>
       <label style="margin-top:12px">Notes <span class="muted">(optional, e.g. check #, Venmo name, who paid)</span></label>
       <textarea name="note" style="min-height:70px" placeholder="Check #1042 from Sarah Mitchell"></textarea>
-      <div class="actions"><button type="button" class="btn" id="mpCancel">Cancel</button><button class="btn primary">Mark as paid</button></div></form></div>`;
+      <div class="actions"><button type="button" class="btn" id="mpCancel">Cancel</button><button class="btn primary">Record payment</button></div></form></div>`;
   document.body.appendChild(box);
   const close = () => box.remove();
   box.querySelector('.overlay').onclick = close; box.querySelector('#mpCancel').onclick = close;
@@ -6370,7 +6371,8 @@ function renderBookingDetail(id){
       <div class="panel od-card"><label>Invoice</label>
         <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
         <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
-        <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">${hqi('file')} View Invoice PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
+        <div class="od-cbtns od-cstack">${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : 'title="Record a payment made outside Stripe (check, Venmo, cash…)"'}>${b.paid ? 'Mark unpaid' : `${hqi('dollar')} Pay Invoice`}</button>`}
+          <button type="button" class="ap-link od-elink" data-inv="email">${hqi('mail')} Email Invoice</button></div></div>
       <div class="panel od-card"><label>Status</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
