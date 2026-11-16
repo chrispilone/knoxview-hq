@@ -982,6 +982,9 @@ header.top .top-icons{display:flex;gap:4px;margin-left:auto}
 body.gs-open{overflow:hidden}
 /* results (shared) */
 .gs-sec{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 10px 6px}
+.gs-sec-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gs-sec-row .gs-clear{flex:none;width:auto;min-height:0;display:inline-block;border:0;background:none;padding:4px 6px;margin:-4px -2px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:0;text-transform:none;color:var(--accent-2);cursor:pointer}
+.gs-sec-row .gs-clear:hover{background:var(--panel-2)}
 .gs-sec:first-child{padding-top:6px}
 .gs-it{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--text);padding:9px 10px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gs-it:active,.gs-it.on{background:var(--accent-soft)}
@@ -4426,7 +4429,7 @@ function gsDraw(box, raw){
     html += list.map((it, i) => (i === 1 ? '<div class="gs-sec">Orders &amp; projects</div>' : '') + gsRow(it, i, '', false)).join('') || '<div class="gs-none">No listings yet</div>';
   } else if (!raw.trim()) {
     list = gsRecent().map(r => GS.items.find(x => x.kind === r.k && x.id === r.id)).filter(Boolean);
-    html = list.length ? '<div class="gs-sec">Recent</div>' + list.map((it, i) => gsRow(it, i, '', false)).join('')
+    html = list.length ? '<div class="gs-sec gs-sec-row">Recent<button type="button" class="gs-clear" data-gclear="1">Clear history</button></div>' + list.map((it, i) => gsRow(it, i, '', false)).join('')
       : '<div class="gs-hint">Search by address, order number, agent, company, phone, email, task or applicant.</div>';
   } else {
     const hits = gsSearch(raw);
@@ -4451,6 +4454,10 @@ function gsDraw(box, raw){
   });
   box.querySelectorAll('[data-gl]').forEach(b => b.onclick = e => { e.stopPropagation(); GS.agent = b.dataset.gl; GS.sel = 1; gsRun(); box.scrollTop = 0; });
   const back = box.querySelector('[data-gback]'); if (back) back.onclick = () => { GS.agent = null; GS.sel = 0; gsRun(); };
+  const clr = box.querySelector('[data-gclear]'); if (clr) {
+    clr.onmousedown = e => e.preventDefault(); // keep the search box focused so the list stays open
+    clr.onclick = e => { e.stopPropagation(); try { localStorage.removeItem('hq.gsRecent'); } catch (_) {} GS.sel = 0; gsDraw(box, ''); toast('Search history cleared'); };
+  }
 }
 // Go to a result
 function gsOpen(it){
