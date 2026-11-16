@@ -6474,15 +6474,15 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Library.</p>
           <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
 
-        ${live ? sec('send', 'Delivery Email', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
-      </div>
-      <div class="od-side ap-secs">
         ${sec('projects', 'Media Projects', projs.length ? String(projs.length) : '', `
           ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
             : `<p class="muted" style="margin:0">No photo or video projects linked yet.</p>`}
           <div class="bk-actions">
             ${!projs.length && live ? `<button type="button" class="btn small" id="bkMkProj">Create Projects</button>` : ''}
           </div>`)}
+        ${live ? sec('send', 'Delivery Email', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
+      </div>
+      <div class="od-side ap-secs">
         ${sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
         ${sec('activity', 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
       </div>
