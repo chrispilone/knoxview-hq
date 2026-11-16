@@ -922,6 +922,67 @@ table.dir td.trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis}
   body.side-mini .qlinks{padding:4px 8px 8px}
   body.side-mini .ql-toggle,body.side-mini .ql-list a{justify-content:center;padding-left:0;padding-right:0;gap:0}
 }
+/* ===== Master search: top bar on desktop, swipe in from the right edge on phones ===== */
+:root{--topbar:0px}
+#gsBtn{display:none}
+.gs-box{display:none}
+@media (min-width:901px){
+  :root{--topbar:57px}
+  header.top{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;height:57px;margin-left:252px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--border);transition:margin-left .15s ease}
+  body.side-mini header.top{margin-left:76px}
+  header.top #menuBtn,header.top .brand-mark,header.top .top-title{display:none}
+  .gs-box{display:flex;position:relative;align-items:center;width:min(440px,100%);height:38px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);padding:0 10px 0 12px;gap:8px;transition:border-color .15s,background .15s,box-shadow .15s}
+  .gs-box:focus-within{background:var(--panel);border-color:var(--accent-2);box-shadow:0 0 0 3px var(--accent-soft)}
+  .gs-box .gs-ic{width:17px;height:17px;color:var(--muted);flex:none}
+  .gs-box input{flex:1;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--text);padding:0;height:100%}
+  .gs-box input::-webkit-search-cancel-button{display:none}
+  .gs-kbd{font:600 11px/1 inherit;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:3px 5px;background:var(--panel)}
+  .gs-box:focus-within .gs-kbd{display:none}
+  .gs-drop{position:absolute;top:calc(100% + 8px);left:0;width:min(600px,calc(100vw - 300px));max-height:min(70vh,640px);overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 40px rgba(10,20,40,.18);padding:6px;z-index:30}
+  .ds-prev,.sp-cats,.bk-summary{top:calc(var(--topbar) + 12px)}
+  .sp-cats{max-height:calc(100vh - 40px - var(--topbar))}
+  .mail-list{top:calc(var(--topbar) + 76px);max-height:calc(100vh - 96px - var(--topbar))}
+  .preview-bar{top:var(--topbar)}
+  .chat{height:calc(100vh - var(--topbar));height:calc(100dvh - var(--topbar))}
+}
+@media (max-width:900px){ #gsBtn{display:inline-grid;width:44px;height:44px;margin-left:2px} #gsBtn svg{width:22px;height:22px} }
+/* phone sheet */
+.gs-sheet{position:fixed;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column;transform:translate3d(100%,0,0);visibility:hidden;will-change:transform}
+.gs-sheet.show{visibility:visible}
+.gs-shade{position:fixed;inset:0;z-index:44;background:rgba(10,14,20,.35);opacity:0;pointer-events:none}
+.gs-head{display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--panel);border-bottom:1px solid var(--border)}
+.gs-field{flex:1;display:flex;align-items:center;gap:8px;height:42px;padding:0 10px 0 12px;border-radius:12px;background:var(--panel-2)}
+.gs-field svg{width:18px;height:18px;color:var(--muted);flex:none}
+.gs-field input{flex:1;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:16px;color:var(--text);padding:0;height:100%}
+.gs-field input::-webkit-search-cancel-button{display:none}
+.gs-clear{border:0;background:var(--muted);color:var(--panel);width:18px;height:18px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:11px;line-height:1;opacity:.7}
+.gs-cancel{border:0;background:none;color:var(--accent-2);font:inherit;font-size:16px;font-weight:600;padding:8px 4px;-webkit-tap-highlight-color:transparent}
+.gs-res{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 10px calc(24px + env(safe-area-inset-bottom))}
+body.gs-open{overflow:hidden}
+/* results (shared) */
+.gs-sec{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 10px 6px}
+.gs-sec:first-child{padding-top:6px}
+.gs-it{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--text);padding:9px 10px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gs-it:active,.gs-it.on{background:var(--accent-soft)}
+@media (hover:hover){.gs-it:hover{background:var(--panel-2)}.gs-it.on{background:var(--accent-soft)}}
+.gs-av{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--panel-2);color:var(--accent-2);overflow:hidden;font-weight:700;font-size:13px}
+.gs-av svg{width:18px;height:18px}
+.gs-av img{width:100%;height:100%;object-fit:cover}
+.gs-av.round{border-radius:50%}
+.gs-tx{flex:1;min-width:0}
+.gs-t{display:block;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-s{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.gs-t mark{background:none;color:var(--accent-2);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:var(--accent-soft)}
+.gs-m{flex:none;font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
+.gs-top{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin:2px 0 4px}
+.gs-drop .gs-top{background:var(--panel-2);border-color:transparent}
+.gs-chips{display:flex;gap:6px;flex:none}
+.gs-chip{border:1px solid var(--border);background:var(--panel);color:var(--accent-2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.gs-chip:active{background:var(--accent-soft)}
+.gs-back{display:flex;align-items:center;gap:8px;border:0;background:none;font:inherit;color:var(--accent-2);font-weight:600;font-size:14px;padding:8px 10px;cursor:pointer}
+.gs-none{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px}
+.gs-hint{padding:18px 12px;color:var(--muted);font-size:13.5px;line-height:1.5}
+.gs-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
 /* Pull to refresh */
 html,body{overscroll-behavior-y:none}
 #ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 66px);z-index:15;width:40px;height:40px;border-radius:50%;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.14),0 0 0 1px var(--border);display:grid;place-items:center;color:var(--muted);transform:translate3d(-50%,-60px,0);opacity:0;pointer-events:none;will-change:transform,opacity}
@@ -938,7 +999,7 @@ html,body{overscroll-behavior-y:none}
 #ptr.spinning .ptr-arrow,#ptr.done .ptr-arrow{opacity:0}
 #ptr.done .ptr-check path{stroke-dashoffset:0}
 @keyframes ptrspin{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
-@media (min-width:901px){ #ptr{top:14px} }
+@media (min-width:901px){ #ptr{top:calc(env(safe-area-inset-top) + 65px)} }
 /* Mail */
 .mail-head{align-items:flex-end}
 .mail-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
@@ -1289,6 +1350,13 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     <button class="icon-btn" id="menuBtn" title="Menu" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><i class="menu-dot hidden" id="menuDot"></i></button>
     <a class="brand-mark" href="#/home" aria-label="Knox View HQ home"><span class="kv-logo" role="img" aria-label="Knox View"></span><span class="hq-tag">HQ</span></a>
     <span class="top-title" id="topTitle"></span>
+    <div class="gs-box" id="gsBox" role="search">
+      <svg class="gs-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="gsInput" type="search" placeholder="Search orders, addresses, agents…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search HQ">
+      <kbd class="gs-kbd" id="gsKbd">⌘K</kbd>
+      <div class="gs-drop hidden" id="gsDrop" role="listbox"></div>
+    </div>
+    <button class="icon-btn" id="gsBtn" title="Search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   </header>
   <div class="app-body">
 
@@ -1551,7 +1619,7 @@ $('#tabs').addEventListener('click', () => document.body.classList.remove('menu-
   };
   document.addEventListener('touchstart', e => {
     g = null;
-    if (!mq.matches || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML) return;
+    if (!mq.matches || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML || document.body.classList.contains('gs-open')) return;
     const t = e.touches[0];
     if (isOpen()) g = { mode: 'close', x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, active: false, w: side.offsetWidth };
     else if (t.clientX <= EDGE) g = { mode: 'open', x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, active: false, w: side.offsetWidth };
@@ -3848,6 +3916,320 @@ async function refreshCurrentView(){
   };
   document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
 })();
+
+/* ===================== MASTER SEARCH =====================
+   One search across orders, projects, agents, companies, tasks, applicants and pages.
+   Desktop: always in the top bar (⌘K or / to jump in). Phones: swipe in from the right edge (or tap the search icon).
+   Results follow what you typed: an address puts that order first, a name puts that agent first (with their listings
+   one tap away), a number finds an order number or a phone, an email finds the person. Only shows what you can open. */
+const GS = { q:'', items:[], hits:[], sel:0, agent:null, built:0, loading:false };
+const GS_ABBR = { street:'st', road:'rd', drive:'dr', avenue:'ave', lane:'ln', court:'ct', boulevard:'blvd', circle:'cir', parkway:'pkwy',
+  highway:'hwy', place:'pl', trail:'trl', terrace:'ter', point:'pt', mountain:'mtn', mount:'mt', ridge:'rdg', heights:'hts', hollow:'holw',
+  cove:'cv', creek:'crk', north:'n', south:'s', east:'e', west:'w', apartment:'apt', suite:'ste' };
+const gsNorm = v => String(v ?? '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9@.]+/g, ' ')
+  .split(' ').filter(Boolean).map(w => GS_ABBR[w] || w.replace(/\.+$/, '')).join(' ');
+const gsDigits = v => String(v ?? '').replace(/\D/g, '');
+const GS_IC = {
+  order:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  project:'<rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/>',
+  video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  company:'<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/>',
+  task:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  applicant:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  page:'<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
+};
+const gsIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${GS_IC[k]}</svg>`;
+const gsInitials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+const gsDate = d => d ? new Date(d).toLocaleDateString(undefined, { month:'short', day:'numeric', year: new Date(d).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }) : '';
+const gsAddr = (a, unit, city) => [a, unit ? '#' + String(unit).replace(/^#/, '') : '', ].filter(Boolean).join(' ') + (city ? ', ' + city : '');
+
+// Load whatever the search needs that this screen hasn't loaded yet (quietly, in the background)
+async function gsEnsureData(){
+  if (GS.loading) return; GS.loading = true;
+  const jobs = [];
+  if (viewAllowed('bookings') && !BK.loaded) jobs.push(loadBookingData().catch(() => {}));
+  if (viewAllowed('tasks') && !S.tasks.length && !GS.triedTasks) { GS.triedTasks = true; jobs.push(loadTasks().catch(() => {})); }
+  if (viewAllowed('hiring') && !HR.loaded) jobs.push(loadHiring().catch(() => {}));
+  if (viewAllowed('companies') && !S.companies) jobs.push(loadCompanies().catch(() => {}));
+  if (jobs.length) { await Promise.allSettled(jobs); GS.built = 0; gsRun(); }
+  GS.loading = false;
+}
+// Everything searchable, as one flat list. Rebuilt when opened (cheap), so it always reflects what's loaded.
+function gsBuild(){
+  const out = [], now = Date.now();
+  const recent = d => { if (!d) return 0; const days = Math.abs(now - new Date(d).getTime()) / 864e5; return days < 45 ? 1.5 * (1 - days / 45) : 0; };
+  if (viewAllowed('bookings')) for (const b of BK.list || []) {
+    const agent = agentName(b.agent_id) || b.client_name || '';
+    out.push({ kind:'order', id:b.id, base:1.25, num:String(b.number || ''), rec: recent(b.shoot_start || b.created_at), agentId:b.agent_id,
+      title: gsAddr(b.address, b.unit, b.city) || `Order #${b.number}`,
+      sub: [`#${b.number}`, agent, b.shoot_start ? gsDate(b.shoot_start) : 'Not scheduled'].filter(Boolean).join(' · '),
+      meta: BK_STATUS[b.status] ? `<span class="gs-dot" style="background:${BK_STATUS[b.status][1]}"></span>${BK_STATUS[b.status][0]}` : '',
+      f: [[b.address, 3], [b.unit, 1], [b.city, 1], [b.zip, 1], [agent, 1.5], [b.client_email, 1], [bkPkgName(b), .6]],
+      dg: [gsDigits(b.client_phone)].filter(Boolean),
+      when: b.shoot_start || b.created_at });
+  }
+  if (viewAllowed('projects')) for (const p of S.projects || []) {
+    if (!can(p.media)) continue;
+    const type = S.types.find(t => t.id === p.project_type_id)?.name || '', agent = agentName(p.agent_id);
+    out.push({ kind:'project', id:p.id, base:1, rec: recent(p.due_date || p.created_at), agentId:p.agent_id, icon: p.media === 'video' ? 'video' : 'project',
+      title: p.name || gsAddr(p.address, '', p.city) || 'Project',
+      sub: [p.media === 'video' ? 'Video' : 'Photo', type, agent, p.due_date ? 'Due ' + gsDate(p.due_date + 'T12:00') : ''].filter(Boolean).join(' · '),
+      meta: STATUS_LABEL[p.status] || '', done: DONE.includes(p.status),
+      f: [[p.name, 3], [p.address, 3], [p.city, 1], [agent, 1.5], [type, .6]], when: p.due_date || p.created_at });
+  }
+  if (viewAllowed('agents')) for (const a of S.agents || []) {
+    out.push({ kind:'agent', id:a.id, base:1.2, photo:a.photo_url, title:a.full_name || a.email || 'Agent',
+      sub: [a.team_name, a.brokerage, a.phone || a.email].filter(Boolean).join(' · '),
+      f: [[a.full_name, 3], [a.team_name, 1.2], [a.brokerage, 1], [a.email, 1.2]], dg: [gsDigits(a.phone)].filter(Boolean) });
+  }
+  if (viewAllowed('companies')) for (const c of S.companies || []) {
+    const n = coAgents(c.id).length;
+    out.push({ kind:'company', id:c.id, base:1.05, photo:c.logo_url, title:c.name || c.brokerage || 'Company',
+      sub: [c.brokerage && c.brokerage !== c.name ? c.brokerage : '', n ? `${n} agent${n === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') || 'Company',
+      f: [[c.name, 3], [c.brokerage, 1.2], [c.team_name, 1.2], [c.admin_email, .8]], dg: [gsDigits(c.admin_phone)].filter(Boolean) });
+  }
+  if (viewAllowed('tasks')) for (const t of S.tasks || []) {
+    out.push({ kind:'task', id:t.id, base:.85, rec: t.status === 'done' ? 0 : .5, done: t.status === 'done', title:t.title || 'Task',
+      sub: [t.status === 'done' ? 'Done' : 'Task', t.due_date ? 'Due ' + gsDate(t.due_date + 'T12:00') : '', agentName(t.agent_id)].filter(Boolean).join(' · '),
+      f: [[t.title, 3], [t.notes, .5], [agentName(t.agent_id), .8]] });
+  }
+  if (viewAllowed('hiring')) for (const c of HR.list || []) {
+    out.push({ kind:'applicant', id:c.id, base:.8, title:c.full_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || 'Applicant',
+      sub: ['Applicant', HR_STAGE[c.stage] || c.stage, c.city].filter(Boolean).join(' · '),
+      f: [[c.full_name, 3], [c.email, 1.2], [c.city, .6]], dg: [gsDigits(c.phone)].filter(Boolean) });
+  }
+  document.querySelectorAll('#tabs a[data-view]').forEach(a => {
+    if (a.classList.contains('hidden') || !viewAllowed(a.dataset.view)) return;
+    const label = a.querySelector('.lbl')?.textContent || a.title || a.dataset.view;
+    out.push({ kind:'page', id:a.dataset.view, base:.9, title: label, sub:'Go to ' + label, href: a.getAttribute('href'), f: [[label, 3]] });
+  });
+  for (const it of out) it.nf = it.f.filter(x => x[0]).map(([t, w]) => [gsNorm(t), w]);
+  GS.items = out; GS.built = Date.now();
+}
+// Score one item against the query. Every word must match somewhere; earlier/whole-word matches in key fields win.
+function gsScore(it, q, toks, digitsQ, isAddr, isNum){
+  let total = 0;
+  for (const tk of toks) {
+    let best = 0;
+    for (const [t, w] of it.nf) {
+      const i = t.indexOf(tk); if (i < 0) continue;
+      const sc = (i === 0 ? 3 : t[i - 1] === ' ' ? 2 : .8) * w;
+      if (sc > best) best = sc;
+    }
+    if (!best && /^\d{3,}$/.test(tk) && it.dg?.some(d => d.includes(tk))) best = 3;
+    if (!best && it.num && it.num === tk.replace(/^#/, '')) best = 6;
+    if (!best) return 0;
+    total += best;
+  }
+  for (const [t, w] of it.nf) { if (t === q) total += 10 * w; else if (t.startsWith(q)) total += 6 * w; else if (t.includes(q)) total += 2.5 * w; }
+  if (digitsQ.length >= 7 && it.dg?.some(d => d.endsWith(digitsQ) || d.includes(digitsQ))) total += it.kind === 'order' ? 15 : 30;
+  if (isNum && it.num === q.replace(/^#/, '')) total += 40;
+  if (isAddr && (it.kind === 'order' || it.kind === 'project')) total += 8;
+  if (it.done) total -= 1.5;
+  return total * it.base + (it.rec || 0);
+}
+function gsSearch(raw){
+  const q = gsNorm(raw), toks = q.split(' ').filter(Boolean);
+  if (!toks.length) return [];
+  const digitsQ = gsDigits(raw), isAddr = /^\s*\d+\s+[a-z]/i.test(raw), isNum = /^\s*#?\d{1,6}\s*$/.test(raw);
+  const hits = [];
+  for (const it of GS.items) { const sc = gsScore(it, q, toks, digitsQ, isAddr, isNum); if (sc > 0) hits.push([sc, it]); }
+  hits.sort((a, b) => b[0] - a[0]);
+  return hits.map(h => h[1]);
+}
+// Agent's listings: their orders and projects, newest first
+function gsListings(agentId){
+  const its = GS.items.filter(it => (it.kind === 'order' || it.kind === 'project') && it.agentId === agentId);
+  return its.sort((a, b) => (b.kind === 'order') - (a.kind === 'order') || String(b.when || '').localeCompare(String(a.when || '')));
+}
+const gsListingCount = id => GS.items.reduce((n, it) => n + ((it.kind === 'order' || it.kind === 'project') && it.agentId === id ? 1 : 0), 0);
+function gsMark(text, raw){
+  let h = esc(text);
+  const words = String(raw).trim().split(/\s+/).filter(w => w.length > 1).sort((a, b) => b.length - a.length).slice(0, 4);
+  for (const w of words) { const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'i'); if (re.test(h) && !/[<>&]/.test(w)) { h = h.replace(re, '<mark>$1</mark>'); } }
+  return h;
+}
+function gsRow(it, i, raw, top){
+  const av = it.kind === 'agent' ? `<span class="gs-av round">${it.photo ? `<img src="${esc(it.photo)}" alt="" loading="lazy">` : gsInitials(it.title)}</span>`
+    : it.kind === 'company' && it.photo ? `<span class="gs-av"><img src="${esc(it.photo)}" alt="" loading="lazy" style="object-fit:contain;background:#fff"></span>`
+    : `<span class="gs-av">${gsIcon(it.icon || it.kind)}</span>`;
+  const n = it.kind === 'agent' ? gsListingCount(it.id) : 0;
+  const chips = it.kind === 'agent' && !GS.agent ? `<span class="gs-chips">${n ? `<button type="button" class="gs-chip" data-gl="${it.id}">Listings ${n}</button>` : ''}</span>` : '';
+  return `<div class="gs-it${top ? ' gs-top' : ''}${i === GS.sel ? ' on' : ''}" role="option" data-gi="${i}">${av}
+    <span class="gs-tx"><span class="gs-t">${gsMark(it.title, raw)}</span><span class="gs-s">${esc(it.sub || '')}</span></span>
+    ${chips}${!chips && it.meta ? `<span class="gs-m">${it.meta}</span>` : ''}</div>`;
+}
+const GS_GROUPS = [['order','Orders'],['agent','Agents'],['project','Projects'],['company','Companies'],['task','Tasks'],['applicant','Applicants'],['page','Pages']];
+function gsRecent(){ try { return JSON.parse(localStorage.getItem('hq.gsRecent') || '[]'); } catch (_) { return []; } }
+function gsRemember(it){ try { const r = gsRecent().filter(x => !(x.k === it.kind && x.id === it.id)); r.unshift({ k: it.kind, id: it.id }); localStorage.setItem('hq.gsRecent', JSON.stringify(r.slice(0, 6))); } catch (_) {} }
+// Draw results into a container (the desktop drop-down or the phone sheet)
+function gsDraw(box, raw){
+  if (!box) return;
+  let html = '', list = [];
+  if (GS.agent) {
+    const a = GS.items.find(x => x.kind === 'agent' && x.id === GS.agent);
+    list = gsListings(GS.agent);
+    html = `<button type="button" class="gs-back" data-gback="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>${esc(a?.title || 'Agent')} · Listings</button>`;
+    if (a) { list.unshift(a); }
+    html += list.map((it, i) => (i === 1 ? '<div class="gs-sec">Orders &amp; projects</div>' : '') + gsRow(it, i, '', false)).join('') || '<div class="gs-none">No listings yet</div>';
+  } else if (!raw.trim()) {
+    list = gsRecent().map(r => GS.items.find(x => x.kind === r.k && x.id === r.id)).filter(Boolean);
+    html = list.length ? '<div class="gs-sec">Recent</div>' + list.map((it, i) => gsRow(it, i, '', false)).join('')
+      : '<div class="gs-hint">Search by address, order number, agent, company, phone, email, task or applicant.</div>';
+  } else {
+    const hits = gsSearch(raw);
+    if (!hits.length) html = `<div class="gs-none">No results for “${esc(raw.trim())}”</div>`;
+    else {
+      const top = hits[0];
+      list.push(top);
+      html = '<div class="gs-sec">Top result</div>' + gsRow(top, 0, raw, true);
+      for (const [k, label] of GS_GROUPS) {
+        const g = hits.filter(h => h.kind === k && h !== top).slice(0, k === 'page' ? 3 : 5);
+        if (!g.length) continue;
+        html += `<div class="gs-sec">${label}</div>` + g.map(it => { list.push(it); return gsRow(it, list.length - 1, raw, false); }).join('');
+      }
+    }
+  }
+  GS.hits = list;
+  if (GS.sel >= list.length) GS.sel = Math.max(0, list.length - 1);
+  box.innerHTML = html;
+  box.querySelectorAll('[data-gi]').forEach(el => {
+    el.onclick = e => { if (e.target.closest('[data-gl]')) return; gsOpen(GS.hits[+el.dataset.gi]); };
+    el.onmousemove = () => { if (GS.sel !== +el.dataset.gi) { GS.sel = +el.dataset.gi; box.querySelectorAll('.gs-it.on').forEach(x => x.classList.remove('on')); el.classList.add('on'); } };
+  });
+  box.querySelectorAll('[data-gl]').forEach(b => b.onclick = e => { e.stopPropagation(); GS.agent = b.dataset.gl; GS.sel = 1; gsRun(); box.scrollTop = 0; });
+  const back = box.querySelector('[data-gback]'); if (back) back.onclick = () => { GS.agent = null; GS.sel = 0; gsRun(); };
+}
+// Go to a result
+function gsOpen(it){
+  if (!it) return;
+  gsRemember(it);
+  gsCloseAll();
+  if (it.kind === 'order') location.hash = `#/bookings/${it.id}`;
+  else if (it.kind === 'project') openProject(it.id);
+  else if (it.kind === 'agent') { if (S.view !== 'agents') location.hash = '#/agents'; setTimeout(() => openAgent(it.id), 60); }
+  else if (it.kind === 'company') { if (S.view !== 'companies') location.hash = '#/companies'; setTimeout(() => openCompany(it.id), 60); }
+  else if (it.kind === 'task') { if (S.view !== 'tasks') location.hash = '#/tasks'; setTimeout(() => openTask(it.id), 60); }
+  else if (it.kind === 'applicant') location.hash = `#/hiring/${it.id}`;
+  else if (it.kind === 'page') location.hash = it.href || `#/${it.id}`;
+}
+const gsIsPhone = () => matchMedia('(max-width:900px)').matches;
+function gsRun(){
+  if (!GS.built || Date.now() - GS.built > 15000) gsBuild();
+  if (gsIsPhone()) gsDraw($('#gsMRes'), GS.q);
+  else if (!$('#gsDrop').classList.contains('hidden')) gsDraw($('#gsDrop'), GS.q);
+}
+function gsKeys(e, box){
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault(); if (!GS.hits.length) return;
+    GS.sel = (GS.sel + (e.key === 'ArrowDown' ? 1 : -1) + GS.hits.length) % GS.hits.length;
+    box.querySelectorAll('.gs-it').forEach(x => x.classList.toggle('on', +x.dataset.gi === GS.sel));
+    box.querySelector('.gs-it.on')?.scrollIntoView({ block:'nearest' });
+  } else if (e.key === 'Enter') { e.preventDefault(); gsOpen(GS.hits[GS.sel]); }
+  else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (GS.agent) { GS.agent = null; GS.sel = 0; gsRun(); } else gsCloseAll(); }
+}
+
+/* ----- Desktop: search box in the top bar ----- */
+(() => {
+  const inp = $('#gsInput'), drop = $('#gsDrop'), box = $('#gsBox');
+  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) $('#gsKbd').textContent = '⌘K'; else $('#gsKbd').textContent = 'Ctrl K';
+  const openDrop = () => { if (!S.me) return; GS.built = 0; drop.classList.remove('hidden'); gsRun(); gsEnsureData(); };
+  inp.onfocus = openDrop;
+  inp.oninput = () => { GS.q = inp.value; GS.agent = null; GS.sel = 0; if (drop.classList.contains('hidden')) openDrop(); else gsRun(); };
+  inp.onkeydown = e => gsKeys(e, drop);
+  drop.onmousedown = e => e.preventDefault(); // keep focus in the box while clicking results
+  document.addEventListener('mousedown', e => { if (!box.contains(e.target)) drop.classList.add('hidden'); });
+  inp.onblur = () => setTimeout(() => { if (document.activeElement !== inp) drop.classList.add('hidden'); }, 120);
+  document.addEventListener('keydown', e => {
+    if (!S.me || gsIsPhone()) return;
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) { e.preventDefault(); inp.focus(); inp.select(); }
+  });
+})();
+
+/* ----- Phones: full-screen search that slides in from the right edge ----- */
+(() => {
+  const sheet = document.createElement('div');
+  sheet.className = 'gs-sheet no-ptr'; sheet.id = 'gs'; sheet.setAttribute('aria-hidden', 'true');
+  sheet.innerHTML = `<div class="gs-head"><label class="gs-field">${gsIcon('page').replace(GS_IC.page, '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>')}
+      <input id="gsMInput" type="search" enterkeyhint="go" placeholder="Search HQ" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Search HQ">
+      <button type="button" class="gs-clear hidden" id="gsClear" aria-label="Clear">✕</button></label>
+      <button type="button" class="gs-cancel" id="gsCancel">Cancel</button></div>
+    <div class="gs-res" id="gsMRes" role="listbox"></div>`;
+  const shade = document.createElement('div'); shade.className = 'gs-shade';
+  document.body.append(shade, sheet);
+  const inp = $('#gsMInput'), res = $('#gsMRes'), clear = $('#gsClear');
+  let x = null, open = false; // x: current slide offset in px (0 = open, W = closed)
+  const W = () => window.innerWidth;
+  const place = (px, anim) => {
+    const t = anim ? 'transform .28s cubic-bezier(.2,.8,.25,1)' : 'none';
+    sheet.style.transition = t; shade.style.transition = anim ? 'opacity .28s' : 'none';
+    sheet.style.transform = `translate3d(${px}px,0,0)`; shade.style.opacity = String(Math.max(0, 1 - px / W()));
+  };
+  const show = () => {
+    if (open) return; open = true;
+    sheet.classList.add('show'); sheet.setAttribute('aria-hidden', 'false'); document.body.classList.add('gs-open');
+    GS.built = 0; GS.agent = null; GS.sel = 0; gsRun(); gsEnsureData();
+  };
+  window.gsShow = () => { show(); place(W(), false); requestAnimationFrame(() => place(0, true)); inp.focus(); };
+  const hide = anim => {
+    if (!open) return; open = false;
+    inp.blur(); place(W(), anim !== false);
+    setTimeout(() => { if (!open) { sheet.classList.remove('show'); sheet.setAttribute('aria-hidden', 'true'); document.body.classList.remove('gs-open'); } }, anim === false ? 0 : 290);
+  };
+  window.gsHide = hide;
+  inp.oninput = () => { GS.q = inp.value; GS.agent = null; GS.sel = 0; clear.classList.toggle('hidden', !inp.value); gsRun(); res.scrollTop = 0; };
+  inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); gsOpen(GS.hits[0]); } else if (e.key === 'Escape') hide(); };
+  clear.onclick = () => { inp.value = ''; inp.oninput(); inp.focus(); };
+  $('#gsCancel').onclick = () => hide();
+  res.addEventListener('touchstart', () => { if (document.activeElement === inp && GS.q) inp.blur(); }, { passive: true }); // scrolling results tucks the keyboard away
+  $('#gsBtn').onclick = () => window.gsShow();
+
+  // Gestures: from the right edge, swipe left to pull it in; on the sheet, swipe right to push it away. Follows the finger.
+  const EDGE = 24;
+  let g = null;
+  const blocked = () => !S.me || !gsIsPhone() || $('#layer')?.innerHTML || document.body.classList.contains('menu-open');
+  document.addEventListener('touchstart', e => {
+    g = null;
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    if (open) { if (sheet.contains(e.target)) g = { mode:'close', x0:t.clientX, y0:t.clientY, t0:Date.now(), dx:0, active:false }; return; }
+    if (blocked() || t.clientX < W() - EDGE) return;
+    g = { mode:'open', x0:t.clientX, y0:t.clientY, t0:Date.now(), dx:0, active:false };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!g) return;
+    const t = e.touches[0], dx = t.clientX - g.x0, dy = t.clientY - g.y0;
+    if (!g.active) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      const ok = Math.abs(dx) > Math.abs(dy) * 1.2 && (g.mode === 'open' ? dx < 0 : dx > 0);
+      if (!ok) { g = null; return; }
+      g.active = true;
+      if (g.mode === 'open') { show(); place(W(), false); }
+    }
+    if (e.cancelable) e.preventDefault();
+    g.dx = dx;
+    place(g.mode === 'open' ? Math.max(0, W() + dx) : Math.max(0, dx), false);
+  }, { passive: false });
+  const end = () => {
+    if (!g || !g.active) { g = null; return; }
+    const v = g.dx / Math.max(1, Date.now() - g.t0); // px per ms
+    if (g.mode === 'open') {
+      const go = -g.dx > W() * 0.28 || v < -0.4;
+      if (go) { place(0, true); inp.focus(); } else hide();
+    } else {
+      const shut = g.dx > W() * 0.3 || v > 0.45;
+      if (shut) hide(); else place(0, true);
+    }
+    g = null;
+  };
+  document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
+  window.addEventListener('resize', () => { if (!gsIsPhone() && open) hide(false); });
+})();
+function gsCloseAll(){
+  $('#gsDrop')?.classList.add('hidden'); const di = $('#gsInput'); if (di) di.blur();
+  if (window.gsHide) window.gsHide();
+}
 
 /* ===================== CALENDAR (Google Calendar via the gcal edge function) ===================== */
 const CAL_TZ = 'America/New_York';
