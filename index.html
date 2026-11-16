@@ -6244,6 +6244,7 @@ function renderBookingDetail(id){
       </div>
       <div class="od-links">
         <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">👁 Download page</button>
+        ${b.public_token ? `<button type="button" class="btn small" id="bkShareLink" title="The download page's own link: anyone with it can view (no sign-in). Downloads unlock after payment if the order requires it.">🔗 Copy download link</button>` : ''}
         <button type="button" class="btn small" id="bkInvoice" title="Open the invoice the client sees in their portal">🧾 Invoice</button>
         ${site ? `<a class="btn small" href="${esc(site)}" target="_blank" rel="noopener" title="The single property website">🌐 Property website</a>` : ''}
         ${dbxUrl ? `<a class="btn small" href="${esc(dbxUrl)}" target="_blank" rel="noopener" title="${esc(b.dropbox_path)}">📁 Dropbox</a>` : ''}
@@ -6430,6 +6431,7 @@ function renderBookingDetail(id){
     btn.disabled = false; btn.textContent = label;
   };
   on('bkClientView', () => openAsClient('bkClientView', `delivery/${b.id}`));
+  on('bkShareLink', () => { const u = `${PORTAL_URL}/d/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Download link copied'), () => prompt('Download link', u)); });
   on('bkInvoice', () => openAsClient('bkInvoice', `invoice/${b.number}${b.paid ? '/paid' : ''}`));
   on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
   on('bkCancel', async () => {
@@ -6530,7 +6532,7 @@ async function deliverCall(body){
 }
 function dsFill(str, b, a){
   const name = String(a?.full_name || b.client_name || '').trim();
-  const v = { first_name: name.split(/\s+/)[0] || 'there', client_name: name || 'there', address: b.address || 'your listing', city: b.city || '', order_number: b.number ? String(b.number) : '', link: `${PORTAL_URL}/#delivery/${b.id}` };
+  const v = { first_name: name.split(/\s+/)[0] || 'there', client_name: name || 'there', address: b.address || 'your listing', city: b.city || '', order_number: b.number ? String(b.number) : '', link: b.public_token ? `${PORTAL_URL}/d/${b.public_token}` : `${PORTAL_URL}/#delivery/${b.id}` };
   return String(str || '').replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m);
 }
 function dsFormHTML(b, a){
