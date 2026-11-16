@@ -367,7 +367,8 @@ header.top{display:none}
   body.menu-open .side-scrim{display:block;position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:39}
   #sideCollapse{display:none} #sideClose{display:inline-grid;width:44px;height:44px}
   nav.tabs{gap:6px}
-  nav.tabs a{min-height:52px;padding:13px 16px;font-size:16.5px;gap:16px}
+  nav.tabs a,nav.tabs .nav-group{min-height:52px;padding:13px 16px;font-size:16.5px;gap:16px}
+  nav.tabs .nav-group>svg:first-child{width:22px;height:22px} nav.tabs .nav-sub a{min-height:46px;font-size:15.5px}
   nav.tabs a svg{width:23px;height:23px}
   .side-out{min-height:50px;padding:12px 16px;gap:16px;font-size:16px}
   .app-body{margin-left:0}
@@ -397,7 +398,10 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .check input{width:auto}
 
 /* Media switch (Photo / Video) */
-.media-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;max-width:560px}
+.media-switch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;max-width:1000px}
+.media-switch button[data-m=all] .ico,.media-switch button[data-m=custom] .ico{background:var(--accent-soft);color:var(--accent)}
+.media-switch button[data-m=all].active,.media-switch button[data-m=custom].active{border-color:var(--accent)}
+@media (max-width:640px){ .media-switch{grid-template-columns:1fr 1fr} }
 .media-switch button{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--border);background:var(--panel);border-radius:12px;padding:12px 14px}
 .media-switch .ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none}
 .media-switch .ico svg{width:18px;height:18px}
@@ -936,6 +940,12 @@ table.dir td.trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis}
 /* ===== Master search: top bar on desktop, swipe in from the right edge on phones ===== */
 :root{--topbar:0px}
 #gsBtn{display:none}
+.top-ic{color:var(--muted);text-decoration:none}.top-ic.on{color:var(--accent);background:var(--accent-soft)}
+header.top .top-icons{display:flex;gap:4px;margin-left:auto}
+.top-ic .badge{display:inline-grid;place-items:center;border-radius:999px;background:var(--danger);color:#fff;font-weight:700}
+.top-ic .badge{position:absolute;top:3px;right:2px;min-width:17px;height:17px;font-size:10.5px;padding:0 4px}
+@media (max-width:900px){ header.top .top-ic{width:40px;height:40px} header.top .top-ic svg{width:21px;height:21px} }
+@media (max-width:480px){ header.top .top-title{display:none} header.top .top-icons{gap:0} }
 .gs-box{display:none}
 @media (min-width:901px){
   :root{--topbar:57px}
@@ -1365,22 +1375,28 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     </div>
     <nav class="tabs" id="tabs">
       <a href="#/home" data-view="home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">Home</span></a>
-      <a href="#/notifications" data-view="notifications" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="lbl">Notifications</span><span class="badge hidden" id="notifBadge"></span></a>
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
-      <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
       <a href="#/bookings" data-view="bookings" title="Orders · shoots, listings, deliveries and payments" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Orders</span></a>
-      <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
-      <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
-      <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
-      <button type="button" class="nav-group" id="clientsTab" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button type="button" class="nav-group" id="clientsTab" data-grp="clients" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
       <div class="nav-sub" id="clientsSub">
         <a href="#/companies" data-view="companies" title="Companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></svg><span class="lbl">Companies</span></a>
         <a href="#/agents" data-view="agents" title="Agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.5 7-5.5s6.1 1.9 7 5.5"/></svg><span class="lbl">Agents</span></a>
       </div>
-      <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
-      <a href="#/chat" data-view="chat" title="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="lbl">Chat</span><span class="badge hidden" id="chatBadge"></span></a>
-      <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
+      <button type="button" class="nav-group" id="projectsTab" data-grp="projects" title="Projects" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span><svg class="chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="nav-sub" id="projectsSub">
+        <a href="#/projects/all" data-view="projects" data-pv="all" title="All projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span class="lbl">All projects</span></a>
+        <a href="#/projects/photo" data-view="projects" data-pv="photo" title="Photo projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Photo projects</span></a>
+        <a href="#/projects/video" data-view="projects" data-pv="video" title="Video projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg><span class="lbl">Video projects</span></a>
+        <a href="#/projects/custom" data-view="projects" data-pv="custom" title="Custom projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5-5-2.8-5 2.8 1-5.5-4-4 5.5-1z"/></svg><span class="lbl">Custom projects</span></a>
+      </div>
+      <button type="button" class="nav-group" id="companyTab" data-grp="company" title="My Company" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-5h6v5M4 20h16"/></svg><span class="lbl">My Company</span><svg class="chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="nav-sub" id="companySub">
+        <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
+        <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
+        <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
+        <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
+      </div>
     </nav>
     <div class="qlinks hidden" id="quickLinks">
       <button type="button" class="ql-toggle" id="qlToggle" title="Quick links" aria-expanded="false">
@@ -1408,6 +1424,10 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
       <kbd class="gs-kbd" id="gsKbd">⌘K</kbd>
       <div class="gs-drop hidden" id="gsDrop" role="listbox"></div>
     </div>
+    <span class="top-icons">
+      <a class="icon-btn top-ic" href="#/chat" data-top="chat" title="Chat" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="badge hidden" id="chatBadge"></span></a>
+      <a class="icon-btn top-ic" href="#/notifications" data-top="notifications" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="badge hidden" id="notifBadge"></span></a>
+    </span>
     <button class="icon-btn" id="gsBtn" title="Search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   </header>
   <div class="app-body">
@@ -1420,6 +1440,10 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     <!-- Projects -->
     <div id="projectsView" class="hidden">
       <div class="media-switch" id="mediaSwitch">
+        <button data-m="all">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>
+          <span><b>All</b><small id="allCount"></small></span>
+        </button>
         <button data-m="photo">
           <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
           <span><b>Photo</b><small id="photoCount"></small></span>
@@ -1427,6 +1451,10 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
         <button data-m="video">
           <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></span>
           <span><b>Video</b><small id="videoCount"></small></span>
+        </button>
+        <button data-m="custom">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5-5-2.8-5 2.8 1-5.5-4-4 5.5-1z"/></svg></span>
+          <span><b>Custom</b><small id="customCount"></small></span>
         </button>
       </div>
       <div class="stats" id="stats"></div>
@@ -1593,7 +1621,9 @@ function applyAccess(){
   ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','companies','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
-  document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', !can(b.dataset.m)));
+  document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
+  document.querySelectorAll('#projectsSub a[data-pv=photo], #projectsSub a[data-pv=video]').forEach(a => a.classList.toggle('hidden', !can(a.dataset.pv)));
+  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects'));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
   $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
   $('#newAgentBtn').classList.toggle('hidden', !can('manage_agents'));
@@ -1705,7 +1735,7 @@ $('#tabs').addEventListener('click', () => document.body.classList.remove('menu-
   tg.onclick = () => { const on = !box.classList.contains('open'); set(on); try { localStorage.setItem('kvhq.qlinks', on ? '1' : '0'); } catch (e) {} };
   $('#qlList').addEventListener('click', () => document.body.classList.remove('menu-open'));
 })();
-const paintMenuDot = () => $('#menuDot').classList.toggle('hidden', !document.querySelector('#tabs .badge:not(.hidden)'));
+const paintMenuDot = () => $('#menuDot').classList.toggle('hidden', true); // badges now live on the top-bar icons
 new MutationObserver(paintMenuDot).observe($('#tabs'), { subtree: true, attributes: true, attributeFilter: ['class'] }); $('#pendingSignOut').onclick = doSignOut;
 
 function show(section){ ['auth','pending','app'].forEach(id => $('#'+id).classList.toggle('hidden', id !== section)); }
@@ -1964,8 +1994,9 @@ function route(){
   let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
-    if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = parts[1]; savePrefs(); }
-    else { history.replaceState(null, '', `#/projects/${S.media}`); }
+    if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
+    else if (parts[1] === 'all' || parts[1] === 'custom') S.pview = parts[1];
+    else { S.pview = S.pview || 'all'; history.replaceState(null, '', `#/projects/${S.pview}`); }
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   if (view === 'bookings') S.bkSub = parts[1] || '';
@@ -1973,21 +2004,25 @@ function route(){
   if (view === 'hiring') HR.sub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
-  document.body.dataset.sec = ({ projects: S.media, bookings: 'orders', orderpages: 'orders', agents: 'clients', companies: 'clients', hiring: 'hiring', calendar: 'calendar', finance: 'finance' })[view] || '';
+  document.body.dataset.sec = ({ projects: ['photo','video'].includes(S.pview) ? S.pview : '', bookings: 'orders', orderpages: 'orders', agents: 'clients', companies: 'clients', hiring: 'hiring', calendar: 'calendar', finance: 'finance' })[view] || '';
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
-  if (view === 'agents' || view === 'companies') navGroup(true);
-  $('#clientsTab')?.classList.toggle('in', view === 'agents' || view === 'companies');
-  $('#topTitle').textContent = document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || '';
+  if (NAV_GROUP[view]) navGroup(true, NAV_GROUP[view]);
+  document.querySelectorAll('#tabs .nav-group').forEach(t => t.classList.toggle('in', NAV_GROUP[view] === t.dataset.grp));
+  if (view === 'projects') document.querySelectorAll('#projectsSub a').forEach(a => a.classList.toggle('active', a.dataset.pv === S.pview));
+  document.querySelectorAll('header.top [data-top]').forEach(a => a.classList.toggle('on', a.dataset.top === view));
+  $('#companyTab')?.classList.toggle('hidden', !['finance','hiring','orderpages','team'].some(v => viewAllowed(v)));
+  $('#topTitle').textContent = view === 'projects' ? document.querySelector(`#projectsSub a[data-pv=${S.pview}] .lbl`)?.textContent || 'Projects' : document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || ({ chat: 'Chat', notifications: 'Notifications', mail: 'Mail' })[view] || '';
   document.body.classList.remove('menu-open');
-  document.querySelector('#tabs a[data-view=projects]').href = `#/projects/${S.media}`;
   render();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', () => { if (S.me) route(); });
-function navGroup(open){ const t = $('#clientsTab'), s = $('#clientsSub'); if (!t) return; t.setAttribute('aria-expanded', open); s.classList.toggle('open', open); try { localStorage.setItem('hq.clientsOpen', open ? '1' : ''); } catch (_) {} }
-$('#clientsTab').onclick = () => navGroup($('#clientsTab').getAttribute('aria-expanded') !== 'true');
-try { if (localStorage.getItem('hq.clientsOpen')) navGroup(true); } catch (_) {}
+function navGroup(open, g = 'clients'){ const t = $(`#${g}Tab`), s = $(`#${g}Sub`); if (!t) return; t.setAttribute('aria-expanded', open); s.classList.toggle('open', open); try { localStorage.setItem(`hq.${g}Open`, open ? '1' : ''); } catch (_) {} }
+document.querySelectorAll('#tabs .nav-group').forEach(t => { const g = t.dataset.grp; t.onclick = () => navGroup(t.getAttribute('aria-expanded') !== 'true', g); try { if (localStorage.getItem(`hq.${g}Open`)) navGroup(true, g); } catch (_) {} });
+const NAV_GROUP = { agents: 'clients', companies: 'clients', projects: 'projects', finance: 'company', hiring: 'company', orderpages: 'company', team: 'company' };
 const goProjects = m => { location.hash = `#/projects/${m}`; };
+// Which projects a Projects page shows: all / photo / video / custom (project type named "Custom…")
+const inPView = p => S.pview === 'custom' ? /custom/i.test(typeName(p.project_type_id)) && can(p.media) : S.pview === 'photo' || S.pview === 'video' ? p.media === S.pview : can(p.media);
 
 /* ===================== CONTROLS ===================== */
 $('#mediaSwitch').onclick = e => { const b = e.target.closest('button'); if (b) goProjects(b.dataset.m); };
@@ -2127,7 +2162,7 @@ function bindOpeners(root){ root.querySelectorAll('[data-open]').forEach(el => e
 /* ----- Projects ----- */
 function filtered(){
   return S.projects.filter(p => {
-    if (p.media !== S.media) return false;
+    if (!inPView(p)) return false;
     if (S.assignee === 'me' && p.assigned_to !== S.me.id) return false;
     if (S.assignee === 'none' && p.assigned_to) return false;
     if (S.assignee && !['me','none'].includes(S.assignee) && p.assigned_to !== S.assignee) return false;
@@ -2139,14 +2174,17 @@ function filtered(){
   });
 }
 function renderProjects(){
-  const m = S.media;
+  const m = S.media, pv = S.pview || 'all', mixed = pv === 'all' || pv === 'custom';
   const activeOf = mm => S.projects.filter(p => p.media === mm && !DONE.includes(p.status)).length;
   $('#photoCount').textContent = `${activeOf('photo')} active`;
   $('#videoCount').textContent = `${activeOf('video')} active`;
-  document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  $('#allCount').textContent = `${S.projects.filter(p => can(p.media) && !DONE.includes(p.status)).length} active`;
+  $('#customCount').textContent = `${S.projects.filter(p => can(p.media) && /custom/i.test(typeName(p.project_type_id)) && !DONE.includes(p.status)).length} active`;
+  document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('active', b.dataset.m === pv));
+  const ah = $('#projHead'); if (ah) ah.textContent = ({ all: 'All projects', photo: 'Photo projects', video: 'Video projects', custom: 'Custom projects' })[pv];
   document.querySelectorAll('#layoutSeg button').forEach(b => b.classList.toggle('active', b.dataset.l === S.layout));
-  const nb = $('#newProjectBtn'); nb.textContent = `+ New ${m} project`; nb.className = `btn ${m}`; nb.classList.toggle('hidden', !can('create_projects'));
-  $('#search').placeholder = `Search ${m} projects…`;
+  const nb = $('#newProjectBtn'); nb.textContent = mixed ? '+ New project' : `+ New ${m} project`; nb.className = mixed ? 'btn primary' : `btn ${m}`; nb.classList.toggle('hidden', !can('create_projects'));
+  $('#search').placeholder = `Search ${mixed ? pv === 'all' ? 'all' : 'custom' : m} projects…`;
   $('#showDone').checked = S.showDone;
   $('#showDone').closest('label').classList.toggle('hidden', S.layout !== 'list');
   if ($('#assigneeFilter').value !== S.assignee) $('#assigneeFilter').value = S.assignee;
@@ -2156,7 +2194,7 @@ function renderProjects(){
   S.layout === 'board' ? renderBoard() : renderList();
 }
 function renderStats(){
-  const ps = S.projects.filter(p => p.media === S.media);
+  const ps = S.projects.filter(inPView);
   const active = ps.filter(p => !DONE.includes(p.status));
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const items = [
@@ -2227,10 +2265,10 @@ function renderBoard(){
 }
 function renderList(){
   const list = filtered().filter(onBoard).sort(byDue);
-  if (!list.length) { $('#listWrap').innerHTML = `<div class="empty">No ${S.media} projects match.</div>`; return; }
-  const isPhoto = S.media === 'photo';
+  if (!list.length) { $('#listWrap').innerHTML = `<div class="empty">No ${S.pview === 'all' ? '' : S.pview + ' '}projects match.</div>`; return; }
+  const isPhoto = S.pview === 'photo', mixed = S.pview === 'all' || S.pview === 'custom';
   $('#listWrap').innerHTML = `<table class="list"><thead><tr>
-    <th>Project</th><th>Type</th><th>Agent</th><th>Assigned</th><th>Status</th><th>Due</th><th>${isPhoto ? 'Photos' : 'Format'}</th></tr></thead><tbody>
+    <th>Project</th><th>Type</th><th>Agent</th><th>Assigned</th><th>Status</th><th>Due</th><th>${isPhoto ? 'Photos' : mixed ? 'Details' : 'Format'}</th></tr></thead><tbody>
     ${list.map(p => `<tr class="row" data-id="${p.id}">
       <td><b>${esc(p.name)}</b></td>
       <td>${esc(typeName(p.project_type_id))}</td>
@@ -2238,7 +2276,7 @@ function renderList(){
       <td>${esc(memberName(p.assigned_to)) || '<span class="muted">—</span>'}</td>
       <td><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></td>
       <td ${isOverdue(p) ? 'style="color:var(--danger)"' : ''}>${esc(fmtDate(p.due_date))}</td>
-      <td class="muted">${esc(isPhoto ? (p.photo_count ?? '') : (p.video_format || ''))}</td>
+      <td class="muted">${esc(p.media === 'photo' ? (p.photo_count != null ? p.photo_count + ' photos' : '') : (p.video_format || ''))}</td>
     </tr>`).join('')}</tbody></table>`;
   document.querySelectorAll('#listWrap tr.row').forEach(r => r.onclick = () => openProject(r.dataset.id));
 }
