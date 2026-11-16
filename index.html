@@ -533,6 +533,47 @@ label.extra{margin:0}
 .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b1f27;color:#fff;padding:10px 16px;border-radius:8px;z-index:100;font-size:13px}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+/* Directory tables (Agents, Companies) */
+.dir-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dir-head .cnt{color:var(--muted);font-size:14px}
+.dir-wrap{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto}
+table.dir{width:100%;border-collapse:collapse;font-size:13.5px}
+table.dir th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--panel)}
+table.dir th.sort{cursor:pointer;user-select:none}
+table.dir th.sort:hover{color:var(--text)}
+table.dir th .ar{display:inline-block;margin-left:4px;opacity:.35;font-size:10px}
+table.dir th.on .ar{opacity:1;color:var(--accent)}
+table.dir td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;text-align:left}
+table.dir tr:last-child td{border-bottom:none}
+table.dir tbody tr{cursor:pointer}
+table.dir tbody tr:hover td{background:var(--panel-2)}
+table.dir td.trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.dir-who{display:flex;align-items:center;gap:11px;min-width:0}
+.dir-who b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.dir-av{width:36px;height:36px;flex:none;border-radius:50%;overflow:hidden;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12.5px;font-weight:700;letter-spacing:.3px}
+.dir-av img{width:100%;height:100%;object-fit:cover;display:block}
+.dir-co{display:flex;align-items:center;gap:9px;min-width:0;max-width:240px}
+.dir-co span,.dir-co b{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dir-logo{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--border);background:#fff;display:grid;place-items:center;overflow:hidden;color:var(--muted)}
+.dir-logo img{max-width:80%;max-height:80%;object-fit:contain}
+.dir-logo svg{width:16px;height:16px}
+.dir-logo.lg{width:40px;height:40px}
+.dir-acts{display:flex;gap:4px;justify-content:flex-end}
+.dir-acts button{width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:none;color:var(--accent);display:grid;place-items:center;cursor:pointer;padding:0}
+.dir-acts button:hover{background:var(--accent-soft);border-color:var(--border)}
+.dir-acts button:disabled{opacity:.4;cursor:default}
+.dir-acts svg{width:17px;height:17px}
+.dir-stack{display:flex;align-items:center}
+.dir-stack .dir-av{width:26px;height:26px;font-size:10px;border:2px solid var(--panel);margin-left:-7px}
+.dir-stack .dir-av:first-child{margin-left:0}
+.dir-stack em{font-style:normal;color:var(--muted);font-size:12.5px;margin-left:8px}
+.dir-foot{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap;padding:10px 4px;color:var(--muted);font-size:13px}
+.dir-foot select{width:auto;padding:4px 8px}
+.dir-foot .pg{display:flex;gap:4px}
+.dir-foot .pg button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer}
+.dir-foot .pg button:disabled{opacity:.35;cursor:default}
+.dir-tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+@media (max-width:760px){ table.dir .m-hide{display:none} table.dir td,table.dir th{padding:9px 10px} }
 .entity{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer}
 .entity:hover{border-color:var(--accent)}
 .entity .t{font-weight:600}
@@ -1286,12 +1327,12 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     <!-- Agents -->
     <div id="companiesView" class="hidden"></div>
     <div id="agentsView" class="hidden">
-      <div class="page-head"><div><h1>Agents</h1><p>Client preferences and branding, shown on every project for that agent.</p></div></div>
+      <div class="page-head"><div><div class="dir-head"><h1>Agents</h1><span class="cnt" id="agentCount"></span></div><p>Client preferences and branding, shown on every project for that agent.</p></div></div>
       <div class="toolbar">
         <button class="btn primary" id="newAgentBtn">+ New agent</button>
-        <input type="search" id="agentSearch" placeholder="Search agents, teams, brokerages…" />
+        <input type="search" id="agentSearch" placeholder="Search name, email, phone, company…" />
       </div>
-      <div id="agentsGrid" class="cards-grid"></div>
+      <div id="agentsGrid"></div>
     </div>
 
     <!-- Tasks -->
@@ -2427,23 +2468,73 @@ function revHTML(r){
 }
 
 /* ===================== AGENTS ===================== */
+const DIR_ICON = {
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14.5 8.5l2.5 2.5"/></svg>',
+  bldg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10.5 21v-3h3v3"/></svg>',
+};
+const initialsOf = n => String(n || '?').split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const agentAvatar = a => `<span class="dir-av">${a.photo_url ? `<img src="${esc(a.photo_url)}" alt="" loading="lazy">` : esc(initialsOf(a.full_name))}</span>`;
+const coLogo = (c, big) => `<span class="dir-logo${big ? ' lg' : ''}">${c?.logo_url ? `<img src="${esc(c.logo_url)}" alt="" loading="lazy">` : DIR_ICON.bldg}</span>`;
+// Shared sort header + pager for the directory tables
+const dirTh = (st, key, label, cls = '') => `<th class="sort ${cls} ${st.sort === key ? 'on' : ''}" data-sort="${key}">${label}<span class="ar">${st.sort === key && st.dir < 0 ? '▼' : '▲'}</span></th>`;
+function dirPager(st, total, noun){
+  const pages = Math.max(1, Math.ceil(total / st.size)); st.page = Math.min(st.page, pages - 1);
+  const from = total ? st.page * st.size + 1 : 0, to = Math.min(total, (st.page + 1) * st.size);
+  return `<div class="dir-foot"><label>Page size <select data-psize>${[25, 50, 100].map(n => `<option ${n === st.size ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <span>${from} to ${to} of ${total} ${noun}</span><span>Page ${st.page + 1} of ${pages}</span>
+    <span class="pg"><button data-pg="first" ${st.page ? '' : 'disabled'} aria-label="First page">«</button><button data-pg="prev" ${st.page ? '' : 'disabled'} aria-label="Previous page">‹</button><button data-pg="next" ${st.page < pages - 1 ? '' : 'disabled'} aria-label="Next page">›</button><button data-pg="last" ${st.page < pages - 1 ? '' : 'disabled'} aria-label="Last page">»</button></span></div>`;
+}
+function wireDir(root, st, total, redraw){
+  root.querySelectorAll('th[data-sort]').forEach(th => th.onclick = () => { const k = th.dataset.sort; st.dir = st.sort === k ? -st.dir : 1; st.sort = k; st.page = 0; redraw(); });
+  const ps = root.querySelector('[data-psize]'); if (ps) ps.onchange = () => { st.size = +ps.value; st.page = 0; redraw(); };
+  const pages = Math.max(1, Math.ceil(total / st.size));
+  root.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => { st.page = { first: 0, prev: st.page - 1, next: st.page + 1, last: pages - 1 }[b.dataset.pg]; redraw(); root.scrollIntoView?.({ block: 'nearest' }); });
+}
+const dirCmp = (st, val) => (x, y) => { const a = val(x), b = val(y); if (!a && b) return 1; if (a && !b) return -1; return st.dir * String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }); };
+
+S.agDir = S.agDir || { sort: 'name', dir: 1, page: 0, size: 50, q: '' };
 function renderAgents(){
-  const q = ($('#agentSearch').value || '').toLowerCase();
-  const list = S.agents.filter(a => [a.full_name, a.team_name, a.brokerage, coName(a.company_id)].join(' ').toLowerCase().includes(q));
-  if (!list.length) { $('#agentsGrid').innerHTML = `<div class="empty" style="grid-column:1/-1">${S.agents.length ? 'No agents match.' : 'No agents yet. Add your first one.'}</div>`; return; }
-  $('#agentsGrid').innerHTML = list.map(a => {
-    const ps = S.projects.filter(p => p.agent_id === a.id);
-    const ph = ps.filter(p => p.media === 'photo').length, vi = ps.filter(p => p.media === 'video').length;
-    const logos = logosFor(a.id), cover = logos.find(isImageLogo);
-    const initials = a.full_name.split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase();
-    return `<div class="entity" data-id="${a.id}"><div class="ent-row">
-      ${cover ? `<div class="ent-logo"><img data-logo-path="${esc(cover.storage_path)}" alt="" /></div>` : `<div class="ent-logo none">${esc(initials)}</div>`}
-      <div style="min-width:0"><div class="t">${esc(a.full_name)}</div>
-      <div class="muted" style="font-size:13px;margin-top:4px">${a.company_id && coName(a.company_id) ? `<b class="co-of">${esc(coName(a.company_id))}</b>` : esc([a.team_name, a.brokerage].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
-      <div class="counts"><span class="tag photo">${ph} photo</span><span class="tag video">${vi} video</span>${logos.length ? `<span class="tag">${logos.length} logo${logos.length > 1 ? 's' : ''}</span>` : ''}</div></div>`;
-  }).join('');
-  document.querySelectorAll('#agentsGrid .entity').forEach(el => el.onclick = () => openAgent(el.dataset.id));
-  hydrateLogoImgs($('#agentsGrid'));
+  const st = S.agDir, q = ($('#agentSearch').value || '').toLowerCase().trim();
+  if (q !== st.q) { st.q = q; st.page = 0; }
+  const co = a => S.companies.find(c => c.id === a.company_id);
+  const coLabel = a => co(a)?.name || [a.team_name, a.brokerage].filter(Boolean).join(' · ');
+  const digits = q.replace(/\D/g, '');
+  const list = S.agents.filter(a => !q || [a.full_name, a.email, a.phone, a.team_name, a.brokerage, coName(a.company_id)].join(' ').toLowerCase().includes(q) || (digits.length >= 3 && String(a.phone || '').replace(/\D/g, '').includes(digits)));
+  const val = { name: a => a.full_name, email: a => (a.email || '').toLowerCase(), phone: a => String(a.phone || '').replace(/\D/g, ''), company: coLabel }[st.sort] || (a => a.full_name);
+  list.sort(dirCmp(st, val));
+  $('#agentCount').textContent = `${S.agents.length} agent${S.agents.length === 1 ? '' : 's'}`;
+  if (!list.length) { $('#agentsGrid').innerHTML = `<div class="empty">${S.agents.length ? 'No agents match.' : 'No agents yet. Add your first one.'}</div>`; return; }
+  const canAccess = isSuperAdmin() && BOOKINGS_ENABLED;
+  const pager = dirPager(st, list.length, 'agents'), rows = list.slice(st.page * st.size, (st.page + 1) * st.size);
+  $('#agentsGrid').innerHTML = `<div class="dir-wrap"><table class="dir"><thead><tr>
+      ${dirTh(st, 'name', 'Full name')}${dirTh(st, 'email', 'Email address', 'm-hide')}${dirTh(st, 'phone', 'Phone', 'm-hide')}${dirTh(st, 'company', 'Company')}<th style="text-align:right">Actions</th></tr></thead><tbody>
+    ${rows.map(a => { const c = co(a), label = coLabel(a); return `<tr data-id="${a.id}">
+      <td><div class="dir-who">${agentAvatar(a)}<b>${esc(a.full_name)}</b></div></td>
+      <td class="m-hide trunc">${a.email ? esc(a.email) : '<span class="muted">—</span>'}</td>
+      <td class="m-hide">${a.phone ? esc(a.phone) : '<span class="muted">—</span>'}</td>
+      <td><div class="dir-co">${coLogo(c)}<span class="${c ? '' : 'muted'}">${esc(label)}</span></div></td>
+      <td><div class="dir-acts"><button type="button" data-manage="${a.id}" title="Manage agent" aria-label="Manage ${esc(a.full_name)}">${DIR_ICON.edit}</button>${canAccess ? `<button type="button" data-access="${a.id}" title="Access agent · open the client portal as ${esc(a.full_name)}" aria-label="Access ${esc(a.full_name)}'s portal" ${a.email ? '' : 'disabled'}>${DIR_ICON.key}</button>` : ''}</div></td>
+    </tr>`; }).join('')}</tbody></table></div>${pager}`;
+  const root = $('#agentsGrid');
+  root.querySelectorAll('tbody tr').forEach(tr => tr.onclick = e => { if (e.target.closest('[data-access]')) return; openAgent(tr.dataset.id); });
+  root.querySelectorAll('[data-access]').forEach(b => b.onclick = e => { e.stopPropagation(); accessAgent(b.dataset.access, b); });
+  wireDir(root, st, list.length, renderAgents);
+}
+
+// "Access agent": open the client portal signed in as this client (same as the order's "Client's download page")
+async function accessAgent(id, btn){
+  const a = S.agents.find(x => x.id === id) || {}, win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
+  const label = btn?.textContent; if (btn) { btn.disabled = true; if (btn.id === 'aAccess') btn.textContent = 'Opening…'; }
+  try {
+    const { data, error } = await sb.functions.invoke('client-view', { body: { agentId: id } });
+    if (error) { let m = 'Could not open the client portal'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+    const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const url = `${PORTAL_URL}/#ts=${tok}&go=listings`;
+    if (win) win.location.href = url; else location.assign(url);
+    toast(`Opened the portal as ${a.full_name || data.email}`);
+  } catch (e) { if (win) win.close(); fail(e); }
+  if (btn) { btn.disabled = false; if (btn.id === 'aAccess') btn.textContent = label; }
 }
 
 /* ----- Agent profile photo + logo (same fields the client edits in their portal profile; used on property websites) ----- */
@@ -2648,20 +2739,7 @@ function openAgent(id){
   if (id) renderAgentLogos(id);
   if (id && isSuperAdmin()) renderAgentCredits(id);
   if (id) renderAgentMedia(a);
-  // "Access agent": open the client portal signed in as this client (same as the order's "Client's download page")
-  if ($('#aAccess')) $('#aAccess').onclick = async () => {
-    const btn = $('#aAccess'), win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
-    btn.disabled = true; btn.textContent = 'Opening…';
-    try {
-      const { data, error } = await sb.functions.invoke('client-view', { body: { agentId: id } });
-      if (error) { let m = 'Could not open the client portal'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
-      const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      const url = `${PORTAL_URL}/#ts=${tok}&go=listings`;
-      if (win) win.location.href = url; else location.assign(url);
-      toast(`Opened the portal as ${a.full_name || data.email}`);
-    } catch (e) { if (win) win.close(); fail(e); }
-    btn.disabled = false; btn.textContent = 'Access agent ↗';
-  };
+  if ($('#aAccess')) $('#aAccess').onclick = () => accessAgent(id, $('#aAccess'));
   const fillPage = () => { const el = $('#aPage'); if (!el) return; const cur = el.dataset.v ?? (a.custom_order_page_id || ''); el.dataset.v = cur;
     const co = S.companies.find(c => c.id === ($('#aCo')?.value ?? a.company_id)), cp = co && OP.pages.find(p => p.id === co.custom_order_page_id);
     el.innerHTML = `<option value="">${cp ? `Company's page: ${esc(cp.name)}` : 'None: default order page only'}</option>` + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === cur ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join('');
@@ -5482,15 +5560,24 @@ async function renderCompanies(){
   if (!S.companiesLoaded) { root.innerHTML = '<p class="muted">Loading companies…</p>'; try { await Promise.all([loadCompanies(), isSuperAdmin() && BOOKINGS_ENABLED ? loadOrderPages() : null]); S.companiesLoaded = true; } catch (e) { return fail(e); } if (S.view !== 'companies') return; }
   const q = (S.coQ || '').toLowerCase();
   const list = S.companies.filter(c => [c.name, c.brokerage, c.team_name, c.admin_email].join(' ').toLowerCase().includes(q));
-  root.innerHTML = `<div class="page-head"><div><h1>Companies</h1><p>Brokerage teams and offices. Agents in a company get its custom order page and branding.</p></div></div>
+  const st = S.coDir = S.coDir || { sort: 'name', dir: 1, page: 0, size: 50 };
+  const val = { name: c => c.name, brokerage: c => c.brokerage, team: c => c.team_name, agents: c => String(coAgents(c.id).length).padStart(5, '0') }[st.sort] || (c => c.name);
+  list.sort(dirCmp(st, val));
+  const pager = list.length ? dirPager(st, list.length, 'companies') : '', rows = list.slice(st.page * st.size, (st.page + 1) * st.size);
+  root.innerHTML = `<div class="page-head"><div><div class="dir-head"><h1>Companies</h1><span class="cnt">${S.companies.length} compan${S.companies.length === 1 ? 'y' : 'ies'}</span></div><p>Brokerage teams and offices. Agents in a company get its custom order page and branding.</p></div></div>
     <div class="toolbar">${can('manage_agents') ? '<button class="btn primary" id="coNew">+ New company</button>' : ''}<input type="search" id="coSearch" placeholder="Search companies…" value="${esc(S.coQ || '')}" /></div>
-    ${list.length ? `<div class="grid co-grid">${list.map(c => { const ag = coAgents(c.id), pg = OP.pages.find(p => p.id === c.custom_order_page_id); return `
-      <div class="entity" data-co="${c.id}"><div class="ent-row">
-        ${c.logo_url ? `<div class="ent-logo"><img src="${esc(c.logo_url)}" alt="" /></div>` : `<div class="ent-logo none">${esc(c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase())}</div>`}
-        <div style="min-width:0"><div class="t">${esc(c.name)}</div><div class="muted" style="font-size:13px;margin-top:4px">${esc([c.brokerage, c.admin_phone].filter(Boolean).join(' · ')) || '&nbsp;'}</div></div></div>
-        <div class="counts"><span class="tag">${ag.length} agent${ag.length === 1 ? '' : 's'}</span>${pg ? `<span class="tag co-pg">★ ${esc(pg.name)}</span>` : ''}</div></div>`; }).join('')}</div>`
+    ${list.length ? `<div class="dir-wrap"><table class="dir"><thead><tr>${dirTh(st, 'name', 'Company')}${dirTh(st, 'brokerage', 'Brokerage', 'm-hide')}${dirTh(st, 'team', 'Team', 'm-hide')}<th class="m-hide">Office phone</th>${dirTh(st, 'agents', 'Agents')}<th class="m-hide">Order page</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+      ${rows.map(c => { const ag = coAgents(c.id), pg = OP.pages.find(p => p.id === c.custom_order_page_id); return `<tr data-co="${c.id}">
+        <td><div class="dir-co" style="max-width:250px" title="${esc(c.name)}">${coLogo(c, true)}<b>${esc(c.name)}</b></div></td>
+        <td class="m-hide trunc" style="max-width:170px">${c.brokerage ? esc(c.brokerage) : '<span class="muted">—</span>'}</td>
+        <td class="m-hide trunc" style="max-width:170px">${c.team_name ? esc(c.team_name) : '<span class="muted">—</span>'}</td>
+        <td class="m-hide">${c.admin_phone ? esc(c.admin_phone) : '<span class="muted">—</span>'}</td>
+        <td>${ag.length ? `<div class="dir-stack">${ag.slice(0, 5).map(agentAvatar).join('')}<em>${ag.length}</em></div>` : '<span class="muted">0</span>'}</td>
+        <td class="m-hide trunc" style="max-width:190px">${pg ? `<span class="dir-tag">★ ${esc(pg.name)}</span>` : '<span class="muted">Default</span>'}</td>
+        <td><div class="dir-acts"><button type="button" data-manage="${c.id}" title="Manage company" aria-label="Manage ${esc(c.name)}">${DIR_ICON.edit}</button></div></td></tr>`; }).join('')}</tbody></table></div>${pager}`
       : `<div class="empty">${S.companies.length ? 'No companies match.' : 'No companies yet. Add one for each team or office, then assign its agents.'}</div>`}`;
-  const s = $('#coSearch'); s.oninput = () => { S.coQ = s.value; renderCompanies(); const el = $('#coSearch'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); };
+  wireDir(root, st, list.length, renderCompanies);
+  const s = $('#coSearch'); s.oninput = () => { S.coQ = s.value; if (S.coDir) S.coDir.page = 0; renderCompanies(); const el = $('#coSearch'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); };
   const nb = $('#coNew'); if (nb) nb.onclick = () => openCompany(null);
   root.querySelectorAll('[data-co]').forEach(el => el.onclick = () => openCompany(el.dataset.co));
 }
