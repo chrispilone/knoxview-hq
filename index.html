@@ -883,23 +883,19 @@ label.extra{margin:0}
 }
 /* Pull to refresh */
 html,body{overscroll-behavior-y:none}
-main{will-change:auto}
-main.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15)}
-#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 66px);z-index:15;width:40px;height:40px;border-radius:50%;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.14),0 0 0 1px var(--border);display:grid;place-items:center;color:var(--muted);transform:translate3d(-50%,-44px,0) scale(.7);opacity:0;pointer-events:none}
-#ptr.ptr-anim{transition:transform .38s cubic-bezier(.2,.9,.25,1.15),opacity .3s}
+#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 66px);z-index:15;width:40px;height:40px;border-radius:50%;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.14),0 0 0 1px var(--border);display:grid;place-items:center;color:var(--muted);transform:translate3d(-50%,-60px,0);opacity:0;pointer-events:none;will-change:transform,opacity}
 #ptr svg{grid-area:1/1}
 .ptr-ring{width:40px;height:40px;transform:rotate(-90deg)}
-.ptr-track{fill:none;stroke:var(--border);stroke-width:2.5}
+.ptr-track{fill:none;stroke:var(--border);stroke-width:2.5;transition:opacity .2s}
 .ptr-prog{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
-.ptr-arrow{width:18px;height:18px;transition:transform .18s ease,color .18s}
+.ptr-arrow{width:18px;height:18px;transition:color .15s,opacity .15s}
+.ptr-check{width:18px;height:18px;color:var(--accent)}
+.ptr-check path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .26s cubic-bezier(.3,.8,.3,1) .04s}
 #ptr.ready{color:var(--accent)}
-#ptr.ready .ptr-arrow{transform:rotate(180deg)}
-#ptr.spinning .ptr-ring{animation:ptrspin .75s linear infinite}
-#ptr.spinning .ptr-prog{stroke-dashoffset:66 !important}
-#ptr.spinning .ptr-arrow{opacity:0}
-#ptr.done .ptr-arrow{opacity:0}
-#ptr.done .ptr-prog{stroke-dashoffset:0 !important;transition:stroke-dashoffset .2s}
-#ptr.done::after{content:"";grid-area:1/1;width:9px;height:15px;border:solid var(--accent);border-width:0 2.6px 2.6px 0;transform:translateY(-2px) rotate(45deg)}
+#ptr.spinning .ptr-ring{animation:ptrspin .8s linear infinite}
+#ptr.spinning .ptr-track{opacity:.45}
+#ptr.spinning .ptr-arrow,#ptr.done .ptr-arrow{opacity:0}
+#ptr.done .ptr-check path{stroke-dashoffset:0}
 @keyframes ptrspin{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
 @media (min-width:901px){ #ptr{top:14px} }
 /* Mail */
@@ -3684,12 +3680,13 @@ async function refreshCurrentView(){
   const el = document.createElement('div');
   el.id = 'ptr'; el.setAttribute('aria-hidden', 'true');
   el.innerHTML = `<svg class="ptr-ring" viewBox="0 0 40 40"><circle class="ptr-track" cx="20" cy="20" r="15"/><circle class="ptr-prog" cx="20" cy="20" r="15"/></svg>
-    <svg class="ptr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>`;
+    <svg class="ptr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+    <svg class="ptr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg>`;
   document.body.appendChild(el);
-  const prog = el.querySelector('.ptr-prog'), C = 2 * Math.PI * 15;
+  const prog = el.querySelector('.ptr-prog'), arrow = el.querySelector('.ptr-arrow'), C = 2 * Math.PI * 15;
   prog.style.strokeDasharray = C; prog.style.strokeDashoffset = C;
-  const TRIGGER = 72, HOLD = 58, MAX = 140;
-  let startY = null, startX = 0, dist = 0, pulling = false, busy = false, armed = false, raf = 0;
+  const TRIGGER = 70, HOLD = 64, MAX = 150, R = 0.6, SOFT = MAX - TRIGGER;
+  let startY = null, startX = 0, carry = 0, dist = 0, pulling = false, busy = false, armed = false, raf = 0, anim = 0;
   const scrolledParent = n => {
     for (; n && n !== document.body; n = n.parentElement) {
       const cs = getComputedStyle(n);
@@ -3697,52 +3694,79 @@ async function refreshCurrentView(){
     }
     return false;
   };
-  // Rubber-band resistance: follows the finger at first, then gets heavier
-  const resist = dy => MAX * (1 - Math.exp(-dy / 190));
+  // Finger travel -> pull distance. Tracks the finger 1:R up to the trigger point (predictable), then eases into a soft stop.
+  const resist = dy => { const d = Math.max(0, dy) * R; return d <= TRIGGER ? d : TRIGGER + SOFT * (1 - Math.exp(-(d - TRIGGER) / SOFT)); };
+  const unresist = v => (v <= TRIGGER ? v : TRIGGER - SOFT * Math.log(1 - Math.min(v - TRIGGER, SOFT - 0.5) / SOFT)) / R;
   const paint = () => {
     raf = 0;
     const p = Math.min(1, dist / TRIGGER);
-    main.style.transform = dist ? `translate3d(0, ${dist}px, 0)` : '';
-    el.style.transform = `translate3d(-50%, ${Math.min(dist, TRIGGER) * 0.9 - 44}px, 0) scale(${0.7 + 0.3 * p})`;
-    el.style.opacity = Math.min(1, dist / 28);
-    prog.style.strokeDashoffset = C * (1 - p);
-    el.querySelector('.ptr-arrow').style.transform = `rotate(${p >= 1 ? 180 : p * 150}deg)`;
-    const ready = dist >= TRIGGER;
-    if (ready !== armed) { armed = ready; el.classList.toggle('ready', ready); if (ready && navigator.vibrate) navigator.vibrate(8); }
+    main.style.transform = dist > 0.5 ? `translate3d(0, ${dist.toFixed(2)}px, 0)` : '';
+    // The indicator rises out from under the header with the content, then stays centred in the gap it opens.
+    const y = Math.min(dist / 2 - 28, dist - 48);
+    el.style.transform = `translate3d(-50%, ${y.toFixed(2)}px, 0) scale(${(0.72 + 0.28 * p).toFixed(3)})`;
+    el.style.opacity = Math.max(0, Math.min(1, (dist - 6) / 30)).toFixed(3);
+    if (!busy) {
+      prog.style.strokeDashoffset = C * (1 - p);
+      arrow.style.transform = `rotate(${(p * 180).toFixed(1)}deg)`;
+      const ready = dist >= TRIGGER;
+      if (ready !== armed) { armed = ready; el.classList.toggle('ready', ready); if (ready && navigator.vibrate) navigator.vibrate(8); }
+    }
   };
   const schedule = () => { if (!raf) raf = requestAnimationFrame(paint); };
-  const animated = on => { main.classList.toggle('ptr-anim', on); el.classList.toggle('ptr-anim', on); };
-  const settle = (to, then) => { animated(true); dist = to; paint(); setTimeout(() => { animated(false); then && then(); }, 380); };
+  const stop = () => { if (anim) cancelAnimationFrame(anim); anim = 0; };
+  // Frame-by-frame ease-out (no CSS transitions), so content and indicator always move together and can be grabbed mid-way.
+  const tween = (to, ms) => new Promise(done => {
+    stop();
+    const from = dist, t0 = performance.now();
+    const step = now => {
+      const t = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - t, 3);
+      dist = from + (to - from) * e; paint();
+      if (t < 1) anim = requestAnimationFrame(step); else { anim = 0; done(); }
+    };
+    anim = requestAnimationFrame(step);
+  });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const reset = () => {
+    main.style.transform = main.style.willChange = '';
+    el.classList.remove('ready', 'spinning', 'done');
+    prog.style.transition = ''; armed = false;
+  };
   document.addEventListener('touchstart', e => {
     if (busy || e.touches.length !== 1 || !S.me || $('#layer')?.innerHTML || window.scrollY > 0 || document.body.classList.contains('menu-open') || e.touches[0].clientX <= 28) return;
     if (e.target.closest('input, textarea, select, [contenteditable], iframe, .no-ptr') || scrolledParent(e.target)) return;
-    startY = e.touches[0].clientY; startX = e.touches[0].clientX; pulling = false;
+    stop(); carry = dist > 0.5 ? unresist(dist) : 0; // catching it while it springs back continues from where it is
+    startY = e.touches[0].clientY; startX = e.touches[0].clientX; pulling = carry > 0;
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (startY === null) return;
     const dy = e.touches[0].clientY - startY, dx = e.touches[0].clientX - startX;
     if (!pulling) {
-      if (dy < 4 || Math.abs(dx) > dy || window.scrollY > 0) { if (dy < 0 || Math.abs(dx) > 10) startY = null; return; }
-      pulling = true; animated(false); el.classList.remove('done');
+      if (dy < 6 || Math.abs(dx) > dy || window.scrollY > 0) { if (dy < 0 || Math.abs(dx) > 10) startY = null; return; }
+      pulling = true; startY += 6; // start from zero so nothing jumps
+      main.style.willChange = 'transform';
     }
     e.preventDefault();
-    dist = resist(Math.max(0, dy - 4)); schedule();
+    dist = resist(carry + e.touches[0].clientY - startY); schedule();
   }, { passive: false });
   const end = async () => {
     if (startY === null) return;
     startY = null;
     if (!pulling) return;
     pulling = false;
-    if (dist < TRIGGER) return settle(0, () => { armed = false; el.classList.remove('ready'); });
+    if (dist < TRIGGER) { await tween(0, 260); if (!pulling && !anim) reset(); return; }
     busy = true;
     el.classList.add('spinning');
-    settle(HOLD);
+    prog.style.transition = 'stroke-dashoffset .35s ease';
+    prog.style.strokeDashoffset = C * 0.72;
     const t0 = Date.now();
+    await tween(HOLD, 300);
     try { await refreshCurrentView(); } catch (err) { console.warn(err); }
-    await new Promise(r => setTimeout(r, Math.max(0, 550 - (Date.now() - t0)))); // let the spinner read as a refresh
+    await wait(Math.max(0, 600 - (Date.now() - t0))); // let the spinner read as a refresh
     el.classList.remove('spinning'); el.classList.add('done');
-    await new Promise(r => setTimeout(r, 280));
-    settle(0, () => { el.classList.remove('ready', 'done'); armed = false; busy = false; main.style.transform = ''; });
+    prog.style.strokeDashoffset = 0;
+    await wait(420);
+    await tween(0, 340);
+    reset(); busy = false;
   };
   document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
 })();
