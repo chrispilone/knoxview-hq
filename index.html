@@ -1097,6 +1097,47 @@ html,body{overscroll-behavior-y:none}
 .bk-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .kpi-mini{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:baseline;gap:8px;flex:1 1 160px}
 .kpi-mini{border-left:3px solid var(--sec)}.kpi-mini b{font-size:20px;color:var(--sec)}.kpi-mini span{color:var(--muted);font-size:12.5px}
+/* Orders list */
+table.dir.ord td{padding:8px 12px}
+.ord-th-thumb,.ord-td-thumb{width:78px;padding-right:0!important}
+.ord-thumb{width:68px;height:46px;border-radius:7px;overflow:hidden;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);flex:none}
+.ord-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ord-thumb svg{width:20px;height:20px;opacity:.7}
+.ord-addr{white-space:normal!important;min-width:180px;max-width:300px}
+.ord-addr b{display:block;font-weight:600;line-height:1.3}
+.ord-addr small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.ord-ics{display:inline-flex;gap:6px;align-items:center}
+.ord-ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--muted);opacity:.45}
+.ord-ic svg{width:17px;height:17px}
+.ord-ic.on{color:var(--ok);opacity:1;background:rgba(30,142,90,.12)}
+.ord-ic.paid{color:var(--ok);opacity:1;background:rgba(30,142,90,.12)}
+.ord-ic.unpaid{color:var(--danger);opacity:1;background:rgba(192,57,43,.1)}
+tr.ord-x td,.ord-card.ord-x{opacity:.55}
+tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
+.ord-tabs button .muted{font-size:11.5px;margin-left:2px}
+.ord-tools{display:flex;gap:8px;margin-left:auto}
+.ord-menu{position:fixed;z-index:70;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:5px;min-width:190px;display:flex;flex-direction:column}
+.ord-menu button{border:none;background:none;text-align:left;padding:9px 12px;border-radius:7px;color:var(--text)}
+.ord-menu button:hover{background:var(--panel-2)}
+.ord-menu button.danger{color:var(--danger)}
+.ord-cards{display:none}
+.modal.ord-ds{width:min(1060px,calc(100% - 32px))}
+.ord-ds-head{display:flex;align-items:center;gap:10px}.ord-ds-head h2{flex:1}
+@media (max-width:1250px){ table.dir .xl-hide{display:none} }
+@media (max-width:760px){
+  .ord-desk{display:none}
+  .ord-cards{display:flex;flex-direction:column;gap:8px}
+  .ord-card{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;cursor:pointer}
+  .ord-card .ord-thumb{width:84px;height:64px}
+  .ord-cmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .ord-cmain b{font-weight:600;line-height:1.3}
+  .ord-cmain small{color:var(--muted);font-size:12.5px}
+  .ord-cfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+  .ord-card .dir-acts{flex-direction:column;gap:2px}
+  .ord-tabs{width:100%;overflow-x:auto}.ord-tabs button{white-space:nowrap}
+  .ord-tools{margin-left:0;width:100%}.ord-tools .btn{flex:1}
+  .modal.ord-ds{padding:16px}
+}
 .bk-group{margin-bottom:18px}
 .bk-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
 .bk-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:6px;color:var(--text);text-decoration:none;min-width:0}
@@ -1328,7 +1369,7 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/mail" data-view="mail" title="Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><span class="lbl">Mail</span><span class="badge hidden" id="mailBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
-      <a href="#/bookings" data-view="bookings" title="Bookings · booking portal control center" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Bookings</span></a>
+      <a href="#/bookings" data-view="bookings" title="Orders · shoots, listings, deliveries and payments" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Orders</span></a>
       <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
       <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
       <a href="#/projects" data-view="projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Projects</span></a>
@@ -1919,6 +1960,7 @@ async function reloadProjects(){
 // #/home  #/projects/photo  #/projects/video  #/agents  #/team
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
+  if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
   let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
@@ -4921,58 +4963,135 @@ async function renderCandidate(id){
 
 async function renderBookings(){
   const root = $('#bookingsView');
-  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading bookings…</p>'; await loadBookingData(); if (S.view !== 'bookings') return; }
+  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading orders…</p>'; await loadBookingData(); if (S.view !== 'bookings') return; }
   const sub = S.bkSub || '';
   if (sub === 'new') return renderOrderForm();
   if (sub) return renderBookingDetail(sub);
   renderBookingList();
 }
 
-/* ----- List ----- */
+/* ----- List: Orders = Spiro's Orders + Listings in one table ----- */
+const ORD_ICON = {
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4 18-7z"/></svg>',
+  paid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M12 8.5v7M14.2 10.1c-.4-.7-1.2-1.1-2.2-1.1-1.3 0-2.2.7-2.2 1.6 0 2.1 4.5 1.1 4.5 3.3 0 .9-1 1.6-2.3 1.6-1 0-1.9-.4-2.3-1.1"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
+  house: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/><path d="M10 20v-5h4v5"/></svg>',
+};
+// First photo of the delivery (cover photo if set), else none yet
+const ordThumb = b => b.cover_url || (b.media_files || []).find(f => f.kind === 'photo')?.preview || (b.media_files || []).find(f => f.kind === 'photo')?.url || '';
+const ordShot = b => b.shoot_start && (b.status === 'completed' || b.delivered_at) ? b.shoot_start : null; // "Date shot" fills in once the shoot is marked complete
+// Status shown in the list: a sent delivery reads as Delivered
+const ordPill = b => b.status !== 'cancelled' && b.delivered_at ? `<span class="status-pill"><span class="dot" style="background:var(--s-delivered)"></span>Delivered</span>` : bkPill(b.status);
+const ordDate = (d, yr) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: yr || new Date(d).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined }) : '';
+const ORD_TABS = [
+  ['upcoming', 'Upcoming', (b, now) => b.status !== 'cancelled' && b.status !== 'completed' && (!b.shoot_start || b.shoot_end >= now)],
+  ['deliver', 'To deliver', (b, now) => b.status !== 'cancelled' && !b.delivered_at && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now))],
+  ['unpaid', 'Unpaid', b => b.status !== 'cancelled' && !b.paid],
+  ['delivered', 'Delivered', b => b.status !== 'cancelled' && !!b.delivered_at],
+  ['cancelled', 'Cancelled', b => b.status === 'cancelled'],
+  ['all', 'All', () => true],
+];
+BK.dir = BK.dir || { sort: '', dir: 1, page: 0, size: 50 };
 function renderBookingList(){
-  const now = new Date().toISOString();
-  const q = BK.q.toLowerCase();
-  let rows = BK.list.filter(b => {
-    if (BK.tab === 'upcoming') return b.status !== 'cancelled' && b.status !== 'completed' && (!b.shoot_start || b.shoot_end >= now);
-    if (BK.tab === 'past') return b.status !== 'cancelled' && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now));
-    if (BK.tab === 'unpaid') return b.status !== 'cancelled' && !b.paid;
-    if (BK.tab === 'cancelled') return b.status === 'cancelled';
-    return true;
-  }).filter(b => !q || [b.address, b.city, bkClient(b), bkPkgName(b), String(b.number)].join(' ').toLowerCase().includes(q));
-  if (BK.tab !== 'upcoming') rows = rows.slice().reverse();
-  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now);
-  const unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid);
+  const now = new Date().toISOString(), q = BK.q.toLowerCase().trim(), st = BK.dir;
+  if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'upcoming';
+  const tabFn = ORD_TABS.find(t => t[0] === BK.tab)[2];
+  const count = k => BK.list.filter(b => ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
+  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
+  // Default order: upcoming soonest first, everything else newest shoot first. Column headers override it.
+  const key = st.sort || 'shoot', dir = st.sort ? st.dir : (BK.tab === 'upcoming' ? 1 : -1);
+  const val = { address: b => b.address, agent: bkClient, status: b => b.status !== 'cancelled' && b.delivered_at ? 'delivered' : b.status, shoot: b => b.shoot_start || '', submitted: b => b.created_at, shot: b => ordShot(b) || '' }[key];
+  rows.sort(dirCmp({ dir }, val));
+  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now), unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid);
   const weekEnd = addDays(new Date(), 7).toISOString();
-  const groups = [];
-  rows.forEach(b => {
-    const k = b.shoot_start ? new Date(b.shoot_start).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }) : 'Not scheduled';
-    let g = groups.find(x => x.k === k); if (!g) groups.push(g = { k, items: [] }); g.items.push(b);
-  });
+  const pager = rows.length ? dirPager(st, rows.length, 'orders') : '', page = rows.slice(st.page * st.size, (st.page + 1) * st.size);
+  const th = (k, l, cls = '') => dirTh({ sort: st.sort || 'shoot', dir }, k, l, cls);
+  const agentCell = b => { const a = S.agents.find(x => x.id === b.agent_id); return `<div class="dir-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${esc(bkClient(b))}</span></div>`; };
+  const icons = b => `<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
+    <span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' + (b.paid_at ? ' ' + esc(ordDate(b.paid_at, true)) : '') : 'Unpaid · ' + esc(money(b.total))}">${ORD_ICON.paid}</span>`;
+  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${b.number}">${DIR_ICON.edit}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${b.number}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${b.number}">${ORD_ICON.more}</button></div>`;
+  const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
+  const time = b => b.shoot_start ? fmtT(b.shoot_start) : '';
   $('#bookingsView').innerHTML = `
-    <div class="page-head"><div><h1>Bookings</h1><p>Place orders, schedule shoots and keep track of what's been paid.</p></div></div>
+    <div class="page-head"><div><div class="dir-head"><h1>Orders</h1><span class="cnt">${BK.list.length} order${BK.list.length === 1 ? '' : 's'}</span></div><p>Every shoot from booking to delivery: schedule, photos, delivery and payment in one list.</p></div></div>
     <div class="bk-kpis">
       <div class="kpi-mini"><b>${upcoming.filter(b => b.shoot_start < weekEnd).length}</b><span>shoots in the next 7 days</span></div>
-      <div class="kpi-mini"><b>${upcoming.length}</b><span>upcoming</span></div>
+      <div class="kpi-mini"><b>${count('deliver')}</b><span>shot, waiting on delivery</span></div>
       <div class="kpi-mini"><b>${money(unpaid.reduce((t, b) => t + Number(b.total || 0), 0))}</b><span>unpaid (${unpaid.length})</span></div>
     </div>
     <div class="toolbar">
       <a class="btn primary" href="#/bookings/new">+ New order</a>
-      <div class="seg" id="bkTabs">${[['upcoming','Upcoming'],['past','Past'],['unpaid','Unpaid'],['cancelled','Cancelled'],['all','All']].map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+      <div class="seg ord-tabs" id="bkTabs">${ORD_TABS.map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l} <span class="muted">${count(k)}</span></button>`).join('')}</div>
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
-      <button class="btn" id="bkPortal" style="margin-left:auto">📱 Client portal</button>
-      <button class="btn" id="bkSettings">⚙ Portal settings</button>
+      <span class="ord-tools"><button class="btn" id="bkPortal">📱 Client portal</button><button class="btn" id="bkSettings">⚙ Portal settings</button></span>
     </div>
-    ${groups.length ? groups.map(g => `<div class="bk-group"><h3>${esc(g.k)}</h3>${g.items.map(b => `
-      <a class="bk-row ${b.status}" href="#/bookings/${b.id}">
-        <span class="bk-time">${b.shoot_start ? `${fmtT(b.shoot_start)}<small>${fmtT(b.shoot_end)}</small>` : '—'}</span>
-        <span class="bk-main"><b>${esc(b.address)}</b><small>${esc(bkClient(b))}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''} · #${b.number}</small></span>
-        <span class="bk-right"><b>${money(b.total)}</b>${b.status === 'cancelled' ? bkPill('cancelled') : b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</span>
-      </a>`).join('')}</div>`).join('')
-      : `<div class="panel bk-empty"><p>${BK.list.length ? 'Nothing here.' : 'No bookings yet.'}</p>${BK.list.length ? '' : '<a class="btn primary" href="#/bookings/new">Place your first order</a>'}</div>`}`;
-  $('#bkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; BK.tab = b.dataset.t; renderBookingList(); };
-  $('#bkSearch').oninput = e => { BK.q = e.target.value; const pos = e.target.selectionStart; renderBookingList(); const i = $('#bkSearch'); i.focus(); i.setSelectionRange(pos, pos); };
+    ${rows.length ? `<div class="dir-wrap ord-desk"><table class="dir ord"><thead><tr>
+        <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+      ${page.map(b => `<tr data-id="${b.id}" class="${b.status === 'cancelled' ? 'ord-x' : ''}">
+        <td class="ord-td-thumb">${thumb(b)}</td>
+        <td class="ord-addr"><b>${esc(b.address)}</b><small>${esc([b.city, '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
+        <td class="trunc" style="max-width:200px">${agentCell(b)}</td>
+        <td class="m-hide">${ordPill(b)}</td>
+        <td>${b.shoot_start ? esc(ordDate(b.shoot_start)) : '<span class="muted">Not set</span>'}</td>
+        <td class="m-hide">${esc(time(b)) || '<span class="muted">—</span>'}</td>
+        <td class="xl-hide">${esc(ordDate(b.created_at))}</td>
+        <td class="xl-hide">${ordShot(b) ? esc(ordDate(ordShot(b))) : '<span class="muted">—</span>'}</td>
+        <td><div class="ord-ics">${icons(b)}</div></td>
+        <td>${acts(b)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="ord-cards">${page.map(b => `<div class="ord-card ${b.status === 'cancelled' ? 'ord-x' : ''}" data-id="${b.id}">
+        ${thumb(b)}
+        <div class="ord-cmain"><b>${esc(b.address)}</b><small>${esc(bkClient(b))}</small>
+          <small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'} · #${b.number}</small>
+          <div class="ord-cfoot">${ordPill(b)}<span class="ord-ics">${icons(b)}</span></div></div>
+        ${acts(b)}</div>`).join('')}</div>${pager}`
+      : `<div class="panel bk-empty"><p>${BK.list.length ? (q ? 'No orders match.' : 'Nothing here.') : 'No orders yet.'}</p>${BK.list.length ? '' : '<a class="btn primary" href="#/bookings/new">Place your first order</a>'}</div>`}`;
+  const root = $('#bookingsView');
+  $('#bkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; BK.tab = b.dataset.t; st.sort = ''; st.page = 0; renderBookingList(); };
+  $('#bkSearch').oninput = e => { BK.q = e.target.value; st.page = 0; const pos = e.target.selectionStart; renderBookingList(); const i = $('#bkSearch'); i.focus(); i.setSelectionRange(pos, pos); };
   $('#bkSettings').onclick = openBookingSettings;
   $('#bkPortal').onclick = openClientPortalPanel;
+  root.querySelectorAll('tr[data-id], .ord-card[data-id]').forEach(el => el.onclick = e => { if (e.target.closest('button')) return; location.hash = `#/bookings/${el.dataset.id}`; });
+  root.querySelectorAll('[data-edit]').forEach(x => x.onclick = () => { location.hash = `#/bookings/${x.dataset.edit}`; });
+  root.querySelectorAll('[data-send]').forEach(x => x.onclick = () => openDeliveryModal(x.dataset.send));
+  root.querySelectorAll('[data-more]').forEach(x => x.onclick = e => { e.stopPropagation(); ordMenu(x, BK.list.find(b => b.id === x.dataset.more)); });
+  if (rows.length) wireDir(root, st, rows.length, renderBookingList);
+}
+// ⋯ menu on an order row
+function ordMenu(btn, b){
+  document.querySelector('.ord-menu')?.remove();
+  if (!b) return;
+  const m = document.createElement('div'); m.className = 'ord-menu';
+  m.innerHTML = `<button data-m="edit">Manage order</button>${b.status !== 'cancelled' ? '<button data-m="send">Send delivery email</button>' : ''}<button data-m="del" class="danger">Delete order</button>`;
+  document.body.appendChild(m);
+  const r = btn.getBoundingClientRect(); m.style.top = `${Math.min(r.bottom + 4, innerHeight - m.offsetHeight - 8)}px`; m.style.left = `${Math.max(8, r.right - m.offsetWidth)}px`;
+  const close = () => { m.remove(); document.removeEventListener('click', close, true); };
+  setTimeout(() => document.addEventListener('click', close, true));
+  m.onclick = async e => {
+    const k = e.target.dataset.m; if (!k) return; close();
+    if (k === 'edit') location.hash = `#/bookings/${b.id}`;
+    if (k === 'send') openDeliveryModal(b.id);
+    if (k === 'del') {
+      if (b.paid) return toast('Paid orders can\'t be deleted, so the payment record stays. Cancel it instead.');
+      if (!confirm(`Delete order #${b.number} (${b.address})?\n\nThis removes the order, its invoice and delivery history for good.${b.gcal_event_id ? ' The shoot is also removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
+      if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (err) { if (!/404|410|not found|deleted/i.test(err.message)) return fail(err); } }
+      const { error } = await sb.from('bookings').delete().eq('id', b.id);
+      if (error) return fail(error);
+      BK.list = BK.list.filter(x => x.id !== b.id); toast(`Order #${b.number} deleted`); renderBookingList();
+    }
+  };
+}
+// Send-delivery pop-up from the list: pick the email template, preview, send (same form as on the order page)
+function openDeliveryModal(id){
+  const b = BK.list.find(x => x.id === id); if (!b) return;
+  const a = S.agents.find(x => x.id === b.agent_id);
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal ord-ds"><div class="ord-ds-head"><h2>Send delivery · ${esc(b.address)}</h2><button class="btn small ghost" id="dsX" aria-label="Close">✕</button></div>
+    <p class="muted bk-hint" style="margin:-10px 0 12px">Order #${b.number} · ${esc(bkClient(b))}${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</p>
+    ${dsFormHTML(b, a)}</div>`;
+  $('#ov').onclick = $('#dsX').onclick = closeLayer;
+  dsWire(b, a, () => { closeLayer(); if (S.view === 'bookings' && !S.bkSub) renderBookingList(); });
 }
 
 /* ----- Pricing ----- */
@@ -5073,7 +5192,7 @@ function renderOrderForm(){
   if (!BK.draft) BK.draft = bkNewDraft();
   const d = BK.draft, pk = bkActive('package'), ad = bkActive('addon');
   $('#bookingsView').innerHTML = `
-    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Bookings</a><h1>New order</h1></div></div>
+    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Orders</a><h1>New order</h1></div></div>
     <form id="bkForm" class="bk-layout" autocomplete="off">
       <div class="bk-steps">
         <section class="panel bk-step"><h2><span class="n">1</span> Client</h2>
@@ -5450,13 +5569,13 @@ function dvWire(b){
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
   if (b) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
-  if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Bookings</a><p class="muted">That booking wasn't found.</p>`; return; }
+  if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Orders</a><p class="muted">That order wasn't found.</p>`; return; }
   const a = S.agents.find(x => x.id === b.agent_id);
   const phone = b.client_phone || a?.phone, email = b.client_email || a?.email;
   const projs = (b.project_ids || []).map(pid => S.projects.find(p => p.id === pid)).filter(Boolean);
   const loc = [b.address, b.city].filter(Boolean).join(', ');
   $('#bookingsView').innerHTML = `
-    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Bookings</a><h1>${esc(b.address)}</h1><p>Order #${b.number} · ${bkPill(b.status)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</p></div></div>
+    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Orders</a><h1>${esc(b.address)}</h1><p>Order #${b.number} · ${bkPill(b.status)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</p></div></div>
     <div class="bk-detail">
       <div class="panel"><h2>Shoot</h2>
         <div class="bk-links">
@@ -5560,21 +5679,7 @@ function renderBookingDetail(id){
         <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button></div>
       </div>
       <div class="panel bk-wide" id="dsPanel"><h2>Send delivery <span class="muted" style="font-weight:400;font-size:13px">· email the client their delivery link${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</span></h2>
-        <div class="ds-wrap">
-          <div class="ds-form">
-            <label>What are you delivering?</label><select id="dsTpl"><option>Loading…</option></select>
-            <label>To <span class="muted">(agent's email on file)</span></label><input id="dsTo" type="email" value="${esc((a?.email || b.client_email || '').toLowerCase())}" />
-            <label>Additional recipients <span class="muted">(optional, separate with commas)</span></label><input id="dsCc" placeholder="teammate@brokerage.com" />
-            <p class="muted bk-hint" style="margin:6px 0 0">Bcc: <b>chris@knoxview.com</b> is copied on every delivery.</p>
-            <label>Additional notes <span class="muted">(optional, shows in the email as "A note from Chris")</span></label><textarea id="dsNotes" style="min-height:90px" placeholder="e.g. The twilight shots are in the second half of the gallery."></textarea>
-            <label class="check" style="margin-top:12px"><input type="checkbox" id="dsSms" /> <b>Also text the delivery link</b></label>
-            <div id="dsSmsBox" class="hidden" style="margin-left:26px"><input id="dsSmsTo" type="tel" placeholder="Mobile number" value="${esc(a?.phone || b.client_phone || '')}" /><p class="muted bk-hint" id="dsSmsText" style="margin:6px 0 0"></p></div>
-            <label class="check" style="margin-top:8px"><input type="checkbox" id="dsDone" ${b.status === 'completed' && b.delivered_at ? '' : 'checked'} /> <b>Mark order as delivered &amp; completed</b></label>
-            <div class="bk-actions"><button class="btn primary" id="dsSend">Send delivery</button></div>
-            <div id="dsHist"></div>
-          </div>
-          <div class="ds-prev"><div class="ds-subj" id="dsSubj"></div><iframe id="dsFrame" title="Email preview"></iframe></div>
-        </div>
+        ${dsFormHTML(b, a)}
       </div>
       <div class="panel bk-wide"><h2>Notes</h2>
         <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
@@ -5707,7 +5812,24 @@ function dsFill(str, b, a){
   const v = { first_name: name.split(/\s+/)[0] || 'there', client_name: name || 'there', address: b.address || 'your listing', city: b.city || '', order_number: b.number ? String(b.number) : '', link: `${PORTAL_URL}/#delivery/${b.id}` };
   return String(str || '').replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m);
 }
-async function dsWire(b, a){
+function dsFormHTML(b, a){
+  return `<div class="ds-wrap">
+          <div class="ds-form">
+            <label>What are you delivering?</label><select id="dsTpl"><option>Loading…</option></select>
+            <label>To <span class="muted">(agent's email on file)</span></label><input id="dsTo" type="email" value="${esc((a?.email || b.client_email || '').toLowerCase())}" />
+            <label>Additional recipients <span class="muted">(optional, separate with commas)</span></label><input id="dsCc" placeholder="teammate@brokerage.com" />
+            <p class="muted bk-hint" style="margin:6px 0 0">Bcc: <b>chris@knoxview.com</b> is copied on every delivery.</p>
+            <label>Additional notes <span class="muted">(optional, shows in the email as "A note from Chris")</span></label><textarea id="dsNotes" style="min-height:90px" placeholder="e.g. The twilight shots are in the second half of the gallery."></textarea>
+            <label class="check" style="margin-top:12px"><input type="checkbox" id="dsSms" /> <b>Also text the delivery link</b></label>
+            <div id="dsSmsBox" class="hidden" style="margin-left:26px"><input id="dsSmsTo" type="tel" placeholder="Mobile number" value="${esc(a?.phone || b.client_phone || '')}" /><p class="muted bk-hint" id="dsSmsText" style="margin:6px 0 0"></p></div>
+            <label class="check" style="margin-top:8px"><input type="checkbox" id="dsDone" ${b.status === 'completed' && b.delivered_at ? '' : 'checked'} /> <b>Mark order as delivered &amp; completed</b></label>
+            <div class="bk-actions"><button class="btn primary" id="dsSend">Send delivery</button></div>
+            <div id="dsHist"></div>
+          </div>
+          <div class="ds-prev"><div class="ds-subj" id="dsSubj"></div><iframe id="dsFrame" title="Email preview"></iframe></div>
+        </div>`;
+}
+async function dsWire(b, a, onSent){
   const sel = $('#dsTpl'); if (!sel) return;
   let tpls; try { tpls = (await dtLoad()).filter(t => t.active); } catch (e) { return fail(e); }
   if (!$('#dsTpl')) return; // navigated away
@@ -5737,7 +5859,7 @@ async function dsWire(b, a){
       const r = await deliverCall(x);
       if (r.completed) Object.assign(b, { status: 'completed', delivered_at: new Date().toISOString() });
       toast('Delivery email sent' + (r.sms ? (r.sms.ok ? ' + text sent' : ' · text failed: ' + r.sms.error) : '') + (r.completed ? ' · order completed' : ''));
-      renderBookingDetail(b.id);
+      (onSent || (() => renderBookingDetail(b.id)))(r);
     } catch (e) { fail(e); btn.disabled = false; btn.textContent = 'Send delivery'; }
   };
   try {
