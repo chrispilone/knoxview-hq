@@ -1027,6 +1027,14 @@ body.gs-open{overflow:hidden}
 .hqi-lg{width:28px;height:28px;color:var(--ok);margin-bottom:6px}
 .note .ic .hqi,.act-ic .hqi{width:16px;height:16px;vertical-align:middle}
 .od-ics a .hqi{width:15px;height:15px}
+.od-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 6px}
+.od-addr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.od-addr .full{grid-column:1 / -1}
+.od-addr>div:first-child:not(.full){grid-column:span 2}
+.od-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.od-kv label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 3px}
+.od-kv span{font-size:14px}
+@media (max-width:600px){ .od-addr{grid-template-columns:1fr 1fr} .od-addr>div:first-child:not(.full){grid-column:1 / -1} }
 /* Media Library (order media page) */
 .om-head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .om-head>.od-thumb,.om-head>.od-title,.om-head>.om-acts{grid-area:auto}
@@ -4720,10 +4728,10 @@ function gsBuild(){
   if (viewAllowed('bookings')) for (const b of BK.list || []) {
     const agent = agentName(b.agent_id) || b.client_name || '';
     out.push({ kind:'order', id:b.id, base:1.25, num:String(b.number || ''), rec: recent(b.shoot_start || b.created_at), agentId:b.agent_id,
-      title: gsAddr(b.address, b.unit, b.city) || `Order #${b.number}`,
+      title: b.media_title ? `${b.media_title} · ${gsAddr(b.address, b.unit, b.city)}` : gsAddr(b.address, b.unit, b.city) || `Order #${b.number}`,
       sub: [`#${b.number}`, agent, b.shoot_start ? gsDate(b.shoot_start) : 'Not scheduled'].filter(Boolean).join(' · '),
       meta: BK_STATUS[b.status] ? `<span class="gs-dot" style="background:${BK_STATUS[b.status][1]}"></span>${BK_STATUS[b.status][0]}` : '',
-      f: [[b.address, 3], [b.unit, 1], [b.city, 1], [b.zip, 1], [agent, 1.5], [b.client_email, 1], [bkPkgName(b), .6]],
+      f: [[b.address, 3], [b.media_title, 3], [b.unit, 1], [b.city, 1], [b.zip, 1], [agent, 1.5], [b.client_email, 1], [bkPkgName(b), .6]],
       dg: [gsDigits(b.client_phone)].filter(Boolean),
       when: b.shoot_start || b.created_at });
   }
@@ -5689,6 +5697,8 @@ const ORD_ICON = {
 };
 // First photo of the delivery (cover photo if set), else none yet
 const ordThumb = b => b.cover_url || (b.media_files || []).filter(f => f.kind === 'photo').map(f => f.preview || f.url).find(u => u && !u.includes('/storage/v1/object/delivery/')) || ''; // uploaded photos are private: no thumbnail from them
+// Media title: what the listing is called on listing cards (HQ + client portal) and the download page. Defaults to the address.
+const ordTitle = b => (b.media_title || '').trim() || b.address || '';
 const ordShot = b => b.shoot_start && (b.status === 'completed' || b.delivered_at) ? b.shoot_start : null; // "Date shot" fills in once the shoot is marked complete
 // Status shown in the list: a sent delivery reads as Delivered
 const ordPill = b => b.status !== 'cancelled' && b.delivered_at ? `<span class="status-pill"><span class="dot" style="background:var(--s-delivered)"></span>Delivered</span>` : bkPill(b.status);
@@ -5707,7 +5717,7 @@ function renderBookingList(){
   if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'upcoming';
   const tabFn = ORD_TABS.find(t => t[0] === BK.tab)[2];
   const count = k => BK.list.filter(b => ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
-  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
+  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
   // Default order: upcoming soonest first, everything else newest shoot first. Column headers override it.
   const key = st.sort || 'shoot', dir = st.sort ? st.dir : (BK.tab === 'upcoming' ? 1 : -1);
   const val = { address: b => b.address, agent: bkClient, status: b => b.status !== 'cancelled' && b.delivered_at ? 'delivered' : b.status, shoot: b => b.shoot_start || '', submitted: b => b.created_at, shot: b => ordShot(b) || '' }[key];
@@ -5739,7 +5749,7 @@ function renderBookingList(){
         <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
       ${page.map(b => `<tr data-id="${b.id}" class="${b.status === 'cancelled' ? 'ord-x' : ''}">
         <td class="ord-td-thumb">${thumb(b)}</td>
-        <td class="ord-addr"><b>${esc(b.address)}</b><small>${esc([b.city, '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
+        <td class="ord-addr"><b>${esc(ordTitle(b))}</b><small>${esc([b.city, '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
         <td class="trunc" style="max-width:200px">${agentCell(b)}</td>
         <td class="m-hide">${ordPill(b)}</td>
         <td>${b.shoot_start ? esc(ordDate(b.shoot_start)) : '<span class="muted">Not set</span>'}</td>
@@ -5750,7 +5760,7 @@ function renderBookingList(){
         <td>${acts(b)}</td></tr>`).join('')}</tbody></table></div>
       <div class="ord-cards">${page.map(b => `<div class="ord-card ${b.status === 'cancelled' ? 'ord-x' : ''}" data-id="${b.id}">
         ${thumb(b)}
-        <div class="ord-cmain"><b>${esc(b.address)}</b><small>${esc(bkClient(b))}</small>
+        <div class="ord-cmain"><b>${esc(ordTitle(b))}</b><small>${esc(bkClient(b))}</small>
           <small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'} · #${b.number}</small>
           <div class="ord-cfoot">${ordPill(b)}<span class="ord-ics">${icons(b)}</span></div></div>
         ${acts(b)}</div>`).join('')}</div>${pager}`
@@ -5905,6 +5915,8 @@ function renderOrderForm(){
         <section class="panel bk-step"><h2><span class="n">2</span> Property</h2>
           <div class="grid2">
             <div class="full"><label>Street address</label><input name="address" required value="${esc(d.address)}" placeholder="123 Mountain View Dr" /></div>
+            <div class="full"><label class="check bk-check"><input type="checkbox" name="mt_on" ${d.mt_on ? 'checked' : ''} /> Use a different media title <span class="muted">(shown on listing cards instead of the address)</span></label>
+              <input name="media_title" class="${d.mt_on ? '' : 'hidden'}" value="${esc(d.media_title || '')}" placeholder="e.g. Lot 12 · Smoky Ridge Estates" maxlength="120" style="margin-top:6px" /></div>
             <div><label>City</label><input name="city" value="${esc(d.city)}" placeholder="Knoxville" /></div>
             <div><label>Square feet</label><input name="sqft" type="number" min="0" inputmode="numeric" value="${esc(d.sqft)}" placeholder="2,400" /></div>
             <div class="full"><label class="check bk-check"><input type="checkbox" name="adu" ${d.adu ? 'checked' : ''} /> ADU, guest house or other extra structure</label>
@@ -5934,7 +5946,8 @@ function renderOrderForm(){
   form.oninput = form.onchange = e => {
     const t = e.target;
     if (t.closest('#bkSummary') || t.closest('#bkPicker') || t.closest('#bkClientBox')) return;
-    if (['address','city','sqft','occupancy','entry','access_notes','notes'].includes(t.name)) d[t.name] = t.value;
+    if (['address','city','sqft','occupancy','entry','access_notes','notes','media_title'].includes(t.name)) d[t.name] = t.value;
+    if (t.name === 'mt_on') { d.mt_on = t.checked; const mi = form.querySelector('[name=media_title]'); mi.classList.toggle('hidden', !t.checked); if (t.checked) mi.focus(); }
     if (t.name === 'adu') d.adu = t.checked;
     if (t.name === 'pkg') { d.pkg = t.value; document.querySelectorAll('.bk-pkg').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); bkDurationChanged(); }
     if (t.dataset.add) { t.checked ? d.addons.add(t.dataset.add) : d.addons.delete(t.dataset.add); t.closest('.bk-add').classList.toggle('on', t.checked); bkDurationChanged(); }
@@ -6040,7 +6053,7 @@ async function bkSubmit(){
     }
     const start = d.pick.start, end = new Date(start.getTime() + q.duration * 60000);
     const row = { agent_id: agentId, client_name: d.newClient ? d.client.name.trim() : null, client_email: d.newClient ? d.client.email.trim() || null : null, client_phone: d.newClient ? d.client.phone.trim() || null : null,
-      address: d.address.trim(), city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
+      address: d.address.trim(), media_title: d.mt_on && (d.media_title || '').trim() ? d.media_title.trim().slice(0, 120) : null, city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
       occupancy: d.occupancy || null, entry: d.entry || null, access_notes: d.access_notes.trim() || null, notes: d.notes.trim() || null,
       items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, paid: d.paid, paid_at: d.paid ? new Date().toISOString() : null,
       shoot_start: start.toISOString(), shoot_end: end.toISOString(), duration_min: q.duration, created_by: S.me.id };
@@ -6271,7 +6284,7 @@ function dvWire(b){
   dvPaintPlans(b);
 }
 const OD_OPEN_KEY = 'hq.odOpen';
-const odOpen = () => { try { return JSON.parse(localStorage.getItem(OD_OPEN_KEY) || '["invoice","shoot","projects"]'); } catch (_) { return ['invoice', 'shoot', 'projects']; } };
+const odOpen = () => { try { return JSON.parse(localStorage.getItem(OD_OPEN_KEY) || '["details","schedule","projects"]'); } catch (_) { return ['details', 'schedule', 'projects']; } };
 const OD_CHEV = '<svg class="ap-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 // Delete an order for good (shared by the order list ⋯ menu and the order page). Resolves true when deleted.
 async function ordDelete(b){
@@ -6308,8 +6321,8 @@ function renderBookingDetail(id){
     <section class="panel od-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title">
-        <h1>${esc(b.address)}</h1>
-        <p class="od-sub">${esc([[b.city, b.zip].filter(Boolean).join(' '), '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</p>
+        <h1>${esc(ordTitle(b))}</h1>
+        <p class="od-sub">${esc([b.media_title ? b.address : '', [b.city, b.zip].filter(Boolean).join(' '), '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</p>
         <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
       <div class="od-cta">
@@ -6362,6 +6375,49 @@ function renderBookingDetail(id){
 
     <div class="od-grid">
       <div class="od-main ap-secs">
+        ${sec('details', 'Order details', esc([bkPkgName(b), b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label].filter(Boolean).join(' · ')), `
+          <p class="od-loc">${hqi('pin')} ${esc([b.address, b.unit ? '#' + String(b.unit).replace(/^#/, '') : '', [b.city, [b.state, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(' '))} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
+          <h4 class="od-h">Listing address</h4>
+          <div class="od-addr">
+            <div class="full"><label>Street address</label><input id="odStreet" value="${esc(b.address || '')}" autocomplete="off" /></div>
+            <div><label>Unit</label><input id="odUnit" value="${esc(b.unit || '')}" placeholder="Apt / unit" /></div>
+            <div><label>City</label><input id="odCity" value="${esc(b.city || '')}" /></div>
+            <div><label>State</label><input id="odState" value="${esc(b.state || 'TN')}" maxlength="2" style="text-transform:uppercase" /></div>
+            <div><label>ZIP</label><input id="odZip" value="${esc(b.zip || '')}" inputmode="numeric" maxlength="5" /></div>
+          </div>
+          <label class="check" style="margin-top:12px"><input type="checkbox" id="odMtOn" ${b.media_title ? 'checked' : ''} /> <span><b>Use a different media title</b> <span class="muted">(otherwise the address is the title)</span></span></label>
+          <div id="odMtBox" class="${b.media_title ? '' : 'hidden'}" style="margin-top:6px"><label>Media title</label><input id="odMt" value="${esc(b.media_title || '')}" maxlength="120" placeholder="e.g. Lot 12 · Smoky Ridge Estates" /></div>
+          <p class="muted bk-hint" style="margin:6px 0 0">The media title is what the listing card shows in HQ and in the client's Listings, and the heading on the download page. Changing the address updates the order everywhere it appears: the media title (unless you set your own), delivery emails and invoices, linked projects, and the Google Calendar event.</p>
+          <h4 class="od-h">Property</h4>
+          <div class="od-addr">
+            <div><label>Size (sq ft)</label><input id="odSqft" type="number" inputmode="numeric" value="${esc(b.sqft || '')}" placeholder="${esc(b.sqft_label || '')}" /></div>
+            <div><label>Occupancy</label><select id="odOcc">${opt([['Occupied','Occupied'],['Vacant','Vacant'],['Staged','Vacant, staged']], b.occupancy || '', '—')}</select></div>
+            <div class="full"><label>Entering the house</label><select id="odEntry">${opt([['Agent will meet','Agent will meet'],['Owner will be home','Owner will be home'],['Lockbox','Lockbox'],['Door code','Door code'],['Other','Other (see notes)'], ...(b.entry && !['Agent will meet','Owner will be home','Lockbox','Door code','Other'].includes(b.entry) ? [[b.entry, b.entry]] : [])], b.entry || '', '—')}</select></div>
+          </div>
+          <label style="margin-top:10px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" placeholder="Lockbox code, gate code, who'll be there…" />
+          <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
+          <div class="od-kv">
+            <div><label>Package</label><span>${esc(bkPkgName(b) || '—')}</span></div>
+            <div><label>Order page</label><span>${esc((typeof OP !== 'undefined' && OP.pages.find(x => x.id === b.order_page_id)?.name) || (b.order_page_id ? 'Custom page' : 'Default'))}</span></div>
+            <div><label>Booked</label><span>${b.source === 'public' ? 'Online by the client' : 'In HQ'}${b.created_by ? ' · ' + esc(memberName(b.created_by)) : ''}</span></div>
+            <div><label>Created</label><span>${esc(fmtDateTime(b.created_at))}</span></div>
+          </div>
+          ${(b.client_files || []).length ? `<p style="margin:10px 0 0"><b>Attachments:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">${hqi('clip')} ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : `<p class="muted bk-hint" style="margin:10px 0 0">No attachments.</p>`}
+          <div class="bk-actions"><button type="button" class="btn primary" id="odSaveDetails">Save order details</button></div>`)}
+
+        ${sec('schedule', 'Scheduling', b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + fmtT(b.shoot_start)) : 'Not scheduled', `
+          <div class="od-kv">
+            <div><label>Scheduled for</label><span>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })) + '<br>' + esc(fmtT(b.shoot_start)) + '–' + esc(fmtT(b.shoot_end)) : 'Not scheduled yet'}</span></div>
+            <div><label>Status</label><span>${ordPill(b)}</span></div>
+            <div><label>Google Calendar</label><span>${b.gcal_event_id ? 'On your calendar' : 'Not on your calendar'}</span></div>
+          </div>
+          <div class="od-addr" style="margin-top:12px">
+            <div><label>Expected duration (minutes)</label><div class="om-row"><input id="odDur" type="number" inputmode="numeric" min="15" step="15" value="${esc(b.duration_min || 60)}" /><button type="button" class="btn small" id="odDurSave">Save</button></div></div>
+            <div><label>Photographer</label><select id="odPhotog">${opt(S.team.filter(m => m.active || m.id === b.photographer_id).map(m => [m.id, m.full_name]), b.photographer_id || '', 'Not assigned')}</select></div>
+          </div>
+          <p class="muted bk-hint" style="margin:6px 0 0">Changing the duration moves the end time${b.gcal_event_id ? ' and updates the Google Calendar event' : ''}.</p>
+          ${live ? `<div class="bk-actions"><button type="button" class="btn" data-act="resched">${hqi('calendar')} Reschedule</button></div>` : ''}`)}
+
         ${sec('invoice', 'Invoice & services', `${money(b.total)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}`, `
           <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
             ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
@@ -6385,19 +6441,6 @@ function renderBookingDetail(id){
           </div>`}
           <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
           <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>`)}
-
-        ${sec('shoot', 'Property, access & notes', esc([b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label, b.occupancy].filter(Boolean).join(' · ')), `
-          <p class="od-loc">${hqi('pin')} ${esc(loc)} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
-          <div class="od-specs">
-            <div><label>Size</label>${b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : esc(b.sqft_label || '—')}${b.large_property ? ' · large' : ''}</div>
-            <div><label>Occupancy</label>${esc(b.occupancy || '—')}</div>
-            <div><label>Entry</label>${esc(b.entry || '—')}</div>
-            <div><label>Length</label>${b.duration_min || '—'} min</div>
-          </div>
-          ${(b.client_files || []).length ? `<p><b>Client files:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">${hqi('clip')} ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : ''}
-          <label style="margin-top:12px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" placeholder="Lockbox code, gate code, who'll be there…" />
-          <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
-          <div class="bk-actions"><button type="button" class="btn" id="bkSaveNotes">Save notes</button><span class="muted bk-hint" style="margin:0">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</span></div>`)}
 
         ${sec('media', 'Media Library', esc(omSummary(b)), `
           <div class="om-chips">${(() => { const s = omStats(b); return [
@@ -6480,7 +6523,60 @@ function renderBookingDetail(id){
   on('bkClientView', () => openAsClient('bkClientView', `delivery/${b.id}`));
   on('bkShareLink', () => { const u = `${PORTAL_URL}/d/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Download link copied'), () => prompt('Download link', u)); });
   on('odPdf', () => ordViewPdf(b, $('#odPdf')));
-  on('bkSaveNotes', () => save({ notes: $('#bkNotes').value.trim() || null, access_notes: $('#bkAccess').value.trim() || null }, 'Notes saved'));
+  // --- Order details: address (flows everywhere), property, access & notes ---
+  on('odSaveDetails', async () => {
+    const v = id => $('#' + id).value.trim();
+    const addr = { address: v('odStreet'), unit: v('odUnit') || null, city: v('odCity'), state: v('odState').toUpperCase() || null, zip: v('odZip') || null };
+    if (!addr.address) return toast('Enter the street address');
+    if (addr.zip && !/^\d{5}$/.test(addr.zip)) return toast('ZIP must be 5 digits');
+    const sq = v('odSqft');
+    const mt = $('#odMtOn').checked ? v('odMt').slice(0, 120) || null : null;
+    const patch = { ...addr, media_title: mt, sqft: sq ? Math.round(Number(sq)) || null : b.sqft, occupancy: v('odOcc') || null, entry: v('odEntry') || null,
+      access_notes: v('bkAccess') || null, notes: $('#bkNotes').value.trim() || null };
+    const moved = ['address', 'unit', 'city', 'state', 'zip'].some(k => (b[k] || null) !== (addr[k] || null));
+    const btn = $('#odSaveDetails'); btn.disabled = true;
+    const before = { address: b.address, city: b.city };
+    const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
+    if (error) { btn.disabled = false; return fail(error); }
+    Object.assign(b, patch);
+    const notes = [];
+    if (moved) {
+      // linked projects: address, city, and the name when it was the old address
+      const pids = b.project_ids || [];
+      if (pids.length) {
+        let n = 0;
+        for (const pid of pids) {
+          const pr = S.projects.find(x => x.id === pid);
+          const pp = { address: b.address, city: b.city };
+          if (pr && before.address && String(pr.name || '').includes(before.address)) pp.name = pr.name.replace(before.address, b.address);
+          const r = await sb.from('projects').update(pp).eq('id', pid);
+          if (!r.error) n++;
+        }
+        if (n) { notes.push(`${n} project${n === 1 ? '' : 's'}`); await reloadProjects().catch(() => {}); }
+      }
+      // Google Calendar event: title, location, details
+      if (b.gcal_event_id) {
+        try { const ev = bkEventBody(b); await gcal('update', { id: b.gcal_event_id, event: { summary: ev.summary, location: ev.location, description: ev.description } }); clearCalCache(); notes.push('Google Calendar'); }
+        catch (e) { toast("Saved, but the Google Calendar event couldn't be updated"); }
+      }
+    }
+    toast(moved ? `Address updated${notes.length ? ' · ' + notes.join(' and ') + ' too' : ''}` : 'Order details saved');
+    renderBookingDetail(b.id);
+  });
+  const mton = $('#odMtOn'); if (mton) mton.onchange = () => { $('#odMtBox').classList.toggle('hidden', !mton.checked); if (mton.checked) $('#odMt').focus(); };
+  // --- Scheduling: duration (moves the end time) and photographer ---
+  on('odDurSave', async () => {
+    const dur = Math.round(Number($('#odDur').value));
+    if (!dur || dur < 15 || dur > 600) return toast('Enter a duration between 15 and 600 minutes');
+    const patch = { duration_min: dur };
+    if (b.shoot_start) patch.shoot_end = new Date(new Date(b.shoot_start).getTime() + dur * 60000).toISOString();
+    if (b.gcal_event_id && patch.shoot_end) {
+      try { await gcal('update', { id: b.gcal_event_id, event: { end: { dateTime: patch.shoot_end, timeZone: CAL_TZ } } }); clearCalCache(); BK.busy = null; }
+      catch (e) { return fail(e); }
+    }
+    save(patch, `Duration set to ${dur} min` + (b.gcal_event_id ? ' · Google Calendar updated' : ''));
+  });
+  const pg = $('#odPhotog'); if (pg) pg.onchange = () => save({ photographer_id: pg.value || null }, pg.value ? `Photographer: ${memberName(pg.value)}` : 'Photographer cleared');
   on('bkCancel', async () => {
     if (!confirm(`Cancel order #${b.number}?${b.gcal_event_id ? ' The shoot will be removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
     if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (e) { if (!/404|410|not found|deleted/i.test(e.message)) return fail(e); } }
@@ -6739,7 +6835,7 @@ function renderOrderMedia(id){
     <section class="panel om-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title"><h1>Media Library</h1>
-        <p class="od-sub">${esc([b.address, b.city].filter(Boolean).join(', '))} · #${b.number}</p>
+        <p class="od-sub">${esc(ordTitle(b))}${b.media_title ? ' · ' + esc([b.address, b.city].filter(Boolean).join(', ')) : b.city ? ', ' + esc(b.city) : ''} · #${b.number}</p>
         <p class="om-sum" id="omSum"></p></div>
       <div class="om-acts">
         <button type="button" class="btn small" id="omPreview" title="Open the download page as the client sees it">${hqi('eye')} Preview</button>
