@@ -3211,7 +3211,7 @@ async function renderAgentProfile(id){
     </div>
     <div class="ap-actions">
       ${admin && a.email ? `<button type="button" class="btn" id="apAccess">${DIR_ICON.key} Access agent</button>` : ''}
-      ${admin ? `<button type="button" class="btn" id="apMedia">${hqi('image')} Media library</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
+      ${admin ? `<button type="button" class="btn" id="apMedia" title="Open the client portal as this agent, on their Listings">${hqi('home')} Client Listings</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
       ${co ? `<button type="button" class="btn" id="apCompany">${hqi('building')} View company</button>` : ''}
       ${can('manage_agents') ? `<button type="button" class="btn" id="apSwitch">⇄ ${co ? 'Switch' : 'Add'} company</button>` : ''}
       ${isSuperAdmin() ? `<button type="button" class="btn ghost danger ap-del" id="apDelete">Delete agent</button>` : ''}
