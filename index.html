@@ -1035,6 +1035,8 @@ body.gs-open{overflow:hidden}
 .od-kv label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 3px}
 .od-kv span{font-size:14px}
 @media (max-width:600px){ .od-addr{grid-template-columns:1fr 1fr} .od-addr>div:first-child:not(.full){grid-column:1 / -1} }
+.od-invbtns{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.od-invbtns .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
 /* Media Library (order media page) */
 .om-head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .om-head>.od-thumb,.om-head>.od-title,.om-head>.om-acts{grid-area:auto}
@@ -6336,7 +6338,9 @@ function renderBookingDetail(id){
             <button type="button" data-act="media">${hqi('image')} Media Library</button>
             <button type="button" data-act="dlpage">${hqi('eye')} Download page</button>
             ${b.public_token ? '<button type="button" data-act="copylink">' + hqi('link') + ' Copy download link</button>' : ''}
-            <button type="button" data-act="pdf">${hqi('file')} View PDF</button>
+            <button type="button" data-act="pdf">${hqi('file')} View Invoice PDF</button>
+            <button type="button" data-act="email-inv">${hqi('mail')} Email invoice</button>
+            <button type="button" data-act="paylink">${hqi('link')} Copy payment link</button>
             ${a?.email ? '<button type="button" data-act="access">' + hqi('key') + ' Access agent</button>' : ''}
             <hr>
             <button type="button" id="odSwitch">⇄ Switch agent</button>
@@ -6365,7 +6369,7 @@ function renderBookingDetail(id){
       <div class="panel od-card"><label>Invoice</label>
         <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
         <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
-        <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">${hqi('file')} View PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
+        <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">${hqi('file')} View Invoice PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
       <div class="panel od-card"><label>Delivery</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
@@ -6418,7 +6422,13 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:6px 0 0">Changing the duration moves the end time${b.gcal_event_id ? ' and updates the Google Calendar event' : ''}.</p>
           ${live ? `<div class="bk-actions"><button type="button" class="btn" data-act="resched">${hqi('calendar')} Reschedule</button></div>` : ''}`)}
 
-        ${sec('invoice', 'Invoice & services', `${money(b.total)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}`, `
+        ${sec('invoice', 'Invoicing', `${money(b.total)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}`, `
+          <div class="od-invbtns">
+            <button type="button" class="btn small" data-inv="pdf">${hqi('file')} View Invoice PDF</button>
+            <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email invoice</button>
+            ${b.public_token ? `<a class="btn small" href="${PORTAL_URL}/pay/${b.public_token}" target="_blank" rel="noopener" title="The invoice anyone can pay, no sign-in">${hqi('dollar')} Payment link</a>
+            <button type="button" class="btn small" data-inv="copypay">${hqi('link')} Copy payment link</button>` : ''}
+          </div>
           <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
             ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
             ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
@@ -6523,6 +6533,12 @@ function renderBookingDetail(id){
   on('bkClientView', () => openAsClient('bkClientView', `delivery/${b.id}`));
   on('bkShareLink', () => { const u = `${PORTAL_URL}/d/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Download link copied'), () => prompt('Download link', u)); });
   on('odPdf', () => ordViewPdf(b, $('#odPdf')));
+  const copyPay = () => { const u = `${PORTAL_URL}/pay/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Payment link copied'), () => prompt('Payment link', u)); };
+  document.querySelectorAll('#bookingsView [data-inv]').forEach(x => x.onclick = () => {
+    if (x.dataset.inv === 'pdf') ordViewPdf(b, x);
+    if (x.dataset.inv === 'email') ordEmailInvoice(b, a);
+    if (x.dataset.inv === 'copypay') copyPay();
+  });
   // --- Order details: address (flows everywhere), property, access & notes ---
   on('odSaveDetails', async () => {
     const v = id => $('#' + id).value.trim();
@@ -6638,6 +6654,8 @@ function renderBookingDetail(id){
     if (x.dataset.act === 'dlpage') ordOpenAsClient(b, mBtn, `delivery/${b.id}`);
     if (x.dataset.act === 'copylink') $('#bkShareLink')?.click();
     if (x.dataset.act === 'pdf') ordViewPdf(b, mBtn);
+    if (x.dataset.act === 'email-inv') ordEmailInvoice(b, a);
+    if (x.dataset.act === 'paylink' && b.public_token) { const u = `${PORTAL_URL}/pay/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Payment link copied'), () => prompt('Payment link', u)); }
     if (x.dataset.act === 'access') $('#odAccess')?.click();
   }));
   on('odDelivered', () => {
@@ -6722,6 +6740,36 @@ async function ordViewPdf(b, btn){
     setTimeout(() => URL.revokeObjectURL(url), 120000);
   } catch (e) { if (win) win.close(); fail(e); }
   if (btn) { btn.disabled = false; btn.innerHTML = label; }
+}
+// Email the invoice PDF: confirm who it goes to (the client's email, changeable) and add more people
+function ordEmailInvoice(b, a){
+  const def = (a?.email || b.client_email || '').trim();
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Email invoice #${b.number}</h2>
+    <p class="muted bk-hint" style="margin-top:-6px">${esc(ordTitle(b))} · ${money(Math.max(0, Number(b.total) - Number(b.credit_applied || 0)))} ${b.paid ? 'paid' : 'due'}. The PDF is attached${b.paid ? '' : ' and the email has a button to pay online (no sign-in)'}.</p>
+    <form id="eiForm"><label>Send to</label><input type="email" id="eiTo" value="${esc(def)}" placeholder="client@email.com" required />
+      <div id="eiMore"></div>
+      <button type="button" class="ap-link" id="eiAdd" style="margin-top:8px">+ Add another email</button>
+      <div class="actions"><button type="button" class="btn" id="eiX">Cancel</button><button class="btn primary" id="eiSend">${hqi('mail')} Send invoice</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove();
+  box.querySelector('.overlay').onclick = close; box.querySelector('#eiX').onclick = close;
+  const more = box.querySelector('#eiMore');
+  box.querySelector('#eiAdd').onclick = () => {
+    if (more.children.length >= 5) return toast('Up to 6 people');
+    more.insertAdjacentHTML('beforeend', `<div class="om-row" style="margin-top:8px"><input type="email" class="ei-x" placeholder="another@email.com" /><button type="button" class="btn small" aria-label="Remove">✕</button></div>`);
+    const row = more.lastElementChild; row.querySelector('button').onclick = () => row.remove(); row.querySelector('input').focus();
+  };
+  box.querySelector('#eiForm').onsubmit = async e => {
+    e.preventDefault();
+    const to = [box.querySelector('#eiTo').value, ...[...more.querySelectorAll('.ei-x')].map(i => i.value)].map(x => x.trim()).filter(Boolean);
+    if (!to.length) return toast('Add an email address');
+    const btn = box.querySelector('#eiSend'); btn.disabled = true; btn.textContent = 'Sending…';
+    const { data, error } = await sb.functions.invoke('invoices', { body: { action: 'hq_email', bookingId: b.id, to } });
+    if (error) { let m = 'The invoice could not be sent'; try { m = (await error.context.json()).error || m; } catch (_) {} btn.disabled = false; btn.innerHTML = `${hqi('mail')} Send invoice`; return toast(m); }
+    close(); toast(`Invoice sent to ${data.sent.join(', ')}`);
+  };
+  setTimeout(() => box.querySelector('#eiTo').focus(), 30);
 }
 // Link fields in the Media Library -> one save (photos, plans and uploads save on their own)
 function omCollect(b){
