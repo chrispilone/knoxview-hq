@@ -18,34 +18,22 @@
   --accent:#1f3c66; --accent-2:#2f5486; --accent-soft:#e4eaf3; --on-accent:#ffffff; --brand-ink:#1f3c66;
   --font-display:"Cormorant Garamond",Marcellus,Georgia,serif; --danger:#c0392b; --ok:#1e8e5a; --warn:#b7700a;
   --photo:#2a6fb0; --photo-soft:#e6f0fa; --video:#7a4bb0; --video-soft:#f2ebfa;
-  /* Smokies accents: copper (orders), forest (clients), rose (hiring), teal (calendar), green (finance) */
-  --copper:#b5652b; --copper-soft:#fbeee3; --forest:#2d7a68; --forest-soft:#e2f1ec; --rose:#b04a6c; --rose-soft:#f9e8ee;
-  --teal:#0f766e; --teal-soft:#e1f3f1; --money:#1e8e5a; --money-soft:#e3f3ea;
-  --sec:var(--accent); --sec-soft:var(--accent-soft); --sec-on:#ffffff;
+  --sec:var(--accent); --sec-soft:var(--accent-soft); --sec-on:var(--on-accent);
   --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05); --radius:10px;
   --s-not_started:#9aa3af; --s-in_progress:#3a7bc8; --s-ready_for_review:#d48a0a; --s-needs_revision:#c0392b;
   --s-approved:#1e8e5a; --s-delivered:#5b3fa6; --s-archived:#6b7280;
 }
 @media (prefers-color-scheme: dark){
-  /* Dark: soft charcoal (not navy) so the colors can carry meaning; navy/mist stay as the brand accent */
-  :root{ --bg:#14171c; --panel:#1c2027; --panel-2:#242931; --border:#30363f; --text:#e8ecf2; --muted:#9ea8b6;
-    --side-bg:#181b21; --side-hover:#22272f;
-    --accent:#9db4d6; --accent-2:#c3d1e4; --accent-soft:rgba(157,180,214,.15); --on-accent:#14171c; --brand-ink:#e8ecf2; --warn:#e0a84a;
-    --photo:#7db8ee; --photo-soft:rgba(125,184,238,.14); --video:#c3a3ec; --video-soft:rgba(195,163,236,.14);
-    --copper:#e7a46c; --copper-soft:rgba(231,164,108,.14); --forest:#72c7b0; --forest-soft:rgba(114,199,176,.13); --rose:#ec98b4; --rose-soft:rgba(236,152,180,.14);
-    --teal:#5ec4b3; --teal-soft:rgba(94,196,179,.13); --money:#5fcf96; --money-soft:rgba(95,207,150,.13);
-    --sec-on:#14171c;
-    --s-not_started:#8a93a0; --s-in_progress:#7fb2e6; --s-ready_for_review:#e6a23c; --s-needs_revision:#e5726a; --s-approved:#5fcf96; --s-delivered:#a98be0;
+  /* Dark: the knoxview.com navy palette (page #1d3250, cards #253e60, mist-blue accents) */
+  :root{ --bg:#1d3250; --panel:#253e60; --panel-2:#2d4c75; --border:#3a5a85; --text:#e7edf6; --muted:#a9b6c9;
+    --side-bg:#172a44; --side-hover:#253e60;
+    --accent:#bccadc; --accent-2:#e7edf6; --accent-soft:rgba(140,166,204,.2); --on-accent:#1d3250; --brand-ink:#e7edf6; --warn:#e0a84a;
+    --photo:#9cc8f2; --photo-soft:rgba(140,190,240,.16); --video:#cbb2ee; --video-soft:rgba(197,163,236,.16);
+    --s-not_started:#a9b6c9; --s-in_progress:#9cc8f2; --s-ready_for_review:#e6b45c; --s-needs_revision:#ec8a80; --s-approved:#6fd3a0; --s-delivered:#b9a2ea;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);}
 }
-/* Section accents: each area of HQ gets its own color (set on <body data-sec> by the router) */
 body[data-sec=photo],.sec-photo{--sec:var(--photo);--sec-soft:var(--photo-soft)}
 body[data-sec=video],.sec-video{--sec:var(--video);--sec-soft:var(--video-soft)}
-body[data-sec=orders],.sec-orders{--sec:var(--copper);--sec-soft:var(--copper-soft)}
-body[data-sec=clients],.sec-clients{--sec:var(--forest);--sec-soft:var(--forest-soft)}
-body[data-sec=hiring]{--sec:var(--rose);--sec-soft:var(--rose-soft)}
-body[data-sec=calendar]{--sec:var(--teal);--sec-soft:var(--teal-soft)}
-body[data-sec=finance]{--sec:var(--money);--sec-soft:var(--money-soft)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Figtree,"Segoe UI",system-ui,-apple-system,sans-serif;font-size:14px}
 a{color:var(--accent-2)}
@@ -348,7 +336,7 @@ nav.tabs a:hover{background:var(--side-hover);color:var(--text)}
 nav.tabs a:active{transform:scale(.98)}
 nav.tabs a.active{background:var(--panel);color:var(--sec);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 nav.tabs a.active::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--sec)}
-@media (prefers-color-scheme: dark){ nav.tabs a.active{background:var(--sec-soft);box-shadow:none} }
+@media (prefers-color-scheme: dark){ nav.tabs a.active{background:var(--panel);box-shadow:none} }
 nav.tabs a svg{width:21px;height:21px;flex:none}
 nav.tabs a .badge{min-width:20px;height:20px;font-size:11.5px}
 nav.tabs a.hidden{display:none}
