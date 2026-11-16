@@ -1022,6 +1022,11 @@ body.gs-open{overflow:hidden}
 .od-cbtns .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}.od-cbtns svg{width:14px;height:14px}
 .od-card .od-ics{flex-wrap:wrap}
 .od-ics .od-access{width:auto;height:32px;border-radius:999px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px}.od-ics .od-access svg{width:14px;height:14px}
+.hqi{width:1.05em;height:1.05em;flex:none;vertical-align:-.17em;display:inline-block}
+.btn .hqi,.od-menu .hqi,.tv-chip .hqi{width:15px;height:15px;vertical-align:-3px}
+.hqi-lg{width:28px;height:28px;color:var(--ok);margin-bottom:6px}
+.note .ic .hqi,.act-ic .hqi{width:16px;height:16px;vertical-align:middle}
+.od-ics a .hqi{width:15px;height:15px}
 /* Order media page */
 .om-head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .om-head>.od-thumb,.om-head>.od-title,.om-head>.om-acts{grid-area:auto}
@@ -1647,7 +1652,7 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
       </div></div>
     </div>
     <div class="side-foot">
-      <button class="side-viewas lbl hidden" id="viewAsBtn">👁 View as…</button>
+      <button class="side-viewas lbl hidden" id="viewAsBtn">View as…</button>
       <span class="user-chip lbl" id="userChip"></span>
       <button class="side-out" id="signOut" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span class="lbl">Sign out</span></button>
     </div>
@@ -1832,6 +1837,49 @@ function savePrefs(){
 /* ===================== HELPERS ===================== */
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* HQ icons: one line-icon style everywhere (no emoji) */
+const HQI = {
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>',
+  clip: '<path d="m21 11-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6L15 6.6"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+  pencil: '<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
+  folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/>',
+  image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-9 9"/>',
+  key: '<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M17 6l3 3M14.5 8.5l2 2"/>',
+  alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  package: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8M7.5 5.5l9 5"/>',
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/><path d="M10 20v-5h4v5"/>',
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  mobile: '<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  camera: '<path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5z"/><circle cx="12" cy="13" r="3.5"/>',
+  film: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.5 3.5 5.2"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/>',
+  checkbox: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/>',
+  building: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  tool: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',
+  dollar: '<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  receipt: '<path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+  ticket: '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"/><path d="M13 6v2M13 11v2M13 16v2"/>',
+  tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  printer: '<path d="M6 9V2h12v7"/><rect x="2" y="9" width="20" height="8" rx="2"/><path d="M6 14h12v8H6z"/>',
+  hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>'
+};
+const hqi = (n, cls = '') => `<svg class="hqi${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HQI[n] || ''}</svg>`;
 const fmtDate = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '';
 const fmtShort = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '';
 const fmtDateTime = d => d ? new Date(d).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
@@ -2011,7 +2059,7 @@ async function boot(session){
    a task assigned to them, a project assigned to them, a revision on their project,
    a project ready for review (QC admins), or an @mention in chat. Done = cleared from the list. */
 const NOTE = { list: [], showCleared: false, sub: null };
-const NOTE_ICON = { application: '🧑‍💼', task_assigned: '✅', project_assigned: '📁', revision: '✏️', review: '👀', mention: '💬' };
+const NOTE_ICON = { application: hqi('briefcase'), task_assigned: hqi('checkbox'), project_assigned: hqi('folder'), revision: hqi('pencil'), review: hqi('eye'), mention: hqi('chat') };
 const activeNotes = () => NOTE.list.filter(n => !n.dismissed_at);
 function noteAgo(ts){
   const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
@@ -2034,7 +2082,7 @@ function subscribeNotes(){
   NOTE.sub = sb.channel('hq-notes').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `member_id=eq.${S.me.id}` }, p => {
     if (p.eventType === 'INSERT') {
       if (!NOTE.list.some(n => n.id === p.new.id)) NOTE.list.unshift(p.new);
-      toast('🔔 ' + p.new.title);
+      toast(p.new.title);
       try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) { const dn = new Notification(p.new.title, { body: p.new.body || '', tag: p.new.id }); dn.onclick = () => { window.focus(); openNote(p.new.id); dn.close(); }; } } catch (e) {}
     } else if (p.eventType === 'UPDATE') {
       NOTE.list = NOTE.list.map(n => n.id === p.new.id ? p.new : n);
@@ -2081,7 +2129,7 @@ function noteHTML(n){
   const cleared = !!n.dismissed_at, link = n.task_id || n.project_id || n.channel_id;
   const who = n.actor_id && memberName(n.actor_id) ? `from ${esc(firstName(memberName(n.actor_id)))} · ` : '';
   return `<div class="note ${cleared ? 'cleared' : n.read_at ? 'read' : 'unread'}" data-note="${n.id}">
-    <span class="ic">${NOTE_ICON[n.kind] || '🔔'}</span>
+    <span class="ic">${NOTE_ICON[n.kind] || hqi('bell')}</span>
     <div class="bd"><div class="tt">${esc(n.title)}</div>${n.body ? `<div class="tx">${esc(n.body)}</div>` : ''}<div class="mt">${who}${esc(noteAgo(n.created_at))}</div></div>
     <div class="acts">
       ${link ? `<button class="btn small" data-note-open="${n.id}">Open</button>` : ''}
@@ -2098,7 +2146,7 @@ function renderNotes(){
     <div class="page-head"><div><h1>Notifications</h1><p>Things that need your attention: new tasks and projects, revisions, reviews and @mentions.</p></div>
       ${act.length > 1 ? `<div class="home-actions"><button class="btn" id="notesClearAll">✓ Clear all ${act.length}</button></div>` : ''}</div>
     ${act.length ? group('New today', act.filter(n => new Date(n.created_at).getTime() >= today)) + group('Earlier', act.filter(n => new Date(n.created_at).getTime() < today))
-      : `<div class="notes-empty">🎉 You're all caught up.<br><span style="font-size:13px">When a task, project, revision or mention comes your way, it shows up here.</span></div>`}
+      : `<div class="notes-empty">${hqi('check', 'hqi-lg')}<br>You're all caught up.<br><span style="font-size:13px">When a task, project, revision or mention comes your way, it shows up here.</span></div>`}
     ${cleared.length ? `<div style="margin-top:24px"><button class="btn small ghost" id="notesShowCleared">${NOTE.showCleared ? '▾' : '▸'} Cleared in the last 30 days (${cleared.length})</button>
       ${NOTE.showCleared ? `<div class="notes-list" style="margin-top:8px">${cleared.map(noteHTML).join('')}</div>` : ''}</div>` : ''}`;
   const v = $('#notificationsView');
@@ -2142,14 +2190,14 @@ function paintPreviewChrome(){
   const bar = $('#previewBar');
   bar.classList.toggle('hidden', !IMP);
   if (IMP) {
-    bar.innerHTML = `<span>👁 You're signed in as <b>${esc(S.me.full_name)}</b> · ${esc(ROLE_LABEL[S.me.role])}. Anything you do here is saved as ${esc(firstName(S.me.full_name))}.</span>
+    bar.innerHTML = `<span>${hqi('eye')} You're signed in as <b>${esc(S.me.full_name)}</b> · ${esc(ROLE_LABEL[S.me.role])}. Anything you do here is saved as ${esc(firstName(S.me.full_name))}.</span>
       <button class="btn small" id="pvOther">View as someone else</button><button class="btn small" id="pvBack" style="margin-left:0">Switch back to ${esc(IMP.owner)}</button>`;
     $('#pvBack').onclick = () => endViewAs();
     $('#pvOther').onclick = openViewAs;
   }
   const vb = $('#viewAsBtn');
   vb.classList.toggle('hidden', !IMP && S.me?.role !== 'owner');
-  vb.textContent = IMP ? `👁 Viewing as ${firstName(S.me.full_name)}` : '👁 View as…';
+  vb.textContent = IMP ? `Viewing as ${firstName(S.me.full_name)}` : 'View as…';
   vb.onclick = openViewAs;
 }
 function openViewAs(){
@@ -3151,8 +3199,8 @@ async function renderAgentProfile(id){
           ${co ? `<a class="ap-co" href="#/companies" data-co-open="${co.id}">${coLogo(co)}<span>${esc(co.name)}</span></a>` : (a.brokerage || a.team_name) ? `<div class="ap-co">${coLogo(null)}<span class="muted">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · '))}</span></div>` : ''}
           <div class="ap-contact">
             ${a.email ? `<a href="mailto:${esc(a.email)}">${ORD_ICON.mail}<span>${esc(a.email)}</span></a>` : '<span class="muted">No email on file</span>'}
-            ${a.phone ? `<span class="ap-phone"><a href="tel:${esc(tel)}">📞 <span>${esc(a.phone)}</span></a><a href="sms:${esc(tel)}" class="ap-sms" title="Text">💬</a></span>` : '<span class="muted">No phone on file</span>'}
-            ${a.website_url ? `<a href="${esc(a.website_url)}" target="_blank" rel="noopener">🌐 <span>${esc(a.website_url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</span></a>` : ''}
+            ${a.phone ? `<span class="ap-phone"><a href="tel:${esc(tel)}">${hqi('phone')} <span>${esc(a.phone)}</span></a><a href="sms:${esc(tel)}" class="ap-sms" title="Text">${hqi('chat')}</a></span>` : '<span class="muted">No phone on file</span>'}
+            ${a.website_url ? `<a href="${esc(a.website_url)}" target="_blank" rel="noopener">${hqi('globe')} <span>${esc(a.website_url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</span></a>` : ''}
           </div>
         </div>
       </section>
@@ -3163,8 +3211,8 @@ async function renderAgentProfile(id){
     </div>
     <div class="ap-actions">
       ${admin && a.email ? `<button type="button" class="btn" id="apAccess">${DIR_ICON.key} Access agent</button>` : ''}
-      ${admin ? `<button type="button" class="btn" id="apMedia">🖼 Media library</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
-      ${co ? `<button type="button" class="btn" id="apCompany">🏢 View company</button>` : ''}
+      ${admin ? `<button type="button" class="btn" id="apMedia">${hqi('image')} Media library</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
+      ${co ? `<button type="button" class="btn" id="apCompany">${hqi('building')} View company</button>` : ''}
       ${can('manage_agents') ? `<button type="button" class="btn" id="apSwitch">⇄ ${co ? 'Switch' : 'Add'} company</button>` : ''}
       ${isSuperAdmin() ? `<button type="button" class="btn ghost danger ap-del" id="apDelete">Delete agent</button>` : ''}
     </div>
@@ -3248,10 +3296,10 @@ async function renderAgentProfile(id){
 }
 const ACT_GROUPS = [['all', 'All'], ['comms', 'Emails & texts'], ['orders', 'Orders & payments'], ['logins', 'Logins & downloads'], ['account', 'Account changes']];
 const ACT_KIND = {
-  signin: ['logins', '🔐'], visit: ['logins', '👀'], team_view: ['logins', '🛠'], download: ['logins', '⬇️'], signin_code: ['logins', '🔑'],
-  email: ['comms', '✉️'], sms: ['comms', '💬'], failed: ['comms', '⚠️'],
-  order: ['orders', '📅'], delivery: ['orders', '📦'], payment: ['orders', '💵'], invoice: ['orders', '🧾'], credit: ['orders', '🎟'],
-  account: ['account', '👤'],
+  signin: ['logins', hqi('lock')], visit: ['logins', hqi('eye')], team_view: ['logins', hqi('tool')], download: ['logins', hqi('download')], signin_code: ['logins', hqi('key')],
+  email: ['comms', hqi('mail')], sms: ['comms', hqi('chat')], failed: ['comms', hqi('alert')],
+  order: ['orders', hqi('calendar')], delivery: ['orders', hqi('package')], payment: ['orders', hqi('dollar')], invoice: ['orders', hqi('receipt')], credit: ['orders', hqi('ticket')],
+  account: ['account', hqi('user')],
 };
 async function renderAgentActivity(id, filter = 'all', limit = 100, bookingId = null){
   const sel = bookingId ? '#bkAct' : '#apAct', box = $(sel); if (!box) return;
@@ -3367,7 +3415,7 @@ async function renderSettings(){
   const body = $('#setBody');
   const save = async (patch, msg) => { patch.updated_at = new Date().toISOString(); const { error } = await sb.from('booking_settings').update(patch).eq('id', 1); if (error) return fail(error), false; Object.assign(BK.settings, patch); toast(msg || 'Saved'); return true; };
   const card = (title, inner, hint = '') => `<section class="panel set-card"><h2>${title}</h2>${hint ? `<p class="muted bk-hint set-hint">${hint}</p>` : ''}${inner}</section>`;
-  const svcRow = (s) => `<div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · ⚠ no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`;
+  const svcRow = (s) => `<div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`;
 
   if (sec === 'company') {
     body.innerHTML = card('Business details', `<form id="setCo" class="grid2">
@@ -3674,7 +3722,7 @@ function taskRow(t){
   return `<div class="trow ${t.status === 'done' ? 'done' : ''} ${t.priority === 'high' ? 'high' : ''}" data-task="${t.id}">
     <button class="tcheck" data-toggle-task="${t.id}" aria-label="${t.status === 'done' ? 'Mark not done' : 'Mark done'}">${t.status === 'done' ? '✓' : ''}</button>
     <div class="tmain"><div class="tt" title="${esc(t.title)}">${t.priority === 'high' ? '<span class="flag" title="High priority">!</span>' : ''}${esc(t.title)}</div>
-      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>👤 ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>🏠 ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>☑ ${done}/${cl.length}</span>` : ''}${taskThreadId(t) ? '<span title="Has an email">✉ Email</span>' : ''}${t.repeat ? `<span title="When you check this off, the next one is added automatically">↻ ${esc(REPEAT_LABEL[t.repeat])}</span>` : ''}${from}</div></div>
+      <div class="tmeta">${catTag(t.category)}${t.agent_id ? `<span>${hqi('user')} ${esc(agentName(t.agent_id))}</span>` : ''}${t.project_id ? `<span>${hqi('home')} ${esc(S.projects.find(p => p.id === t.project_id)?.name || '')}</span>` : ''}${cl.length ? `<span>${hqi('checkbox')} ${done}/${cl.length}</span>` : ''}${taskThreadId(t) ? '<span title="Has an email">' + hqi('mail') + ' Email</span>' : ''}${t.repeat ? `<span title="When you check this off, the next one is added automatically">↻ ${esc(REPEAT_LABEL[t.repeat])}</span>` : ''}${from}</div></div>
     ${t.status === 'doing' ? '<span class="tstate">In progress</span>' : ''}
     ${t.status === 'done' ? `<span class="due">${esc(fmtShort(t.done_at))}</span>` : dueLabel(t.due_date)}${who}
   </div>`;
@@ -3800,7 +3848,7 @@ function inboxHTML(){
   const status = pend ? (pend.status === 'running' ? 'Checking Gmail & Quo now…' : 'Check requested. Results show up here within the hour.')
     : `${last ? `Last checked ${ago(last.finished_at || last.requested_at)}${last.status === 'failed' ? ' (had a problem)' : ''}` : 'Not checked yet'}${nx ? ` · next automatic check ${nx.toLocaleString(undefined, { weekday: nx.toDateString() === new Date().toDateString() ? undefined : 'short', hour:'numeric', minute:'2-digit' })}` : ''}`;
   return `<div class="panel inbox" id="inboxPanel">
-    <h2>📬 Missed messages <span class="count">${list.length}</span><span class="spacer"></span>
+    <h2>${hqi('inbox')} Missed messages <span class="count">${list.length}</span><span class="spacer"></span>
       <button class="btn small" id="scanBtn" ${pend ? 'disabled' : ''}>${pend ? 'Checking…' : '↻ Check Gmail & Quo'}</button></h2>
     <p class="muted inbox-status">${esc(status)}${last?.note && !pend ? ` · ${esc(last.note)}` : ''}</p>
     ${list.length ? `<div class="sugs">${list.map(sugHTML).join('')}</div>`
@@ -3915,7 +3963,7 @@ function paintHomeTasks(){
   const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, 10);
   box.querySelector('.count').textContent = mine.length;
   const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length;
-  if (chip) { chip.textContent = `📬 ${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
+  if (chip) { chip.textContent = `${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
   box.querySelector('.tlist').innerHTML = show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`;
   box.querySelector('.more').innerHTML = mine.length > show.length ? `<a href="#/tasks">See all ${mine.length} tasks →</a>` : '';
   bindTaskRows(box);
@@ -3951,7 +3999,7 @@ function openTask(id){
       <button type="button" class="tv-x" id="tX" aria-label="Close">✕</button>
     </div>
     <div class="tv-chips" id="tChips"></div>
-    ${tid ? `<div class="temail"><span>✉ This task came from an email</span>${S.cal.status?.gmail && can('mail')
+    ${tid ? `<div class="temail"><span>${hqi('mail')} This task came from an email</span>${S.cal.status?.gmail && can('mail')
         ? `<button type="button" class="btn small primary" id="tEmail">View email &amp; reply</button>`
         : `<a class="btn small" href="${esc(gmailThreadUrl(tid))}" target="_blank" rel="noopener">Open in Gmail ↗</a>`}</div>` : ''}
     <div class="tv-sec"><div class="tv-lbl">Details</div>
@@ -3992,15 +4040,15 @@ function openTask(id){
     const ag = f('agent_id').value, pj = f('project_id').value;
     const chips = [];
     if (pr === 'high') chips.push(`<button type="button" class="tv-chip high" data-edit="priority">! High priority</button>`);
-    chips.push(due ? `<button type="button" class="tv-chip" data-edit="due_date">📅 ${dueLabel(due).replace(/<[^>]+>/g, '') || fmtShort(due)}${dueLabel(due).includes('over') ? ' <b class="late">late</b>' : ''}</button>`
-                   : `<button type="button" class="tv-chip ghost" data-edit="due_date">📅 No due date</button>`);
+    chips.push(due ? `<button type="button" class="tv-chip" data-edit="due_date">${hqi('calendar')} ${dueLabel(due).replace(/<[^>]+>/g, '') || fmtShort(due)}${dueLabel(due).includes('over') ? ' <b class="late">late</b>' : ''}</button>`
+                   : `<button type="button" class="tv-chip ghost" data-edit="due_date">${hqi('calendar')} No due date</button>`);
     if (st === 'doing') chips.push(`<button type="button" class="tv-chip" data-edit="status">In progress</button>`);
     if (f('repeat').value) chips.push(`<button type="button" class="tv-chip" data-edit="repeat">↻ Repeats ${esc(REPEAT_LABEL[f('repeat').value].toLowerCase())}</button>`);
     chips.push(`<button type="button" class="tv-chip" data-edit="category">${catTag(f('category').value)}</button>`);
-    if (who && who !== S.me.id) chips.push(`<button type="button" class="tv-chip" data-edit="assigned_to">👤 ${esc(firstName(memberName(who)))}</button>`);
+    if (who && who !== S.me.id) chips.push(`<button type="button" class="tv-chip" data-edit="assigned_to">${hqi('user')} ${esc(firstName(memberName(who)))}</button>`);
     if (!who) chips.push(`<button type="button" class="tv-chip ghost" data-edit="assigned_to">Unassigned</button>`);
-    if (ag) chips.push(`<button type="button" class="tv-chip" data-edit="agent_id">🏷 ${esc(agentName(ag))}</button>`);
-    if (pj) chips.push(`<button type="button" class="tv-chip" data-edit="project_id">🏠 ${esc(S.projects.find(p => p.id === pj)?.name || 'Project')}</button>`);
+    if (ag) chips.push(`<button type="button" class="tv-chip" data-edit="agent_id">${hqi('tag')} ${esc(agentName(ag))}</button>`);
+    if (pj) chips.push(`<button type="button" class="tv-chip" data-edit="project_id">${hqi('home')} ${esc(S.projects.find(p => p.id === pj)?.name || 'Project')}</button>`);
     $('#tChips').innerHTML = chips.join('');
     $('#tChips').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
       $('#tProps').open = true; const el = f(b.dataset.edit); el.focus();
@@ -4174,12 +4222,12 @@ function renderMail(){
       </div></div>
     <div class="mail ${reading ? 'reading' : ''}">
       <div class="mail-list panel">
-        ${needs.length || MAIL.needsOnly ? `<button class="mail-needs ${MAIL.needsOnly ? 'on' : ''}" id="mailNeeds">📬 ${needs.length} need${needs.length === 1 ? 's' : ''} a reply${MAIL.needsOnly ? ' · show all' : ''}</button>` : ''}
+        ${needs.length || MAIL.needsOnly ? `<button class="mail-needs ${MAIL.needsOnly ? 'on' : ''}" id="mailNeeds">${hqi('inbox')} ${needs.length} need${needs.length === 1 ? 's' : ''} a reply${MAIL.needsOnly ? ' · show all' : ''}</button>` : ''}
         ${MAIL.q ? `<div class="mail-qnote">Results for “${esc(MAIL.q)}” <a href="#" id="mailClearQ">Clear</a></div>` : ''}
         ${MAIL.error ? `<div class="mail-err">${esc(MAIL.error)}${/Gmail API/.test(MAIL.error) ? '<br><span class="muted">Turn on the Gmail API in Google Cloud (project Knox View HQ), then refresh.</span>' : ''}</div>` : ''}
         ${MAIL.threads === null ? `<div class="none" style="padding:16px">Loading your inbox…</div>`
           : shown.length ? `<div class="mrows">${shown.map(mailRowHTML).join('')}</div>`
-          : `<div class="none" style="padding:16px">${MAIL.needsOnly ? 'Nothing flagged as needing a reply.' : MAIL.q ? 'No emails match.' : MAIL.box === 'unread' ? 'No unread email in Primary. 🎉' : 'Your inbox is empty.'}</div>`}
+          : `<div class="none" style="padding:16px">${MAIL.needsOnly ? 'Nothing flagged as needing a reply.' : MAIL.q ? 'No emails match.' : MAIL.box === 'unread' ? 'No unread email in Primary.' : 'Your inbox is empty.'}</div>`}
         ${MAIL.next && !MAIL.needsOnly ? `<button class="btn small mail-more" id="mailMore" ${MAIL.more ? 'disabled' : ''}>${MAIL.more ? 'Loading…' : 'Load more'}</button>` : ''}
       </div>
       <div class="mail-read panel" id="mailRead">${reading ? mailThreadHTML(MAIL.openId) : `<div class="mail-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg><p>Pick an email to read it here.</p></div>`}</div>
@@ -4226,7 +4274,7 @@ function mailThreadHTML(id){
     </div>
     <h2 class="mread-subj">${esc(subject)}</h2>
     ${ag ? `<div class="mread-agent">Agent: <a href="#" data-mail-agent="${ag.id}">${esc(ag.full_name)}</a></div>` : ''}
-    ${g ? `<div class="mneeds"><div><b>📬 Needs a reply</b><span>${esc(g.title)}</span></div>
+    ${g ? `<div class="mneeds"><div><b>${hqi('inbox')} Needs a reply</b><span>${esc(g.title)}</span></div>
       <button class="btn small primary" data-sug-accept="${g.id}">Add task</button><button class="btn small ghost" data-sug-dis="${g.id}">Dismiss</button></div>` : ''}
     <div class="mmsgs">${msgs.map((m, i) => mailMsgHTML(id, m, i, msgs.length)).join('')}</div>
     ${mailComposeHTML(id)}`;
@@ -4251,7 +4299,7 @@ function mailMsgHTML(tid, m, i, n){
     <div class="mbody">${m.html ? `<iframe class="mframe" data-frame="${key}" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" referrerpolicy="no-referrer" title="Email"></iframe>`
       : `<div class="mtext">${linkifyMail(MAIL.showQuoted[key] ? (m.text || '') : stripQuotedText(m.text || ''))}</div>`}</div>
     ${hasQuote ? `<button class="mquote" data-mail-quote="${key}">${MAIL.showQuoted[key] ? 'Hide quoted text' : '•••'}</button>` : ''}
-    ${files.length ? `<div class="mfiles">${files.map(x => `<a class="mfile" href="${esc(gmailThreadUrl(tid))}" target="_blank" rel="noopener" title="Open in Gmail to download">📎 ${esc(x.name)}<span class="muted">${x.size ? ' · ' + fmtBytes(x.size) : ''}</span></a>`).join('')}</div>` : ''}
+    ${files.length ? `<div class="mfiles">${files.map(x => `<a class="mfile" href="${esc(gmailThreadUrl(tid))}" target="_blank" rel="noopener" title="Open in Gmail to download">${hqi('clip')} ${esc(x.name)}<span class="muted">${x.size ? ' · ' + fmtBytes(x.size) : ''}</span></a>`).join('')}</div>` : ''}
   </div>`;
 }
 const fmtBytes = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
@@ -5067,7 +5115,7 @@ async function paintMyDay(){
     ${todays.length ? `<div class="day-list">${todays.map(e => dayItemHTML(e, now, next)).join('')}</div>`
       : `<div class="none">No appointments today. ${tomorrow.length ? '' : 'Enjoy the open calendar.'}</div>`}
     <div class="md-foot">
-      ${route.length > 1 ? `<a class="btn small" href="${esc(dirUrl(route))}" target="_blank" rel="noopener">🗺 Today’s route (${route.length} stops)</a>` : route.length === 1 ? `<a class="btn small" href="${esc(mapsUrl(route[0]))}" target="_blank" rel="noopener">🗺 Directions</a>` : ''}
+      ${route.length > 1 ? `<a class="btn small" href="${esc(dirUrl(route))}" target="_blank" rel="noopener">${hqi('map')} Today’s route (${route.length} stops)</a>` : route.length === 1 ? `<a class="btn small" href="${esc(mapsUrl(route[0]))}" target="_blank" rel="noopener">${hqi('map')} Directions</a>` : ''}
       <span class="muted">${tomorrow.length ? `Tomorrow: ${tomorrow.length} appointment${tomorrow.length === 1 ? '' : 's'}, first at ${fmtT(tomorrow[0].s)}` : 'Tomorrow is open'}</span>
       <span class="spacer"></span><a href="#/calendar" class="muted">Week view →</a></div>`;
   body.querySelectorAll('[data-ev]').forEach(el => el.onclick = e => { if (!e.target.closest('a')) openCalEvent(items.find(x => x.id === el.dataset.ev)); });
@@ -5081,7 +5129,7 @@ function dayItemHTML(e, now, next){
     <div class="di-bar"></div>
     <div class="di-main">
       <div class="di-title">${state === 'now' ? '<span class="pill now">Now</span>' : state === 'next' ? '<span class="pill next">Next</span>' : ''}${esc(e.title)}${e.kind === 'block' ? ' <span class="muted">· time block</span>' : ''}</div>
-      ${e.location ? `<div class="di-loc"><a href="${esc(mapsUrl(e.location))}" target="_blank" rel="noopener">📍 ${esc(shortAddr(e.location))}</a>${sp?.unit ? ` · ${esc(sp.unit)}` : ''}</div>` : ''}
+      ${e.location ? `<div class="di-loc"><a href="${esc(mapsUrl(e.location))}" target="_blank" rel="noopener">${hqi('pin')} ${esc(shortAddr(e.location))}</a>${sp?.unit ? ` · ${esc(sp.unit)}` : ''}</div>` : ''}
       ${chips.length ? `<div class="di-chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : ''}
     </div>
   </div>`;
@@ -5200,7 +5248,7 @@ function openCalEvent(ev){
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
   <div class="modal wide"><h2><span class="lg ${ev.kind}"></span>${esc(ev.title)}</h2>
     <p class="muted" style="margin:-10px 0 14px">${esc(when)}${ev.kind === 'block' ? ' · time block' : sp ? ' · Spiro appointment' : ''}</p>
-    ${ev.location ? `<p style="margin:0 0 12px">📍 ${esc(ev.location)}${sp?.unit ? ` (${esc(sp.unit)})` : ''} · <a href="${esc(mapsUrl(ev.location))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([ev.location]))}" target="_blank" rel="noopener">Directions</a></p>` : ''}
+    ${ev.location ? `<p style="margin:0 0 12px">${hqi('pin')} ${esc(ev.location)}${sp?.unit ? ` (${esc(sp.unit)})` : ''} · <a href="${esc(mapsUrl(ev.location))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([ev.location]))}" target="_blank" rel="noopener">Directions</a></p>` : ''}
     ${sp ? `<div class="sp-grid">
         <div><label>Package</label>${esc(sp.bundle || '—')}</div>
         <div><label>Entry</label>${esc(sp.entry || '—')}</div>
@@ -5410,7 +5458,7 @@ const hrVideo = c => c.video_completed_at ? '<span class="hr-badge ok">▶ Video
 const hrStars = (n, edit) => `<span class="hr-stars${edit ? ' edit' : ''}" ${edit ? 'id="hrStars"' : ''}>${[1,2,3,4,5].map(i => `<${edit ? 'button type="button"' : 'i'} data-star="${i}" class="${i <= (n || 0) ? 'on' : ''}" ${edit ? `title="${i} star${i > 1 ? 's' : ''}"` : ''}>★</${edit ? 'button' : 'i'}>`).join('')}</span>`;
 const hrExt = c => { const u = HR.openings.find(o => o.id === c.opening_id)?.interview_url; return safeUrl(u) && !(c.videos || []).length ? u : ''; };
 const hrIvWhen = d => new Date(d).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
-const hrIvBadge = c => c.interview_status === 'scheduled' && c.interview_at && new Date(c.interview_at).getTime() > Date.now() - 3600e3 ? `<span class="hr-badge iv">📅 ${esc(hrIvWhen(c.interview_at))}</span>` : '';
+const hrIvBadge = c => c.interview_status === 'scheduled' && c.interview_at && new Date(c.interview_at).getTime() > Date.now() - 3600e3 ? `<span class="hr-badge iv">${hqi('calendar')} ${esc(hrIvWhen(c.interview_at))}</span>` : '';
 async function hiringFn(action, payload = {}){
   const { data: { session } } = await sb.auth.getSession();
   const r = await fetch(`${SUPABASE_URL}/functions/v1/hiring-interview`, { method:'POST',
@@ -5425,7 +5473,7 @@ function hrIvPanel(c){
   const past = up && new Date(c.interview_at).getTime() + (c.interview_minutes || 30) * 60e3 < Date.now();
   if (!up) return `<section class="panel hr-iv"><h2>Interview ${c.interview_status === 'done' ? '<span class="hr-badge ok">Done</span>' : c.interview_status === 'canceled' ? '<span class="hr-badge">Canceled</span>' : ''}</h2>
     <p class="muted" style="margin:0 0 12px">Send ${esc(hrName(c).split(' ')[0])} a Google Meet link for a video interview. It goes to ${esc(c.email || 'their email')} and onto your Google Calendar.</p>
-    <button class="btn primary" id="hrIvNew" ${c.email ? '' : 'disabled'}>📅 Schedule interview</button></section>`;
+    <button class="btn primary" id="hrIvNew" ${c.email ? '' : 'disabled'}>${hqi('calendar')} Schedule interview</button></section>`;
   return `<section class="panel hr-iv"><h2>Interview <span class="hr-badge ${past ? '' : 'iv'}">${past ? 'Time has passed' : 'Scheduled'}</span></h2>
     <div class="hr-iv-when">${esc(new Date(c.interview_at).toLocaleString('en-US', { weekday:'long', month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }))} <span class="muted">· ${c.interview_minutes || 30} min · Google Meet</span></div>
     ${c.interview_meet_url ? `<p style="margin:6px 0 12px;font-size:13.5px"><a href="${esc(c.interview_meet_url)}" target="_blank" rel="noopener">${esc(c.interview_meet_url.replace(/^https?:\/\//, ''))}</a></p>` : ''}
@@ -5491,7 +5539,7 @@ function renderHiringList(){
   const op = HR.openings.find(o => o.status === 'open');
   $('#hiringView').innerHTML = `
     <div class="page-head"><div><h1>Hiring</h1><p>Applicants from <a href="https://knoxview.com/apply" target="_blank" rel="noopener">knoxview.com/apply</a>, with their answers, resumes and video interviews.</p></div>
-      <div class="home-actions"><button class="btn" id="hrCopy">🔗 Copy apply link</button></div></div>
+      <div class="home-actions"><button class="btn" id="hrCopy">${hqi('link')} Copy apply link</button></div></div>
     <div class="bk-kpis">
       <div class="kpi-mini"><b>${HR.list.filter(c => new Date(c.applied_at).getTime() >= weekAgo).length}</b><span>applied this week</span></div>
       <div class="kpi-mini"><b>${HR.list.filter(c => c.stage === 'new').length}</b><span>new, not reviewed</span></div>
@@ -5507,7 +5555,7 @@ function renderHiringList(){
       <a class="hr-row" href="#/hiring/${c.id}">
         <span class="hr-av">${esc(hrInitials(c))}</span>
         <span class="hr-main"><b>${esc(hrName(c))}</b><small>${[c.city, HR_SRC[c.source] || c.source, 'applied ' + hrAgo(c.applied_at)].filter(Boolean).map(esc).join(' · ')}</small></span>
-        <span class="hr-right">${hrIvBadge(c)}${c.my_rating ? hrStars(c.my_rating) : ''}${hrExt(c) ? '' : hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">📄</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
+        <span class="hr-right">${hrIvBadge(c)}${c.my_rating ? hrStars(c.my_rating) : ''}${hrExt(c) ? '' : hrVideo(c)}${c.resume_path ? '<span class="hr-badge" title="Resume attached">' + hqi('file') + '</span>' : ''}<span class="hr-stage s-${c.stage}">${HR_STAGE[c.stage] || c.stage}</span></span>
       </a>`).join('')
       : `<div class="panel bk-empty"><p>${HR.list.length ? 'No applicants here.' : 'No applicants yet. Share <b>knoxview.com/apply</b> to start getting them.'}</p></div>`}`;
   $('#hrTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; HR.tab = b.dataset.t; renderHiringList(); };
@@ -5537,10 +5585,10 @@ async function renderCandidate(id){
       <div class="hr-id"><h1>${esc(hrName(c))}</h1>
         <p class="muted">${esc(op?.title || 'Applicant')} · applied ${esc(fmtDate(c.applied_at))} via ${esc(HR_SRC[c.source] || c.source)}</p>
         <div class="hr-contact">
-          ${c.email ? `<a href="mailto:${esc(c.email)}">✉ ${esc(c.email)}</a>` : ''}
-          ${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">☎ ${esc(c.phone)}</a>` : ''}
-          ${c.city ? `<span>📍 ${esc(c.city)}</span>` : ''}
-          ${safeUrl(c.website_url) ? `<a href="${esc(c.website_url)}" target="_blank" rel="noopener">🔗 ${esc(c.website_url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</a>` : ''}
+          ${c.email ? `<a href="mailto:${esc(c.email)}">${hqi('mail')} ${esc(c.email)}</a>` : ''}
+          ${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">${hqi('phone')} ${esc(c.phone)}</a>` : ''}
+          ${c.city ? `<span>${hqi('pin')} ${esc(c.city)}</span>` : ''}
+          ${safeUrl(c.website_url) ? `<a href="${esc(c.website_url)}" target="_blank" rel="noopener">${hqi('link')} ${esc(c.website_url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</a>` : ''}
         </div>
       </div>
       <div class="hr-ctl">
@@ -5554,7 +5602,7 @@ async function renderCandidate(id){
           ${vids.length ? vids.map(v => `<div class="hr-vid"><p class="q"><b>Q${v.i + 1}.</b> ${esc(v.q || qs[v.i]?.q || '')}${v.seconds ? ` <span class="muted">· ${Math.floor(v.seconds / 60)}:${String(Math.round(v.seconds % 60)).padStart(2, '0')}</span>` : ''}</p>
             <video controls playsinline preload="metadata" data-vpath="${esc(v.path)}"></video></div>`).join('')
             : `<p class="muted" style="margin:0">${c.video_started_at ? 'They opened the interview but haven\'t sent any answers yet.' : 'They haven\'t recorded their video interview yet. The link was emailed to them when they applied.'}</p>`}
-          ${!c.video_completed_at ? `<p style="margin:12px 0 0"><button class="btn small" id="hrLink">🔗 Copy their interview link</button></p>` : ''}
+          ${!c.video_completed_at ? `<p style="margin:12px 0 0"><button class="btn small" id="hrLink">${hqi('link')} Copy their interview link</button></p>` : ''}
         </section>`}
         <section class="panel"><h2>Application answers</h2>
           ${hrQs.map(([k, l]) => `<div class="hr-ans"><h3>${esc(l)}</h3><p>${esc(c.answers?.[k] || '—')}</p></div>`).join('')}
@@ -5563,7 +5611,7 @@ async function renderCandidate(id){
       <div class="hr-col">
         ${hrIvPanel(c)}
         <section class="panel"><h2>Resume ${c.resume_path ? `<a href="#" id="hrResOpen">Open ↗</a>` : ''}</h2>
-          ${c.resume_path ? (ext === 'pdf' ? '<iframe class="hr-pdf" id="hrPdf" title="Resume"></iframe>' : ['jpg','png','webp','heic'].includes(ext) ? '<img class="hr-img" id="hrImg" alt="Resume">' : `<p style="margin:0">📄 ${esc(c.resume_name || 'Resume')} <span class="muted">(Word document — use Open)</span></p>`) : '<p class="muted" style="margin:0">No resume attached (it was optional).</p>'}
+          ${c.resume_path ? (ext === 'pdf' ? '<iframe class="hr-pdf" id="hrPdf" title="Resume"></iframe>' : ['jpg','png','webp','heic'].includes(ext) ? '<img class="hr-img" id="hrImg" alt="Resume">' : `<p style="margin:0">${hqi('file')} ${esc(c.resume_name || 'Resume')} <span class="muted">(Word document — use Open)</span></p>`) : '<p class="muted" style="margin:0">No resume attached (it was optional).</p>'}
         </section>
         <section class="panel"><h2>My notes</h2>
           <textarea id="hrNotes" rows="5" placeholder="Private notes about this applicant…">${esc(c.notes || '')}</textarea>
@@ -5685,7 +5733,7 @@ function renderBookingList(){
       <a class="btn primary" href="#/bookings/new">+ New order</a>
       <div class="seg ord-tabs" id="bkTabs">${ORD_TABS.map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l} <span class="muted">${count(k)}</span></button>`).join('')}</div>
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
-      <span class="ord-tools"><button class="btn" id="bkPortal">📱 Client portal</button><button class="btn" id="bkSettings">⚙ Settings</button></span>
+      <span class="ord-tools"><button class="btn" id="bkPortal">${hqi('mobile')} Client portal</button><button class="btn" id="bkSettings">${hqi('settings')} Settings</button></span>
     </div>
     ${rows.length ? `<div class="dir-wrap ord-desk"><table class="dir ord"><thead><tr>
         <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
@@ -5827,7 +5875,7 @@ async function bkPaintPicker(st, duration, ignoreEvent, onChange){
       <div class="bk-slots">${cur?.slots.length ? cur.slots.map(s => `<button type="button" class="bk-slot ${st.start && +st.start === +s ? 'on' : ''}" data-s="${s.toISOString()}">${fmtT(s)}</button>`).join('') : `<p class="muted">No openings this day for a ${duration}-minute shoot.</p>`}</div>` : ''}
       <label class="check" style="margin-top:10px"><input type="checkbox" id="bkOverride" ${st.override ? 'checked' : ''} ${!S.cal.status?.connected || !BK.busy ? 'disabled' : ''} /> Pick any time (override)</label>
       ${st.override ? `<div class="grid2" style="margin-top:8px"><div><label>Date</label><input type="date" id="bkOvDate" value="${st.start ? isoDay(st.start) : st.day}" /></div><div><label>Start time</label><input type="time" id="bkOvTime" step="900" value="${st.start ? toLocalTime(st.start) : ''}" /></div></div>` : ''}
-      ${st.start ? `<p class="bk-chosen">📅 ${esc(st.start.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }))} · ${fmtT(st.start)}–${fmtT(new Date(st.start.getTime() + duration * 60000))} <span class="muted">(${duration} min)</span></p>
+      ${st.start ? `<p class="bk-chosen">${hqi('calendar')} ${esc(st.start.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' }))} · ${fmtT(st.start)}–${fmtT(new Date(st.start.getTime() + duration * 60000))} <span class="muted">(${duration} min)</span></p>
         ${why.length ? `<div class="bk-warn"><b>Heads up — this time doesn't fit your rules:</b><ul>${why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>You can still book it.</div>` : ''}` : ''}`;
     box.querySelectorAll('[data-day]').forEach(b => b.onclick = () => { st.day = b.dataset.day; paint(); });
     box.querySelector('.bk-day.on')?.scrollIntoView({ block:'nearest', inline:'nearest' });
@@ -6268,28 +6316,28 @@ function renderBookingDetail(id){
         ${live ? `<button type="button" class="btn primary" id="odSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Send delivery'}</span></button>` : ''}
         <div class="od-more"><button type="button" class="btn" id="odMoreBtn" aria-haspopup="menu" aria-expanded="false">Actions <span aria-hidden="true">▾</span></button>
           <div class="od-menu hidden" id="odMenu" role="menu">
-            ${live ? '<button type="button" data-act="resched">📅 Reschedule</button>' : ''}
+            ${live ? '<button type="button" data-act="resched">' + hqi('calendar') + ' Reschedule</button>' : ''}
             ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark shoot complete</button>' : ''}
             ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark not complete</button>' : ''}
-            ${live && !b.delivered_at ? '<button type="button" id="odDelivered">📦 Promote to delivered</button>' : ''}
-            <button type="button" data-act="media">🖼 Media</button>
-            <button type="button" data-act="dlpage">👁 Download page</button>
-            ${b.public_token ? '<button type="button" data-act="copylink">🔗 Copy download link</button>' : ''}
-            <button type="button" data-act="pdf">📄 View PDF</button>
-            ${a?.email ? '<button type="button" data-act="access">🔑 Access agent</button>' : ''}
+            ${live && !b.delivered_at ? '<button type="button" id="odDelivered">' + hqi('package') + ' Promote to delivered</button>' : ''}
+            <button type="button" data-act="media">${hqi('image')} Media</button>
+            <button type="button" data-act="dlpage">${hqi('eye')} Download page</button>
+            ${b.public_token ? '<button type="button" data-act="copylink">' + hqi('link') + ' Copy download link</button>' : ''}
+            <button type="button" data-act="pdf">${hqi('file')} View PDF</button>
+            ${a?.email ? '<button type="button" data-act="access">' + hqi('key') + ' Access agent</button>' : ''}
             <hr>
             <button type="button" id="odSwitch">⇄ Switch agent</button>
-            ${a ? `<button type="button" data-act="agent">👤 Agent profile</button>` : ''}
+            ${a ? `<button type="button" data-act="agent">${hqi('user')} Agent profile</button>` : ''}
             <hr>
             ${live ? '<button type="button" id="bkCancel" class="danger">Cancel order</button>' : '<button type="button" id="bkRestore">Restore order</button>'}
             <button type="button" id="odDelete" class="danger">Delete order</button>
           </div></div>
       </div>
       <div class="od-links">
-        <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">👁 Download page</button>
-        ${b.public_token ? `<button type="button" class="btn small" id="bkShareLink" title="The download page's own link: anyone with it can view (no sign-in). Downloads unlock after payment if the order requires it.">🔗 Copy download link</button>` : ''}
-        ${site ? `<a class="btn small" href="${esc(site)}" target="_blank" rel="noopener" title="The single property website">🌐 Property website</a>` : ''}
-        ${dbxUrl ? `<a class="btn small" href="${esc(dbxUrl)}" target="_blank" rel="noopener" title="${esc(b.dropbox_path)}">📁 Dropbox</a>` : ''}
+        <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">${hqi('eye')} Download page</button>
+        ${b.public_token ? `<button type="button" class="btn small" id="bkShareLink" title="The download page's own link: anyone with it can view (no sign-in). Downloads unlock after payment if the order requires it.">${hqi('link')} Copy download link</button>` : ''}
+        ${site ? `<a class="btn small" href="${esc(site)}" target="_blank" rel="noopener" title="The single property website">${hqi('globe')} Property website</a>` : ''}
+        ${dbxUrl ? `<a class="btn small" href="${esc(dbxUrl)}" target="_blank" rel="noopener" title="${esc(b.dropbox_path)}">${hqi('folder')} Dropbox</a>` : ''}
       </div>
     </section>
 
@@ -6300,11 +6348,11 @@ function renderBookingDetail(id){
         ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
       <div class="panel od-card"><label>Client</label>
         <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
-        <span class="od-ics">${phone ? `<a href="tel:${esc(tel)}" title="Call ${esc(phone)}">📞</a><a href="sms:${esc(tel)}" title="Text ${esc(phone)}">💬</a>` : ''}${email ? `<a href="mailto:${esc(email)}" title="${esc(email)}">${ORD_ICON.mail}</a>` : ''}${!phone && !email ? '<span class="muted">No contact info</span>' : ''}${a?.email ? `<button type="button" class="btn small od-access" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${DIR_ICON.key} Access agent</button>` : ''}</span></div>
+        <span class="od-ics">${phone ? `<a href="tel:${esc(tel)}" title="Call ${esc(phone)}">${hqi('phone')}</a><a href="sms:${esc(tel)}" title="Text ${esc(phone)}">${hqi('chat')}</a>` : ''}${email ? `<a href="mailto:${esc(email)}" title="${esc(email)}">${ORD_ICON.mail}</a>` : ''}${!phone && !email ? '<span class="muted">No contact info</span>' : ''}${a?.email ? `<button type="button" class="btn small od-access" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${DIR_ICON.key} Access agent</button>` : ''}</span></div>
       <div class="panel od-card"><label>Invoice</label>
         <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
         <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
-        <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">📄 View PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
+        <div class="od-cbtns"><button type="button" class="btn small" id="odPdf" title="The invoice PDF the client gets">${hqi('file')} View PDF</button>${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div></div>
       <div class="panel od-card"><label>Delivery</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
@@ -6323,7 +6371,7 @@ function renderBookingDetail(id){
             <div class="bk-total"><span>Amount due</span><span>${money(due)}</span></div></div>
           ${Number(b.credit_applied) && !b.paid ? `<p class="muted bk-hint" style="margin:6px 0 0">${money(b.credit_applied)} of the client's account credit is on this invoice. <button type="button" class="btn small" id="bkCreditBack">Return credit to their account</button></p>` : ''}
           <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}${b.paid && b.paid_note ? ` · Note: ${esc(b.paid_note)}` : ''}</p>
-          ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">🔒 This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
+          ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">${hqi('lock')} This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
             <label>Add a service</label>
             <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
                 ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
@@ -6339,14 +6387,14 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>`)}
 
         ${sec('shoot', 'Property, access & notes', esc([b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label, b.occupancy].filter(Boolean).join(' · ')), `
-          <p class="od-loc">📍 ${esc(loc)} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
+          <p class="od-loc">${hqi('pin')} ${esc(loc)} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
           <div class="od-specs">
             <div><label>Size</label>${b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : esc(b.sqft_label || '—')}${b.large_property ? ' · large' : ''}</div>
             <div><label>Occupancy</label>${esc(b.occupancy || '—')}</div>
             <div><label>Entry</label>${esc(b.entry || '—')}</div>
             <div><label>Length</label>${b.duration_min || '—'} min</div>
           </div>
-          ${(b.client_files || []).length ? `<p><b>Client files:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">📎 ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : ''}
+          ${(b.client_files || []).length ? `<p><b>Client files:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">${hqi('clip')} ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : ''}
           <label style="margin-top:12px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" placeholder="Lockbox code, gate code, who'll be there…" />
           <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
           <div class="bk-actions"><button type="button" class="btn" id="bkSaveNotes">Save notes</button><span class="muted bk-hint" style="margin:0">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</span></div>`)}
@@ -6693,8 +6741,8 @@ function renderOrderMedia(id){
         <p class="od-sub">${esc([b.address, b.city].filter(Boolean).join(', '))} · #${b.number}</p>
         <p class="om-sum" id="omSum"></p></div>
       <div class="om-acts">
-        <button type="button" class="btn small" id="omPreview" title="Open the download page as the client sees it">👁 Preview</button>
-        ${b.public_token ? '<button type="button" class="btn small" id="omCopy" title="Anyone with the link can view it (no sign-in)">🔗 Copy link</button>' : ''}
+        <button type="button" class="btn small" id="omPreview" title="Open the download page as the client sees it">${hqi('eye')} Preview</button>
+        ${b.public_token ? '<button type="button" class="btn small" id="omCopy" title="Anyone with the link can view it (no sign-in)">' + hqi('link') + ' Copy link</button>' : ''}
         ${live ? `<button type="button" class="btn small primary" id="omSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Deliver'}</span></button>` : ''}
       </div>
     </section>
@@ -7688,7 +7736,7 @@ function paintSP(){
       <button class="sp-vrow" data-v="${esc(v.key)}"><span class="sp-caret">${SP.open[v.key] ? '▾' : '▸'}</span>
         <span class="sp-vname">${esc(v.name)}${v.kind ? ` <span class="sp-kind">${esc(v.kind)}</span>` : ''}</span>
         ${bar(v.total, maxV)}<span class="sp-pct">${pct(v.total)}%</span><span class="sp-n">${v.n}×</span><span class="sp-amt">${usd(v.total, true)}</span></button>
-      ${SP.open[v.key] ? `<div class="sp-vbody"><div class="sp-vtools"><span class="muted">${v.n} payment${v.n === 1 ? '' : 's'} · avg ${usd(v.total / v.n, true)}${months > 1 ? ` · ${usd(v.total / months)}/mo over the period` : ''}</span><span class="spacer"></span><button class="btn small ghost" data-rename="${esc(v.key)}">✎ Rename / group</button></div>${txHTML(v.items)}</div>` : ''}
+      ${SP.open[v.key] ? `<div class="sp-vbody"><div class="sp-vtools"><span class="muted">${v.n} payment${v.n === 1 ? '' : 's'} · avg ${usd(v.total / v.n, true)}${months > 1 ? ` · ${usd(v.total / months)}/mo over the period` : ''}</span><span class="spacer"></span><button class="btn small ghost" data-rename="${esc(v.key)}">${hqi('pencil')} Rename / group</button></div>${txHTML(v.items)}</div>` : ''}
     </div>`;
   const maxCat = Math.max(...cats.flatMap(g => [...g.subs.values()]), 1);
   box.innerHTML = `
@@ -7697,7 +7745,7 @@ function paintSP(){
       ${SP.period === 'custom' ? `<input type="date" id="spFrom" value="${esc(r.start)}"/><span class="muted">to</span><input type="date" id="spTo" value="${esc(r.end)}"/>` : ''}
       <input type="search" id="spSearch" class="sp-search" placeholder="Find a vendor…" value="${esc(SP.q)}" />
       <span class="spacer"></span>
-      <button class="btn small" id="spCsv" ${d ? '' : 'disabled'}>⬇ CSV</button>
+      <button class="btn small" id="spCsv" ${d ? '' : 'disabled'}>${hqi('download')} CSV</button>
       <button class="btn small" id="spReload" ${SP.loading ? 'disabled' : ''}>${SP.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
     </div>
     <div class="pl-range">${esc(rangeLabel(r.start, r.end))}</div>
@@ -7722,7 +7770,7 @@ function paintSP(){
             ${SP.showMisc ? `<div class="sp-miscbody">${misc.map(vRow).join('')}</div>` : ''}</div>` : ''}
         </div>
       </div>
-      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}, read-only: nothing here changes QuickBooks. Vendor names are tidied up in HQ from the payee or bank description; Wise payments from 2025 on are named by category (Photo Editing → Creo / Maverick, Video Editing → Mark in 2025 and Harvey in 2026, Team &amp; Admin → Charlene). Use ✎ Rename / group to fix a name or merge two vendors (give them the same name). Refunds show as negative amounts.</p>` : ''}`;
+      <p class="fin-note">From QuickBooks${d.basis ? ` (${esc(String(d.basis).toLowerCase())} basis)` : ''}, read-only: nothing here changes QuickBooks. Vendor names are tidied up in HQ from the payee or bank description; Wise payments from 2025 on are named by category (Photo Editing → Creo / Maverick, Video Editing → Mark in 2025 and Harvey in 2026, Team &amp; Admin → Charlene). Use Rename / group to fix a name or merge two vendors (give them the same name). Refunds show as negative amounts.</p>` : ''}`;
   wireSP(vendors);
 }
 function wireSP(vendors){
@@ -7916,8 +7964,8 @@ function paintPL(){
       <div class="seg" id="plView"><button data-v="total" class="${!PL.byMonth ? 'active' : ''}">Total</button><button data-v="month" class="${PL.byMonth ? 'active' : ''}">By month</button></div>
       <span class="spacer"></span>
       <button class="btn small ${PL.arrange ? 'primary' : ''}" id="plArrange" ${d ? '' : 'disabled'} title="Set the order of categories in HQ">${PL.arrange ? '✓ Done' : '⇅ Arrange'}</button>
-      <button class="btn small" id="plPrint" ${d ? '' : 'disabled'}>🖨 Print / PDF</button>
-      <button class="btn small" id="plCsv" ${d ? '' : 'disabled'}>⬇ CSV</button>
+      <button class="btn small" id="plPrint" ${d ? '' : 'disabled'}>${hqi('printer')} Print / PDF</button>
+      <button class="btn small" id="plCsv" ${d ? '' : 'disabled'}>${hqi('download')} CSV</button>
       <button class="btn small" id="plReload" ${PL.loading ? 'disabled' : ''}>${PL.loading ? '<span class="spin"></span>Loading…' : '↻ Refresh'}</button>
     </div>
     ${PL.arrange ? `<div class="pl-arrange-note">Use ↑ ↓ to move categories within their group. The order saves right away and applies to this page, Print and CSV. QuickBooks stays alphabetical. <a href="#" id="plResetOrder">Reset to QuickBooks order</a></div>` : ''}
@@ -8121,7 +8169,7 @@ function paintBooks(){
     ${BOOKS.error ? `<div class="panel" style="margin-bottom:12px"><div class="none">Couldn’t load transactions: ${esc(BOOKS.error)}</div></div>` : ''}
     ${!d && BOOKS.loading ? `<div class="panel fin-loading"><span class="spin"></span>Pulling transactions from QuickBooks…</div>` : ''}
     ${d && isNew && easy.length > 1 ? `<div class="books-bulk"><span>${easy.length} already have a category. Look them over, then confirm them together.</span><button class="btn small" id="booksBulk">✓ Confirm all ${easy.length} categorized</button></div>` : ''}
-    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${isNew ? '🎉 All caught up. New transactions show up here as soon as they land in QuickBooks.' : 'No transactions match.'}</div>`) : ''}
+    ${d ? (shown.length ? `<div class="txns">${shown.map(txnHTML).join('')}</div>` : `<div class="empty">${isNew ? 'All caught up. New transactions show up here as soon as they land in QuickBooks.' : 'No transactions match.'}</div>`) : ''}
     ${list.length > shown.length ? `<div style="text-align:center;margin-top:12px"><button class="btn" id="booksMore">Show more (${list.length - shown.length} left)</button></div>` : ''}
     ${d ? `<p class="fin-note">${isNew
       ? 'Transactions show up here once they’re in QuickBooks: after you accept them on the QuickBooks Banking screen, or a bank rule adds them. Pick or change the category, then confirm: the category saves to QuickBooks right away and the transaction leaves this list. Anything without a category stays here until it has one.'
@@ -8358,7 +8406,7 @@ function wireFinChart(d){
 
 /* ===================== CHAT ===================== */
 const CHAT_BUCKET = 'chat-files';
-const CH_ICON = { team:'👋', photo:'📷', video:'🎬', social:'📱' };
+const CH_ICON = { team: hqi('users'), photo: hqi('camera'), video: hqi('film'), social: hqi('mobile') };
 const AV_COLORS = ['#1f4e79','#6b3aa0','#1e8e5a','#b7700a','#c0392b','#2f6fab','#7a4b2a','#0f766e'];
 const avColor = id => AV_COLORS[[...(id || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
 const initials = n => (n || '?').split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
@@ -8516,7 +8564,7 @@ function renderChat(){
     <aside class="chat-side"><div class="ch-scroll"><h2>Channels</h2>
       <ul class="ch-list">${groups.map(chItem).join('')}</ul>
       <h2>Direct messages<button type="button" id="newDM" title="New message" aria-label="New message">+</button></h2>
-      <ul class="ch-list">${dms.map(chItem).join('')}<li><button type="button" class="new-dm" id="newDM2"><span class="ico">✎</span><span class="nm">New message</span></button></li></ul></div>
+      <ul class="ch-list">${dms.map(chItem).join('')}<li><button type="button" class="new-dm" id="newDM2"><span class="ico">${hqi('pencil')}</span><span class="nm">New message</span></button></li></ul></div>
       <div class="side-foot">${notifState}</div></aside>
     <section class="chat-main">
       <div class="chat-head">
@@ -8533,7 +8581,7 @@ function renderChat(){
           <div class="pending-files" id="pendingFiles"></div>
           <textarea id="chatInput" rows="1" placeholder="Message ${esc(isDM(ch) ? firstName(other.full_name) : ch.name)}"></textarea>
           <div class="row">
-            <label class="btn small ghost" style="margin:0;cursor:pointer" title="Attach files">📎 Attach<input type="file" id="chatFile" multiple hidden /></label>
+            <label class="btn small ghost" style="margin:0;cursor:pointer" title="Attach files">${hqi('clip')} Attach<input type="file" id="chatFile" multiple hidden /></label>
             <span class="hint">Enter to send · Shift+Enter for a new line · @name to mention</span>
             <button class="btn small primary" id="chatSend">Send</button>
           </div>
@@ -8580,7 +8628,7 @@ function msgHTML(m, prev){
   const editing = S.chat.editing === m.id;
   const atts = (m.attachments || []).map(a => /^image\//.test(a.type || '')
     ? `<a class="img" href="#" data-att="${esc(a.path)}" data-name="${esc(a.name)}"><img data-chat-path="${esc(a.path)}" alt="${esc(a.name)}" /></a>`
-    : `<a class="file" href="#" data-att="${esc(a.path)}" data-name="${esc(a.name)}">📄 ${esc(a.name)} <small>${fmtSize(a.size || 0)}</small></a>`).join('');
+    : `<a class="file" href="#" data-att="${esc(a.path)}" data-name="${esc(a.name)}">${hqi('file')} ${esc(a.name)} <small>${fmtSize(a.size || 0)}</small></a>`).join('');
   const body = m.deleted_at ? `<span class="deleted">Message deleted</span>`
     : editing ? `<textarea class="edit-box" data-edit="${m.id}" style="min-height:60px">${esc(m.body)}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px"><button class="btn small primary" data-save-edit="${m.id}">Save</button><button class="btn small" data-cancel-edit>Cancel</button><span class="muted" style="font-size:12px;align-self:center">Enter to save · Esc to cancel</span></div>`
@@ -8597,7 +8645,7 @@ function paintMessages(stick){
   const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   const list = S.chat.msgs[ch.id] || [];
   let html = S.chat.more[ch.id] ? `<div class="more"><button class="btn small" id="loadOlder">Load earlier messages</button></div>` : '';
-  if (!list.length) html += `<div class="chat-empty">${isDM(ch) ? `This is the start of your conversation with ${esc(dmOther(ch).full_name)}.` : `No messages in ${esc(ch.name)} yet. Say hello 👋`}</div>`;
+  if (!list.length) html += `<div class="chat-empty">${isDM(ch) ? `This is the start of your conversation with ${esc(dmOther(ch).full_name)}.` : `No messages in ${esc(ch.name)} yet. Say hello.`}</div>`;
   let lastDay = '';
   list.forEach((m, i) => {
     const d = new Date(m.created_at).toDateString();
@@ -8676,7 +8724,7 @@ function addPending(files){
 }
 function paintPending(){
   const el = $('#pendingFiles'); if (!el) return;
-  el.innerHTML = S.chat.files.map((f, i) => `<span>📎 ${esc(f.name)} <small class="muted">${fmtSize(f.size)}</small><button type="button" data-rm-file="${i}" aria-label="Remove">✕</button></span>`).join('');
+  el.innerHTML = S.chat.files.map((f, i) => `<span>${hqi('clip')} ${esc(f.name)} <small class="muted">${fmtSize(f.size)}</small><button type="button" data-rm-file="${i}" aria-label="Remove">✕</button></span>`).join('');
   el.querySelectorAll('[data-rm-file]').forEach(b => b.onclick = () => { S.chat.files.splice(+b.dataset.rmFile, 1); paintPending(); });
 }
 async function sendMessage(ch){
@@ -8765,7 +8813,7 @@ async function renderTeam(){
     <td style="text-align:right"><button class="btn small" data-rehire="${t.id}">Rehire</button></td></tr>`).join('');
   if (S.view !== 'team') return;
   $('#teamList').innerHTML = `
-    ${owner ? `<div style="display:flex;justify-content:flex-end;margin:-6px 0 12px"><button class="btn" id="rolesBtn">⚙ Roles: default access &amp; Home screens</button></div>` : ''}
+    ${owner ? `<div style="display:flex;justify-content:flex-end;margin:-6px 0 12px"><button class="btn" id="rolesBtn">${hqi('settings')} Roles: default access &amp; Home screens</button></div>` : ''}
     ${pend ? `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase">Pending sign-ups</h3><div class="table-wrap"><table class="list" style="margin-bottom:24px"><tbody>${pend}</tbody></table></div>` : ''}
     <div class="table-wrap"><table class="list"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
     ${formerRows ? `<details style="margin-top:24px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase">Former team members (${former.length})</summary>
