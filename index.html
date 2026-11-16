@@ -1179,6 +1179,73 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .set-sys-row small{font-size:12.5px;color:var(--muted)}
 .set-sys-row code{font-family:inherit;font-size:13px;background:var(--panel-2);border-radius:6px;padding:5px 8px;white-space:normal}
 @media (max-width:900px){ .set-layout{grid-template-columns:1fr} .set-nav{display:none} .set-pick{display:block;font-weight:600} .set-itg-row{flex-wrap:wrap} .set-itg-st{text-align:left;max-width:none;flex-basis:100%;padding-left:22px} }
+/* Agent profile */
+.ap-top{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin:6px 0 14px}
+.ap-card{display:flex;gap:18px;align-items:flex-start}
+.ap-pic .dir-av{width:92px;height:92px;font-size:28px}
+.ap-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.ap-name{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.ap-name h1{margin:0;font-family:var(--font-display);font-size:28px;font-weight:600;line-height:1.1;min-width:0;overflow-wrap:anywhere}
+.ap-name .btn svg{width:14px;height:14px;vertical-align:-2px}
+.ap-co{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--accent-2);font-weight:600;min-width:0}
+.ap-co span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-contact{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.ap-contact a{color:var(--text);text-decoration:none;display:inline-flex;align-items:center;gap:7px;min-width:0}
+.ap-contact a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-contact a:hover span{text-decoration:underline}
+.ap-contact svg{width:16px;height:16px;color:var(--muted);flex:none}
+.ap-phone{display:inline-flex;align-items:center;gap:10px}
+.ap-sms{padding:2px 8px;border:1px solid var(--border);border-radius:999px;font-size:13px}
+.ap-stats{display:flex;flex-direction:column;justify-content:center}
+.ap-kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--border);font-size:13.5px}
+.ap-kv:first-child{border-top:none}
+.ap-kv span{color:var(--muted)}.ap-kv b{font-weight:600;text-align:right}
+.ap-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
+.ap-actions a.btn{text-decoration:none}
+.ap-actions .btn svg{width:15px;height:15px;vertical-align:-3px}
+.ap-actions .ap-del{margin-left:auto}
+.ap-secs{display:flex;flex-direction:column;gap:10px}
+.ap-sec{background:var(--panel);border:1px solid var(--border);border-radius:12px}
+.ap-sec summary{list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ap-sec summary::-webkit-details-marker{display:none}
+.ap-st{flex:1;font-weight:600;font-size:14.5px}
+.ap-st em{font-style:normal;font-weight:600;font-size:12px;color:var(--muted);background:var(--panel-2);border-radius:999px;padding:2px 8px;margin-left:6px}
+.ap-sa{font-size:13px}
+.ap-link{border:0;background:none;padding:0;color:var(--accent-2);font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.ap-chev{width:18px;height:18px;color:var(--muted);transition:transform .15s;flex:none}
+.ap-sec[open] .ap-chev{transform:rotate(180deg)}
+.ap-body{padding:0 18px 18px}
+.ap-body textarea{min-height:100px}
+.ap-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;margin-top:12px}
+.ap-grid .ap-kv:nth-child(2){border-top:none}
+.ap-rows{display:flex;flex-direction:column}
+.ap-row{display:flex;align-items:center;gap:12px;padding:10px 0;border:0;border-top:1px solid var(--border);background:none;width:100%;text-align:left;color:var(--text);text-decoration:none;font:inherit;cursor:pointer}
+.ap-row:first-child{border-top:none}
+.ap-row:hover .ap-rmain b{text-decoration:underline}
+.ap-inv{cursor:default}.ap-inv:hover .ap-rmain b{text-decoration:none}
+.ap-rmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.ap-rmain b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-rmain small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-rside{display:flex;align-items:center;gap:10px;flex:none}
+.ap-inline{display:flex;gap:8px}.ap-inline select{flex:1}
+@media (max-width:760px){
+  .ap-top{grid-template-columns:1fr}
+  .ap-card{flex-direction:column;align-items:center;text-align:center;gap:12px}
+  .ap-info{align-items:center;width:100%}
+  .ap-name{flex-direction:column;gap:8px}
+  .ap-name h1{font-size:26px}
+  .ap-contact{align-items:center}
+  .ap-actions{display:grid;grid-template-columns:1fr 1fr}
+  .ap-actions .btn{width:100%;justify-content:center;text-align:center}
+  .ap-actions .ap-del{margin:0;grid-column:1/-1}
+  .ap-sec summary{padding:14px}
+  .ap-body{padding:0 14px 14px}
+  .ap-grid{grid-template-columns:1fr}.ap-grid .ap-kv:nth-child(2){border-top:1px solid var(--border)}
+  .ap-row{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:6px;align-items:center}
+  .ap-row .ord-thumb{grid-row:span 2}
+  .ap-rside{grid-column:2;justify-content:flex-start}
+  .ap-inv{grid-template-columns:minmax(0,1fr)}.ap-inv .ap-rside{grid-column:1}
+}
 .bk-group{margin-bottom:18px}
 .bk-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
 .bk-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:6px;color:var(--text);text-decoration:none;min-width:0}
@@ -1521,12 +1588,15 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     <!-- Agents -->
     <div id="companiesView" class="hidden"></div>
     <div id="agentsView" class="hidden">
+      <div id="agentsList">
       <div class="page-head"><div><div class="dir-head"><h1>Agents</h1><span class="cnt" id="agentCount"></span></div><p>Client preferences and branding, shown on every project for that agent.</p></div></div>
       <div class="toolbar">
         <button class="btn primary" id="newAgentBtn">+ New agent</button>
         <input type="search" id="agentSearch" placeholder="Search name, email, phone, company…" />
       </div>
       <div id="agentsGrid"></div>
+      </div>
+      <div id="agentProfile" class="hidden"></div>
     </div>
 
     <!-- Tasks -->
@@ -2048,6 +2118,7 @@ function route(){
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   if (view === 'bookings') S.bkSub = parts[1] || '';
   if (view === 'settings') S.setSub = parts[1] || '';
+  if (view === 'agents') S.agentSub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'orderpages') OP.sub = parts[1] || '';
   if (view === 'hiring') HR.sub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
@@ -2705,6 +2776,8 @@ const dirCmp = (st, val) => (x, y) => { const a = val(x), b = val(y); if (!a && 
 
 S.agDir = S.agDir || { sort: 'name', dir: 1, page: 0, size: 50, q: '' };
 function renderAgents(){
+  $('#agentsList').classList.toggle('hidden', !!S.agentSub); $('#agentProfile').classList.toggle('hidden', !S.agentSub);
+  if (S.agentSub) return renderAgentProfile(S.agentSub);
   const st = S.agDir, q = ($('#agentSearch').value || '').toLowerCase().trim();
   if (q !== st.q) { st.q = q; st.page = 0; }
   const co = a => S.companies.find(c => c.id === a.company_id);
@@ -2733,18 +2806,18 @@ function renderAgents(){
 }
 
 // "Access agent": open the client portal signed in as this client (same as the order's "Client's download page")
-async function accessAgent(id, btn){
+async function accessAgent(id, btn, go = 'listings'){
   const a = S.agents.find(x => x.id === id) || {}, win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
-  const label = btn?.textContent; if (btn) { btn.disabled = true; if (btn.id === 'aAccess') btn.textContent = 'Opening…'; }
+  if (btn) btn.disabled = true;
   try {
     const { data, error } = await sb.functions.invoke('client-view', { body: { agentId: id } });
     if (error) { let m = 'Could not open the client portal'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
     const tok = btoa(JSON.stringify({ a: data.session.access_token, r: data.session.refresh_token })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const url = `${PORTAL_URL}/#ts=${tok}&go=listings`;
+    const url = `${PORTAL_URL}/#ts=${tok}&go=${go}`;
     if (win) win.location.href = url; else location.assign(url);
     toast(`Opened the portal as ${a.full_name || data.email}`);
   } catch (e) { if (win) win.close(); fail(e); }
-  if (btn) { btn.disabled = false; if (btn.id === 'aAccess') btn.textContent = label; }
+  if (btn) btn.disabled = false;
 }
 
 /* ----- Agent profile photo + logo (same fields the client edits in their portal profile; used on property websites) ----- */
@@ -2912,14 +2985,143 @@ async function renderAgentCredits(agentId){
     renderAgentCredits(agentId);
   };
 }
-function openAgent(id){
+/* ----- Agent profile page (#/agents/<id>): info card, stats, actions, and dropdown sections ----- */
+function openAgent(id){ if (!id) return editAgent(null); if (location.hash !== `#/agents/${id}`) location.hash = `#/agents/${id}`; else renderAgents(); }
+const AP_OPEN_KEY = 'hq.apOpen';
+const apOpen = () => { try { return JSON.parse(localStorage.getItem(AP_OPEN_KEY) || '["orders"]'); } catch (_) { return ['orders']; } };
+async function renderAgentProfile(id){
+  const root = $('#agentProfile');
+  const a = S.agents.find(x => x.id === id);
+  if (!a) { root.innerHTML = `<a class="bk-back" href="#/agents">← Agents</a><p class="muted">That agent wasn't found.</p>`; return; }
+  const admin = isSuperAdmin() && BOOKINGS_ENABLED;
+  if (admin && !BK.loaded) { root.innerHTML = '<p class="muted">Loading…</p>'; try { await loadBookingData(); } catch (e) { fail(e); } if (S.view !== 'agents' || S.agentSub !== id) return; }
+  if (admin && !OP.loaded) loadOrderPages().then(() => { if (S.agentSub === id) paintPages(); }).catch(() => {});
+  const co = S.companies.find(c => c.id === a.company_id);
+  const orders = admin ? BK.list.filter(b => b.agent_id === id).sort((x, y) => String(y.shoot_start || y.created_at).localeCompare(String(x.shoot_start || x.created_at))) : [];
+  const live = orders.filter(b => b.status !== 'cancelled');
+  const invoices = live.filter(b => !(b.status === 'requested' && b.payment_status === 'unpaid'));
+  const projects = S.projects.filter(p => p.agent_id === id && can(p.media)).sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)));
+  const yr = new Date().getFullYear(), inYr = y => live.filter(b => new Date(b.shoot_start || b.created_at).getFullYear() === y);
+  const avg = l => l.length ? money(Math.round(l.reduce((t, b) => t + Number(b.total || 0), 0) / l.length)) : '—';
+  const done = live.filter(b => b.status === 'completed' || b.delivered_at);
+  const d30 = new Date(Date.now() - 30 * 864e5).toISOString();
+  const owed = invoices.filter(b => !b.paid).reduce((t, b) => t + Math.max(0, Number(b.total || 0) - Number(b.credit_applied || 0)), 0);
+  const tel = String(a.phone || '').replace(/[^\d+]/g, '');
+  const logos = logosFor(id);
+  const open = new Set(apOpen());
+  const sec = (key, title, count, body, action = '') => `<details class="ap-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}${count != null ? ` <em>${count}</em>` : ''}</span>${action ? `<span class="ap-sa">${action}</span>` : ''}<svg class="ap-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ap-body">${body}</div></details>`;
+  const kv = (k, v) => `<div class="ap-kv"><span>${k}</span><b>${v || '<span class="muted">—</span>'}</b></div>`;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const orderRow = b => `<a class="ap-row" href="#/bookings/${b.id}"><span class="ord-thumb">${ordThumb(b) ? `<img src="${esc(ordThumb(b))}" alt="" loading="lazy">` : ORD_ICON.house}</span>
+      <span class="ap-rmain"><b>${esc(b.address)}</b><small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'} · #${b.number}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''}</small></span>
+      <span class="ap-rside">${ordPill(b)}<span class="ord-ics">${`<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered' : 'Not delivered'}">${ORD_ICON.send}</span><span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' : 'Unpaid'}">${ORD_ICON.paid}</span>`}</span></span></a>`;
+
+  root.innerHTML = `<a class="bk-back" href="#/agents">← Agents</a>
+    <div class="ap-top">
+      <section class="panel ap-card">
+        <div class="ap-pic">${agentAvatar(a)}</div>
+        <div class="ap-info">
+          <div class="ap-name"><h1>${esc(a.full_name)}</h1>${can('manage_agents') ? `<button type="button" class="btn small" id="apEdit">${DIR_ICON.edit} Edit</button>` : ''}</div>
+          ${co ? `<a class="ap-co" href="#/companies" data-co-open="${co.id}">${coLogo(co)}<span>${esc(co.name)}</span></a>` : (a.brokerage || a.team_name) ? `<div class="ap-co">${coLogo(null)}<span class="muted">${esc([a.team_name, a.brokerage].filter(Boolean).join(' · '))}</span></div>` : ''}
+          <div class="ap-contact">
+            ${a.email ? `<a href="mailto:${esc(a.email)}">${ORD_ICON.mail}<span>${esc(a.email)}</span></a>` : '<span class="muted">No email on file</span>'}
+            ${a.phone ? `<span class="ap-phone"><a href="tel:${esc(tel)}">📞 <span>${esc(a.phone)}</span></a><a href="sms:${esc(tel)}" class="ap-sms" title="Text">💬</a></span>` : '<span class="muted">No phone on file</span>'}
+            ${a.website_url ? `<a href="${esc(a.website_url)}" target="_blank" rel="noopener">🌐 <span>${esc(a.website_url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</span></a>` : ''}
+          </div>
+        </div>
+      </section>
+      <section class="panel ap-stats">
+        ${admin ? `${kv('Completed orders', String(done.length))}${kv('Orders in the last 30 days', String(live.filter(b => (b.shoot_start || b.created_at) >= d30).length))}${kv(`Avg order ${yr}`, avg(inYr(yr)))}${kv(`Avg order ${yr - 1}`, avg(inYr(yr - 1)))}${kv('Unpaid balance', owed ? `<span style="color:var(--danger)">${money(owed)}</span>` : money(0))}<div class="ap-kv"><span>Account credit</span><b id="apCredit">…</b></div>`
+          : `${kv('Projects', String(projects.length))}${kv('Active projects', String(projects.filter(p => !DONE.includes(p.status)).length))}`}
+      </section>
+    </div>
+    <div class="ap-actions">
+      ${admin && a.email ? `<button type="button" class="btn" id="apAccess">${DIR_ICON.key} Access agent</button>` : ''}
+      ${admin ? `<button type="button" class="btn" id="apMedia">🖼 Media library</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
+      ${co ? `<button type="button" class="btn" id="apCompany">🏢 View company</button>` : ''}
+      ${can('manage_agents') ? `<button type="button" class="btn" id="apSwitch">⇄ ${co ? 'Switch' : 'Add'} company</button>` : ''}
+      ${isSuperAdmin() ? `<button type="button" class="btn ghost danger ap-del" id="apDelete">Delete agent</button>` : ''}
+    </div>
+    <div class="ap-secs">
+      ${sec('profile', 'Profile & branding', null, `<div class="ag-media" id="agMedia"></div>
+          <div class="ap-grid">${kv('Team', esc(a.team_name || ''))}${kv('Brokerage', esc(a.brokerage || ''))}${kv('Company', co ? esc(co.name) : '')}${kv('Birthday', a.birth_month ? `${MONTHS[a.birth_month - 1]} ${a.birth_day}` : '')}
+            ${kv('Branding files', a.branding_folder_url ? `<a href="${esc(a.branding_folder_url)}" target="_blank" rel="noopener">Open ↗</a>` : '')}${kv('Text notifications', [a.sms_appointment_reminders && 'Reminders', a.sms_media_delivered && 'Media delivered'].filter(Boolean).join(', ') || 'Off')}
+            ${kv('Portal login', a.auth_user_id ? 'Has signed in' : 'Not yet')}${kv('Added', esc(fmtDate(a.created_at)))}</div>`, can('manage_agents') ? '<button type="button" class="ap-link" data-ap-edit>Edit profile</button>' : '')}
+      ${sec('notes', 'Preferences & notes', a.preferences ? '1' : '0', `<p class="muted bk-hint" style="margin:0 0 8px">Shown on every project for this agent.</p>
+          <textarea id="apPrefs" placeholder="Name/brokerage at end of reels, music style, export needs…" ${can('manage_agents') ? '' : 'disabled'}>${esc(a.preferences || '')}</textarea>
+          ${can('manage_agents') ? '<div class="set-actions"><button type="button" class="btn primary small" id="apPrefsSave">Save notes</button></div>' : ''}`)}
+      ${admin ? sec('orders', 'Submitted orders', orders.length, orders.length ? `<div class="ap-rows">${orders.slice(0, 30).map(orderRow).join('')}</div>${orders.length > 30 ? `<p class="muted bk-hint">Showing the latest 30 of ${orders.length}.</p>` : ''}` : '<p class="muted">No orders yet.</p>', '<a class="ap-link ap-neworder" href="#/bookings/new">New order</a>') : ''}
+      ${sec('projects', 'Projects', projects.length, projects.length ? `<div class="ap-rows">${projects.slice(0, 30).map(p => `<button type="button" class="ap-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="ap-rmain"><b>${esc(p.name)}</b><small>${esc(typeName(p.project_type_id))}${p.due_date ? ' · due ' + esc(fmtShort(p.due_date)) : ''}</small></span><span class="ap-rside"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></button>`).join('')}</div>` : '<p class="muted">No projects yet.</p>')}
+      ${admin ? sec('pages', 'Custom order pages', '<span id="apPageCount">…</span>', '<div id="apPages"><p class="muted">Loading…</p></div>', '<a class="ap-link" href="#/orderpages">Order pages</a>') : ''}
+      ${admin ? sec('credits', 'Credit management', '<span id="apCredCount">…</span>', '<div id="agentCredits" class="credits-box" style="margin:0"></div>') : ''}
+      ${admin ? sec('invoices', 'Invoices', invoices.length, invoices.length ? `<div class="ap-rows">${invoices.slice(0, 40).map(b => `<div class="ap-row ap-inv"><span class="ap-rmain"><b>#${b.number} · ${esc(b.address)}</b><small>${esc(ordDate(b.invoice_sent_at || b.created_at, true))}${b.paid && b.paid_at ? ' · paid ' + esc(ordDate(b.paid_at, true)) : ''}</small></span>
+            <span class="ap-rside"><b>${money(b.total)}</b>${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Due</span>'}<button type="button" class="btn small" data-inv="${b.number}" data-paid="${b.paid ? 1 : ''}">View</button></span></div>`).join('')}</div>` : '<p class="muted">No invoices yet.</p>') : ''}
+      ${sec('docs', 'Documents & logos', logos.length, '<div id="agentLogos"></div>')}
+      ${admin ? sec('payment', 'Payment settings', null, `<label class="check"><input type="checkbox" id="apReqPay" ${a.require_payment !== false ? 'checked' : ''} ${can('manage_agents') ? '' : 'disabled'} /> <b>Requires payment before delivery</b></label>
+          <p class="muted bk-hint" style="margin:4px 0 0 26px">On: new orders show watermarked previews until paid. Turn off for trusted clients. You can still change it on any single order.</p>`) : ''}
+    </div>`;
+
+  // dropdowns remember what's open
+  root.querySelectorAll('details.ap-sec').forEach(d => d.addEventListener('toggle', () => {
+    const s = new Set(apOpen()); d.open ? s.add(d.dataset.k) : s.delete(d.dataset.k); try { localStorage.setItem(AP_OPEN_KEY, JSON.stringify([...s])); } catch (_) {}
+  }));
+  root.querySelectorAll('.ap-sa a, .ap-sa button').forEach(x => x.addEventListener('click', e => e.stopPropagation()));
+  const on = (sel, fn) => { const el = root.querySelector(sel); if (el) el.onclick = fn; };
+  on('#apEdit', () => editAgent(id)); root.querySelectorAll('[data-ap-edit]').forEach(b => b.onclick = e => { e.preventDefault(); editAgent(id); });
+  on('#apAccess', () => accessAgent(id, $('#apAccess')));
+  on('#apMedia', () => accessAgent(id, $('#apMedia'), 'listings'));
+  on('#apCompany', () => openCompany(co.id));
+  root.querySelectorAll('[data-co-open]').forEach(x => x.onclick = e => { e.preventDefault(); openCompany(x.dataset.coOpen); });
+  root.querySelectorAll('#apNewOrder, .ap-neworder').forEach(x => x.addEventListener('click', () => { BK.draft = null; BK.preAgent = id; }));
+  on('#apSwitch', () => {
+    const box = document.createElement('div');
+    box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>${co ? 'Switch' : 'Add'} company</h2>
+      <select id="apCoPick"><option value="">No company</option>${S.companies.map(c => `<option value="${c.id}" ${c.id === a.company_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+      <p class="muted bk-hint">The company's logo, order page and delivery settings follow the agent.</p>
+      <div class="actions"><button class="btn" id="apCoX">Cancel</button><button class="btn primary" id="apCoOk">Save</button></div></div>`;
+    document.body.appendChild(box);
+    const close = () => box.remove(); box.querySelector('.overlay').onclick = close; box.querySelector('#apCoX').onclick = close;
+    box.querySelector('#apCoOk').onclick = async () => { const v = box.querySelector('#apCoPick').value || null;
+      const { error } = await sb.from('agents').update({ company_id: v }).eq('id', id); if (error) return fail(error);
+      a.company_id = v; close(); toast('Company updated'); renderAgentProfile(id); };
+  });
+  on('#apDelete', async () => {
+    if (orders.length || projects.length) return toast(`${a.full_name} has ${orders.length} order${orders.length === 1 ? '' : 's'} and ${projects.length} project${projects.length === 1 ? '' : 's'}, so the agent can't be deleted.`);
+    if (!confirm(`Delete ${a.full_name}? This removes the agent, their logos and credit history.`)) return;
+    const { error } = await sb.from('agents').delete().eq('id', id); if (error) return fail(error);
+    S.agents = S.agents.filter(x => x.id !== id); toast('Agent deleted'); location.hash = '#/agents';
+  });
+  on('#apPrefsSave', async () => { const v = $('#apPrefs').value.trim() || null; const { error } = await sb.from('agents').update({ preferences: v }).eq('id', id); if (error) return fail(error); a.preferences = v; toast('Notes saved'); });
+  const rp = $('#apReqPay'); if (rp) rp.onchange = async () => { const v = rp.checked; const { error } = await sb.from('agents').update({ require_payment: v }).eq('id', id); if (error) { rp.checked = !v; return fail(error); } a.require_payment = v; toast(v ? 'Payment required before delivery' : 'Downloads open right away for new orders'); };
+  root.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
+  root.querySelectorAll('[data-inv]').forEach(btn => btn.onclick = () => accessAgent(id, btn, `invoice/${btn.dataset.inv}${btn.dataset.paid ? '/paid' : ''}`));
+  renderAgentMedia(a);
+  renderAgentLogos(id);
+  if (admin) {
+    renderAgentCredits(id);
+    sb.from('client_credits').select('amount').eq('agent_id', id).then(({ data }) => { const bal = Math.round((data || []).reduce((t, c) => t + Number(c.amount), 0) * 100) / 100;
+      const el = $('#apCredit'); if (el) el.textContent = money(bal); const c = $('#apCredCount'); if (c) c.textContent = money(bal); });
+  }
+  function paintPages(){
+    const box = $('#apPages'); if (!box) return;
+    const own = OP.pages.find(p => p.id === a.custom_order_page_id), coPg = co && OP.pages.find(p => p.id === co.custom_order_page_id);
+    $('#apPageCount').textContent = String([own, coPg].filter(Boolean).length);
+    box.innerHTML = `${own ? `<div class="bk-svc"><span><b>${esc(own.name)}</b><small>Assigned to ${esc(a.first_name || a.full_name)}${own.active ? '' : ' · off'}</small></span><a class="btn small" href="#/orderpages/${own.id}">Open</a></div>` : ''}
+      ${coPg ? `<div class="bk-svc"><span><b>${esc(coPg.name)}</b><small>From ${esc(co.name)}${own ? ' (their own page wins)' : ''}</small></span><a class="btn small" href="#/orderpages/${coPg.id}">Open</a></div>` : ''}
+      ${!own && !coPg ? '<p class="muted" style="margin:0 0 10px">Only the default order page.</p>' : ''}
+      ${can('manage_agents') ? `<label style="margin-top:10px">Their own page</label><div class="ap-inline"><select id="apPagePick"><option value="">None${coPg ? ` (use ${esc(coPg.name)})` : ''}</option>${OP.pages.map(p => `<option value="${p.id}" ${p.id === a.custom_order_page_id ? 'selected' : ''}>${esc(p.name)}${p.active ? '' : ' (off)'}</option>`).join('')}</select><button type="button" class="btn small primary" id="apPageSave">Save</button></div>
+        <label class="check" style="margin-top:10px"><input type="checkbox" id="apShowDef" ${a.show_default_order_page !== false ? 'checked' : ''} /> Also show the default order page</label>` : ''}`;
+    const sv = $('#apPageSave'); if (sv) sv.onclick = async () => { const patch = { custom_order_page_id: $('#apPagePick').value || null, show_default_order_page: $('#apShowDef').checked };
+      const { error } = await sb.from('agents').update(patch).eq('id', id); if (error) return fail(error); Object.assign(a, patch); toast('Order page saved'); paintPages(); };
+  }
+  if (admin && OP.loaded) paintPages();
+}
+
+function editAgent(id){
   const a = S.agents.find(x => x.id === id) || {};
   document.body.style.overflow = 'hidden';
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal ${id ? 'wide' : ''}"><div class="agent-head"><h2>${id ? esc(a.full_name) : 'New agent'}</h2>${id && isSuperAdmin() && BOOKINGS_ENABLED ? `<button type="button" class="btn small primary" id="aAccess" title="Open the client portal signed in as ${esc(a.full_name || 'this client')}">Access agent ↗</button>` : ''}</div>
-    ${id ? `<div class="ag-media" id="agMedia"></div>` : ''}
-    ${id ? `<div id="agentLogos"></div>` : ''}
-    ${id && isSuperAdmin() ? `<div id="agentCredits" class="credits-box"></div>` : ''}
+  <div class="modal ${id ? 'wide' : ''}"><div class="agent-head"><h2>${id ? esc(a.full_name) : 'New agent'}</h2></div>
     <form id="aForm"><div class="grid2">
       <div><label>First name</label><input name="first_name" required autocomplete="off" value="${esc(a.first_name || '')}" /></div>
       <div><label>Last name</label><input name="last_name" required autocomplete="off" value="${esc(a.last_name || '')}" /></div>
@@ -2946,10 +3148,6 @@ function openAgent(id){
     </div>
     <div class="actions"><button type="button" class="btn" id="aCancel">${can('manage_agents') ? 'Cancel' : 'Close'}</button>${can('manage_agents') ? `<button class="btn primary">${id ? 'Save' : 'Add agent'}</button>` : ''}</div></form></div>`;
   $('#ov').onclick = closeLayer; $('#aCancel').onclick = closeLayer;
-  if (id) renderAgentLogos(id);
-  if (id && isSuperAdmin()) renderAgentCredits(id);
-  if (id) renderAgentMedia(a);
-  if ($('#aAccess')) $('#aAccess').onclick = () => accessAgent(id, $('#aAccess'));
   const fillPage = () => { const el = $('#aPage'); if (!el) return; const cur = el.dataset.v ?? (a.custom_order_page_id || ''); el.dataset.v = cur;
     const co = S.companies.find(c => c.id === ($('#aCo')?.value ?? a.company_id)), cp = co && OP.pages.find(p => p.id === co.custom_order_page_id);
     el.innerHTML = `<option value="">${cp ? `Company's page: ${esc(cp.name)}` : 'None: default order page only'}</option>` + OP.pages.map(pg => `<option value="${pg.id}" ${pg.id === cur ? 'selected' : ''}>${esc(pg.name)}${pg.active ? '' : ' (off)'}</option>`).join('');
@@ -5490,7 +5688,7 @@ async function bkPaintPicker(st, duration, ignoreEvent, onChange){
 }
 
 /* ----- Order form ----- */
-function bkNewDraft(){ return { agent_id:'', newClient:false, client:{ name:'', email:'', phone:'', brokerage:'' }, address:'', city:'', sqft:'', adu:false,
+function bkNewDraft(){ const pre = BK.preAgent || ''; BK.preAgent = null; return { agent_id:pre, newClient:false, client:{ name:'', email:'', phone:'', brokerage:'' }, address:'', city:'', sqft:'', adu:false,
   occupancy:'', entry:'', access_notes:'', notes:'', pkg: bkActive('package')[0]?.id || '', addons: new Set(), discount:'', pick:{ start:null, override:false, day:'' },
   mkCal:true, mkProjects:true, postChat:false, paid:false }; }
 function renderOrderForm(){
