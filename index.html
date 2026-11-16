@@ -1392,6 +1392,76 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
 @media (max-width:900px){ .bk-layout{grid-template-columns:1fr} .bk-summary{position:static} .bk-detail{grid-template-columns:1fr} }
 @media (max-width:640px){ .bk-row{gap:10px;padding:10px 12px} .bk-agent-pick{flex-wrap:wrap} .bk-agent-pick .btn{width:100%} #bkSettings{margin-left:0!important} }
 
+/* ----- Order page ----- */
+.od{display:flex;flex-direction:column;gap:14px}
+.od>.bk-back{margin-bottom:-6px}
+.od-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"thumb title cta" "thumb links links";column-gap:18px;row-gap:12px;align-items:start}
+.od-thumb{grid-area:thumb;width:132px;height:92px;border-radius:10px;overflow:hidden;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;color:var(--muted)}
+.od-thumb img{width:100%;height:100%;object-fit:cover;display:block}.od-thumb svg{width:34px;height:34px;opacity:.6}
+.od-title{grid-area:title;min-width:0}
+.od-title h1{margin:0;font-family:var(--font-display);font-size:26px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
+.od-sub{margin:3px 0 8px;color:var(--muted);font-size:13.5px}
+.od-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.od-cta{grid-area:cta;display:flex;gap:8px;align-items:center}
+.od-cta .btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.od-cta .btn svg{width:16px;height:16px}
+.od-links{grid-area:links;display:flex;flex-wrap:wrap;gap:6px}
+.od-links .btn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}.od-links .btn svg{width:14px;height:14px}
+.od-more{position:relative}
+.od-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:5px;min-width:220px;display:flex;flex-direction:column}
+.od-menu button{border:none;background:none;text-align:left;padding:9px 12px;border-radius:7px;color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+.od-menu button:hover{background:var(--panel-2)}.od-menu button.danger{color:var(--danger)}
+.od-menu hr{border:0;border-top:1px solid var(--border);margin:4px 2px}
+.od-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.od-card{display:flex;flex-direction:column;gap:3px;padding:14px 16px;min-width:0}
+.od-card>label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 2px}
+.od-card>b{font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.od-card>b small{font-size:12.5px;font-weight:500}
+.od-card>span{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.od-card>.ap-link,.od-card>.btn{align-self:flex-start;margin-top:auto;padding-top:6px}
+.od-card>.btn{padding-top:5px}
+.od-who{display:flex;align-items:center;gap:10px;min-width:0}
+.od-who .dir-av{width:38px;height:38px;flex:none}
+.od-who>span:not(.dir-av){display:flex;flex-direction:column;min-width:0}
+.od-who a{color:var(--text);text-decoration:none}.od-who a:hover b{text-decoration:underline}
+.od-who b,.od-who small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.od-who small{color:var(--muted);font-size:12.5px}
+.od-ics{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+.od-ics a{width:32px;height:32px;border:1px solid var(--border);border-radius:999px;display:grid;place-items:center;text-decoration:none;color:var(--text);font-size:14px}
+.od-ics a:hover{background:var(--panel-2)}.od-ics svg{width:15px;height:15px}
+.od-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+.od-meta{flex:0 1 auto;font-size:13px;color:var(--muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:60%}
+.od-sec summary{gap:10px}
+.od-sec .ap-st{flex:1 1 auto;min-width:0}
+.od-specs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;font-size:13.5px}
+.od-specs label{margin:0 0 2px}
+.od-loc{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 10px!important}
+.od-loclinks{font-size:13.5px}
+.od #zsPanel>h2{display:none}
+.od #zsPanel .zs-form{grid-template-columns:1fr 1fr}
+.od .dv-h:first-of-type{margin-top:4px}
+#bkResched:empty{display:none}
+#bkResched .bk-resched{margin:0;background:var(--panel)}
+@media (max-width:1180px){ .od-grid{grid-template-columns:1fr} .od-strip{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:640px){
+  .od{gap:10px}
+  .od-head{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"thumb title" "cta cta" "links links";column-gap:12px;padding:14px}
+  .od-thumb{width:84px;height:64px}
+  .od-title h1{font-size:20px}
+  .od-sub{margin:2px 0 6px;font-size:12.5px}
+  .od-cta{display:grid;grid-template-columns:1fr 1fr}
+  .od-cta .btn,.od-more,.od-more .btn{width:100%;justify-content:center}
+  .od-cta:not(:has(#odSend)){grid-template-columns:1fr}
+  .od-menu{left:0;right:0;min-width:0}
+  .od-menu button{padding:12px}
+  .od-links{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}
+  .od-links::-webkit-scrollbar{display:none}
+  .od-links .btn{flex:none}
+  .od-strip{gap:8px}
+  .od-card{padding:12px}
+  .od-card>b{font-size:15px}
+  .od-meta{max-width:50%;font-size:12px}
+  .od-specs{grid-template-columns:1fr 1fr}
+  .od #zsPanel .zs-form{grid-template-columns:1fr}
+}
 /* ----- Hiring ----- */
 .hr-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;color:var(--text);text-decoration:none;min-width:0}
 .hr-row:hover{background:var(--panel-2)}
@@ -3137,11 +3207,13 @@ const ACT_KIND = {
   order: ['orders', '📅'], delivery: ['orders', '📦'], payment: ['orders', '💵'], invoice: ['orders', '🧾'], credit: ['orders', '🎟'],
   account: ['account', '👤'],
 };
-async function renderAgentActivity(id, filter = 'all', limit = 100){
-  const box = $('#apAct'); if (!box) return;
+async function renderAgentActivity(id, filter = 'all', limit = 100, bookingId = null){
+  const sel = bookingId ? '#bkAct' : '#apAct', box = $(sel); if (!box) return;
   box.innerHTML = '<p class="muted">Loading activity…</p>';
-  const { data, error } = await sb.from('agent_activity').select('kind, summary, device, actor, booking_id, created_at').eq('agent_id', id).order('created_at', { ascending: false }).limit(limit);
-  if (!$('#apAct')) return;
+  let qy = sb.from('agent_activity').select('kind, summary, device, actor, booking_id, created_at');
+  qy = bookingId ? qy.eq('booking_id', bookingId) : qy.eq('agent_id', id);
+  const { data, error } = await qy.order('created_at', { ascending: false }).limit(limit);
+  if (!$(sel)) return;
   if (error) { box.innerHTML = `<p class="muted">Couldn't load activity: ${esc(error.message)}</p>`; return; }
   const rows = (data || []).filter(r => filter === 'all' || (ACT_KIND[r.kind]?.[0] || 'account') === filter);
   const day = d => new Date(d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(d).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' });
@@ -3150,11 +3222,11 @@ async function renderAgentActivity(id, filter = 'all', limit = 100){
     ${rows.length ? `<div class="act-list">${rows.map(r => { const d = day(r.created_at), head = d !== last ? `<div class="act-day">${esc(d)}</div>` : ''; last = d;
       return head + `<div class="act-row ${r.kind === 'failed' ? 'bad' : ''}"><span class="act-ic">${ACT_KIND[r.kind]?.[1] || '•'}</span>
         <span class="act-main"><span>${esc(r.summary)}</span><small>${esc(fmtT(r.created_at))}${r.device ? ' · ' + esc(r.device) : ''}${r.actor === 'team' ? ' · by Knox View' : r.actor === 'client' ? ' · by client' : ''}</small></span>
-        ${r.booking_id ? `<a class="ap-link act-go" href="#/bookings/${r.booking_id}">Order</a>` : ''}</div>`; }).join('')}</div>
+        ${r.booking_id && !bookingId ? `<a class="ap-link act-go" href="#/bookings/${r.booking_id}">Order</a>` : ''}</div>`; }).join('')}</div>
       ${(data || []).length >= limit ? `<button type="button" class="btn small" id="actMore" style="margin-top:10px">Show older</button>` : ''}`
       : '<p class="muted" style="margin:6px 0 0">Nothing recorded yet. New activity shows up here automatically.</p>'}`;
-  box.querySelectorAll('[data-af]').forEach(b => b.onclick = () => renderAgentActivity(id, b.dataset.af, limit));
-  const more = $('#actMore'); if (more) more.onclick = () => renderAgentActivity(id, filter, limit + 200);
+  box.querySelectorAll('[data-af]').forEach(b => b.onclick = () => renderAgentActivity(id, b.dataset.af, limit, bookingId));
+  const more = box.querySelector('#actMore'); if (more) more.onclick = () => renderAgentActivity(id, filter, limit + 200, bookingId);
 }
 
 function editAgent(id){
@@ -5614,14 +5686,7 @@ function ordMenu(btn, b){
     const k = e.target.dataset.m; if (!k) return; close();
     if (k === 'edit') location.hash = `#/bookings/${b.id}`;
     if (k === 'send') openDeliveryModal(b.id);
-    if (k === 'del') {
-      if (b.paid) return toast('Paid orders can\'t be deleted, so the payment record stays. Cancel it instead.');
-      if (!confirm(`Delete order #${b.number} (${b.address})?\n\nThis removes the order, its invoice and delivery history for good.${b.gcal_event_id ? ' The shoot is also removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return;
-      if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (err) { if (!/404|410|not found|deleted/i.test(err.message)) return fail(err); } }
-      const { error } = await sb.from('bookings').delete().eq('id', b.id);
-      if (error) return fail(error);
-      BK.list = BK.list.filter(x => x.id !== b.id); toast(`Order #${b.number} deleted`); renderBookingList();
-    }
+    if (k === 'del' && await ordDelete(b)) renderBookingList();
   };
 }
 // Send-delivery pop-up from the list: pick the email template, preview, send (same form as on the order page)
@@ -6109,128 +6174,183 @@ function dvWire(b){
   drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files.length) dvUpload(b, e.dataTransfer.files); };
   dvPaintPlans(b);
 }
+const OD_OPEN_KEY = 'hq.odOpen';
+const odOpen = () => { try { return JSON.parse(localStorage.getItem(OD_OPEN_KEY) || '["invoice","shoot","projects"]'); } catch (_) { return ['invoice', 'shoot', 'projects']; } };
+const OD_CHEV = '<svg class="ap-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+// Delete an order for good (shared by the order list ⋯ menu and the order page). Resolves true when deleted.
+async function ordDelete(b){
+  if (b.paid) { toast('Paid orders can\'t be deleted, so the payment record stays. Cancel it instead.'); return false; }
+  if (!confirm(`Delete order #${b.number} (${b.address})?\n\nThis removes the order, its invoice and delivery history for good.${b.gcal_event_id ? ' The shoot is also removed from your Google Calendar.' : ''} Its projects are left as they are.`)) return false;
+  if (b.gcal_event_id) { try { await gcal('delete', { id: b.gcal_event_id }); clearCalCache(); BK.busy = null; } catch (err) { if (!/404|410|not found|deleted/i.test(err.message)) { fail(err); return false; } } }
+  const { error } = await sb.from('bookings').delete().eq('id', b.id);
+  if (error) { fail(error); return false; }
+  BK.list = BK.list.filter(x => x.id !== b.id); toast(`Order #${b.number} deleted`); return true;
+}
+/* ----- Order page (#/bookings/<id>): header card + quick links, at-a-glance strip, then dropdown sections ----- */
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
   if (b) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
   if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Orders</a><p class="muted">That order wasn't found.</p>`; return; }
   const a = S.agents.find(x => x.id === b.agent_id);
-  const phone = b.client_phone || a?.phone, email = b.client_email || a?.email;
+  const co = a && S.companies.find(c => c.id === a.company_id);
+  const phone = b.client_phone || a?.phone, email = b.client_email || a?.email, tel = String(phone || '').replace(/[^\d+]/g, '');
   const projs = (b.project_ids || []).map(pid => S.projects.find(p => p.id === pid)).filter(Boolean);
   const loc = [b.address, b.city].filter(Boolean).join(', ');
-  $('#bookingsView').innerHTML = `
-    <div class="page-head"><div><a href="#/bookings" class="bk-back">← Orders</a><h1>${esc(b.address)}</h1><p>Order #${b.number} · ${bkPill(b.status)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</p></div></div>
-    <div class="bk-detail">
-      <div class="panel"><h2>Shoot</h2>
-        <div class="bk-links">
-          <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">👁 Client's download page</button>
-          ${b.dropbox_path ? `<a class="btn small" href="${esc('https://www.dropbox.com/home' + b.dropbox_path.split('/').map(encodeURIComponent).join('/'))}" target="_blank" rel="noopener">📁 Open Dropbox</a>` : ''}
-          <button type="button" class="btn small" id="bkInvoice" title="Open the invoice the client sees in their portal">🧾 View invoice</button>
-        </div>
-        <p class="bk-big">${esc(bkWhen(b))}</p>
-        <p>📍 ${esc(loc)} · <a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></p>
-        <div class="sp-grid">
-          <div><label>Size</label>${b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : esc(b.sqft_label || '—')}${b.large_property ? ' · large' : ''}</div>
-          <div><label>Occupancy</label>${esc(b.occupancy || '—')}</div>
-          <div><label>Entry</label>${esc(b.entry || '—')}</div>
-          <div><label>Length</label>${b.duration_min || '—'} min</div>
-        </div>
-        ${b.access_notes ? `<p><b>Access:</b> ${esc(b.access_notes)}</p>` : ''}
-        ${(b.client_files || []).length ? `<p><b>Client files:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">📎 ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : ''}
-        <div id="bkResched"></div>
-        <div class="bk-actions">
-          ${b.status !== 'cancelled' ? `<button class="btn" id="bkReschedBtn">Reschedule</button>` : ''}
-          ${b.status === 'scheduled' ? `<button class="btn" id="bkDone">Mark shoot complete</button>` : ''}
-          ${b.status === 'completed' ? `<button class="btn" id="bkUndone">Mark not complete</button>` : ''}
-          ${b.status !== 'cancelled' ? `<button class="btn danger" id="bkCancel">Cancel booking</button>` : `<button class="btn" id="bkRestore">Restore booking</button>`}
-        </div>
+  const live = b.status !== 'cancelled';
+  const due = b.paid ? 0 : Math.max(0, Number(b.total) - Number(b.credit_applied || 0));
+  const dbxUrl = b.dropbox_path ? 'https://www.dropbox.com/home' + b.dropbox_path.split('/').map(encodeURIComponent).join('/') : '';
+  const site = b.website_url || b.website_unbranded_url;
+  const nPh = (b.photo_files || []).length, nVid = (b.videos || []).filter(v => v.url).length;
+  const thumb = ordThumb(b);
+  const open = new Set(odOpen());
+  const sec = (key, title, meta, body) => `<details class="ap-sec od-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}</span>${meta ? `<span class="od-meta">${meta}</span>` : ''}${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const mediaMeta = [nPh && plural(nPh, 'photo'), nVid && plural(nVid, 'video'), b.tour_url && '3D tour', ((b.media_files || []).some(f => f.kind === 'floorplan') || b.floorplan_url) && 'floor plan'].filter(Boolean).join(' · ') || 'Nothing added yet';
+
+  $('#bookingsView').innerHTML = `<div class="od">
+    <a href="#/bookings" class="bk-back">← Orders</a>
+    <section class="panel od-head">
+      <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
+      <div class="od-title">
+        <h1>${esc(b.address)}</h1>
+        <p class="od-sub">${esc([[b.city, b.zip].filter(Boolean).join(' '), '#' + b.number, bkPkgName(b)].filter(Boolean).join(' · '))}</p>
+        <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
-      <div class="panel"><h2>Client</h2>
-        <p class="bk-big">${esc(bkClient(b))}</p>
-        ${a?.brokerage ? `<p class="muted">${esc(a.brokerage)}</p>` : ''}
-        <p>${phone ? `<a href="tel:${esc(phone)}">${esc(phone)}</a>` : ''}${phone && email ? ' · ' : ''}${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : ''}</p>
-        ${a ? `<button class="btn small" id="bkAgent">Agent file</button>` : ''}
+      <div class="od-cta">
+        ${live ? `<button type="button" class="btn primary" id="odSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Send delivery'}</span></button>` : ''}
+        <div class="od-more"><button type="button" class="btn" id="odMoreBtn" aria-haspopup="menu" aria-expanded="false">Actions <span aria-hidden="true">▾</span></button>
+          <div class="od-menu hidden" id="odMenu" role="menu">
+            ${live ? '<button type="button" data-act="resched">📅 Reschedule</button>' : ''}
+            ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark shoot complete</button>' : ''}
+            ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark not complete</button>' : ''}
+            ${live && !b.delivered_at ? '<button type="button" id="odDelivered">📦 Promote to delivered</button>' : ''}
+            <button type="button" id="odSwitch">⇄ Switch agent</button>
+            ${a ? `<button type="button" data-act="agent">👤 Agent profile</button>` : ''}
+            <hr>
+            ${live ? '<button type="button" id="bkCancel" class="danger">Cancel order</button>' : '<button type="button" id="bkRestore">Restore order</button>'}
+            <button type="button" id="odDelete" class="danger">Delete order</button>
+          </div></div>
       </div>
-      <div class="panel"><h2>Order</h2>
-        <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('')}
-          ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
-          ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
-          <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div>
-          ${Number(b.credit_applied) ? `<div><span>Account credit applied</span><span>−${money(b.credit_applied)}</span></div>` : ''}
-          <div class="bk-total"><span>Amount due</span><span>${money(b.paid ? 0 : Math.max(0, Number(b.total) - Number(b.credit_applied || 0)))}</span></div></div>
-        ${Number(b.credit_applied) && !b.paid ? `<p class="muted bk-hint" style="margin:6px 0 0">${money(b.credit_applied)} of the client's account credit is on this invoice. <button type="button" class="btn small" id="bkCreditBack">Return credit to their account</button></p>` : ''}
-        <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}</p>
-        ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">🔒 This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
-          <label>Add a service</label>
-          <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
-              ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
-                  .map(x => `<option value="${x.id}">${esc(x.name)}${x.kind === 'package' ? ' (package)' : ''} · ${money(x.price)}</option>`).join('')
-              : `<option value="">No services set up yet (Settings → Services)</option>`}</select>
-            <button type="button" class="btn small" id="bkAddSvcBtn">Add</button></div>
-          <label style="margin-top:10px">Custom line item</label>
-          <div class="bk-addrow"><input id="bkCustName" placeholder="e.g. Extra twilight edit" maxlength="120" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$0.00" style="max-width:110px" />
-            <button type="button" class="btn small" id="bkAddCust">Add</button></div>
-          <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
-        </div>`}
-        <div class="bk-actions">${b.paid && !isOwner() ? '' : `<button class="btn ${b.paid ? '' : 'primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}${b.paid && b.paid_at ? `<span class="muted">Paid ${esc(fmtDate(b.paid_at))}${b.paid_method ? ' · ' + esc(PAY_METHODS[b.paid_method] || b.paid_method) : b.payment_status === 'paid' ? ' · Card (online)' : ''}</span>` : ''}</div>
-        ${b.paid && b.paid_note ? `<p class="muted bk-hint" style="margin:6px 0 0">Note: ${esc(b.paid_note)}</p>` : ''}
-        <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
-        <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>
+      <div class="od-links">
+        <button type="button" class="btn small" id="bkClientView" title="Open the client portal as this client, on this order's delivery page">👁 Download page</button>
+        <button type="button" class="btn small" id="bkInvoice" title="Open the invoice the client sees in their portal">🧾 Invoice</button>
+        ${site ? `<a class="btn small" href="${esc(site)}" target="_blank" rel="noopener" title="The single property website">🌐 Property website</a>` : ''}
+        ${dbxUrl ? `<a class="btn small" href="${esc(dbxUrl)}" target="_blank" rel="noopener" title="${esc(b.dropbox_path)}">📁 Dropbox</a>` : ''}
+        ${a?.email ? `<button type="button" class="btn small" id="odAccess" title="Open the client portal signed in as ${esc(a.full_name)}">${DIR_ICON.key} Access agent</button>` : ''}
       </div>
-      <div class="panel"><h2>Projects & calendar</h2>
-        ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
-          : `<p class="muted">No projects linked.</p>`}
-        <div class="bk-actions">
-          ${!projs.length && b.status !== 'cancelled' ? `<button class="btn" id="bkMkProj">Create projects</button>` : ''}
-          ${b.gcal_event_id ? `<span class="muted">✓ On your Google Calendar</span>` : b.status !== 'cancelled' && b.shoot_start && S.cal.status?.connected ? `<button class="btn" id="bkMkCal">Add to Google Calendar</button>` : ''}
-        </div>
+    </section>
+
+    <div class="od-strip">
+      <div class="panel od-card"><label>Shoot</label>
+        <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not scheduled'}</b>
+        <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
+        ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
+      <div class="panel od-card"><label>Client</label>
+        <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
+        <span class="od-ics">${phone ? `<a href="tel:${esc(tel)}" title="Call ${esc(phone)}">📞</a><a href="sms:${esc(tel)}" title="Text ${esc(phone)}">💬</a>` : ''}${email ? `<a href="mailto:${esc(email)}" title="${esc(email)}">${ORD_ICON.mail}</a>` : ''}${!phone && !email ? '<span class="muted">No contact info</span>' : ''}</span></div>
+      <div class="panel od-card"><label>Invoice</label>
+        <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
+        <span>Total ${money(b.total)}${b.paid && b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) + (b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : '') : ''}</span>
+        ${b.paid && !isOwner() ? '' : `<button type="button" class="${b.paid ? 'ap-link' : 'btn small primary'}" id="bkPaidBtn" ${b.paid ? 'title="Owner only: unlocks this paid invoice (logged)"' : ''}>${b.paid ? 'Mark unpaid' : 'Mark as paid'}</button>`}</div>
+      <div class="panel od-card"><label>Delivery</label>
+        <b>${b.delivered_at ? 'Delivered' : live ? 'Not delivered' : '—'}</b>
+        <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(mediaMeta)}</span>
+        <button type="button" class="ap-link" data-goto="media">Delivery media</button></div>
+    </div>
+    <div id="bkResched"></div>
+
+    <div class="od-grid">
+      <div class="od-main ap-secs">
+        ${sec('invoice', 'Invoice & services', `${money(b.total)} · ${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}`, `
+          <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
+            ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
+            ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
+            <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div>
+            ${Number(b.credit_applied) ? `<div><span>Account credit applied</span><span>−${money(b.credit_applied)}</span></div>` : ''}
+            <div class="bk-total"><span>Amount due</span><span>${money(due)}</span></div></div>
+          ${Number(b.credit_applied) && !b.paid ? `<p class="muted bk-hint" style="margin:6px 0 0">${money(b.credit_applied)} of the client's account credit is on this invoice. <button type="button" class="btn small" id="bkCreditBack">Return credit to their account</button></p>` : ''}
+          <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}${b.paid && b.paid_note ? ` · Note: ${esc(b.paid_note)}` : ''}</p>
+          ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">🔒 This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
+            <label>Add a service</label>
+            <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
+                ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
+                    .map(x => `<option value="${x.id}">${esc(x.name)}${x.kind === 'package' ? ' (package)' : ''} · ${money(x.price)}</option>`).join('')
+                : `<option value="">No services set up yet (Settings → Services)</option>`}</select>
+              <button type="button" class="btn small" id="bkAddSvcBtn">Add</button></div>
+            <label style="margin-top:10px">Custom line item</label>
+            <div class="bk-addrow"><input id="bkCustName" placeholder="e.g. Extra twilight edit" maxlength="120" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$0.00" style="max-width:110px" />
+              <button type="button" class="btn small" id="bkAddCust">Add</button></div>
+            <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
+          </div>`}
+          <label class="check" style="margin-top:14px"><input type="checkbox" id="dvReqPay" ${b.require_payment !== false ? 'checked' : ''} /> <b>Require payment before download</b></label>
+          <p class="muted bk-hint" style="margin:2px 0 0 26px">${b.paid ? 'This order is paid, so downloads are open either way.' : b.require_payment !== false ? 'Unpaid: the client sees watermarked previews and "Pay to download" until it is paid.' : 'Off: the client can download everything now, before paying.'}</p>`)}
+
+        ${sec('shoot', 'Property, access & notes', esc([b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label, b.occupancy].filter(Boolean).join(' · ')), `
+          <p class="od-loc">📍 ${esc(loc)} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
+          <div class="od-specs">
+            <div><label>Size</label>${b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : esc(b.sqft_label || '—')}${b.large_property ? ' · large' : ''}</div>
+            <div><label>Occupancy</label>${esc(b.occupancy || '—')}</div>
+            <div><label>Entry</label>${esc(b.entry || '—')}</div>
+            <div><label>Length</label>${b.duration_min || '—'} min</div>
+          </div>
+          ${(b.client_files || []).length ? `<p><b>Client files:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">📎 ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : ''}
+          <label style="margin-top:12px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" placeholder="Lockbox code, gate code, who'll be there…" />
+          <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
+          <div class="bk-actions"><button type="button" class="btn" id="bkSaveNotes">Save notes</button><span class="muted bk-hint" style="margin:0">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</span></div>`)}
+
+        ${sec('media', 'Delivery media', esc(mediaMeta), `
+          <p class="muted bk-hint" style="margin-top:0">What the client sees on their delivery page. Photos and videos from delivered projects linked to this order show up automatically. Downloads unlock once the order is paid.</p>
+          <h3 class="dv-h">📷 Photos</h3>
+          <div class="dbx-bar">
+            <div class="dbx-path">${b.dropbox_path ? `<span class="muted">Dropbox folder</span><b title="${esc(b.dropbox_path)}">${esc(b.dropbox_path)}</b>` : '<span class="muted">No Dropbox folder yet. It\'s made when the order is marked completed.</span>'}</div>
+            <div class="dbx-acts">${b.dropbox_path ? '' : '<button type="button" class="btn small" id="dbxMake">Create folders</button>'}<button type="button" class="btn small" id="dbxPathEdit">${b.dropbox_path ? 'Change' : 'Set path'}</button><button type="button" class="btn small primary" id="dbxSync">⟳ Sync with Dropbox</button></div>
+          </div>
+          <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0">${nPh ? `${nPh} photos from the final photos folder${b.photos_synced_at ? ' · synced ' + esc(fmtDateTime(b.photos_synced_at)) : ''}. Drag to set the order clients see.` : 'Sync pulls in everything in the order\'s final photos folder.'}</p>
+          <div class="dbx-grid" id="dbxGrid"></div>
+          <details class="dv-alt" ${b.photos_url ? 'open' : ''}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>
+          <h3 class="dv-h">🎬 Video <span class="muted">Vimeo links</span></h3>
+          <div class="grid2">
+            <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
+            <div><label>Unbranded video</label><input id="dvVidU" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).unbrand?.url || '')}" /></div>
+          </div>
+          <p class="muted bk-hint" style="margin:6px 0 0">The client sees each video titled <b>${esc(dvAddr(b.address))}</b>, with its name as a small tag.</p>
+          <div id="dvVidMore">${dvVid(b).more.map((v, i) => dvVidRow(v, i)).join('')}</div>
+          <button type="button" class="btn small" id="dvVidAdd" style="margin-top:8px">+ Add video</button>
+          <h3 class="dv-h">🧊 3D tour</h3>
+          <input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" />
+          <h3 class="dv-h">📐 Floor plan</h3>
+          <div class="dv-drop" id="dvDrop" tabindex="0" role="button" aria-label="Upload floor plans">
+            <input type="file" id="dvPlanFile" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
+            <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
+          <div id="dvPlans"></div>
+          <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>
+          <div class="bk-actions"><button type="button" class="btn primary" id="bkSaveDelivery">Save delivery</button></div>`)}
+
+        ${sec('site', 'Property website & marketing', b.websites_enabled !== false ? (site ? 'Live' : 'On · coming soon') : 'Off', `
+          <label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Show property websites</b> <span class="muted">(branded + unbranded cards on the client's delivery page; "coming soon" until a link is added)</span></span></label>
+          <div class="grid2" style="margin-top:10px">
+            <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" placeholder="https://" /></div>
+            <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" placeholder="https://" /></div>
+            <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
+            <div><label>Cover photo for the listing card <span class="muted">(image link)</span></label><input id="dvCover" value="${esc(b.cover_url || '')}" placeholder="https://" /></div>
+          </div>
+          <div class="bk-actions"><button type="button" class="btn primary" data-save-delivery>Save</button>${site ? `<a class="btn" href="${esc(site)}" target="_blank" rel="noopener">View website ↗</a>` : ''}</div>`)}
+
+        ${live ? sec('send', 'Send delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
-      <div class="panel bk-wide" id="zsPanel"><h2>Zillow Stat Tracker</h2><p class="muted" style="margin:0">Loading…</p></div>
-      <div class="panel bk-wide"><h2>Delivery <span class="muted" style="font-weight:400;font-size:13px">· what the client sees on their delivery page</span></h2>
-        <p class="muted bk-hint" style="margin-top:0">Photos and videos from delivered projects linked above show up automatically. Use these for anything else. Downloads unlock for the client once the order is paid.</p>
-        <h3 class="dv-h">📷 Photos</h3>
-        <div class="dbx-bar">
-          <div class="dbx-path">${b.dropbox_path ? `<span class="muted">Dropbox folder</span><b title="${esc(b.dropbox_path)}">${esc(b.dropbox_path)}</b>` : '<span class="muted">No Dropbox folder yet. It\'s made when the order is marked completed.</span>'}</div>
-          <div class="dbx-acts">${b.dropbox_path ? '' : '<button type="button" class="btn small" id="dbxMake">Create folders</button>'}<button type="button" class="btn small" id="dbxPathEdit">${b.dropbox_path ? 'Change' : 'Set path'}</button><button type="button" class="btn small primary" id="dbxSync">⟳ Sync with Dropbox</button></div>
-        </div>
-        <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0">${(b.photo_files || []).length ? `${b.photo_files.length} photos from the final photos folder${b.photos_synced_at ? ' · synced ' + esc(fmtDateTime(b.photos_synced_at)) : ''}. Drag to set the order clients see.` : 'Sync pulls in everything in the order\'s final photos folder. You can then drag them into the order you want.'}</p>
-        <div class="dbx-grid" id="dbxGrid"></div>
-        <details class="dv-alt" ${b.photos_url ? 'open' : ''}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>
-        <h3 class="dv-h">🎬 Video <span class="muted">Vimeo links</span></h3>
-        <div class="grid2">
-          <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
-          <div><label>Unbranded video</label><input id="dvVidU" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).unbrand?.url || '')}" /></div>
-        </div>
-        <p class="muted bk-hint" style="margin:6px 0 0">The client sees each video titled <b>${esc(dvAddr(b.address))}</b>, with its name as a small tag.</p>
-        <div id="dvVidMore">${dvVid(b).more.map((v, i) => dvVidRow(v, i)).join('')}</div>
-        <button type="button" class="btn small" id="dvVidAdd" style="margin-top:8px">+ Add video</button>
-        <h3 class="dv-h">🧊 3D tour</h3>
-        <div class="grid2"><div class="full"><label>3D tour link</label><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" /></div></div>
-        <h3 class="dv-h">📐 Floor plan</h3>
-        <div class="dv-drop" id="dvDrop" tabindex="0" role="button" aria-label="Upload floor plans">
-          <input type="file" id="dvPlanFile" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
-          <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
-        <div id="dvPlans"></div>
-        <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>
-        <h3 class="dv-h">🌐 Property websites &amp; more</h3>
-        <div class="grid2">
-          <div class="full"><label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Property websites</b> <span class="muted">(shows branded + unbranded website cards to the client; "coming soon" until a link is added)</span></span></label></div>
-          <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" /></div>
-          <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" /></div>
-          <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
-          <div><label>Cover photo for the listing card (image link)</label><input id="dvCover" value="${esc(b.cover_url || '')}" /></div>
-        </div>
-        <div class="bk-actions"><button class="btn primary" id="bkSaveDelivery">Save delivery</button></div>
+      <div class="od-side ap-secs">
+        ${sec('projects', 'Projects & calendar', projs.length ? String(projs.length) : '', `
+          ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
+            : `<p class="muted" style="margin:0">No projects linked.</p>`}
+          <div class="bk-actions">
+            ${!projs.length && live ? `<button type="button" class="btn small" id="bkMkProj">Create projects</button>` : ''}
+            ${b.gcal_event_id ? `<span class="muted bk-hint" style="margin:0">✓ On your Google Calendar</span>` : live && b.shoot_start && S.cal.status?.connected ? `<button type="button" class="btn small" id="bkMkCal">Add to Google Calendar</button>` : ''}
+          </div>`)}
+        ${sec('zillow', 'Zillow stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
+        ${sec('activity', 'Order activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
       </div>
-      <div class="panel bk-wide" id="dsPanel"><h2>Send delivery <span class="muted" style="font-weight:400;font-size:13px">· email the client their delivery link${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</span></h2>
-        ${dsFormHTML(b, a)}
-      </div>
-      <div class="panel bk-wide"><h2>Notes</h2>
-        <textarea id="bkNotes" placeholder="Notes for the shoot and the editors">${esc(b.notes || '')}</textarea>
-        <label style="margin-top:10px">Access details</label><input id="bkAccess" value="${esc(b.access_notes || '')}" />
-        <div class="bk-actions"><button class="btn" id="bkSaveNotes">Save notes</button></div>
-        <p class="muted bk-hint">Created ${esc(fmtDateTime(b.created_at))}${b.created_by ? ' by ' + esc(memberName(b.created_by)) : ''}</p>
-      </div>
-    </div>`;
+    </div></div>`;
+
   const save = async (patch, msg) => {
     const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
     if (error) return fail(error) || false;
@@ -6238,7 +6358,6 @@ function renderBookingDetail(id){
   };
   document.querySelectorAll('#bookingsView [data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open));
   const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
-  on('bkAgent', () => openAgent(a.id));
   on('bkPaidBtn', () => {
     if (b.paid) { if (confirm(`Mark order #${b.number} as unpaid?\n\nThis unlocks a paid invoice so it can be corrected. It's logged. For extra work after payment, create a new order instead.`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
     openMarkPaid(b, (method, note) => save({ paid: true, paid_at: new Date().toISOString(), paid_method: method, paid_note: note || null }, `Marked paid · ${PAY_METHODS[method]}`));
@@ -6321,7 +6440,7 @@ function renderBookingDetail(id){
     const st = { start: null, override: false, day: b.shoot_start ? isoDay(new Date(b.shoot_start)) : '' };
     const dur = b.duration_min || 60;
     $('#bkResched').innerHTML = `<div class="bk-resched"><h4 class="bk-sub">Pick a new time</h4>${bkPickerHTML()}<div class="bk-actions"><button class="btn" id="bkRsCancel">Never mind</button><button class="btn primary" id="bkRsSave" disabled>Save new time</button></div></div>`;
-    $('#bkReschedBtn').classList.add('hidden');
+    $('#bkReschedBtn').classList.add('hidden'); $('#bkResched').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     bkPaintPicker(st, dur, b.gcal_event_id, () => { $('#bkRsSave').disabled = !st.start; });
     $('#bkRsCancel').onclick = () => renderBookingDetail(b.id);
     $('#bkRsSave').onclick = async () => {
@@ -6334,6 +6453,54 @@ function renderBookingDetail(id){
       }
       await save(patch, 'Rescheduled' + (b.gcal_event_id ? ' — Google Calendar updated' : ''));
       await reloadBookings();
+    };
+  });
+
+  // --- dropdown sections remember what's open; strip links jump to a section ---
+  const view = $('#bookingsView');
+  view.querySelectorAll('details.od-sec').forEach(d => d.addEventListener('toggle', () => {
+    const s = new Set(odOpen()); d.open ? s.add(d.dataset.k) : s.delete(d.dataset.k); try { localStorage.setItem(OD_OPEN_KEY, JSON.stringify([...s])); } catch (_) {}
+    if (d.dataset.k === 'activity' && d.open && !d.dataset.loaded) { d.dataset.loaded = '1'; renderAgentActivity(b.agent_id, 'all', 60, b.id); }
+  }));
+  const actSec = view.querySelector('details[data-k=activity]'); if (actSec?.open) { actSec.dataset.loaded = '1'; renderAgentActivity(b.agent_id, 'all', 60, b.id); }
+  const goSec = k => { const d = view.querySelector(`details[data-k=${k}]`); if (!d) return; d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  view.querySelectorAll('[data-goto]').forEach(x => x.onclick = () => goSec(x.dataset.goto));
+  on('odSend', () => goSec('send'));
+  view.querySelectorAll('[data-save-delivery]').forEach(x => x.onclick = () => $('#bkSaveDelivery').click());
+  on('odAccess', () => accessAgent(a.id, $('#odAccess'), `delivery/${b.id}`));
+  // --- Actions menu ---
+  const menu = $('#odMenu'), mBtn = $('#odMoreBtn');
+  const closeMenu = () => { menu.classList.add('hidden'); mBtn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); };
+  const outside = e => { if (!e.target.closest('.od-more')) closeMenu(); };
+  mBtn.onclick = () => { if (!menu.classList.contains('hidden')) return closeMenu(); menu.classList.remove('hidden'); mBtn.setAttribute('aria-expanded', 'true'); document.addEventListener('click', outside, true); };
+  menu.addEventListener('click', e => { if (e.target.closest('button')) closeMenu(); });
+  view.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => {
+    if (x.dataset.act === 'resched') $('#bkReschedBtn')?.click();
+    if (x.dataset.act === 'agent') openAgent(a.id);
+  }));
+  on('odDelivered', () => {
+    if (!confirm(`Mark order #${b.number} as delivered without sending an email?\n\nUse Send delivery instead if the client should get the link.`)) return;
+    save({ status: 'completed', delivered_at: new Date().toISOString() }, 'Marked delivered');
+  });
+  on('odDelete', async () => { if (await ordDelete(b)) location.hash = '#/bookings'; });
+  on('odSwitch', () => {
+    const list = [...S.agents].sort((x, y) => String(x.full_name).localeCompare(String(y.full_name)));
+    const box = document.createElement('div');
+    box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>Switch agent</h2>
+      <p class="muted bk-hint" style="margin:-6px 0 10px">Order #${b.number} · ${esc(b.address)}</p>
+      <input type="search" id="odAgQ" placeholder="Search agents…" autocomplete="off" />
+      <select id="odAgPick" size="8" style="margin-top:8px;height:auto">${list.map(x => `<option value="${x.id}" ${x.id === b.agent_id ? 'selected' : ''}>${esc(x.full_name)}${x.email ? ' · ' + esc(x.email) : ''}</option>`).join('')}</select>
+      <p class="muted bk-hint">The order, its invoice and delivery page move to this agent. Their email and phone become the order's contact info.</p>
+      <div class="actions"><button type="button" class="btn" id="odAgX">Cancel</button><button type="button" class="btn primary" id="odAgOk">Switch</button></div></div>`;
+    document.body.appendChild(box);
+    const close = () => box.remove(); box.querySelector('.overlay').onclick = close; box.querySelector('#odAgX').onclick = close;
+    const pick = box.querySelector('#odAgPick'), q = box.querySelector('#odAgQ'); q.focus();
+    q.oninput = () => { const t = q.value.toLowerCase(); [...pick.options].forEach(o => { o.hidden = !!t && !o.textContent.toLowerCase().includes(t); }); };
+    box.querySelector('#odAgOk').onclick = async () => {
+      const n = S.agents.find(x => x.id === pick.value); if (!n) return toast('Pick an agent');
+      if (n.id === b.agent_id) return close();
+      const ok = await save({ agent_id: n.id, client_name: n.full_name, client_email: n.email || null, client_phone: n.phone || null }, `Order moved to ${n.full_name}`);
+      if (ok) close();
     };
   });
 }
