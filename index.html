@@ -1148,6 +1148,34 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
   .ord-tools{margin-left:0;width:100%}.ord-tools .btn{flex:1}
   .modal.ord-ds{padding:16px}
 }
+/* Settings */
+.set-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.set-nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:72px}
+.set-nav a{display:block;padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--text)}
+.set-nav a small{display:block;color:var(--muted);font-size:12px}
+.set-nav a b{font-weight:600}
+.set-nav a:hover{background:var(--panel-2)}
+.set-nav a.on{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent);border:1px solid var(--border)}
+.set-pick{display:none}
+.set-body{display:flex;flex-direction:column;gap:14px;max-width:820px}
+.set-card h2{margin:0 0 6px;font-size:16px}
+.set-hint{margin:0 0 12px}
+.set-actions{margin-top:14px}
+.set-itg{display:flex;flex-direction:column}
+.set-itg-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border)}
+.set-itg-row:first-child{border-top:none}
+.set-itg-dot{width:10px;height:10px;border-radius:50%;background:var(--border);flex:none}
+.set-itg-dot[data-ok="1"]{background:var(--ok)}.set-itg-dot[data-ok="0"]{background:var(--warn)}
+.set-itg-main{flex:1;min-width:0}.set-itg-main b{display:block}.set-itg-main small{color:var(--muted);font-size:12.5px}
+.set-itg-st{font-size:13px;text-align:right;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.set-body a.btn{text-decoration:none}
+.set-ok{color:var(--ok);font-weight:600}.set-off{color:var(--warn);font-weight:600}
+.set-sys{display:flex;flex-direction:column}
+.set-sys-row{display:flex;flex-direction:column;gap:3px;padding:11px 0;border-top:1px solid var(--border)}
+.set-sys-row:first-child{border-top:none}
+.set-sys-row small{font-size:12.5px;color:var(--muted)}
+.set-sys-row code{font-family:inherit;font-size:13px;background:var(--panel-2);border-radius:6px;padding:5px 8px;white-space:normal}
+@media (max-width:900px){ .set-layout{grid-template-columns:1fr} .set-nav{display:none} .set-pick{display:block;font-weight:600} .set-itg-row{flex-wrap:wrap} .set-itg-st{text-align:left;max-width:none;flex-basis:100%;padding-left:22px} }
 .bk-group{margin-bottom:18px}
 .bk-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
 .bk-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:6px;color:var(--text);text-decoration:none;min-width:0}
@@ -1397,6 +1425,7 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
         <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
         <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
       </div>
+      <a href="#/settings" data-view="settings" title="Settings" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span class="lbl">Settings</span></a>
     </nav>
     <div class="qlinks hidden" id="quickLinks">
       <button type="button" class="ql-toggle" id="qlToggle" title="Quick links" aria-expanded="false">
@@ -1494,6 +1523,7 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
     <div id="notificationsView" class="hidden"></div>
     <!-- Bookings (owner only for now) -->
     <div id="bookingsView" class="hidden"></div>
+    <div id="settingsView" class="hidden"></div>
     <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
 
@@ -1616,9 +1646,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','companies','chat','finance'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
@@ -1991,7 +2021,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2000,6 +2030,7 @@ function route(){
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
   if (view === 'bookings') S.bkSub = parts[1] || '';
+  if (view === 'settings') S.setSub = parts[1] || '';
   if (view === 'orderpages') OP.sub = parts[1] || '';
   if (view === 'hiring') HR.sub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
@@ -2050,6 +2081,8 @@ function render(){
   $('#mailView').classList.toggle('hidden', S.view !== 'mail');
   if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
+  $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
+  if (S.view === 'settings') renderSettings();
   $('#bookingsView').classList.toggle('hidden', S.view !== 'bookings');
   if (S.view === 'bookings') renderBookings();
   $('#orderPagesView').classList.toggle('hidden', S.view !== 'orderpages');
@@ -2929,6 +2962,219 @@ function openAgent(id){
     }
     closeLayer(); await loadAll(); render(); toast(id ? 'Agent saved' : 'Agent added');
   };
+}
+
+/* ===================== SETTINGS =====================
+   One place for HQ + booking portal settings (super admins). Sections: #/settings/<key>.
+   Stored in booking_settings (id 1), booking_services, booking_upsells, delivery_templates. */
+const SET_SECTIONS = [
+  ['company', 'My Company', 'Business details'],
+  ['scheduling', 'Scheduling', 'Shoot hours & openings'],
+  ['orderform', 'Order Form', 'Packages, add-ons & fees'],
+  ['invoicing', 'Invoicing', 'Payment options & invoices'],
+  ['delivery', 'Delivery & Dropbox', 'Order folders & photos'],
+  ['integrations', 'Integrations', 'Connected services'],
+  ['email', 'Email Templates', 'Every email HQ sends'],
+  ['sms', 'SMS Templates', 'Every text HQ sends'],
+];
+// Old "Portal settings" buttons land here now
+function openBookingSettings(){ if (S.view === 'settings') return renderSettings(); location.hash = '#/settings/orderform'; }
+async function renderSettings(){
+  const root = $('#settingsView');
+  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading settings…</p>'; await loadBookingData(); if (S.view !== 'settings') return; }
+  const sec = SET_SECTIONS.find(x => x[0] === S.setSub) ? S.setSub : 'company';
+  const set = BK.settings || {};
+  root.innerHTML = `<div class="page-head"><div><h1>Settings</h1><p>How HQ and the booking portal work. Changes save right away.</p></div></div>
+    <div class="set-layout">
+      <nav class="set-nav">${SET_SECTIONS.map(([k, l, d]) => `<a href="#/settings/${k}" class="${k === sec ? 'on' : ''}"><b>${l}</b><small>${d}</small></a>`).join('')}</nav>
+      <select class="set-pick" id="setPick">${SET_SECTIONS.map(([k, l]) => `<option value="${k}" ${k === sec ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <div class="set-body" id="setBody"></div>
+    </div>`;
+  $('#setPick').onchange = e => { location.hash = `#/settings/${e.target.value}`; };
+  const body = $('#setBody');
+  const save = async (patch, msg) => { patch.updated_at = new Date().toISOString(); const { error } = await sb.from('booking_settings').update(patch).eq('id', 1); if (error) return fail(error), false; Object.assign(BK.settings, patch); toast(msg || 'Saved'); return true; };
+  const card = (title, inner, hint = '') => `<section class="panel set-card"><h2>${title}</h2>${hint ? `<p class="muted bk-hint set-hint">${hint}</p>` : ''}${inner}</section>`;
+  const svcRow = (s) => `<div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · ⚠ no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`;
+
+  if (sec === 'company') {
+    body.innerHTML = card('Business details', `<form id="setCo" class="grid2">
+        <div><label>Business name</label><input name="biz_name" value="${esc(set.biz_name || '')}" /></div>
+        <div><label>Legal name</label><input name="biz_legal_name" value="${esc(set.biz_legal_name || '')}" /></div>
+        <div><label>Owner</label><input name="biz_owner" value="${esc(set.biz_owner || '')}" /></div>
+        <div><label>Business phone</label><input name="biz_phone" value="${esc(set.biz_phone || '')}" /></div>
+        <div><label>Business email</label><input type="email" name="biz_email" value="${esc(set.biz_email || '')}" /></div>
+        <div><label>Time zone</label><input name="timezone" value="${esc(set.timezone || CAL_TZ || 'America/New_York')}" placeholder="America/New_York" /></div>
+        <div class="full"><label>Mailing address</label><input name="biz_address" value="${esc(set.biz_address || '')}" /></div>
+        <div><label>Website</label><input name="biz_website" value="${esc(set.biz_website || '')}" /></div>
+        <div><label>Booking link</label><input name="biz_booking_url" value="${esc(set.biz_booking_url || '')}" /></div>
+        <div class="full"><button class="btn primary">Save business details</button></div></form>`,
+      'Your official business details in one place. Invoices, emails and the client portal still use their built-in copy of these for now; they\'ll read from here as each one is updated.');
+    $('#setCo').onsubmit = e => { e.preventDefault(); const f = e.target, patch = {};
+      for (const k of ['biz_name','biz_legal_name','biz_owner','biz_phone','biz_email','biz_address','biz_website','biz_booking_url','timezone']) patch[k] = f[k].value.trim() || null;
+      save(patch, 'Business details saved'); };
+  }
+
+  if (sec === 'scheduling') {
+    body.innerHTML = card('Shoot hours', `<form id="setSched">
+        <div class="bk-wdays">${BK_DAYS.map((n, i) => `<label class="check"><input type="checkbox" name="wd" value="${i}" ${(set.work_days || []).includes(i) ? 'checked' : ''} /> ${n}</label>`).join('')}</div>
+        <div class="grid3" style="margin-top:12px">
+          <div><label>First start</label><input type="time" name="day_start" value="${esc(String(set.day_start || '09:00').slice(0, 5))}" /></div>
+          <div><label>Done by</label><input type="time" name="day_end" value="${esc(String(set.day_end || '17:00').slice(0, 5))}" /></div>
+          <div><label>Start times every (min)</label><input type="number" min="15" step="15" name="slot_step" value="${set.slot_step || 30}" /></div>
+          <div><label>Gap between shoots (min)</label><input type="number" min="0" step="5" name="buffer_min" value="${set.buffer_min ?? 30}" /></div>
+          <div><label>Minimum notice (hours)</label><input type="number" min="0" name="min_notice_hours" value="${set.min_notice_hours ?? 12}" /></div>
+          <div><label>Show openings for (days)</label><input type="number" min="7" max="90" name="horizon_days" value="${set.horizon_days || 21}" /></div>
+        </div>
+        <div class="set-actions"><button class="btn primary">Save shoot hours</button></div></form>`,
+      'Used to show openings on the booking portal and the New order form. Anything on your Google Calendar blocks that time (plus the gap). All-day events block the whole day.')
+      + card('Google Calendar', `<div class="dbx-bar"><div class="dbx-path" id="setCal"><span class="muted">Checking…</span></div><div class="dbx-acts"><a class="btn small" href="#/calendar">Open Calendar</a></div></div>`);
+    $('#setSched').onsubmit = e => { e.preventDefault(); const f = e.target;
+      const patch = { work_days: [...f.querySelectorAll('[name=wd]:checked')].map(x => +x.value), day_start: f.day_start.value, day_end: f.day_end.value,
+        slot_step: +f.slot_step.value || 30, buffer_min: +f.buffer_min.value || 0, min_notice_hours: +f.min_notice_hours.value || 0, horizon_days: +f.horizon_days.value || 21 };
+      if (bkMin(patch.day_end) <= bkMin(patch.day_start)) return toast('"Done by" has to be after the first start');
+      if (!patch.work_days.length) return toast('Pick at least one shoot day');
+      save(patch, 'Shoot hours saved'); };
+    (S.cal.status ? Promise.resolve() : loadCalStatus()).then(() => { const el = $('#setCal'); if (!el) return; const st = S.cal.status || {};
+      el.innerHTML = st.connected ? `<span class="muted">Connected</span><b>✓ ${esc(st.email || 'Google Calendar')}</b>` : `<span class="muted">Not connected</span><b>Connect it on the Calendar tab so openings respect your schedule.</b>`; });
+  }
+
+  if (sec === 'orderform') {
+    const svc = k => BK.services.filter(s => s.kind === k).sort((a, b) => a.sort_order - b.sort_order).map(svcRow).join('') || '<p class="muted">None yet.</p>';
+    body.innerHTML = card('Packages', `<div class="bk-svc-list">${svc('package')}</div>`)
+      + card('Add-ons', `<div class="bk-svc-list">${svc('addon')}</div><button type="button" class="btn" id="setSvcAdd" style="margin-top:10px">+ Add a package or add-on</button>`)
+      + card('Upsells', `<div class="bk-svc-list">${(BK.upsells || []).slice().sort((a, b) => a.sort_order - b.sort_order).map(u => `
+          <div class="bk-svc ${u.active ? '' : 'off'}"><span><b>${esc(u.title)}</b><small>Adds ${esc(bkSvc(u.service_id)?.name || '(missing service)')}${u.active ? ' · On' : ' · Off'}</small></span><button type="button" class="btn small" data-ups="${u.id}">Edit</button></div>`).join('') || '<p class="muted">None yet.</p>'}</div>
+          <button type="button" class="btn" id="setUpAdd" style="margin-top:10px">+ Add an upsell</button>`, 'Suggestions shown on the Services step of the order form.')
+      + card('Home size & large property fee', `<form id="setSize">
+          <div class="grid3">
+            <div><label>Large property fee ($)</label><input type="number" min="0" name="large_fee" value="${set.large_fee ?? 75}" /></div>
+            <div><label>Large property over (sq ft)</label><input type="number" min="0" step="100" name="large_sqft" value="${set.large_sqft || 3500}" /></div>
+            <div><label>Extra time on site (min)</label><input type="number" min="0" step="5" name="large_minutes" value="${set.large_minutes ?? 20}" /></div>
+            <div style="grid-column:1/-1"><label>Fee name shown to clients</label><input name="large_label" value="${esc(set.large_label || 'Large Property')}" /></div>
+          </div>
+          <label style="margin-top:12px">Square footage choices <span class="muted">(one per line: label | max sq ft; leave the max blank for the top size)</span></label>
+          <textarea name="sqft" style="min-height:110px;font-family:ui-monospace,monospace;font-size:13px">${esc((set.sqft_options || []).map(o => `${o.label} | ${o.max ?? ''}`).join('\n'))}</textarea>
+          <div class="set-actions"><button class="btn primary">Save</button></div></form>`)
+      + card('Custom order pages', `<p style="margin:0 0 10px">Special packages and pricing for specific agents or teams.</p><a class="btn" href="#/orderpages">Open Order Pages</a>`);
+    body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
+    $('#setSvcAdd').onclick = () => openServiceEdit(null);
+    body.querySelectorAll('[data-ups]').forEach(b => b.onclick = () => openUpsellEdit(BK.upsells.find(u => u.id === b.dataset.ups)));
+    $('#setUpAdd').onclick = () => openUpsellEdit(null);
+    $('#setSize').onsubmit = e => { e.preventDefault(); const f = e.target;
+      const tiers = f.sqft.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [label, max] = l.split('|').map(x => (x || '').trim()); return { label, max: max === '' || max == null ? null : Number(max.replace(/[^\d]/g, '')) }; });
+      if (!tiers.length || tiers.some(t => !t.label || (t.max !== null && !Number.isFinite(t.max)))) return toast('Check the square footage lines: "label | max"');
+      if (tiers.filter(t => t.max === null).length > 1) return toast('Only the top size can have no max');
+      save({ large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, large_minutes: +f.large_minutes.value || 0, large_label: f.large_label.value.trim() || 'Large Property', sqft_options: tiers }, 'Order form saved'); };
+  }
+
+  if (sec === 'invoicing') {
+    const po = set.payment_options || [];
+    body.innerHTML = card('Payment options clients can pick', `<form id="setPay">
+        <label class="check"><input type="checkbox" name="po" value="save_card" ${po.includes('save_card') ? 'checked' : ''} /> Submit order, pay when media is delivered</label>
+        <label class="check"><input type="checkbox" name="po" value="pay_now" ${po.includes('pay_now') ? 'checked' : ''} /> Pay in full now</label>
+        <div class="set-actions"><button class="btn primary">Save</button></div></form>`, 'Shown at checkout on the booking portal. Card payments run through Stripe.')
+      + card('Payment before delivery', `<p style="margin:0">New clients require payment before they can download (watermarked previews until paid). Turn it off for trusted clients on their agent file, or on any single order.</p>`)
+      + card('Invoice template', `<p style="margin:0 0 10px">Each order is an invoice. Clients see, pay and email them from the portal; paid invoices are locked.</p>
+          <div class="bk-links"><button type="button" class="btn small" data-inv="0">Preview unpaid invoice</button><button type="button" class="btn small" data-inv="1">Preview paid invoice</button></div>`);
+    $('#setPay').onsubmit = e => { e.preventDefault(); const v = [...e.target.querySelectorAll('[name=po]:checked')].map(x => x.value);
+      if (!v.length) return toast('Keep at least one payment option on'); save({ payment_options: v }, 'Payment options saved'); };
+    body.querySelectorAll('[data-inv]').forEach(b => b.onclick = async () => {
+      const win = window.open('about:blank', '_blank'); b.disabled = true;
+      try { const { data, error } = await sb.functions.invoke('invoices', { body: { action: 'sample', key: 'kv-layout-check', paid: b.dataset.inv === '1' } }); if (error) throw error;
+        const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0)); const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+        if (win) win.location.href = url; else location.assign(url);
+      } catch (e) { if (win) win.close(); fail(e); }
+      b.disabled = false; });
+  }
+
+  if (sec === 'delivery') {
+    body.innerHTML = card('Dropbox', `<div class="dbx-bar"><div class="dbx-path" id="dbxStatus"><span class="muted">Checking the connection…</span></div><div class="dbx-acts" id="dbxConnActs"></div></div>
+      <form id="dbxSetForm" class="grid2" style="margin-top:12px">
+        <div class="full"><label>Orders folder in Dropbox</label><input name="root" value="${esc(set.dropbox_root || '')}" placeholder="/Knox View Media/Orders" /></div>
+        <div class="full"><label>Folder name for each order <span class="muted">(use / for sub-levels)</span></label><input name="name" value="${esc(set.dropbox_folder_name || '')}" placeholder="{year}/{address} #{order_number}" />
+          <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins: {year} {quarter} {month} {month_name} {date_dots} {day_seq} {photographer} {address} {address_slug} {city} {zip} {client_name} {client_lower} {brokerage} {order_number}</p></div>
+        <div><label>Folders inside each order <span class="muted">(one per line)</span></label><textarea name="subs" style="min-height:120px">${esc((set.dropbox_subfolders || []).join('\n'))}</textarea></div>
+        <div><label>Final photos folder <span class="muted">(what clients see)</span></label><input name="final" value="${esc(set.dropbox_final_photos || 'Final Photos')}" />
+          <label class="check" style="margin-top:12px"><input type="checkbox" name="auto" ${set.dropbox_auto_create !== false ? 'checked' : ''} /> Create the folders when an order is marked completed</label>
+          <p class="muted bk-hint" id="dbxExample" style="margin:8px 0 0"></p></div>
+        <div class="full"><button class="btn primary">Save Dropbox settings</button></div>
+      </form>`) + card('Delivery emails', `<p style="margin:0 0 10px">The emails and texts behind each order's Send delivery button.</p><a class="btn" href="#/settings/email">Edit delivery emails</a>`);
+    const df = $('#dbxSetForm');
+    const example = () => { const f = df, segs = s => s.split('/').map(x => x.trim()).filter(Boolean);
+      const v = { year: '2026', quarter: '4', month: '11', month_name: 'November', day: '18', date: '2026-11-18', date_dots: '11.18.2026', day_seq: '02', photographer: 'Chris Pilone',
+        address: '2381 Misty Mountain Circle', address_slug: '2381-misty-mountain-cir', city: 'Sevierville', zip: '37862', client_name: 'Sarah Mitchell', client_lower: 'sarah mitchell', brokerage: 'Realty Executives', order_number: '1042' };
+      const name = f.name.value.split('/').map(x => x.trim()).filter(Boolean).map(x => x.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m)).join('/');
+      $('#dbxExample').innerHTML = `Example: <b style="white-space:pre-wrap">/${esc([...segs(f.root.value), name].filter(Boolean).join('/'))}/${esc(f.final.value.trim() || 'Final Photos')}</b>`; };
+    df.oninput = example; example();
+    df.onsubmit = async e => { e.preventDefault();
+      const patch = { dropbox_root: df.root.value.trim() || null, dropbox_folder_name: df.name.value.trim() || null, dropbox_subfolders: df.subs.value.split('\n').map(x => x.trim()).filter(Boolean),
+        dropbox_final_photos: df.final.value.trim() || 'Final Photos', dropbox_auto_create: df.auto.checked };
+      if (patch.dropbox_final_photos && !patch.dropbox_subfolders.includes(patch.dropbox_final_photos)) patch.dropbox_subfolders.push(patch.dropbox_final_photos);
+      if (await save(patch, 'Dropbox settings saved')) df.subs.value = patch.dropbox_subfolders.join('\n'); };
+    dbxCall('status').then(st => {
+      const box = $('#dbxStatus'), acts = $('#dbxConnActs'); if (!box) return;
+      box.innerHTML = st.connected ? `<span class="muted">Connected</span><b>✓ ${esc(st.account || 'Dropbox')}</b>` : st.configured ? '<span class="muted">Not connected</span><b>Connect your Dropbox to create order folders and sync photos.</b>' : '<span class="muted">Not set up yet</span><b>Add the DROPBOX_APP_KEY and DROPBOX_APP_SECRET secrets in Supabase, then connect here.</b>';
+      acts.innerHTML = st.connected ? '<button type="button" class="btn small" id="dbxOff">Disconnect</button>' : st.configured ? '<button type="button" class="btn small primary" id="dbxOn">Connect Dropbox</button>' : '';
+      const on = $('#dbxOn'); if (on) on.onclick = async () => { try { const r = await dbxCall('auth_url', { redirect: DBX_REDIRECT() }); location.href = r.url; } catch (e) { fail(e); } };
+      const off = $('#dbxOff'); if (off) off.onclick = async () => { if (!confirm('Disconnect Dropbox? Syncing and the photo downloads that come from Dropbox stop until you connect again.')) return; try { await dbxCall('disconnect'); toast('Dropbox disconnected'); renderSettings(); } catch (e) { fail(e); } };
+    }).catch(e => { const box = $('#dbxStatus'); if (box) box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; });
+  }
+
+  if (sec === 'integrations') {
+    const ITG = [
+      ['google', 'Google Calendar & Gmail', 'Shoots on your calendar, openings, Mail and task suggestions from your inbox', '#/calendar'],
+      ['qbo', 'QuickBooks Online', 'Finance: profit & loss, transaction review and exports', '#/finance'],
+      ['stripe', 'Stripe', 'Card payments and saved cards on the booking portal', ''],
+      ['dropbox', 'Dropbox', 'Order folders, photo sync and client downloads', '#/settings/delivery'],
+      ['resend', 'Resend', 'Sends portal emails: sign-in codes, invoices and deliveries (mail.knoxview.com)', ''],
+      ['twilio', 'Twilio Verify', 'Sign-in codes by text for clients', ''],
+      ['quo', 'Quo', 'Business texts: delivery links (and sign-in codes if Twilio is off)', ''],
+      ['vimeo', 'Vimeo', 'Video links on deliveries', ''],
+      ['zillow', 'Zillow Stat Tracker', 'Views, saves and days on Zillow on each order (filled in from Claude)', ''],
+      ['supabase', 'Supabase', 'HQ and portal database, logins and file storage', ''],
+      ['netlify', 'Netlify', 'Hosts hq.knoxview.com and the booking portal', ''],
+    ];
+    body.innerHTML = card('Integrations', `<div class="set-itg">${ITG.map(([k, n, d, href]) => `<div class="set-itg-row"><span class="set-itg-dot" data-st="${k}"></span>
+        <span class="set-itg-main"><b>${n}</b><small>${d}</small></span><span class="set-itg-st" id="itg-${k}"><span class="muted">—</span></span>${href ? `<a class="btn small" href="${href}">Open</a>` : ''}</div>`).join('')}</div>`, 'Everything HQ is connected to. Status is checked live where HQ can see it.');
+    const mark = (k, ok, label) => { const el = $(`#itg-${k}`); if (!el) return; el.innerHTML = `<span class="${ok === true ? 'set-ok' : ok === false ? 'set-off' : 'muted'}">${esc(label)}</span>`;
+      const d = body.querySelector(`[data-st=${k}]`); if (d) d.dataset.ok = ok === true ? '1' : ok === false ? '0' : ''; };
+    for (const k of ['vimeo', 'zillow', 'supabase', 'netlify']) mark(k, true, k === 'vimeo' ? 'Links' : 'In use');
+    mark('stripe', null, 'Set up in Supabase');
+    (S.cal.status ? Promise.resolve() : loadCalStatus()).then(() => mark('google', !!S.cal.status?.connected, S.cal.status?.connected ? 'Connected' + (S.cal.status.email ? ' · ' + S.cal.status.email : '') : 'Not connected'));
+    loadFinStatus().then(() => mark('qbo', !!FIN.status?.connected, FIN.status?.connected ? 'Connected' : 'Not connected')).catch(() => mark('qbo', false, 'Unknown'));
+    dbxCall('status').then(st => mark('dropbox', !!st.connected, st.connected ? 'Connected' + (st.account ? ' · ' + st.account : '') : 'Not connected')).catch(() => mark('dropbox', false, 'Unknown'));
+    sb.functions.invoke('auth-code', { body: { action: 'status' } }).then(({ data }) => {
+      mark('resend', !!data?.resend, data?.resend ? 'Connected' : 'Not set up');
+      mark('twilio', data?.twilio?.ok ?? !!data?.twilio?.configured, data?.twilio?.ok ? 'Connected' : data?.twilio?.configured ? 'Check setup' : 'Not set up');
+      mark('quo', !!data?.quo, data?.quo ? 'Connected' : 'Not set up');
+    }).catch(() => ['resend', 'twilio', 'quo'].forEach(k => mark(k, null, 'Unknown')));
+  }
+
+  if (sec === 'email' || sec === 'sms') {
+    const isSms = sec === 'sms';
+    const SYS = isSms ? [
+      ['Sign-in code', 'Client portal sign-in by phone', '{code} is your Knox View sign-in code. It expires in 1 hour. Don\'t share it with anyone.', 'Sent by Twilio Verify (their standard wording) or Quo if Twilio is off.'],
+      ['Appointment reminders', 'Clients can opt in on their account', 'Not sending yet', 'The opt-in switch is saved per client; automatic reminder texts aren\'t built yet.'],
+    ] : [
+      ['Sign-in code', 'Client portal sign-in by email', '{code} is your Knox View sign-in code', 'Built in.'],
+      ['Invoice', 'Client emails an invoice from the portal (PDF attached)', 'Invoice #{order_number} · {address}  /  Paid invoice #{order_number} · {address}', 'Built in.'],
+      ['Shoot rescheduled (to you)', 'A client moves their shoot in the portal', 'Rescheduled: #{order_number} {address}', 'Sent to you.'],
+      ['Shoot cancelled (to you)', 'A client cancels in the portal', 'Cancelled: #{order_number} {address}', 'Sent to you.'],
+      ['Application received', 'Hiring: someone applies on knoxview.com/apply', 'We got your application! One last step  /  We received your Knox View application', 'Sent from your Gmail.'],
+      ['Application complete', 'Hiring: applicant finishes the video interview', 'Your application is complete!', 'Sent from your Gmail.'],
+      ['Interview scheduled', 'Hiring: you schedule or move an interview', 'Your interview with Knox View Media  /  Your interview has a new time', 'Sent from your Gmail.'],
+      ['Interview canceled', 'Hiring: you cancel an interview', 'Your interview has been canceled', 'Sent from your Gmail.'],
+    ];
+    body.innerHTML = card(isSms ? 'Delivery texts' : 'Delivery emails', `<div class="bk-svc-list" id="setTpl"><p class="muted">Loading…</p></div>${isSms ? '' : '<button type="button" class="btn" id="setTplAdd" style="margin-top:10px">+ Add a delivery email</button>'}`,
+        isSms ? 'The text sent with "Also text the delivery link" when you send a delivery. Edit a template to change its text.' : 'Picked from the dropdown when you send a delivery. Fill-ins: {first_name} {client_name} {address} {city} {order_number} {link}')
+      + card(isSms ? 'Other texts' : 'Other emails', `<div class="set-sys">${SYS.map(([n, when, subj, note]) => `<div class="set-sys-row"><b>${esc(n)}</b><small>${esc(when)}</small><code>${esc(subj)}</code><small class="muted">${esc(note)}</small></div>`).join('')}</div>`,
+        isSms ? '' : 'Built-in emails (subject lines shown). Ask Claude to change the wording of any of these.');
+    dtLoad(true).then(list => { const el = $('#setTpl'); if (!el) return;
+      el.innerHTML = list.map(t => `<div class="bk-svc ${t.active ? '' : 'off'}"><span><b>${esc(t.name)}</b><small>${esc(isSms ? (t.sms_body || 'No text') : t.subject)}${t.active ? '' : ' · hidden'}</small></span><button type="button" class="btn small" data-tpl="${esc(t.key)}">Edit</button></div>`).join('') || '<p class="muted">No templates yet.</p>';
+      el.querySelectorAll('[data-tpl]').forEach(x => x.onclick = () => openTemplateEdit(list.find(t => t.key === x.dataset.tpl)));
+    }).catch(fail);
+    const add = $('#setTplAdd'); if (add) add.onclick = () => openTemplateEdit(null);
+  }
 }
 
 /* ===================== TASKS ===================== */
@@ -5062,7 +5308,7 @@ function renderBookingList(){
       <a class="btn primary" href="#/bookings/new">+ New order</a>
       <div class="seg ord-tabs" id="bkTabs">${ORD_TABS.map(([k, l]) => `<button data-t="${k}" class="${BK.tab === k ? 'active' : ''}">${l} <span class="muted">${count(k)}</span></button>`).join('')}</div>
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
-      <span class="ord-tools"><button class="btn" id="bkPortal">📱 Client portal</button><button class="btn" id="bkSettings">⚙ Portal settings</button></span>
+      <span class="ord-tools"><button class="btn" id="bkPortal">📱 Client portal</button><button class="btn" id="bkSettings">⚙ Settings</button></span>
     </div>
     ${rows.length ? `<div class="dir-wrap ord-desk"><table class="dir ord"><thead><tr>
         <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
@@ -5945,109 +6191,6 @@ function openTemplateEdit(t){
 }
 
 /* ----- Services & hours (owner) ----- */
-function openBookingSettings(){
-  const set = BK.settings || {};
-  const list = () => ['package', 'addon'].map(k => `<h3 class="bk-sub">${k === 'package' ? 'Packages' : 'Add-ons'}</h3>
-    <div class="bk-svc-list">${BK.services.filter(s => s.kind === k).sort((a, b) => a.sort_order - b.sort_order).map(s => `
-      <div class="bk-svc ${s.active ? '' : 'off'}"><span><b>${esc(s.name)}</b><small>${money(s.price)} · ${s.duration_min} min${s.active ? '' : ' · hidden'}${!Number(s.price) && s.active ? ' · ⚠ no price' : ''}</small></span><button type="button" class="btn small" data-edit="${s.id}">Edit</button></div>`).join('')}</div>`).join('');
-  document.body.style.overflow = 'hidden';
-  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <div class="modal wide"><h2>Booking portal settings</h2>
-    <p class="muted bk-hint" style="margin-top:-6px">Everything here changes what clients see on the booking portal right away. Prices are always re-checked on the server.</p>
-    <div id="bkSvcBox">${list()}</div>
-    <button type="button" class="btn" id="bkSvcAdd" style="margin-top:10px">+ Add a service</button>
-    <h3 class="bk-sub" style="margin-top:22px">Upsells <span class="muted" style="font-weight:400">(suggestions shown on the Services step)</span></h3>
-    <div class="bk-svc-list">${(BK.upsells || []).slice().sort((a, b) => a.sort_order - b.sort_order).map(u => `
-      <div class="bk-svc ${u.active ? '' : 'off'}"><span><b>${esc(u.title)}</b><small>Adds ${esc(bkSvc(u.service_id)?.name || '(missing service)')}${u.active ? ' · <b style="color:var(--ok,#2f7a55)">On</b>' : ' · Off'}</small></span><button type="button" class="btn small" data-ups="${u.id}">Edit</button></div>`).join('') || '<p class="muted">No upsells yet.</p>'}</div>
-    <button type="button" class="btn" id="bkUpAdd" style="margin-top:10px">+ Add an upsell</button>
-    <h3 class="bk-sub" style="margin-top:22px">Delivery emails <span class="muted" style="font-weight:400">(templates in each order's Send delivery dropdown)</span></h3>
-    <div class="bk-svc-list" id="bkTplList"><p class="muted">Loading…</p></div>
-    <button type="button" class="btn" id="bkTplAdd" style="margin-top:10px">+ Add a delivery email</button>
-    <h3 class="bk-sub" style="margin-top:22px">Dropbox</h3>
-    <div class="dbx-bar"><div class="dbx-path" id="dbxStatus"><span class="muted">Checking the connection…</span></div><div class="dbx-acts" id="dbxConnActs"></div></div>
-    <form id="dbxSetForm" class="grid2" style="margin-top:10px">
-      <div class="full"><label>Orders folder in Dropbox</label><input name="root" value="${esc(set.dropbox_root || '')}" placeholder="/Knox View Media/Orders" /></div>
-      <div class="full"><label>Folder name for each order <span class="muted">(use / for sub-levels)</span></label><input name="name" value="${esc(set.dropbox_folder_name || '')}" placeholder="{year}/{address} #{order_number}" />
-        <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins (from the shoot date and order): {year} {quarter} {photographer} {date_dots} (11.18.2026) {day_seq} (01, 02… that day) {address_slug} (2381-misty-mountain-cir) {client_lower} {client_name} {address} {city} {zip} {brokerage} {order_number} {date} {month} {month_name} {day}</p></div>
-      <div><label>Folders inside each order <span class="muted">(one per line)</span></label><textarea name="subs" style="min-height:120px">${esc((set.dropbox_subfolders || []).join('\n'))}</textarea></div>
-      <div><label>Final photos folder <span class="muted">(what clients see)</span></label><input name="final" value="${esc(set.dropbox_final_photos || 'Final Photos')}" />
-        <label class="check" style="margin-top:12px"><input type="checkbox" name="auto" ${set.dropbox_auto_create !== false ? 'checked' : ''} /> Create the folders when an order is marked completed</label>
-        <p class="muted bk-hint" id="dbxExample" style="margin:8px 0 0"></p></div>
-      <div class="full"><button class="btn">Save Dropbox settings</button></div>
-    </form>
-    <form id="bkSetForm">
-      <h3 class="bk-sub" style="margin-top:22px">Shoot hours (used to show openings)</h3>
-      <div class="bk-wdays">${BK_DAYS.map((n, i) => `<label class="check"><input type="checkbox" name="wd" value="${i}" ${(set.work_days || []).includes(i) ? 'checked' : ''} /> ${n}</label>`).join('')}</div>
-      <div class="grid3" style="margin-top:10px">
-        <div><label>First start</label><input type="time" name="day_start" value="${esc(String(set.day_start || '09:00').slice(0, 5))}" /></div>
-        <div><label>Done by</label><input type="time" name="day_end" value="${esc(String(set.day_end || '17:00').slice(0, 5))}" /></div>
-        <div><label>Start times every (min)</label><input type="number" min="15" step="15" name="slot_step" value="${set.slot_step || 30}" /></div>
-        <div><label>Gap between shoots (min)</label><input type="number" min="0" step="5" name="buffer_min" value="${set.buffer_min ?? 30}" /></div>
-        <div><label>Minimum notice (hours)</label><input type="number" min="0" name="min_notice_hours" value="${set.min_notice_hours ?? 12}" /></div>
-        <div><label>Show openings for (days)</label><input type="number" min="7" max="90" name="horizon_days" value="${set.horizon_days || 21}" /></div>
-        <div><label>Large property fee ($)</label><input type="number" min="0" name="large_fee" value="${set.large_fee ?? 75}" /></div>
-        <div><label>Large property over (sq ft)</label><input type="number" min="0" step="100" name="large_sqft" value="${set.large_sqft || 3500}" /></div>
-        <div><label>Large property extra time (min)</label><input type="number" min="0" step="5" name="large_minutes" value="${set.large_minutes ?? 20}" /></div>
-        <div style="grid-column:span 2"><label>Large property fee name (shown to clients)</label><input name="large_label" value="${esc(set.large_label || 'Large Property')}" /></div>
-      </div>
-      <h3 class="bk-sub" style="margin-top:18px">Square footage choices</h3>
-      <p class="muted bk-hint" style="margin-top:0">One per line: <b>label | max sq ft</b>. Leave the max blank for the top size. Sizes at or over the large property size add the fee.</p>
-      <textarea name="sqft" style="min-height:100px;font-family:ui-monospace,monospace;font-size:13px">${esc((set.sqft_options || []).map(o => `${o.label} | ${o.max ?? ''}`).join('\n'))}</textarea>
-      <h3 class="bk-sub" style="margin-top:18px">Payment options clients can pick</h3>
-      <label class="check"><input type="checkbox" name="po" value="save_card" ${(set.payment_options || []).includes('save_card') ? 'checked' : ''} /> Save card, charge when media is delivered</label>
-      <label class="check"><input type="checkbox" name="po" value="pay_now" ${(set.payment_options || []).includes('pay_now') ? 'checked' : ''} /> Pay in full now</label>
-      <p class="muted bk-hint">Anything on your Google Calendar blocks that time (plus the gap). All-day events block the whole day, even ones marked Free.</p>
-      <div class="actions"><button type="button" class="btn" id="bkSetClose">Close</button><button class="btn primary">Save settings</button></div>
-    </form></div>`;
-  $('#ov').onclick = $('#bkSetClose').onclick = () => { closeLayer(); if (S.view === 'bookings') renderBookings(); if (S.view === 'orderpages') renderOrderPages(); };
-  const wire = () => document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
-  wire();
-  $('#bkSvcAdd').onclick = () => openServiceEdit(null);
-  document.querySelectorAll('[data-ups]').forEach(b => b.onclick = () => openUpsellEdit(BK.upsells.find(u => u.id === b.dataset.ups)));
-  $('#bkUpAdd').onclick = () => openUpsellEdit(null);
-  $('#bkTplAdd').onclick = () => openTemplateEdit(null);
-  const df = $('#dbxSetForm');
-  const example = () => { const f = df, segs = s => s.split('/').map(x => x.trim()).filter(Boolean);
-    const v = { year: '2026', quarter: '4', month: '11', month_name: 'November', day: '18', date: '2026-11-18', date_dots: '11.18.2026', day_seq: '02', photographer: 'Chris Pilone',
-      address: '2381 Misty Mountain Circle', address_slug: '2381-misty-mountain-cir', city: 'Sevierville', zip: '37862', client_name: 'Sarah Mitchell', client_lower: 'sarah mitchell', brokerage: 'Realty Executives', order_number: '1042' };
-    const name = f.name.value.split('/').map(x => x.trim()).filter(Boolean).map(x => x.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m)).join('/');
-    $('#dbxExample').innerHTML = `Example: <b style="white-space:pre-wrap">/${esc([...segs(f.root.value), name].filter(Boolean).join('/'))}/${esc(f.final.value.trim() || 'Final Photos')}</b>`; };
-  df.oninput = example; example();
-  df.onsubmit = async e => { e.preventDefault();
-    const patch = { dropbox_root: df.root.value.trim() || null, dropbox_folder_name: df.name.value.trim() || null, dropbox_subfolders: df.subs.value.split('\n').map(x => x.trim()).filter(Boolean),
-      dropbox_final_photos: df.final.value.trim() || 'Final Photos', dropbox_auto_create: df.auto.checked, updated_at: new Date().toISOString() };
-    if (patch.dropbox_final_photos && !patch.dropbox_subfolders.includes(patch.dropbox_final_photos)) patch.dropbox_subfolders.push(patch.dropbox_final_photos);
-    const { error } = await sb.from('booking_settings').update(patch).eq('id', 1); if (error) return fail(error);
-    Object.assign(BK.settings, patch); df.subs.value = patch.dropbox_subfolders.join('\n'); toast('Dropbox settings saved'); };
-  dbxCall('status').then(st => {
-    const box = $('#dbxStatus'), acts = $('#dbxConnActs'); if (!box) return;
-    box.innerHTML = st.connected ? `<span class="muted">Connected</span><b>✓ ${esc(st.account || 'Dropbox')}</b>` : st.configured ? '<span class="muted">Not connected</span><b>Connect your Dropbox to create order folders and sync photos.</b>'
-      : '<span class="muted">Not set up yet</span><b>Add the DROPBOX_APP_KEY and DROPBOX_APP_SECRET secrets in Supabase, then connect here.</b>';
-    acts.innerHTML = st.connected ? '<button type="button" class="btn small" id="dbxOff">Disconnect</button>' : st.configured ? '<button type="button" class="btn small primary" id="dbxOn">Connect Dropbox</button>' : '';
-    const on = $('#dbxOn'); if (on) on.onclick = async () => { try { const r = await dbxCall('auth_url', { redirect: DBX_REDIRECT() }); location.href = r.url; } catch (e) { fail(e); } };
-    const off = $('#dbxOff'); if (off) off.onclick = async () => { if (!confirm('Disconnect Dropbox? Syncing and the photo downloads that come from Dropbox stop until you connect again.')) return; try { await dbxCall('disconnect'); toast('Dropbox disconnected'); openBookingSettings(); } catch (e) { fail(e); } };
-  }).catch(e => { const box = $('#dbxStatus'); if (box) box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; });
-  dtLoad().then(list => { const el = $('#bkTplList'); if (!el) return;
-    el.innerHTML = list.map(t => `<div class="bk-svc ${t.active ? '' : 'off'}"><span><b>${esc(t.name)}</b><small>${esc(t.subject)}${t.active ? '' : ' · hidden'}</small></span><button type="button" class="btn small" data-tpl="${esc(t.key)}">Edit</button></div>`).join('') || '<p class="muted">No delivery emails yet.</p>';
-    el.querySelectorAll('[data-tpl]').forEach(x => x.onclick = () => openTemplateEdit(list.find(t => t.key === x.dataset.tpl)));
-  }).catch(fail);
-  $('#bkSetForm').onsubmit = async e => {
-    e.preventDefault();
-    const f = e.target, patch = { work_days: [...f.querySelectorAll('[name=wd]:checked')].map(x => +x.value), day_start: f.day_start.value, day_end: f.day_end.value,
-      slot_step: +f.slot_step.value || 30, buffer_min: +f.buffer_min.value || 0, min_notice_hours: +f.min_notice_hours.value || 0, horizon_days: +f.horizon_days.value || 21,
-      large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, large_minutes: +f.large_minutes.value || 0, large_label: f.large_label.value.trim() || 'Large Property',
-      payment_options: [...f.querySelectorAll('[name=po]:checked')].map(x => x.value), updated_at: new Date().toISOString() };
-    if (bkMin(patch.day_end) <= bkMin(patch.day_start)) return toast('"Done by" has to be after the first start');
-    if (!patch.payment_options.length) return toast('Keep at least one payment option on');
-    const tiers = f.sqft.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [label, max] = l.split('|').map(x => (x || '').trim()); return { label, max: max === '' || max == null ? null : Number(max.replace(/[^\d]/g, '')) }; });
-    if (!tiers.length || tiers.some(t => !t.label || (t.max !== null && !Number.isFinite(t.max)))) return toast('Check the square footage lines: "label | max"');
-    if (tiers.filter(t => t.max === null).length > 1) return toast('Only the top size can have no max');
-    patch.sqft_options = tiers;
-    const { error } = await sb.from('booking_settings').update(patch).eq('id', 1);
-    if (error) return fail(error);
-    Object.assign(BK.settings, patch); toast('Portal settings saved');
-  };
-}
 function openServiceEdit(s, o = {}){
   const isNew = !s; s = s || { kind:'addon', name:'', description:'', includes:[], price:0, duration_min:30, photo_type:null, video_type:null, video_tier:null, twilight:false, active:true, public: o.public ?? true, sort_order: 200 };
   const pTypes = S.types.filter(t => t.media === 'photo' && t.active).map(t => [t.name, t.name]), vTypes = S.types.filter(t => t.media === 'video' && t.active).map(t => [t.name, t.name]);
