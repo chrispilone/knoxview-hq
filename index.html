@@ -6474,7 +6474,7 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Library.</p>
           <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
 
-        ${live ? sec('send', 'Send Delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
+        ${live ? sec('send', 'Delivery Email', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
       <div class="od-side ap-secs">
         ${sec('projects', 'Media Projects', projs.length ? String(projs.length) : '', `
