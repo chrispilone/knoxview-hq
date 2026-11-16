@@ -6427,7 +6427,7 @@ function renderBookingDetail(id){
           <div class="od-kv">
             <div><label>Scheduled for</label><span>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })) + '<br>' + esc(fmtT(b.shoot_start)) + '–' + esc(fmtT(b.shoot_end)) : 'Not scheduled yet'}</span></div>
             <div><label>Status</label><span>${ordPill(b)}</span></div>
-            <div><label>Google Calendar</label><span>${b.gcal_event_id ? 'On your calendar' : 'Not on your calendar'}</span></div>
+            <div><label>Google Calendar</label><span>${b.gcal_event_id ? `${hqi('check')} On your calendar` : live && b.shoot_start && S.cal.status?.connected ? `<button type="button" class="btn small" id="bkMkCal">${hqi('calendar')} Add to Google Calendar</button>` : 'Not on your calendar'}</span></div>
           </div>
           <div class="od-addr" style="margin-top:12px">
             <div><label>Expected duration (minutes)</label><div class="om-row"><input id="odDur" type="number" inputmode="numeric" min="15" step="15" value="${esc(b.duration_min || 60)}" /><button type="button" class="btn small" id="odDurSave">Save</button></div></div>
@@ -6477,12 +6477,11 @@ function renderBookingDetail(id){
         ${live ? sec('send', 'Send Delivery', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
       <div class="od-side ap-secs">
-        ${sec('projects', 'Projects & Calendar', projs.length ? String(projs.length) : '', `
+        ${sec('projects', 'Media Projects', projs.length ? String(projs.length) : '', `
           ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
-            : `<p class="muted" style="margin:0">No projects linked.</p>`}
+            : `<p class="muted" style="margin:0">No photo or video projects linked yet.</p>`}
           <div class="bk-actions">
-            ${!projs.length && live ? `<button type="button" class="btn small" id="bkMkProj">Create projects</button>` : ''}
-            ${b.gcal_event_id ? `<span class="muted bk-hint" style="margin:0">✓ On your Google Calendar</span>` : live && b.shoot_start && S.cal.status?.connected ? `<button type="button" class="btn small" id="bkMkCal">Add to Google Calendar</button>` : ''}
+            ${!projs.length && live ? `<button type="button" class="btn small" id="bkMkProj">Create Projects</button>` : ''}
           </div>`)}
         ${sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
         ${sec('activity', 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
