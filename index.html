@@ -1468,6 +1468,8 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
 .od-title{grid-area:title;min-width:0}
 .od-title h1{margin:0;font-family:var(--font-display);font-size:26px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
 .od-sub{margin:3px 0 8px;color:var(--muted);font-size:13.5px}
+.od-kicker{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.od-clinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:12px}
 .od-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .od-cta{grid-area:cta;display:flex;gap:8px;align-items:center}
 .od-cta .btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.od-cta .btn svg{width:16px;height:16px}
@@ -6316,6 +6318,7 @@ function renderBookingDetail(id){
   const phone = b.client_phone || a?.phone, email = b.client_email || a?.email, tel = String(phone || '').replace(/[^\d+]/g, '');
   const projs = (b.project_ids || []).map(pid => S.projects.find(p => p.id === pid)).filter(Boolean);
   const loc = [b.address, b.city].filter(Boolean).join(', ');
+  const fullAddr = [b.address + (b.unit ? ' #' + String(b.unit).replace(/^#/, '') : ''), [b.city, [b.state, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
   const live = b.status !== 'cancelled';
   const due = b.paid ? 0 : Math.max(0, Number(b.total) - Number(b.credit_applied || 0));
   const dbxUrl = b.dropbox_path ? 'https://www.dropbox.com/home' + b.dropbox_path.split('/').map(encodeURIComponent).join('/') : '';
@@ -6333,8 +6336,9 @@ function renderBookingDetail(id){
     <section class="panel od-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title">
-        <h1>${esc(ordTitle(b))}</h1>
-        <p class="od-sub">${esc([b.media_title ? b.address : '', [b.city, b.zip].filter(Boolean).join(' '), ordNo(b), bkPkgName(b)].filter(Boolean).join(' · '))}</p>
+        <span class="od-kicker">Order Details</span>
+        <h1>${esc(fullAddr)}</h1>
+        <p class="od-sub">${esc([ordNo(b), a?.full_name || bkClient(b)].filter(Boolean).join(' · '))}</p>
         <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
       <div class="od-cta">
@@ -6420,6 +6424,21 @@ function renderBookingDetail(id){
           </div>
           ${(b.client_files || []).length ? `<p style="margin:10px 0 0"><b>Attachments:</b> ${(b.client_files || []).map(f => `<a href="#" data-cfile="${esc(f.path)}">${hqi('clip')} ${esc(f.name || 'File')}</a>`).join(' · ')}</p>` : `<p class="muted bk-hint" style="margin:10px 0 0">No attachments.</p>`}
           <div class="bk-actions"><button type="button" class="btn primary" id="odSaveDetails">Save Order Details</button></div>`)}
+
+        ${sec('client', 'Client', esc([a?.full_name || bkClient(b), co?.name || a?.brokerage].filter(Boolean).join(' · ')), `
+          <div class="od-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${a ? `<a href="#/agents/${a.id}"><b>${esc(a.full_name)}</b></a>` : `<b>${esc(bkClient(b))}</b>`}<small>${esc(co?.name || a?.brokerage || '')}</small></span></div>
+          <div class="od-kv" style="margin-top:12px">
+            <div><label>Email</label><span>${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : '—'}</span></div>
+            <div><label>Phone</label><span>${phone ? `<a href="tel:${esc(tel)}">${esc(phone)}</a>` : '—'}</span></div>
+            <div><label>Brokerage</label><span>${esc(a?.brokerage || co?.name || '—')}</span></div>
+            ${a?.team_name ? `<div><label>Team</label><span>${esc(a.team_name)}</span></div>` : ''}
+          </div>
+          <div class="bk-actions od-clinks">
+            ${a?.email ? `<button type="button" class="btn small" data-act="access">${hqi('key')} Access Agent</button>` : ''}
+            ${phone ? `<a class="btn small" href="tel:${esc(tel)}">${hqi('phone')} Call</a><a class="btn small" href="sms:${esc(tel)}">${hqi('chat')} Text</a>` : ''}
+            ${email ? `<a class="btn small" href="mailto:${esc(email)}">${hqi('mail')} Email</a>` : ''}
+            ${a ? `<a class="btn small" href="#/agents/${a.id}">${hqi('user')} Agent Profile</a>` : ''}
+          </div>`)}
 
         ${sec('schedule', 'Scheduling', b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + fmtT(b.shoot_start)) : 'Not scheduled', `
           <div class="od-kv">
