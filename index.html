@@ -1018,6 +1018,7 @@ body.gs-open{overflow:hidden}
 .gs-none{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px}
 .gs-hint{padding:18px 12px;color:var(--muted);font-size:13.5px;line-height:1.5}
 .gs-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.od-photog{display:flex!important;align-items:center;gap:6px;margin-top:6px;color:var(--text)!important}.od-photog .hqi{color:var(--muted)}
 .od-cbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:auto;padding-top:6px}
 .od-cbtns .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}.od-cbtns svg{width:14px;height:14px}
 .od-card .od-ics{flex-wrap:wrap}
@@ -6364,6 +6365,7 @@ function renderBookingDetail(id){
       <div class="panel od-card"><label>Scheduling</label>
         <b>${b.shoot_start ? esc(new Date(b.shoot_start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(b.shoot_start).getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })) : 'Not scheduled'}</b>
         <span>${b.shoot_start ? `${esc(fmtT(b.shoot_start))}–${esc(fmtT(b.shoot_end))} · ${b.duration_min || '—'} min` : '&nbsp;'}</span>
+        <span class="od-photog">${hqi('camera')} ${b.photographer_id ? esc(memberName(b.photographer_id)) : '<button type="button" class="ap-link" data-goto="schedule">Assign photographer</button>'}</span>
         ${live ? '<button type="button" class="ap-link" id="bkReschedBtn">Reschedule</button>' : '<span class="muted">Cancelled</span>'}</div>
       <div class="panel od-card"><label>Invoice</label>
         <b>${b.paid ? `<span style="color:var(--ok)">Paid</span>` : `${money(due)} <small class="muted">due</small>`}</b>
