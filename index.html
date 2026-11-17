@@ -535,6 +535,53 @@ table.list tr.row:hover td{background:var(--panel-2)}
 .activity li{font-size:13px;margin-bottom:6px;color:var(--muted)}
 .activity{padding-left:18px;margin:0}
 .sop{white-space:pre-wrap;background:var(--panel-2);border-radius:8px;padding:12px;font-size:13px}
+/* project drawer: steps, at a glance, dropdowns */
+.drawer.pj .drawer-body{background:var(--bg);padding:14px 16px 30px}
+.pj-title{flex:1;min-width:0}.pj-title h2{margin:0;font-size:18px;word-break:break-word}.pj-title small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.pj-late{color:var(--danger);font-weight:600}
+.pj-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 8px;margin-bottom:12px}
+.pj-step{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;padding:2px 0;cursor:pointer;color:var(--muted);font:inherit;font-size:11.5px;font-weight:600;position:relative}
+.pj-step:disabled{cursor:default}
+.pj-step i{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--panel);z-index:1}
+.pj-step:not(:first-child)::before{content:"";position:absolute;top:8px;right:50%;width:100%;height:2px;background:var(--border)}
+.pj-step.past i,.pj-step.now i{background:var(--sec);border-color:var(--sec)}
+.pj-step.past::before,.pj-step.now::before{background:var(--sec)!important}
+.pj-step.now{color:var(--text)}.pj-step.now i{box-shadow:0 0 0 4px var(--sec-soft)}
+.pj-steps.rev .pj-step.now{color:var(--danger)}.pj-steps.rev .pj-step.now i{background:var(--danger);border-color:var(--danger);box-shadow:0 0 0 4px rgba(192,57,43,.15)}
+.pj-step span{text-align:center;line-height:1.2}
+.pj-glance{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
+.pj-glance label{margin-top:0}
+.pj-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pj-links .btn{display:inline-flex;align-items:center;gap:6px}.pj-links svg{width:15px;height:15px}
+.pj-secs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.pj-sec .ap-body>label:first-child{margin-top:0}
+.pj-meta{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.pj-count{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--panel-2);color:var(--muted)}
+.pj-count.done{background:#e6f4ec;color:var(--ok)}.pj-count.warn{background:#fdecea;color:var(--danger)}
+.pj-add{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.pj-add>input,.pj-add>select{flex:1;min-width:140px}.pj-add .full{flex-basis:100%}
+.pj-chk{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--border);border-radius:9px;margin:0 0 6px;font-weight:500;font-size:13.5px;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
+.pj-chk input{width:18px;height:18px;margin-top:1px;flex:none}.pj-chk.done span{color:var(--muted);text-decoration:line-through}
+.drawer.pj .task{background:var(--panel)}
+.pj-revfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12.5px}
+.pj-rel{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.pj-relrow{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:10px;padding:4px 6px 4px 4px}
+.pj-relopen{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:6px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.pj-relopen span:last-child{display:flex;flex-direction:column;min-width:0}.pj-relopen small{color:var(--muted);font-size:12px}
+.pj-relbtns{display:flex;gap:8px;flex-wrap:wrap}
+.pj-tgl{display:flex!important;align-items:center;gap:10px;cursor:pointer;text-transform:none!important;letter-spacing:0!important;font-size:14px!important;color:var(--text)!important;margin:4px 0 0}
+.pj-tgl input{position:absolute;opacity:0;width:1px;height:1px}
+.pj-tgl i{width:38px;height:22px;border-radius:999px;background:var(--border);position:relative;transition:background .15s;flex:none}
+.pj-tgl i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.pj-tgl input:checked+i{background:var(--sec)}.pj-tgl input:checked+i::after{transform:translateX(16px)}
+.pj-tgl input:focus-visible+i{outline:2px solid var(--sec);outline-offset:2px}
+.pj-bar{gap:8px}.pj-bar #pjNext{min-width:150px}
+@media (max-width:640px){
+  .pj-glance{grid-template-columns:1fr 1fr;padding:10px;gap:8px}
+  .pj-steps{padding:8px 4px}.pj-step{font-size:10.5px}
+  .drawer.pj .drawer-body{padding:12px 10px 24px}
+  .pj-sec summary{padding:13px 14px}.pj-sec .ap-body{padding:0 14px 14px}
+  .pj-bar{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}.pj-bar .btn{flex:1}.pj-bar .status{display:none}
+}
 .save-bar{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:12px 20px;border-top:1px solid var(--border)}
 .save-bar .status{margin-right:auto;font-size:13px;color:var(--muted)}
 
@@ -2806,182 +2853,280 @@ function openNewProject(media){
 }
 
 /* ----- Project drawer ----- */
-async function openProject(id){
+/* ----- Project drawer (photo + video). Laid out in the order the work happens:
+   status steps → at a glance → brief / notes → links & files → checklist → SOP → revisions → related → details → activity.
+   Dropdowns remember open/closed per person (hq.pjOpen). Checkboxes save on tap; fields save with "Save changes". */
+const PJ_OPEN_KEY = 'hq.pjOpen';
+const pjOpen = () => { try { return JSON.parse(localStorage.getItem(PJ_OPEN_KEY) || 'null') || ['brief', 'notes', 'work', 'links']; } catch (_) { return ['brief', 'notes', 'work', 'links']; } };
+const PJ_STEPS = [['not_started', 'Not Started'], ['in_progress', 'Editing'], ['ready_for_review', 'In Review'], ['approved', 'Approved'], ['delivered', 'Delivered']];
+// The one button that moves the project to its next step
+function pjNext(p, tasksLeft, openRevs){
+  const s = p.status;
+  if (s === 'not_started') return { to: 'in_progress', label: 'Start Editing' };
+  if (s === 'in_progress') return { to: 'ready_for_review', label: 'Submit for Review', warn: tasksLeft ? `${tasksLeft} checklist item${tasksLeft === 1 ? ' is' : 's are'} not checked off.` : '' };
+  if (s === 'needs_revision') return { to: 'ready_for_review', label: 'Submit Revision', warn: openRevs ? `${openRevs} revision${openRevs === 1 ? ' is' : 's are'} not marked resolved.` : '' };
+  if (s === 'ready_for_review') return isReviewer() ? { to: 'approved', label: 'Approve' } : null;
+  if (s === 'approved') return { to: 'delivered', label: 'Mark Delivered' };
+  return null;
+}
+// SOP text → steps (numbered lines become checkboxes) + notes (everything else)
+function pjSop(sop){
+  const steps = [], notes = [];
+  String(sop || '').split('\n').forEach(l => { const m = l.match(/^\s*\d+[.)]\s+(.+)$/); if (m) steps.push(m[1].trim()); else if (l.trim()) notes.push(l.trim()); });
+  return { steps, notes };
+}
+async function openProject(id, keepScroll){
   const p = S.projects.find(x => x.id === id); if (!p) return;
+  const scroll = keepScroll ? $('.drawer-body')?.scrollTop || 0 : 0;
   document.body.style.overflow = 'hidden';
   const [tasks, revs, acts] = await Promise.all([
     sb.from('project_tasks').select('*').eq('project_id', id).order('sort_order').order('created_at'),
     sb.from('revisions').select('*').eq('project_id', id).order('created_at', { ascending:false }),
     sb.from('activity_log').select('*').eq('project_id', id).order('created_at', { ascending:false }).limit(30),
   ]);
+  const reopen = () => openProject(id, true);
   const type = S.types.find(t => t.id === p.project_type_id);
   const agent = S.agents.find(a => a.id === p.agent_id);
+  const root = p.parent_project_id || p.id;
   const related = S.projects.filter(x => x.id !== p.id && (x.parent_project_id === p.id || x.id === p.parent_project_id || (p.parent_project_id && x.parent_project_id === p.parent_project_id)));
-  const isVideo = p.media === 'video';
-  const links = [['Dropbox',p.dropbox_url],['Vimeo',p.vimeo_url],['Spiro',p.spiro_url],['Music',p.music_url],['Agent branding',agent?.branding_folder_url]]
-    .filter(([,u]) => safeUrl(u)).map(([l,u]) => `<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${l} ↗</a>`).join('');
+  const linkable = S.projects.filter(x => x.id !== p.id && !related.some(r => r.id === x.id) && ((p.agent_id && x.agent_id === p.agent_id) || (p.address && x.address && x.address.trim().toLowerCase() === p.address.trim().toLowerCase()))).slice(0, 40);
+  const isVideo = p.media === 'video', canEdit = can('edit_projects');
+  const tl = tasks.data || [], rl = revs.data || [];
+  const tasksDone = tl.filter(t => t.completed).length, openRevs = rl.filter(r => !r.resolved).length;
+  const sop = pjSop(type?.sop), sopDone = new Set(Array.isArray(p.sop_done) ? p.sop_done : []), sopN = sop.steps.filter(s => sopDone.has(s)).length;
+  const open = new Set(pjOpen()); if (openRevs) open.add('revs');
+  const sec = (key, title, meta, body) => `<details class="ap-sec pj-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}</span>${meta ? `<span class="pj-meta">${meta}</span>` : ''}${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
+  const count = (n, of) => `<span class="pj-count ${of && n >= of ? 'done' : ''}">${of ? `${n}/${of}` : n}</span>`;
+  const f = (name, extra = '') => `name="${name}" data-pf ${extra}`;
+  const linkBtns = [['Dropbox', p.dropbox_url, 'folder'], ['Vimeo', p.vimeo_url, 'film'], ['Spiro', p.spiro_url, 'link'], ['Music', /^https?:/i.test(p.music_url || '') ? p.music_url : '', 'link'], ['Agent branding', agent?.branding_folder_url, 'image']]
+    .filter(([, u]) => safeUrl(u)).map(([l, u, ic]) => `<a class="btn small" href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${hqi(ic) || ''} ${l}</a>`).join('');
+  const stepIdx = p.status === 'needs_revision' ? 1 : Math.max(0, PJ_STEPS.findIndex(([k]) => k === p.status));
+  const next = pjNext(p, tl.length - tasksDone, openRevs);
+  const due = p.due_date ? new Date(p.due_date + 'T12:00:00') : null, late = due && !DONE.includes(p.status) && due < new Date(new Date().toDateString());
 
   $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
-  <aside class="drawer sec-${p.media}">
+  <aside class="drawer pj sec-${p.media}">
     <div class="drawer-head">
       <span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span>
-      <h2>${esc(p.name)}</h2>
+      <div class="pj-title"><h2>${esc(p.name)}</h2>
+        <small>${esc([type?.name, agent?.full_name, p.city].filter(Boolean).join(' · '))}${due ? ` · <span class="${late ? 'pj-late' : ''}">Due ${esc(due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }))}</span>` : ''}</small></div>
       <button class="btn small ghost" id="dClose" aria-label="Close">✕</button>
     </div>
     <div class="drawer-body">
-      ${links ? `<div class="section"><div class="links">${links}</div></div>` : ''}
-      ${agent && logosFor(agent.id).length ? `<div class="section"><h3>${esc(agent.full_name)} logos <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">· click to download</span></h3>
-        <div class="logo-strip" id="dLogos">${logosFor(agent.id).map(l => `<a href="#" data-dl-logo="${l.id}" title="${esc(l.file_name)}">${isImageLogo(l) ? `<img data-logo-path="${esc(l.storage_path)}" alt="${esc(l.file_name)}" />` : `<span class="ext">.${esc(logoExt(l).toUpperCase())}</span>`}</a>`).join('')}</div></div>` : ''}
-      <form id="pForm">
-        <div class="section"><h3>Details</h3>
-          <div class="grid3">
-            <div><label>Status</label><select name="status">${opt(STATUSES, p.status)}</select></div>
-            <div><label>Assigned to</label><select name="assigned_to">${opt(S.team.filter(t=>t.active||t.id===p.assigned_to).map(t=>[t.id,t.full_name]), p.assigned_to, 'Unassigned')}</select></div>
-            <div><label>Due date</label><input type="date" name="due_date" value="${esc(p.due_date || '')}" /></div>
-            <div><label>Project type</label><select name="project_type_id">${opt(S.types.filter(t=>t.media===p.media).map(t=>[t.id,t.name]), p.project_type_id, '—')}</select></div>
-            <div><label>Agent</label><select name="agent_id">${opt(S.agents.map(a=>[a.id,a.full_name]), p.agent_id, '—')}</select></div>
-            <div><label>Delivery method</label><select name="delivery_method">${opt(DELIVERY, p.delivery_method, '—')}</select></div>
-            <div class="full grid2" style="gap:12px">
-              <div><label>Name</label><input name="name" value="${esc(p.name)}" required /></div>
-              <div><label>Address</label><input name="address" value="${esc(p.address || '')}" placeholder="Street address" /></div>
-            </div>
-            <div><label>City</label><input name="city" value="${esc(p.city || '')}" /></div>
-            ${!isVideo ? `<div><label># of photos</label><input type="number" min="0" name="photo_count" value="${esc(p.photo_count ?? '')}" /></div>` : ''}
-            <div><label>Posted in chat</label><select name="notify_slack">${opt([['true','Yes'],['false','No']], String(p.notify_slack))}</select></div>
-          </div>
-        </div>
-        <div class="section"><h3>Links</h3>
-          <div class="grid2">
-            <div class="full"><label>Dropbox folder</label><input type="url" name="dropbox_url" value="${esc(p.dropbox_url || '')}" /></div>
-            ${isVideo ? `<div><label>Vimeo link</label><input type="url" name="vimeo_url" value="${esc(p.vimeo_url || '')}" /></div>` : ''}
-            <div ${isVideo ? '' : 'class="full"'}><label>Spiro order link</label><input type="url" name="spiro_url" value="${esc(p.spiro_url || '')}" /></div>
-          </div>
-        </div>
-        ${isVideo ? `<div class="section"><h3>Video brief</h3>
-          <div class="grid3">
-            <div><label>Video type</label><select name="video_tier">${opt(VIDEO_TIERS, p.video_tier || '', '—')}</select></div>
-            <div><label>Length</label><select name="video_length">${opt(lengthOpts(p.video_length), p.video_length || '', '—')}</select></div>
-            <div><label>Format</label><select name="video_format">${opt(formatOpts(p.video_format), p.video_format || '', '—')}</select></div>
-            <div class="full"><label>Music</label><input name="music_url" value="${esc(p.music_url || '')}" placeholder="Spotify link or description" /></div>
-            <div class="full"><label>Script</label><textarea name="script" style="min-height:120px">${esc(p.script || '')}</textarea></div>
-            <div class="full"><label>Export notes</label><textarea name="export_notes" placeholder="Export branded & unbranded…">${esc(p.export_notes || '')}</textarea></div>
-            <div class="full"><label>Reference links</label><textarea name="reference_links">${esc(p.reference_links || '')}</textarea></div>
-          </div></div>` : ''}
-        <div class="section"><h3>Notes</h3><textarea name="notes" placeholder="Anything the editor should know…">${esc(p.notes || '')}</textarea></div>
-      </form>
+      <div class="pj-steps ${p.status === 'needs_revision' ? 'rev' : ''}" role="list">${PJ_STEPS.map(([k, l], i) => `<button type="button" class="pj-step ${i < stepIdx ? 'past' : i === stepIdx ? 'now' : ''}" data-step="${k}" ${canEdit ? '' : 'disabled'} role="listitem" title="Set to ${esc(STATUS_LABEL[k])}"><i></i><span>${i === stepIdx && p.status === 'needs_revision' ? 'Needs Revision' : l}</span></button>`).join('')}</div>
 
-      ${!isVideo ? `<div class="section"><h3>Editing checklist</h3>
-        <div id="taskList">${(tasks.data||[]).map(taskHTML).join('') || '<p class="muted">No checklist items yet.</p>'}</div>
-        <form id="taskForm" class="grid3" style="margin-top:8px;align-items:end">
-          <div><label>Add item</label><select name="kind">${opt(TASK_KINDS,'virtual_twilight')}</select></div>
-          <div><label>Photo number(s)</label><input name="photo_numbers" placeholder="001, 014" /></div>
-          <div><button class="btn">Add</button></div>
-          <div class="full"><input name="details" placeholder="Details (room type, style, preferred locations…)" /></div>
-        </form></div>` : `<div class="section"><h3>Tasks</h3>
-        <div id="taskList">${(tasks.data||[]).map(taskHTML).join('') || '<p class="muted">No tasks yet.</p>'}</div>
-        <form id="taskForm" class="grid3" style="margin-top:8px;align-items:end">
-          <input type="hidden" name="kind" value="custom" />
-          <div class="full" style="display:flex;gap:8px"><input name="title" placeholder="e.g. Export one agent reel with no audio" required /><button class="btn">Add</button></div>
-        </form></div>`}
+      <div class="pj-glance">
+        <div><label>Assigned to</label><select ${f('assigned_to')}>${opt(S.team.filter(t => t.active || t.id === p.assigned_to).map(t => [t.id, t.full_name]), p.assigned_to, 'Unassigned')}</select></div>
+        <div><label>Due date</label><input type="date" ${f('due_date')} value="${esc(p.due_date || '')}" /></div>
+        <div><label>Project type</label><select ${f('project_type_id')}>${opt(S.types.filter(t => t.media === p.media).map(t => [t.id, t.name]), p.project_type_id, '—')}</select></div>
+        ${isVideo ? `<div><label>Video type</label><select ${f('video_tier')}>${opt(VIDEO_TIERS, p.video_tier || '', '—')}</select></div>`
+          : `<div><label># of photos</label><input type="number" min="0" inputmode="numeric" ${f('photo_count')} value="${esc(p.photo_count ?? '')}" /></div>`}
+      </div>
+      ${linkBtns ? `<div class="pj-links">${linkBtns}</div>` : ''}
 
-      <div class="section"><h3>Revision requests</h3>
-        <div id="revList">${(revs.data||[]).map(revHTML).join('') || '<p class="muted">No revisions requested.</p>'}</div>
-        <form id="revForm" style="margin-top:8px">
+      <div class="pj-secs">
+      ${isVideo ? sec('brief', 'Video Brief', esc([p.video_length, p.video_format].filter(Boolean).join(' · ')), `
+        <div class="grid2">
+          <div><label>Length</label><select ${f('video_length')}>${opt(lengthOpts(p.video_length), p.video_length || '', '—')}</select></div>
+          <div><label>Format</label><select ${f('video_format')}>${opt(formatOpts(p.video_format), p.video_format || '', '—')}</select></div>
+          <div class="full"><label>Music</label><input ${f('music_url')} value="${esc(p.music_url || '')}" placeholder="Spotify link or description" /></div>
+          <div class="full"><label>Script</label><textarea ${f('script')} style="min-height:110px">${esc(p.script || '')}</textarea></div>
+          <div class="full"><label>Export notes</label><textarea ${f('export_notes')} placeholder="Export branded & unbranded…">${esc(p.export_notes || '')}</textarea></div>
+          <div class="full"><label>Reference links</label><textarea ${f('reference_links')} placeholder="One per line">${esc(p.reference_links || '')}</textarea></div>
+        </div>`) : ''}
+
+      ${sec('notes', 'Notes & Agent Preferences', agent?.preferences ? esc(agent.full_name) : '', `
+        <label>Notes for the editor</label><textarea ${f('notes')} placeholder="Anything the editor should know…">${esc(p.notes || '')}</textarea>
+        ${agent ? `<label style="margin-top:12px">${esc(agent.full_name)}'s preferences <span class="muted">(from their agent profile)</span></label>
+          <div class="sop">${agent.preferences ? esc(agent.preferences) : '<span class="muted">None saved.</span>'}</div>` : ''}`)}
+
+      ${sec('links', 'Links & Files', '', `
+        <div class="grid2">
+          <div class="full"><label>Dropbox folder</label><input type="url" ${f('dropbox_url')} value="${esc(p.dropbox_url || '')}" placeholder="https://www.dropbox.com/…" /></div>
+          ${isVideo ? `<div><label>Vimeo link</label><input type="url" ${f('vimeo_url')} value="${esc(p.vimeo_url || '')}" /></div>` : ''}
+          <div ${isVideo ? '' : 'class="full"'}><label>Spiro order link</label><input type="url" ${f('spiro_url')} value="${esc(p.spiro_url || '')}" /></div>
+        </div>
+        ${agent && logosFor(agent.id).length ? `<label style="margin-top:12px">${esc(agent.full_name)} logos <span class="muted">· tap to download</span></label>
+          <div class="logo-strip" id="dLogos">${logosFor(agent.id).map(l => `<a href="#" data-dl-logo="${l.id}" title="${esc(l.file_name)}">${isImageLogo(l) ? `<img data-logo-path="${esc(l.storage_path)}" alt="${esc(l.file_name)}" />` : `<span class="ext">.${esc(logoExt(l).toUpperCase())}</span>`}</a>`).join('')}</div>` : ''}`)}
+
+      ${sec('work', isVideo ? 'Tasks' : 'Editing Checklist', tl.length ? count(tasksDone, tl.length) : '', `
+        <div id="taskList">${tl.map(taskHTML).join('') || `<p class="muted" style="margin:0 0 8px">${isVideo ? 'No tasks yet.' : 'No checklist items yet.'}</p>`}</div>
+        ${isVideo ? `<form id="taskForm" class="pj-add"><input type="hidden" name="kind" value="custom" />
+            <input name="title" placeholder="e.g. Export one agent reel with no audio" required /><button class="btn small">Add</button></form>`
+          : `<form id="taskForm" class="pj-add pj-add-photo">
+            <select name="kind">${opt(TASK_KINDS, 'virtual_twilight')}</select>
+            <input name="photo_numbers" placeholder="Photo #s (001, 014)" />
+            <button class="btn small">Add</button>
+            <input name="details" class="full" placeholder="Details (room type, style, preferred locations…)" /></form>`}`)}
+
+      ${sop.steps.length || sop.notes.length ? sec('sop', `SOP · ${esc(type.name)}`, sop.steps.length ? count(sopN, sop.steps.length) : '', `
+        ${sop.steps.map((s, i) => `<label class="pj-chk ${sopDone.has(s) ? 'done' : ''}"><input type="checkbox" data-sop="${i}" ${sopDone.has(s) ? 'checked' : ''} ${canEdit ? '' : 'disabled'} /><span>${esc(s)}</span></label>`).join('')}
+        ${sop.notes.length ? `<div class="sop" style="margin-top:${sop.steps.length ? 10 : 0}px">${esc(sop.notes.join('\n'))}</div>` : ''}`) : ''}
+
+      ${sec('revs', 'Revision Requests', rl.length ? (openRevs ? `<span class="pj-count warn">${openRevs} open</span>` : count(rl.length)) : '', `
+        <div id="revList">${rl.map(revHTML).join('') || '<p class="muted" style="margin:0 0 8px">No revisions requested.</p>'}</div>
+        <form id="revForm">
           <textarea name="notes" placeholder="What needs to change?" required style="min-height:60px"></textarea>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px">
-            <span class="muted" style="font-size:12.5px">Adding a revision moves the project to Needs Revision.</span>
-            <button class="btn">Request revision</button>
-          </div>
-        </form>
-      </div>
+          <div class="pj-revfoot"><span class="muted">Adding a revision moves the project to Needs Revision.</span><button class="btn small">Request Revision</button></div>
+        </form>`)}
 
-      ${type?.sop ? `<div class="section"><h3>SOP · ${esc(type.name)}</h3><div class="sop">${esc(type.sop)}</div></div>` : ''}
-      ${agent?.preferences ? `<div class="section"><h3>Agent preferences · ${esc(agent.full_name)}</h3><div class="sop">${esc(agent.preferences)}</div></div>` : ''}
+      ${sec('related', 'Related Projects', related.length ? count(related.length) : '', `
+        ${related.length ? `<div class="pj-rel">${related.map(r => `<div class="pj-relrow"><button type="button" class="pj-relopen" data-open="${r.id}"><span class="tag ${r.media}">${MEDIA_LABEL[r.media]}</span>
+            <span><b>${esc(r.name)}</b><small>${esc([typeName(r.project_type_id), STATUS_LABEL[r.status], r.assigned_to ? memberName(r.assigned_to) : ''].filter(Boolean).join(' · '))}</small></span></button>
+            ${canEdit ? `<button type="button" class="btn small ghost" data-unlink="${r.id}" title="Unlink">Unlink</button>` : ''}</div>`).join('')}</div>` : '<p class="muted" style="margin:0 0 8px">Nothing linked yet.</p>'}
+        <div class="pj-relbtns">
+          ${can('create_projects') && can('photo') ? `<button type="button" class="btn small" data-related="photo">+ New Photo Project</button>` : ''}
+          ${can('create_projects') && can('video') ? `<button type="button" class="btn small" data-related="video">+ New Video Project</button>` : ''}
+        </div>
+        ${canEdit && linkable.length ? `<div class="pj-add" style="margin-top:10px"><select id="pjLinkSel"><option value="">Link an existing project…</option>${linkable.map(x => `<option value="${x.id}">${esc(MEDIA_LABEL[x.media])} · ${esc(x.name)} · ${esc(STATUS_LABEL[x.status])}</option>`).join('')}</select><button type="button" class="btn small" id="pjLink">Link</button></div>` : ''}
+        <p class="muted bk-hint" style="margin:8px 0 0">New related projects copy the agent, address, Dropbox folder and delivery method.</p>`)}
 
-      ${related.length ? `<div class="section"><h3>Related projects</h3>${related.map(r => `<div class="task" style="cursor:pointer" data-open="${r.id}"><div class="body"><div class="name">${esc(r.name)}</div><div class="sub">${MEDIA_LABEL[r.media]} · ${STATUS_LABEL[r.status]}</div></div></div>`).join('')}</div>` : ''}
+      ${sec('details', 'Project Details', '', `
+        <div class="grid2">
+          <div class="full"><label>Name</label><input ${f('name')} value="${esc(p.name)}" required /></div>
+          <div class="full"><label>Address</label><input ${f('address')} value="${esc(p.address || '')}" placeholder="Street address" /></div>
+          <div><label>City</label><input ${f('city')} value="${esc(p.city || '')}" /></div>
+          <div><label>Agent</label><select ${f('agent_id')}>${opt(S.agents.map(a => [a.id, a.full_name]), p.agent_id, '—')}</select></div>
+          <div><label>Delivery method</label><select ${f('delivery_method')}>${opt(DELIVERY, p.delivery_method, '—')}</select></div>
+          <div><label>Status</label><select ${f('status')}>${opt(STATUSES, p.status)}</select></div>
+          <div class="full"><label class="pj-tgl"><input type="checkbox" ${f('notify_slack')} ${p.notify_slack ? 'checked' : ''} /><i></i> Posted in the team chat</label></div>
+        </div>
+        ${can('delete_projects') ? `<div style="margin-top:14px"><button type="button" class="btn small danger" id="deleteBtn">Delete Project</button></div>` : ''}`)}
 
-      <div class="section"><h3>Activity</h3>
-        <ul class="activity">${(acts.data||[]).map(a => `<li>${esc(fmtDateTime(a.created_at))} — ${esc(memberName(a.actor_id) || 'System')} ${a.action === 'created' ? 'created the project' : `moved it from ${esc(STATUS_LABEL[a.from_status])} to <b>${esc(STATUS_LABEL[a.to_status])}</b>`}</li>`).join('') || '<li>No activity yet.</li>'}</ul>
-        <p class="muted" style="font-size:12.5px">Created ${esc(fmtDateTime(p.created_at))}${p.submitted_by ? ' by ' + esc(memberName(p.submitted_by)) : ''}${p.delivered_at ? ' · Delivered ' + esc(fmtDate(p.delivered_at)) : ''}</p>
-      </div>
-      <div class="section" style="display:flex;gap:8px;flex-wrap:wrap">
-        ${can('create_projects') && can('photo') ? `<button class="btn small" data-related="photo">+ Related photo project</button>` : ''}
-        ${can('create_projects') && can('video') ? `<button class="btn small" data-related="video">+ Related video project</button>` : ''}
-        ${can('delete_projects') ? `<button class="btn small danger" id="deleteBtn">Delete project</button>` : ''}
+      ${sec('activity', 'Activity', '', `
+        <ul class="activity">${(acts.data || []).map(a => `<li>${esc(fmtDateTime(a.created_at))} — ${esc(memberName(a.actor_id) || 'System')} ${a.action === 'created' ? 'created the project' : `moved it from ${esc(STATUS_LABEL[a.from_status])} to <b>${esc(STATUS_LABEL[a.to_status])}</b>`}</li>`).join('') || '<li>No activity yet.</li>'}</ul>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Created ${esc(fmtDateTime(p.created_at))}${p.submitted_by ? ' by ' + esc(memberName(p.submitted_by)) : ''}${p.delivered_at ? ' · Delivered ' + esc(fmtDate(p.delivered_at)) : ''}</p>`)}
       </div>
     </div>
-    <div class="save-bar"><span class="status" id="saveStatus"></span><button class="btn" id="dCancel">Close</button>${can('edit_projects') ? `<button class="btn primary" id="saveBtn">Save changes</button>` : `<span class="muted" style="font-size:13px">View only</span>`}</div>
+    <div class="save-bar pj-bar"><span class="status" id="saveStatus"></span>
+      ${canEdit ? `<button class="btn" id="saveBtn">Save</button>${next ? `<button class="btn primary" id="pjNext">${esc(next.label)} →</button>` : ''}` : `<button class="btn" id="dCancel">Close</button><span class="muted" style="font-size:13px">View only</span>`}</div>
   </aside>`;
 
-  $('#ov').onclick = closeLayer; $('#dClose').onclick = closeLayer; $('#dCancel').onclick = closeLayer;
+  const body = $('.drawer-body'); if (scroll) body.scrollTop = scroll;
+  $('#ov').onclick = closeLayer; $('#dClose').onclick = closeLayer; const dc = $('#dCancel'); if (dc) dc.onclick = closeLayer;
+  body.querySelectorAll('.pj-sec').forEach(d => d.addEventListener('toggle', () => {
+    const s = new Set(pjOpen()); d.open ? s.add(d.dataset.k) : s.delete(d.dataset.k);
+    try { localStorage.setItem(PJ_OPEN_KEY, JSON.stringify([...s])); } catch (_) {}
+  }));
   const dl = $('#dLogos'); if (dl) { hydrateLogoImgs(dl); dl.querySelectorAll('[data-dl-logo]').forEach(b => b.onclick = e => { e.preventDefault(); downloadLogo(S.logos.find(l => l.id === b.dataset.dlLogo)); }); }
-  const form = $('#pForm');
-  form.oninput = () => $('#saveStatus').textContent = 'Unsaved changes';
-  if ($('#saveBtn')) $('#saveBtn').onclick = async () => {
-    if (!form.reportValidity()) return;
-    const fd = Object.fromEntries(new FormData(form));
-    for (const k of Object.keys(fd)) {
-      if (fd[k] === '') fd[k] = null;
-      else if (fd[k] === 'true') fd[k] = true;
-      else if (fd[k] === 'false') fd[k] = false;
+
+  // fields: everything marked data-pf saves together
+  let dirty = false;
+  const fields = () => [...document.querySelectorAll('.drawer [data-pf]')];
+  fields().forEach(el => el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => { dirty = true; $('#saveStatus').textContent = 'Unsaved changes'; }));
+  const collect = () => {
+    const fd = {};
+    for (const el of fields()) {
+      if (el.type === 'checkbox') { fd[el.name] = el.checked; continue; }
+      const v = el.value.trim ? el.value : el.value; fd[el.name] = v === '' ? null : v;
     }
     if ('photo_count' in fd && fd.photo_count !== null) fd.photo_count = parseInt(fd.photo_count, 10);
-    fd.notify_slack = fd.notify_slack ?? false;
-    const { error } = await sb.from('projects').update(fd).eq('id', id);
-    if (error) return fail(error);
-    toast('Saved'); await reloadProjects(); openProject(id);
+    return fd;
   };
+  const saveAll = async (extra = {}, msg = 'Saved') => {
+    const nm = document.querySelector('.drawer [name=name]');
+    if (nm && !nm.value.trim()) { nm.closest('details').open = true; nm.focus(); return toast('The project needs a name'); }
+    const { error } = await sb.from('projects').update({ ...collect(), ...extra }).eq('id', id);
+    if (error) return fail(error);
+    dirty = false; toast(msg); await reloadProjects(); reopen();
+  };
+  if ($('#saveBtn')) $('#saveBtn').onclick = () => saveAll();
+  const setStatus = async (to, label) => {
+    const patch = { status: to };
+    if (to === 'in_progress' && !p.assigned_to && !document.querySelector('.drawer [name=assigned_to]').value) patch.assigned_to = S.me.id;
+    const st = document.querySelector('.drawer [name=status]'); if (st) st.value = to;
+    await saveAll(patch, label || `Moved to ${STATUS_LABEL[to]}`);
+  };
+  const nb = $('#pjNext'); if (nb) nb.onclick = () => { if (next.warn && !confirm(`${next.warn}\n\n${next.label} anyway?`)) return; setStatus(next.to, next.label === 'Start Editing' ? 'Editing started' : undefined); };
+  body.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { if (b.dataset.step === p.status) return; setStatus(b.dataset.step); });
 
+  // checklist / tasks: tick saves right away, no reload of the drawer
+  const paintCount = () => { const all = body.querySelectorAll('#taskList input[type=checkbox]'), n = [...all].filter(x => x.checked).length; const c = body.querySelector('[data-k=work] .pj-count'); if (c) { c.textContent = `${n}/${all.length}`; c.classList.toggle('done', n >= all.length); } };
+  body.querySelectorAll('#taskList input[type=checkbox]').forEach(cb => cb.onchange = async () => {
+    cb.closest('.task').classList.toggle('done', cb.checked); paintCount();
+    const { error } = await sb.from('project_tasks').update({ completed: cb.checked }).eq('id', cb.dataset.id);
+    if (error) { cb.checked = !cb.checked; cb.closest('.task').classList.toggle('done', cb.checked); paintCount(); return fail(error); }
+    reloadProjects();
+  });
   $('#taskForm').onsubmit = async e => {
     e.preventDefault();
     const fd = Object.fromEntries(new FormData(e.target));
     for (const k of Object.keys(fd)) if (fd[k] === '') fd[k] = null;
-    fd.project_id = id; fd.title = fd.title || TASK_LABEL[fd.kind];
-    fd.sort_order = (tasks.data || []).length;
+    fd.project_id = id; fd.title = fd.title || TASK_LABEL[fd.kind]; fd.sort_order = tl.length;
     const { error } = await sb.from('project_tasks').insert(fd);
     if (error) return fail(error);
-    await reloadProjects(); openProject(id);
+    if (dirty) await sb.from('projects').update(collect()).eq('id', id);
+    await reloadProjects(); reopen();
   };
-  document.querySelectorAll('#taskList input[type=checkbox]').forEach(cb => cb.onchange = async () => {
-    const { error } = await sb.from('project_tasks').update({ completed: cb.checked }).eq('id', cb.dataset.id);
-    if (error) return fail(error);
-    await reloadProjects(); openProject(id);
-  });
-  document.querySelectorAll('#taskList [data-del-task]').forEach(b => b.onclick = async () => {
-    if (!confirm('Remove this checklist item?')) return;
+  body.querySelectorAll('#taskList [data-del-task]').forEach(b => b.onclick = async () => {
+    if (!confirm('Remove this item?')) return;
     const { error } = await sb.from('project_tasks').delete().eq('id', b.dataset.delTask);
     if (error) return fail(error);
-    await reloadProjects(); openProject(id);
+    await reloadProjects(); reopen();
+  });
+
+  // SOP steps: tick saves right away
+  body.querySelectorAll('[data-sop]').forEach(cb => cb.onchange = async () => {
+    const step = sop.steps[+cb.dataset.sop]; cb.checked ? sopDone.add(step) : sopDone.delete(step);
+    cb.closest('.pj-chk').classList.toggle('done', cb.checked);
+    const n = sop.steps.filter(s => sopDone.has(s)).length, c = body.querySelector('[data-k=sop] .pj-count');
+    if (c) { c.textContent = `${n}/${sop.steps.length}`; c.classList.toggle('done', n >= sop.steps.length); }
+    const { error } = await sb.from('projects').update({ sop_done: [...sopDone] }).eq('id', id);
+    if (error) return fail(error);
+    p.sop_done = [...sopDone];
   });
 
   $('#revForm').onsubmit = async e => {
     e.preventDefault();
     const notes = new FormData(e.target).get('notes').trim(); if (!notes) return;
-    const round = (revs.data || []).length + 1;
-    const { error } = await sb.from('revisions').insert({ project_id:id, notes, round, requested_by:S.me.id });
+    const { error } = await sb.from('revisions').insert({ project_id: id, notes, round: rl.length + 1, requested_by: S.me.id });
     if (error) return fail(error);
-    if (p.status !== 'needs_revision') await sb.from('projects').update({ status:'needs_revision' }).eq('id', id);
-    toast('Revision requested'); await reloadProjects(); openProject(id);
+    await sb.from('projects').update({ ...(dirty ? collect() : {}), status: 'needs_revision' }).eq('id', id);
+    toast('Revision requested'); await reloadProjects(); reopen();
   };
-  document.querySelectorAll('[data-resolve]').forEach(b => b.onclick = async () => {
+  body.querySelectorAll('[data-resolve]').forEach(b => b.onclick = async () => {
     const resolved = b.dataset.state !== 'true';
     const { error } = await sb.from('revisions').update({ resolved, resolved_at: resolved ? new Date().toISOString() : null }).eq('id', b.dataset.resolve);
     if (error) return fail(error);
-    openProject(id);
+    reopen();
   });
 
-  bindOpeners($('.drawer-body'));
-  document.querySelectorAll('[data-related]').forEach(b => b.onclick = async () => {
+  // related projects: create, link an existing one, unlink
+  bindOpeners(body);
+  body.querySelectorAll('[data-related]').forEach(b => b.onclick = async () => {
     const media = b.dataset.related;
-    const name = prompt(`Name for the related ${media} project:`, p.name + (media === p.media ? ' (Reshoot)' : ''));
+    const name = prompt(`Name for the new ${media} project:`, p.name + (media === p.media ? ' (Reshoot)' : ''));
     if (!name) return;
     const { data, error } = await sb.from('projects').insert({
-      name, media, parent_project_id: p.parent_project_id || p.id, agent_id: p.agent_id, address: p.address, city: p.city,
-      dropbox_url: p.dropbox_url, delivery_method: p.delivery_method, submitted_by: S.me.id,
+      name, media, parent_project_id: root, agent_id: p.agent_id, address: p.address, city: p.city,
+      dropbox_url: p.dropbox_url, delivery_method: p.delivery_method, submitted_by: S.me.id, due_date: p.due_date,
       project_type_id: S.types.find(t => t.media === media && t.active)?.id || null
     }).select().single();
     if (error) return fail(error);
-    await reloadProjects(); openProject(data.id);
+    toast(`${MEDIA_LABEL[media]} project created and linked`); await reloadProjects(); openProject(data.id);
+  });
+  const lk = $('#pjLink'); if (lk) lk.onclick = async () => {
+    const oid = $('#pjLinkSel').value; if (!oid) return toast('Pick a project to link');
+    const o = S.projects.find(x => x.id === oid);
+    // join the other project (and anything already under it) to this group
+    const ids = [oid, ...S.projects.filter(x => x.parent_project_id === oid).map(x => x.id)];
+    const { error } = await sb.from('projects').update({ parent_project_id: root }).in('id', ids.filter(x => x !== root));
+    if (error) return fail(error);
+    if (o?.parent_project_id && o.parent_project_id !== root) await sb.from('projects').update({ parent_project_id: root }).eq('id', o.parent_project_id).neq('id', root);
+    toast('Linked'); await reloadProjects(); reopen();
+  };
+  body.querySelectorAll('[data-unlink]').forEach(b => b.onclick = async () => {
+    const r = S.projects.find(x => x.id === b.dataset.unlink); if (!r || !confirm(`Unlink "${r.name}" from this project?`)) return;
+    let res;
+    if (r.parent_project_id) res = await sb.from('projects').update({ parent_project_id: null }).eq('id', r.id);
+    else { // r is the group's main project: this one (and its siblings stay together under the next one)
+      const rest = S.projects.filter(x => x.parent_project_id === r.id);
+      const lead = rest.find(x => x.id === p.id) || rest[0];
+      res = await sb.from('projects').update({ parent_project_id: null }).eq('id', lead.id);
+      if (!res.error && rest.length > 1) res = await sb.from('projects').update({ parent_project_id: lead.id }).in('id', rest.filter(x => x.id !== lead.id).map(x => x.id));
+    }
+    if (res.error) return fail(res.error);
+    toast('Unlinked'); await reloadProjects(); reopen();
   });
   if ($('#deleteBtn')) $('#deleteBtn').onclick = async () => {
     if (!confirm(`Permanently delete "${p.name}"? This can't be undone.`)) return;
@@ -2990,6 +3135,7 @@ async function openProject(id){
     closeLayer(); toast('Project deleted'); reloadProjects();
   };
 }
+
 function taskHTML(t){
   return `<div class="task ${t.completed ? 'done' : ''}">
     <input type="checkbox" data-id="${t.id}" ${t.completed ? 'checked' : ''} />
