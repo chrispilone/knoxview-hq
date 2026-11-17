@@ -3761,6 +3761,7 @@ async function renderSettings(){
           <p class="muted bk-hint" style="margin:4px 0 0">Fill-ins: {year} {quarter} {month} {month_name} {date_dots} {day_seq} {photographer} {address} {address_slug} {city} {zip} {client_name} {client_lower} {brokerage} {order_number}</p></div>
         <div><label>Folders inside each order <span class="muted">(one per line)</span></label><textarea name="subs" style="min-height:120px">${esc((set.dropbox_subfolders || []).join('\n'))}</textarea></div>
         <div><label>Final photos folder <span class="muted">(what clients see)</span></label><input name="final" value="${esc(set.dropbox_final_photos || 'Final Photos')}" />
+          <label style="margin-top:10px">Final floor plans folder <span class="muted">(synced with the photos)</span></label><input name="plans" value="${esc(set.dropbox_final_floorplans || '')}" placeholder="06-Final-FloorPlan" />
           <label class="check" style="margin-top:12px"><input type="checkbox" name="auto" ${set.dropbox_auto_create !== false ? 'checked' : ''} /> Create the folders when an order is marked completed</label>
           <p class="muted bk-hint" id="dbxExample" style="margin:8px 0 0"></p></div>
         <div class="full"><button class="btn primary">Save Dropbox settings</button></div>
@@ -3774,8 +3775,9 @@ async function renderSettings(){
     df.oninput = example; example();
     df.onsubmit = async e => { e.preventDefault();
       const patch = { dropbox_root: df.root.value.trim() || null, dropbox_folder_name: df.name.value.trim() || null, dropbox_subfolders: df.subs.value.split('\n').map(x => x.trim()).filter(Boolean),
-        dropbox_final_photos: df.final.value.trim() || 'Final Photos', dropbox_auto_create: df.auto.checked };
+        dropbox_final_photos: df.final.value.trim() || 'Final Photos', dropbox_final_floorplans: df.plans.value.trim() || null, dropbox_auto_create: df.auto.checked };
       if (patch.dropbox_final_photos && !patch.dropbox_subfolders.includes(patch.dropbox_final_photos)) patch.dropbox_subfolders.push(patch.dropbox_final_photos);
+      if (patch.dropbox_final_floorplans && !patch.dropbox_subfolders.includes(patch.dropbox_final_floorplans)) patch.dropbox_subfolders.push(patch.dropbox_final_floorplans);
       if (await save(patch, 'Dropbox settings saved')) df.subs.value = patch.dropbox_subfolders.join('\n'); };
     dbxCall('status').then(st => {
       const box = $('#dbxStatus'), acts = $('#dbxConnActs'); if (!box) return;
@@ -6647,8 +6649,9 @@ async function dbxWire(b){
     try {
       const r = await dbxCall('sync', { bookingId: b.id });
       b.photo_files = r.photos.map(({ name, path, size }) => ({ name, path, size })); b.photos_synced_at = r.synced_at;
+      b.floorplan_files = (r.floorplans || []).map(({ name, path, size }) => ({ name, path, size })); dvPaintPlans(b, r.floorplans);
       $('#dbxInfo').textContent = `${r.photos.length} photos from ${r.folder}${r.added || r.removed ? ` · ${r.added} added, ${r.removed} removed` : ''}. Drag to set the order clients see.`;
-      dbxPaintGrid(b, r.photos); if (typeof omPaintCounts === 'function' && $('#omSum')) omPaintCounts(b); toast(r.photos.length ? 'Synced with Dropbox' : 'The final photos folder is empty');
+      dbxPaintGrid(b, r.photos); if (typeof omPaintCounts === 'function' && $('#omSum')) omPaintCounts(b); toast(r.photos.length ? `Synced with Dropbox${b.floorplan_files.length ? ` · ${b.floorplan_files.length} floor plan${b.floorplan_files.length === 1 ? '' : 's'}` : ''}` : 'The final photos folder is empty');
     } catch (e) { fail(e); }
     sync.disabled = false; sync.textContent = '⟳ Sync with Dropbox';
   };
@@ -6667,7 +6670,9 @@ async function dbxWire(b){
   };
   if ((b.photo_files || []).length) {
     $('#dbxGrid').innerHTML = (b.photo_files).map((p, i) => `<div class="dbx-tile"><span class="dbx-n">${i + 1}</span><div class="dbx-ph"></div><small>${esc(p.name)}</small></div>`).join('');
-    try { const g = await dbxCall('gallery', { bookingId: b.id }); dbxPaintGrid(b, g.photos); } catch (e) { /* thumbnails need Dropbox */ dbxPaintGrid(b, b.photo_files); }
+    try { const g = await dbxCall('gallery', { bookingId: b.id }); dbxPaintGrid(b, g.photos); if ((g.floorplans || []).length) dvPaintPlans(b, g.floorplans); } catch (e) { /* thumbnails need Dropbox */ dbxPaintGrid(b, b.photo_files); }
+  } else if ((b.floorplan_files || []).length) {
+    try { const g = await dbxCall('gallery', { bookingId: b.id }); dvPaintPlans(b, g.floorplans); } catch (e) { /* thumbnails need Dropbox */ }
   }
 }
 /* ----- Mark as paid (payments taken outside the portal) ----- */
@@ -6704,10 +6709,12 @@ function dvVidRow(v, i){
     <div><label>Name shown to the client <span class="muted">(optional)</span></label><div style="display:flex;gap:6px"><input class="dv-vlbl" placeholder="e.g. Cinematic film" value="${esc(v?.label || '')}" /><button type="button" class="btn small dv-vdel" title="Remove this video">✕</button></div></div></div>`;
 }
 const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
-async function dvPaintPlans(b){
+async function dvPaintPlans(b, dbxThumbs){
   const box = $('#dvPlans'); if (!box) return;
-  const plans = dvPlansOf(b);
-  box.innerHTML = plans.map((f, i) => `<div class="dv-plan"><span class="dv-pthumb" data-i="${i}">${/\.pdf$/i.test(f.name || f.url) ? 'PDF' : ''}</span><span class="dv-pname">${esc(f.name || 'Floor plan')}</span><button type="button" class="btn small" data-rm="${i}">Remove</button></div>`).join('');
+  const plans = dvPlansOf(b), synced = b.floorplan_files || [];
+  if (dbxThumbs) b._planThumbs = dbxThumbs; // keep the Dropbox previews for later repaints (uploads, removals)
+  const thumbs = new Map((b._planThumbs || []).map(f => [f.name, f.thumb]));
+  box.innerHTML = synced.map(f => `<div class="dv-plan"><span class="dv-pthumb" ${thumbs.get(f.name) ? `style="background-image:url('${esc(thumbs.get(f.name))}')"` : ''}>${/\.pdf$/i.test(f.name) ? 'PDF' : ''}</span><span class="dv-pname">${esc(f.name)}</span><span class="muted" style="margin-left:auto;font-size:12px" title="${esc(f.path)}">From Dropbox</span></div>`).join('') + plans.map((f, i) => `<div class="dv-plan"><span class="dv-pthumb" data-i="${i}">${/\.pdf$/i.test(f.name || f.url) ? 'PDF' : ''}</span><span class="dv-pname">${esc(f.name || 'Floor plan')}</span><button type="button" class="btn small" data-rm="${i}">Remove</button></div>`).join('');
   box.querySelectorAll('[data-rm]').forEach(btn => btn.onclick = async () => {
     const f = plans[+btn.dataset.rm]; if (!confirm(`Remove ${f.name || 'this floor plan'} from the delivery?`)) return;
     const media_files = (b.media_files || []).filter(x => x !== f);
@@ -6789,7 +6796,7 @@ function renderBookingDetail(id){
   const open = new Set(odOpen());
   const sec = (key, title, meta, body) => `<details class="ap-sec od-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}</span>${meta ? `<span class="od-meta">${meta}</span>` : ''}${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
-  const mediaMeta = [nPh && plural(nPh, 'photo'), nVid && plural(nVid, 'video'), b.tour_url && '3D tour', ((b.media_files || []).some(f => f.kind === 'floorplan') || b.floorplan_url) && 'floor plan'].filter(Boolean).join(' · ') || 'Nothing added yet';
+  const mediaMeta = [nPh && plural(nPh, 'photo'), nVid && plural(nVid, 'video'), b.tour_url && '3D tour', ((b.media_files || []).some(f => f.kind === 'floorplan') || (b.floorplan_files || []).length || b.floorplan_url) && 'floor plan'].filter(Boolean).join(' · ') || 'Nothing added yet';
 
   $('#bookingsView').innerHTML = `<div class="od">
     <a href="#/bookings" class="bk-back">← Orders</a>
@@ -7219,7 +7226,7 @@ ORD_ICON.media = OM_IC.photos;
 function omStats(b){
   const up = (b.media_files || []).filter(f => (f.kind || 'photo') === 'photo').length, synced = (b.photo_files || []).length;
   const videos = (b.videos || []).filter(v => v && v.url).length;
-  const plans = (b.media_files || []).filter(f => f.kind === 'floorplan').length + (b.floorplan_url ? 1 : 0);
+  const plans = (b.media_files || []).filter(f => f.kind === 'floorplan').length + (b.floorplan_files || []).length + (b.floorplan_url ? 1 : 0);
   const sites = [b.website_url, b.website_unbranded_url].filter(Boolean).length;
   return { photos: up + synced, up, synced, linkPhotos: !!b.photos_url, videos, tour: !!b.tour_url, plans, sites, marketing: !!b.marketing_url };
 }
