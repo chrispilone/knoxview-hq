@@ -680,6 +680,7 @@ table.dir th.on .ar{opacity:1;color:var(--sec)}
 table.dir td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;text-align:left}
 table.dir tr:last-child td{border-bottom:none}
 table.dir tbody tr{cursor:pointer}
+.br-tasks{display:flex;flex-direction:column;gap:4px}.br-task{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)}.br-task .check{margin:0}
 table.dir tbody tr:hover td{background:var(--panel-2)}
 table.dir td.trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .dir-who{display:flex;align-items:center;gap:11px;min-width:0}
@@ -1827,6 +1828,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
       <a href="#/bookings" data-view="bookings" title="Orders · shoots, listings, deliveries and payments" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Orders</span></a>
+      <a href="#/branding" data-view="branding" title="Branding · headshots, lifestyle shoots, brand videos and other non-listing media" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.5"/><path d="M5.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><path d="M17.5 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="lbl">Branding</span></a>
       <button type="button" class="nav-group" id="clientsTab" data-grp="clients" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
       <div class="nav-sub" id="clientsSub">
         <a href="#/companies" data-view="companies" title="Companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></svg><span class="lbl">Companies</span></a>
@@ -2114,9 +2116,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','bookings','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
@@ -2489,7 +2491,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','bookings','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2497,14 +2499,14 @@ function route(){
     else { S.pview = S.pview || 'all'; history.replaceState(null, '', `#/projects/${S.pview}`); }
   }
   if (view === 'chat' && parts[1]) S.chat.active = parts[1];
-  if (view === 'bookings') { S.bkSub = parts[1] || ''; S.bkPage = parts[2] || ''; }
+  if (view === 'bookings' || view === 'branding') { S.bkSub = parts[1] || ''; S.bkPage = parts[2] || ''; }
   if (view === 'settings') S.setSub = parts[1] || '';
   if (view === 'agents') S.agentSub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'orderpages') OP.sub = parts[1] || '';
   if (view === 'hiring') HR.sub = /^[0-9a-f-]{36}$/i.test(parts[1] || '') ? parts[1] : '';
   if (view === 'mail') MAIL.openId = /^[0-9a-f]+$/i.test(parts[1] || '') ? parts[1] : null;
   S.view = view;
-  document.body.dataset.sec = ({ projects: ['photo','video'].includes(S.pview) ? S.pview : '', bookings: 'orders', orderpages: 'orders', agents: 'clients', companies: 'clients', hiring: 'hiring', calendar: 'calendar', finance: 'finance' })[view] || '';
+  document.body.dataset.sec = ({ projects: ['photo','video'].includes(S.pview) ? S.pview : '', bookings: 'orders', branding: 'orders', orderpages: 'orders', agents: 'clients', companies: 'clients', hiring: 'hiring', calendar: 'calendar', finance: 'finance' })[view] || '';
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
   if (NAV_GROUP[view]) navGroup(true, NAV_GROUP[view]);
   document.querySelectorAll('#tabs .nav-group').forEach(t => t.classList.toggle('in', NAV_GROUP[view] === t.dataset.grp));
@@ -2552,8 +2554,8 @@ function render(){
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
   if (S.view === 'settings') renderSettings();
-  $('#bookingsView').classList.toggle('hidden', S.view !== 'bookings');
-  if (S.view === 'bookings') renderBookings();
+  $('#bookingsView').classList.toggle('hidden', !inOrders());
+  if (inOrders()) renderBookings();
   $('#orderPagesView').classList.toggle('hidden', S.view !== 'orderpages');
   if (S.view === 'orderpages') renderOrderPages();
   $('#hiringView').classList.toggle('hidden', S.view !== 'hiring');
@@ -3492,8 +3494,8 @@ async function renderAgentProfile(id){
   const sec = (key, title, count, body, action = '') => `<details class="ap-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}${count != null ? ` <em>${count}</em>` : ''}</span>${action ? `<span class="ap-sa">${action}</span>` : ''}<svg class="ap-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></summary><div class="ap-body">${body}</div></details>`;
   const kv = (k, v) => `<div class="ap-kv"><span>${k}</span><b>${v || '<span class="muted">—</span>'}</b></div>`;
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const orderRow = b => `<a class="ap-row" href="#/bookings/${b.id}"><span class="ord-thumb">${ordThumb(b) ? `<img src="${esc(ordThumb(b))}" alt="" loading="lazy">` : ORD_ICON.house}</span>
-      <span class="ap-rmain"><b>${esc(b.address)}</b><small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'} · ${ordNo(b)}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''}</small></span>
+  const orderRow = b => `<a class="ap-row" href="${ordBase(b)}/${b.id}"><span class="ord-thumb">${ordThumb(b) ? `<img src="${esc(ordThumb(b))}" alt="" loading="lazy">` : ORD_ICON.house}</span>
+      <span class="ap-rmain"><b>${esc(isBrand(b) ? 'Branding · ' + ordTitle(b) : b.address)}</b><small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'} · ${ordNo(b)}${bkPkgName(b) ? ' · ' + esc(bkPkgName(b)) : ''}</small></span>
       <span class="ap-rside">${ordPill(b)}<span class="ord-ics">${`<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered' : 'Not delivered'}">${ORD_ICON.send}</span><span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' : 'Unpaid'}">${ORD_ICON.paid}</span>`}</span></span></a>`;
 
   root.innerHTML = `<a class="bk-back" href="#/agents">← Agents</a>
@@ -3517,7 +3519,7 @@ async function renderAgentProfile(id){
     </div>
     <div class="ap-actions">
       ${admin && a.email ? `<button type="button" class="btn" id="apAccess">${DIR_ICON.key} Access agent</button>` : ''}
-      ${admin ? `<button type="button" class="btn" id="apMedia" title="Open the client portal as this agent, on their Listings">${hqi('home')} Client Listings</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a>` : ''}
+      ${admin ? `<button type="button" class="btn" id="apMedia" title="Open the client portal as this agent, on their Listings">${hqi('home')} Client Listings</button><button type="button" class="btn" id="apBrand" title="Open the client portal as this agent, on their Branding">${hqi('user')} Client Branding</button><a class="btn" href="#/bookings/new" id="apNewOrder">＋ New order</a><a class="btn" href="#/branding/new" id="apNewBrand">＋ Branding session</a>` : ''}
       ${co ? `<button type="button" class="btn" id="apCompany">${hqi('building')} View company</button>` : ''}
       ${can('manage_agents') ? `<button type="button" class="btn" id="apSwitch">⇄ ${co ? 'Switch' : 'Add'} company</button>` : ''}
       ${isSuperAdmin() ? `<button type="button" class="btn ghost danger ap-del" id="apDelete">Delete agent</button>` : ''}
@@ -3551,6 +3553,8 @@ async function renderAgentProfile(id){
   on('#apEdit', () => editAgent(id)); root.querySelectorAll('[data-ap-edit]').forEach(b => b.onclick = e => { e.preventDefault(); editAgent(id); });
   on('#apAccess', () => accessAgent(id, $('#apAccess')));
   on('#apMedia', () => accessAgent(id, $('#apMedia'), 'listings'));
+  on('#apBrand', () => accessAgent(id, $('#apBrand'), 'branding'));
+  root.querySelector('#apNewBrand')?.addEventListener('click', () => { BK.preAgent = id; });
   on('#apCompany', () => openCompany(co.id));
   root.querySelectorAll('[data-co-open]').forEach(x => x.onclick = e => { e.preventDefault(); openCompany(x.dataset.coOpen); });
   root.querySelectorAll('#apNewOrder, .ap-neworder').forEach(x => x.addEventListener('click', () => { BK.draft = null; BK.preAgent = id; }));
@@ -5982,8 +5986,14 @@ async function renderCandidate(id){
 
 async function renderBookings(){
   const root = $('#bookingsView');
-  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading orders…</p>'; await loadBookingData(); if (S.view !== 'bookings') return; }
+  if (!BK.loaded) { root.innerHTML = '<p class="muted">Loading orders…</p>'; await loadBookingData(); if (!inOrders()) return; }
   const sub = S.bkSub || '';
+  if (S.view === 'bookings' && sub && sub !== 'new' && isBrand(BK.list.find(x => x.id === sub))) { history.replaceState(null, '', `#/branding/${sub}${S.bkPage ? '/' + S.bkPage : ''}`); S.view = 'branding'; document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === 'branding')); }
+  if (S.view === 'branding') {
+    if (sub === 'new') { renderBrandingList(); return openBrandingNew(); }
+    if (sub) return S.bkPage === 'media' ? renderOrderMedia(sub) : renderBookingDetail(sub);
+    return renderBrandingList();
+  }
   if (sub === 'new') return renderOrderForm();
   if (sub) return S.bkPage === 'media' ? renderOrderMedia(sub) : renderBookingDetail(sub);
   renderBookingList();
@@ -6003,6 +6013,24 @@ const ordThumb = b => b.cover_url || (b.media_files || []).filter(f => f.kind ==
 // Order / invoice number shown to people: KV-YYMM-### (bookings.order_no). b.number stays the internal key.
 const ordNo = b => b?.order_no || (b?.number ? '#' + b.number : '');
 const ordTitle = b => (b.media_title || '').trim() || b.address || '';
+// Branding sessions (bookings.kind = 'branding'): agent media that isn't tied to a listing (headshots, lifestyle, brand video…).
+// They live in the same bookings table as orders, so invoices, payments, credits, delivery emails and the download page all work the same.
+// address holds the session title so emails, invoices and the activity log read naturally.
+const inOrders = () => S.view === 'bookings' || S.view === 'branding';
+const isBrand = b => b?.kind === 'branding';
+const ordBase = b => isBrand(b) ? '#/branding' : '#/bookings';
+const BR_TYPES = ['Headshots', 'Lifestyle / Personal Brand', 'Brand Video', 'Team Photos', 'Event', 'Custom'];
+const BR_TASKS = {
+  'Headshots': ['Confirm session details with the agent', 'Shoot', 'Cull and pick selects', 'Edit and retouch', 'QC review', 'Upload to Media Library', 'Send invoice', 'Send delivery'],
+  'Lifestyle / Personal Brand': ['Confirm locations and wardrobe', 'Shoot', 'Cull and pick selects', 'Edit', 'QC review', 'Upload to Media Library', 'Send invoice', 'Send delivery'],
+  'Brand Video': ['Confirm concept, script and music', 'Shoot', 'Edit first cut', 'Agent review', 'Revisions', 'Final export', 'Upload to Vimeo and add to Media Library', 'Send invoice', 'Send delivery'],
+  'Team Photos': ['Confirm team list and location', 'Shoot', 'Cull and pick selects', 'Edit and retouch', 'QC review', 'Upload to Media Library', 'Send invoice', 'Send delivery'],
+  'Event': ['Confirm event details', 'Shoot', 'Cull and edit', 'QC review', 'Upload to Media Library', 'Send invoice', 'Send delivery'],
+  'Custom': ['Confirm scope with the agent', 'Shoot / produce', 'Edit', 'QC review', 'Upload to Media Library', 'Send invoice', 'Send delivery'],
+};
+const brTasksFor = t => (BR_TASKS[t] || BR_TASKS.Custom).map((title, i) => ({ id: 't' + Date.now().toString(36) + i, title, done: false }));
+// Invoice line text: "Name × 3 @ $50.00" when a quantity was entered
+const lineName = i => esc(i.name) + (Number(i.qty) > 1 ? ` <span class="muted">× ${Number(i.qty)} @ ${money(i.unit_price ?? (Number(i.price) / Number(i.qty)))}</span>` : '');
 const ordShot = b => b.shoot_start && (b.status === 'completed' || b.delivered_at) ? b.shoot_start : null; // "Date shot" fills in once the shoot is marked complete
 // Shoot done = marked complete (or already delivered). Red until then, green after.
 const ordShotDone = b => b.status === 'completed' || !!b.delivered_at;
@@ -6014,7 +6042,7 @@ async function ordSetShot(b, done){
   const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
   if (error) { fail(error); return false; }
   Object.assign(b, patch); toast(done ? 'Shoot marked complete' : 'Shoot marked not complete');
-  if (done) dbxAutoFolders(b);
+  if (done && !isBrand(b)) dbxAutoFolders(b);
   return true;
 }
 // Status shown in the list: a sent delivery reads as Delivered
@@ -6033,13 +6061,13 @@ function renderBookingList(){
   const now = new Date().toISOString(), q = BK.q.toLowerCase().trim(), st = BK.dir;
   if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'upcoming';
   const tabFn = ORD_TABS.find(t => t[0] === BK.tab)[2];
-  const count = k => BK.list.filter(b => ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
-  const rows = BK.list.filter(b => tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), b.order_no, '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
+  const count = k => BK.list.filter(b => !isBrand(b) && ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
+  const rows = BK.list.filter(b => !isBrand(b) && tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), b.order_no, '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
   // Default order: upcoming soonest first, everything else newest shoot first. Column headers override it.
   const key = st.sort || 'shoot', dir = st.sort ? st.dir : (BK.tab === 'upcoming' ? 1 : -1);
   const val = { address: b => b.address, agent: bkClient, status: b => b.status !== 'cancelled' && b.delivered_at ? 'delivered' : b.status, shoot: b => b.shoot_start || '', submitted: b => b.created_at, shot: b => ordShot(b) || '' }[key];
   rows.sort(dirCmp({ dir }, val));
-  const upcoming = BK.list.filter(b => b.status === 'scheduled' && b.shoot_end >= now), unpaid = BK.list.filter(b => b.status !== 'cancelled' && !b.paid && b.invoice !== false);
+  const upcoming = BK.list.filter(b => !isBrand(b) && b.status === 'scheduled' && b.shoot_end >= now), unpaid = BK.list.filter(b => !isBrand(b) && b.status !== 'cancelled' && !b.paid && b.invoice !== false);
   const weekEnd = addDays(new Date(), 7).toISOString();
   const pager = rows.length ? dirPager(st, rows.length, 'orders') : '', page = rows.slice(st.page * st.size, (st.page + 1) * st.size);
   const th = (k, l, cls = '') => dirTh({ sort: st.sort || 'shoot', dir }, k, l, cls);
@@ -6051,7 +6079,7 @@ function renderBookingList(){
   const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
   const time = b => b.shoot_start ? fmtT(b.shoot_start) : '';
   $('#bookingsView').innerHTML = `
-    <div class="page-head"><div><div class="dir-head"><h1>Orders</h1><span class="cnt">${BK.list.length} order${BK.list.length === 1 ? '' : 's'}</span></div><p>Every shoot from booking to delivery: schedule, photos, delivery and payment in one list.</p></div></div>
+    <div class="page-head"><div><div class="dir-head"><h1>Orders</h1><span class="cnt">${BK.list.filter(b => !isBrand(b)).length} order${BK.list.filter(b => !isBrand(b)).length === 1 ? '' : 's'}</span></div><p>Every shoot from booking to delivery: schedule, photos, delivery and payment in one list.</p></div></div>
     <div class="bk-kpis">
       <div class="kpi-mini"><b>${upcoming.filter(b => b.shoot_start < weekEnd).length}</b><span>shoots in the next 7 days</span></div>
       <div class="kpi-mini"><b>${count('deliver')}</b><span>shot, waiting on delivery</span></div>
@@ -6121,7 +6149,7 @@ function openDeliveryModal(id){
     <p class="muted bk-hint" style="margin:-10px 0 12px">Order ${ordNo(b)} · ${esc(bkClient(b))}${b.delivered_at ? ' · last delivered ' + esc(fmtDateTime(b.delivered_at)) : ''}</p>
     ${dsFormHTML(b, a)}</div>`;
   $('#ov').onclick = $('#dsX').onclick = closeLayer;
-  dsWire(b, a, () => { closeLayer(); if (S.view === 'bookings' && !S.bkSub) renderBookingList(); });
+  dsWire(b, a, () => { closeLayer(); if (inOrders() && !S.bkSub) renderBookings(); });
 }
 
 /* ----- Pricing ----- */
@@ -6239,6 +6267,89 @@ function bkCatalog(d){
   return { page, pagePkgs: page.filter(s => s.kind === 'package'), listing: pub.filter(s => s.kind === 'package' && s.category !== 'land'), land: pub.filter(s => s.kind === 'package' && s.category === 'land'),
     alacarte: [...page, ...pub].filter(s => s.kind === 'addon' && s.category === 'alacarte'), addons: [...page, ...pub].filter(s => s.kind === 'addon' && s.category !== 'alacarte') };
 }
+
+/* ===================== BRANDING (#/branding) =====================
+   Branding sessions: agent media that isn't for a listing (headshots, lifestyle, brand video, team photos, events, custom).
+   Rows in bookings with kind = 'branding'. Same invoice (custom line items), Pay Before Download, delivery email,
+   download page and Media Library as orders; no address, property website, floor plans, CubiCasa or Zillow. */
+BK.br = BK.br || { tab: 'active', q: '', agent: '' };
+const BR_TABS = [
+  ['active', 'Active', b => b.status !== 'cancelled' && !b.delivered_at],
+  ['unpaid', 'Unpaid', b => b.status !== 'cancelled' && !b.paid && Number(b.total) > 0],
+  ['delivered', 'Delivered', b => b.status !== 'cancelled' && !!b.delivered_at],
+  ['cancelled', 'Cancelled', b => b.status === 'cancelled'],
+  ['all', 'All', () => true],
+];
+function renderBrandingList(){
+  const st = BK.br, all = BK.list.filter(isBrand), q = st.q.toLowerCase().trim();
+  if (!BR_TABS.find(t => t[0] === st.tab)) st.tab = 'active';
+  const fn = BR_TABS.find(t => t[0] === st.tab)[2];
+  const rows = all.filter(fn).filter(b => !st.agent || b.agent_id === st.agent)
+    .filter(b => !q || [ordTitle(b), b.session_type, bkClient(b), b.order_no, String(b.number)].join(' ').toLowerCase().includes(q))
+    .sort((x, y) => String(y.shoot_start || y.created_at).localeCompare(String(x.shoot_start || x.created_at)));
+  const agents = [...new Map(all.map(b => [b.agent_id, S.agents.find(a => a.id === b.agent_id)?.full_name || bkClient(b)])).entries()].filter(([k]) => k).sort((x, y) => String(x[1]).localeCompare(String(y[1])));
+  const tasks = b => { const t = b.branding_tasks || []; return t.length ? `${t.filter(x => x.done).length}/${t.length}` : '—'; };
+  const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : hqi('user')}</span>`; };
+  $('#bookingsView').innerHTML = `
+    <div class="page-head"><div><div class="dir-head"><h1>Branding</h1><span class="cnt">${all.length} session${all.length === 1 ? '' : 's'}</span></div><p>Headshots, lifestyle shoots, brand videos and anything else that isn't listing media. Each session has its own invoice, Media Library and download page, and shows in the agent's Branding section of the portal.</p></div></div>
+    <div class="toolbar">
+      <button type="button" class="btn primary" id="brNew">+ New Branding Session</button>
+      <div class="seg ord-tabs">${BR_TABS.map(([k, l, f]) => `<button type="button" data-brtab="${k}" class="${st.tab === k ? 'active' : ''}">${l} <span class="muted">${all.filter(f).length}</span></button>`).join('')}</div>
+      <input type="search" id="brQ" placeholder="Search title, agent, #…" value="${esc(st.q)}" />
+      <select id="brAg" style="max-width:220px">${opt(agents, st.agent, 'All agents')}</select>
+    </div>
+    ${rows.length ? `<div class="dir-wrap"><table class="dir ord"><thead><tr><th class="ord-th-thumb"></th><th>Session</th><th>Agent</th><th class="m-hide">Type</th><th>Date</th><th class="m-hide">Tasks</th><th>Invoice</th><th class="m-hide">Status</th></tr></thead><tbody>
+      ${rows.map(b => { const a = S.agents.find(x => x.id === b.agent_id); return `<tr data-id="${b.id}" class="${b.status === 'cancelled' ? 'ord-x' : ''}">
+        <td class="ord-td-thumb">${thumb(b)}</td><td class="ord-addr"><b>${esc(ordTitle(b))}</b><small>${esc(ordNo(b))}</small></td>
+        <td class="trunc" style="max-width:200px"><div class="dir-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${esc(a?.full_name || bkClient(b))}</span></div></td>
+        <td class="m-hide">${esc(b.session_type || '—')}</td><td>${b.shoot_start ? esc(ordDate(b.shoot_start)) : '<span class="muted">Not set</span>'}</td><td class="m-hide">${tasks(b)}</td>
+        <td>${money(b.total)} ${b.paid ? '<span class="bk-paid">Paid</span>' : Number(b.total) > 0 ? '<span class="bk-unpaid">Unpaid</span>' : ''}</td><td class="m-hide">${ordPill(b)}</td></tr>`; }).join('')}
+    </tbody></table></div>` : `<div class="panel"><p class="muted" style="margin:0">${all.length ? 'No sessions here.' : 'No branding sessions yet. Create one for the agent, add invoice lines, upload the media and send the delivery.'}</p></div>`}`;
+  const v = $('#bookingsView');
+  $('#brNew').onclick = () => openBrandingNew();
+  $('#brQ').oninput = e => { st.q = e.target.value; clearTimeout(st.t); st.t = setTimeout(() => { renderBrandingList(); const i = $('#brQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  $('#brAg').onchange = e => { st.agent = e.target.value; renderBrandingList(); };
+  v.querySelectorAll('[data-brtab]').forEach(x => x.onclick = () => { st.tab = x.dataset.brtab; renderBrandingList(); });
+  v.querySelectorAll('tr[data-id]').forEach(r => r.onclick = () => { location.hash = `#/branding/${r.dataset.id}`; });
+}
+function openBrandingNew(){
+  const pre = BK.preAgent || ''; BK.preAgent = null;
+  if (S.bkSub === 'new') history.replaceState(null, '', '#/branding');
+  const list = [...S.agents].sort((x, y) => String(x.full_name).localeCompare(String(y.full_name)));
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>New branding session</h2>
+    <form id="brForm"><div class="grid2">
+      <div class="full"><label>Agent</label><input type="search" id="brAgQ" placeholder="Search agents…" autocomplete="off" />
+        <select name="agent_id" id="brAgPick" size="6" required style="margin-top:6px;height:auto">${list.map(x => `<option value="${x.id}" ${x.id === pre ? 'selected' : ''}>${esc(x.full_name)}${x.email ? ' · ' + esc(x.email) : ''}</option>`).join('')}</select></div>
+      <div><label>Session type</label><select name="session_type" required>${opt(BR_TYPES.map(t => [t, t]), 'Headshots')}</select></div>
+      <div><label>Shoot date <span class="muted">(optional)</span></label><input type="datetime-local" name="when" /></div>
+      <div class="full"><label>Session title</label><input name="title" maxlength="120" placeholder="e.g. Spring Headshots" /><p class="muted bk-hint" style="margin:4px 0 0">Blank = the session type and month, like "Headshots · November 2026".</p></div>
+      <div class="full"><label>Notes <span class="muted">(optional)</span></label><textarea name="notes" style="min-height:70px"></textarea></div>
+    </div>
+    <p class="muted bk-hint">You'll add invoice lines, upload media and send the delivery from the session page. The task checklist starts from the session type and can be edited.</p>
+    <div class="actions"><button type="button" class="btn" id="brX">Cancel</button><button class="btn primary">Create session</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove(); box.querySelector('.overlay').onclick = close; box.querySelector('#brX').onclick = close;
+  const pick = box.querySelector('#brAgPick'), q = box.querySelector('#brAgQ');
+  q.oninput = () => { const t = q.value.toLowerCase(); [...pick.options].forEach(o => { o.hidden = !!t && !o.textContent.toLowerCase().includes(t); }); };
+  if (pre) pick.querySelector(`option[value="${pre}"]`)?.scrollIntoView({ block: 'nearest' }); else q.focus();
+  box.querySelector('#brForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, a = S.agents.find(x => x.id === pick.value); if (!a) return toast('Pick an agent');
+    const type = f.session_type.value, when = f.when.value ? new Date(f.when.value) : null;
+    const title = f.title.value.trim() || `${type} · ${(when || new Date()).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}`;
+    const row = { kind: 'branding', source: 'hq', status: 'scheduled', session_type: type, media_title: title, address: title, agent_id: a.id,
+      client_name: a.full_name, client_email: a.email || null, client_phone: a.phone || null, notes: f.notes.value.trim() || null,
+      shoot_start: when ? when.toISOString() : null, shoot_end: when ? new Date(when.getTime() + 60 * 60000).toISOString() : null, duration_min: 60,
+      items: [], subtotal: 0, total: 0, websites_enabled: false, branding_tasks: brTasksFor(type), created_by: S.me.id, photographer_id: S.me.id };
+    const btn = f.querySelector('button.primary'); btn.disabled = true;
+    const { data, error } = await sb.from('bookings').insert(row).select().single();
+    if (error) { btn.disabled = false; return fail(error); }
+    BK.list.push(data); close(); toast('Branding session created');
+    location.hash = `#/branding/${data.id}`;
+  };
+}
+
 function renderOrderForm(){
   if (!BK.draft) BK.draft = bkNewDraft();
   const d = BK.draft;
@@ -7045,8 +7156,9 @@ async function ordDelete(b){
 /* ----- Order page (#/bookings/<id>): header card + quick links, at-a-glance strip, then dropdown sections ----- */
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
-  if (b) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
-  if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Orders</a><p class="muted">That order wasn't found.</p>`; return; }
+  if (b && !isBrand(b)) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
+  if (!b) { $('#bookingsView').innerHTML = `<a href="${S.view === 'branding' ? '#/branding' : '#/bookings'}" class="bk-back">← ${S.view === 'branding' ? 'Branding' : 'Orders'}</a><p class="muted">That ${S.view === 'branding' ? 'session' : 'order'} wasn't found.</p>`; return; }
+  const isBr = isBrand(b), base = ordBase(b);
   const a = S.agents.find(x => x.id === b.agent_id);
   const co = a && S.companies.find(c => c.id === a.company_id);
   const phone = b.client_phone || a?.phone, email = b.client_email || a?.email, tel = String(phone || '').replace(/[^\d+]/g, '');
@@ -7065,13 +7177,13 @@ function renderBookingDetail(id){
   const mediaMeta = [nPh && plural(nPh, 'photo'), nVid && plural(nVid, 'video'), b.tour_url && '3D tour', ((b.media_files || []).some(f => f.kind === 'floorplan') || (b.floorplan_files || []).length || b.floorplan_url) && 'floor plan'].filter(Boolean).join(' · ') || 'Nothing added yet';
 
   $('#bookingsView').innerHTML = `<div class="od">
-    <a href="#/bookings" class="bk-back">← Orders</a>
-    <h2 class="od-page">Order Overview</h2>
+    <a href="${base}" class="bk-back">← ${isBr ? 'Branding' : 'Orders'}</a>
+    <h2 class="od-page">${isBr ? 'Branding Session' : 'Order Overview'}</h2>
     <section class="panel od-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title">
-        <span class="od-kicker">Order Details</span>
-        <h1>${esc(fullAddr)}</h1>
+        <span class="od-kicker">${isBr ? 'Branding' + (b.session_type ? ' · ' + esc(b.session_type) : '') : 'Order Details'}</span>
+        <h1>${esc(isBr ? ordTitle(b) : fullAddr)}</h1>
         <p class="od-sub">${esc([ordNo(b), a?.full_name || bkClient(b)].filter(Boolean).join(' · '))}</p>
         <div class="od-pills">${ordPill(b)}${b.paid ? '<span class="bk-paid">Paid</span>' : '<span class="bk-unpaid">Unpaid</span>'}</div>
       </div>
@@ -7120,17 +7232,28 @@ function renderBookingDetail(id){
         <b>${money(b.total)}</b>
         <span>${b.paid ? `<span style="color:var(--ok);font-weight:600">Paid</span>${b.paid_at ? ' · ' + esc(ordDate(b.paid_at, true)) : ''}${b.paid_method && PAY_METHODS[b.paid_method] ? ' · ' + esc(PAY_METHODS[b.paid_method]) : ''}` : Number(b.credit_applied) ? `Unpaid · ${money(due)} due after credit` : 'Unpaid'}</span>
         <div class="od-cbtns">
-          <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email Invoice</button></div></div>
+          <button type="button" class="btn small" data-inv="email">${hqi('mail')} Email Invoice</button>${isBr ? '<button type="button" class="btn small" data-goto="invoice">Edit Lines</button>' : ''}</div></div>
       <div class="panel od-card"><label>Status</label>
         <b>${b.delivered_at ? 'Delivered' : live ? 'Not Delivered' : 'Cancelled'}</b>
         <span>${b.delivered_at ? esc(fmtDateTime(b.delivered_at)) : esc(omSummary(b))}</span>
-        <div class="od-cbtns"><a class="btn small" href="#/bookings/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a></div></div>
+        <div class="od-cbtns"><a class="btn small" href="${base}/${b.id}/media" title="Media Library: everything delivered on this order (photos, videos, 3D tour, floor plans, websites)">${ORD_ICON.media} Media Library</a></div></div>
     </div>
     <div id="bkResched"></div>
 
     <div class="od-grid">
       <div class="od-main ap-secs">
-        ${sec('details', 'Order Details', esc([bkPkgName(b), b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label].filter(Boolean).join(' · ')), `
+        ${isBr ? sec('details', 'Session Details', esc([b.session_type, `${(b.branding_tasks || []).filter(t => t.done).length}/${(b.branding_tasks || []).length} tasks done`].filter(Boolean).join(' · ')), `
+          <div class="od-addr">
+            <div class="full"><label>Session title</label><input id="brTitle" value="${esc(ordTitle(b))}" maxlength="120" placeholder="e.g. Spring Headshots" /></div>
+            <div><label>Session type</label><select id="brType">${opt(BR_TYPES.map(t => [t, t]), b.session_type || '', 'Choose…')}</select></div>
+          </div>
+          <p class="muted bk-hint" style="margin:6px 0 0">The title shows on the client's Branding card, the download page, the invoice and the delivery email.</p>
+          <label style="margin-top:10px">Notes</label><textarea id="bkNotes" placeholder="Session notes for you and the editors">${esc(b.notes || '')}</textarea>
+          <div class="bk-actions"><button type="button" class="btn primary" id="brSave">Save Session Details</button></div>
+          <h4 class="od-h">Tasks</h4>
+          <div class="br-tasks">${(b.branding_tasks || []).map((t, k) => `<div class="br-task"><label class="check"><input type="checkbox" data-brt="${k}" ${t.done ? 'checked' : ''} /> <span class="${t.done ? 'muted' : ''}" ${t.done ? 'style="text-decoration:line-through"' : ''}>${esc(t.title)}</span></label><button type="button" class="bk-rmline" data-brtx="${k}" title="Remove task" aria-label="Remove ${esc(t.title)}">✕</button></div>`).join('') || '<p class="muted" style="margin:0">No tasks yet.</p>'}</div>
+          <div class="bk-addrow" style="margin-top:8px"><input id="brTaskNew" placeholder="Add a task" maxlength="120" /><button type="button" class="btn small" id="brTaskAdd">Add</button></div>`) : ''}
+        ${isBr ? '' : sec('details', 'Order Details', esc([bkPkgName(b), b.sqft ? Number(b.sqft).toLocaleString() + ' sq ft' : b.sqft_label].filter(Boolean).join(' · ')), `
           <p class="od-loc">${hqi('pin')} ${esc([b.address, b.unit ? '#' + String(b.unit).replace(/^#/, '') : '', [b.city, [b.state, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(' '))} <span class="od-loclinks"><a href="${esc(mapsUrl(loc))}" target="_blank" rel="noopener">Map</a> · <a href="${esc(dirUrl([loc]))}" target="_blank" rel="noopener">Directions</a></span></p>
           <h4 class="od-h">Listing address</h4>
           <div class="od-addr">
@@ -7195,7 +7318,7 @@ function renderBookingDetail(id){
             ${b.public_token ? `<a class="btn small" href="${PORTAL_URL}/pay/${b.public_token}" target="_blank" rel="noopener" title="The invoice anyone can pay, no sign-in">${hqi('dollar')} Payment Link</a>
             <button type="button" class="btn small" data-inv="copypay">${hqi('link')} Copy Payment Link</button>` : ''}
           </div>
-          <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
+          <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${lineName(i)}${i.kind === 'custom' && !isBr ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
             ${b.coupon_code ? `<div class="bk-cp"><span>Coupon <b>${esc(b.coupon_code)}</b>${b.paid ? '' : ' <button type="button" class="linkbtn" id="odCpX">Remove</button>'}</span><span>−${money(Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0))}</span></div>` : ''}
             ${(Number(b.discount) || 0) - (b.coupon_code ? Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0) : 0) > 0 ? `<div><span>Discount</span><span>−${money((Number(b.discount) || 0) - (b.coupon_code ? Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0) : 0))}</span></div>` : ''}
             ${!b.paid && !b.coupon_code ? `<div class="bk-cprow-od"><label class="check bk-cptick"><input type="checkbox" id="odCpOn" /> Coupon code</label><span class="bk-addrow hidden" id="odCpRow"><input id="odCpCode" placeholder="Code" style="text-transform:uppercase" autocomplete="off" /><button type="button" class="btn small" id="odCpApply">Apply</button></span></div>` : ''}
@@ -7207,14 +7330,14 @@ function renderBookingDetail(id){
           <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}${b.paid && b.paid_note ? ` · Note: ${esc(b.paid_note)}` : ''}</p>
           ${spiroInvHTML(b)}
           ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">${hqi('lock')} This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
-            <label>Add a service</label>
+            <div ${isBr ? 'hidden' : ''}><label>Add a service</label>
             <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
                 ? `<option value="">Choose a service…</option>` + BK.services.filter(x => x.active !== false).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'package' ? -1 : 1) || (x.sort_order || 0) - (y.sort_order || 0))
                     .map(x => `<option value="${x.id}">${esc(x.name)}${x.kind === 'package' ? ' (package)' : ''} · ${money(x.price)}</option>`).join('')
                 : `<option value="">No services set up yet (Settings → Services)</option>`}</select>
-              <button type="button" class="btn small" id="bkAddSvcBtn">Add</button></div>
-            <label style="margin-top:10px">Custom line item</label>
-            <div class="bk-addrow"><input id="bkCustName" placeholder="e.g. Extra twilight edit" maxlength="120" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$0.00" style="max-width:110px" />
+              <button type="button" class="btn small" id="bkAddSvcBtn">Add</button></div></div>
+            <label style="margin-top:${isBr ? '0' : '10px'}">${isBr ? 'Add a line item' : 'Custom line item'}</label>
+            <div class="bk-addrow"><input id="bkCustName" placeholder="${isBr ? 'e.g. Headshot session, 2 looks' : 'e.g. Extra twilight edit'}" maxlength="120" /><input id="bkCustQty" type="number" inputmode="numeric" min="1" step="1" value="1" title="Quantity" aria-label="Quantity" style="max-width:64px" /><input id="bkCustPrice" type="number" inputmode="decimal" step="0.01" placeholder="$ each" title="Price each" aria-label="Price each" style="max-width:110px" />
               <button type="button" class="btn small" id="bkAddCust">Add</button></div>
             <p class="muted bk-hint" style="margin:4px 0 0">The client's invoice updates with the new total. Use a negative price for a credit.</p>
           </div>`}
@@ -7224,13 +7347,13 @@ function renderBookingDetail(id){
         ${sec('media', 'Media Library', esc(omSummary(b)), `
           <div class="om-chips">${(() => { const s = omStats(b); return [
             ['photos', 'Photos', s.photos ? String(s.photos) : s.linkPhotos ? 'Link' : ''], ['videos', 'Videos', s.videos ? String(s.videos) : ''], ['tour', '3D tour', s.tour ? '✓' : ''],
-            ['plans', 'Floor plans', s.plans ? String(s.plans) : ''], ['site', 'Websites', b.websites_enabled === false ? 'Off' : s.sites ? String(s.sites) : '']]
-            .map(([k, l, v]) => `<a class="om-chip ${v ? 'on' : ''}" href="#/bookings/${b.id}/media" data-omk="${k}">${OM_IC[k]}<span>${l}</span><b>${v || '—'}</b></a>`).join(''); })()}</div>
-          ${ccLine(b)}
-          <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Library.</p>
-          <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
+            ['plans', 'Floor plans', s.plans ? String(s.plans) : ''], ['site', 'Websites', b.websites_enabled === false ? 'Off' : s.sites ? String(s.sites) : '']].filter(([k]) => !isBr || k === 'photos' || k === 'videos')
+            .map(([k, l, v]) => `<a class="om-chip ${v ? 'on' : ''}" href="${base}/${b.id}/media" data-omk="${k}">${OM_IC[k]}<span>${l}</span><b>${v || '—'}</b></a>`).join(''); })()}</div>
+          ${isBr ? '' : ccLine(b)}
+          <p class="muted bk-hint" style="margin:8px 0 0">${isBr ? 'Photos and videos' : 'Photos, videos, 3D tour, floor plans and websites'}: everything the client's download page shows. Add or remove media in the Media Library.</p>
+          <div class="bk-actions"><a class="btn primary" href="${base}/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
 
-        ${sec('projects', 'Media Projects', projs.length ? String(projs.length) : '', `
+        ${isBr ? '' : sec('projects', 'Media Projects', projs.length ? String(projs.length) : '', `
           ${projs.length ? projs.map(p => `<div class="mini-row" data-open="${p.id}"><span class="tag ${p.media}">${MEDIA_LABEL[p.media]}</span><span class="t">${esc(typeName(p.project_type_id) || p.name)}</span><span class="r"><span class="status-pill"><span class="dot" style="background:var(--s-${p.status})"></span>${STATUS_LABEL[p.status]}</span></span></div>`).join('')
             : `<p class="muted" style="margin:0">No photo or video projects linked yet.</p>`}
           <div class="bk-actions">
@@ -7239,8 +7362,8 @@ function renderBookingDetail(id){
         ${live ? sec('send', 'Delivery Email', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
       <div class="od-side ap-secs">
-        ${sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
-        ${sec('activity', 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
+        ${isBr ? '' : sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
+        ${sec('activity', isBr ? 'Session Activity' : 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
       </div>
     </div></div>`;
 
@@ -7295,10 +7418,11 @@ function renderBookingDetail(id){
     const name = $('#bkCustName').value.trim(), raw = $('#bkCustPrice').value.trim(), price = Math.round(Number(raw) * 100) / 100;
     if (!name) return toast('Name the line item');
     if (raw === '' || !isFinite(price)) return toast('Enter a price');
-    saveLines([...(b.items || []), { id: 'custom-' + Date.now(), name, kind: 'custom', price }], `${name} added`);
+    const qty = Math.max(1, Math.round(Number($('#bkCustQty')?.value) || 1));
+    saveLines([...(b.items || []), { id: 'custom-' + Date.now(), name, kind: 'custom', ...(qty > 1 ? { qty, unit_price: price } : {}), price: Math.round(price * qty * 100) / 100 }], `${name} added`);
   });
   document.querySelectorAll('#bookingsView [data-rmline]').forEach(x => x.onclick = () => {
-    const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from order ${ordNo(b)}?`)) return;
+    const k = +x.dataset.rmline, it = (b.items || [])[k]; if (!it || !confirm(`Remove "${it.name}" (${money(it.price)}) from ${isBr ? 'session' : 'order'} ${ordNo(b)}?`)) return;
     saveLines((b.items || []).filter((_, j) => j !== k), `${it.name} removed`);
   });
   on('bkCreditBack', async () => {
@@ -7329,6 +7453,17 @@ function renderBookingDetail(id){
     if (x.dataset.inv === 'email') ordEmailInvoice(b, a);
     if (x.dataset.inv === 'copypay') copyPay();
   });
+  // --- Branding session: title/type/notes and the task checklist ---
+  on('brSave', () => {
+    const title = $('#brTitle').value.trim().slice(0, 120); if (!title) return toast('Give the session a title');
+    save({ media_title: title, address: title, session_type: $('#brType').value || null, notes: $('#bkNotes').value.trim() || null }, 'Session details saved');
+  });
+  const brTasks = () => (b.branding_tasks || []).map(t => ({ ...t }));
+  document.querySelectorAll('#bookingsView [data-brt]').forEach(x => x.onchange = () => { const t = brTasks(); t[+x.dataset.brt].done = x.checked; save({ branding_tasks: t }); });
+  document.querySelectorAll('#bookingsView [data-brtx]').forEach(x => x.onclick = () => { const t = brTasks(), k = +x.dataset.brtx; if (!confirm(`Remove the task "${t[k].title}"?`)) return; t.splice(k, 1); save({ branding_tasks: t }, 'Task removed'); });
+  const brAdd = () => { const v = $('#brTaskNew').value.trim(); if (!v) return; save({ branding_tasks: [...brTasks(), { id: 't' + Date.now().toString(36), title: v.slice(0, 120), done: false }] }, 'Task added'); };
+  on('brTaskAdd', brAdd);
+  const btn2 = $('#brTaskNew'); if (btn2) btn2.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); brAdd(); } };
   // --- Order details: address (flows everywhere), property, access & notes ---
   on('odSaveDetails', async () => {
     const v = id => $('#' + id).value.trim();
@@ -7440,7 +7575,7 @@ function renderBookingDetail(id){
   view.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => {
     if (x.dataset.act === 'resched') $('#bkReschedBtn')?.click();
     if (x.dataset.act === 'agent') openAgent(a.id);
-    if (x.dataset.act === 'media') location.hash = `#/bookings/${b.id}/media`;
+    if (x.dataset.act === 'media') location.hash = `${base}/${b.id}/media`;
     if (x.dataset.act === 'dlpage') ordOpenAsClient(b, mBtn, `delivery/${b.id}`);
     if (x.dataset.act === 'copylink') { const u = `${PORTAL_URL}/d/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Download link copied'), () => prompt('Download link', u)); }
     if (x.dataset.act === 'pdf') ordViewPdf(b, mBtn);
@@ -7452,7 +7587,7 @@ function renderBookingDetail(id){
     if (!confirm(`Mark order ${ordNo(b)} as delivered without sending an email?\n\nUse Send delivery instead if the client should get the link.`)) return;
     save({ status: 'completed', delivered_at: new Date().toISOString() }, 'Marked delivered');
   });
-  on('odDelete', async () => { if (await ordDelete(b)) location.hash = '#/bookings'; });
+  on('odDelete', async () => { if (await ordDelete(b)) location.hash = base; });
   on('odSwitch', () => {
     const list = [...S.agents].sort((x, y) => String(x.full_name).localeCompare(String(y.full_name)));
     const box = document.createElement('div');
@@ -7503,7 +7638,7 @@ function omSummary(b){
   return [s.photos ? pl(s.photos, 'photo') : s.linkPhotos && 'Photos (link)', s.videos && pl(s.videos, 'video'), s.tour && '3D tour', s.plans && pl(s.plans, 'floor plan'), s.sites && pl(s.sites, 'website')].filter(Boolean).join(' · ') || 'Nothing added yet';
 }
 // Re-render whichever order page is showing
-const bkRefresh = id => S.view === 'bookings' && S.bkPage === 'media' ? renderOrderMedia(id) : renderBookingDetail(id);
+const bkRefresh = id => inOrders() && S.bkPage === 'media' ? renderOrderMedia(id) : renderBookingDetail(id);
 // Open the client portal signed in as this order's client (delivery page or invoice)
 async function ordOpenAsClient(b, btn, go){
   const label = btn.textContent, win = window.open('about:blank', '_blank'); // open now so the pop-up isn't blocked
@@ -7955,15 +8090,15 @@ function omPaintCounts(b){
 function renderOrderMedia(id){
   const b = BK.list.find(x => x.id === id);
   if (!b) { $('#bookingsView').innerHTML = `<a href="#/bookings" class="bk-back">← Orders</a><p class="muted">That order wasn't found.</p>`; return; }
-  const open = new Set(omOpen()), live = b.status !== 'cancelled';
+  const open = new Set(omOpen()), live = b.status !== 'cancelled', isBr = isBrand(b), base = ordBase(b), brHide = isBr ? ' style="display:none"' : '';
   const sec = (k, title, body) => `<details class="ap-sec od-sec om-sec" data-k="${k}" ${open.has(k) ? 'open' : ''}><summary><span class="om-ic">${OM_IC[k]}</span><span class="ap-st">${title}</span><span class="om-count"></span>${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
   const thumb = ordThumb(b);
   $('#bookingsView').innerHTML = `<div class="od om">
-    <a href="#/bookings/${b.id}" class="bk-back">← Order Overview</a>
+    <a href="${base}/${b.id}" class="bk-back">← ${isBr ? 'Branding Session' : 'Order Overview'}</a>
     <section class="panel om-head">
       <span class="od-thumb">${thumb ? `<img src="${esc(thumb)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment(ORD_ICON.house))">` : ORD_ICON.house}</span>
       <div class="od-title"><h1>Media Library</h1>
-        <p class="od-sub">${esc(ordTitle(b))}${b.media_title ? ' · ' + esc([b.address, b.city].filter(Boolean).join(', ')) : b.city ? ', ' + esc(b.city) : ''} · ${ordNo(b)}</p>
+        <p class="od-sub">${esc(ordTitle(b))}${isBr ? (b.session_type ? ' · ' + esc(b.session_type) : '') : b.media_title ? ' · ' + esc([b.address, b.city].filter(Boolean).join(', ')) : b.city ? ', ' + esc(b.city) : ''} · ${ordNo(b)}</p>
         <p class="om-sum" id="omSum"></p></div>
       <div class="om-acts">
         <button type="button" class="btn small" id="omPreview" title="Open the download page as the client sees it">${hqi('eye')} Preview</button>
@@ -7971,7 +8106,7 @@ function renderOrderMedia(id){
         ${live ? `<button type="button" class="btn small primary" id="omSend">${ORD_ICON.send}<span>${b.delivered_at ? 'Resend delivery' : 'Deliver'}</span></button>` : ''}
       </div>
     </section>
-    <p class="muted bk-hint om-note">Everything in the Media Library shows on the client's download page${b.paid || b.require_payment === false ? '' : ' (watermarked previews until the order is paid)'} and will feed the property website. Add or remove media here.</p>
+    <p class="muted bk-hint om-note">Everything in the Media Library shows on the client's download page${b.paid || b.require_payment === false ? '' : ` (watermarked previews until the ${isBr ? 'session' : 'order'} is paid)`}${isBr ? ' and in the Branding section of their portal' : ' and will feed the property website'}. Add or remove media here.</p>
     <div class="ap-secs om-secs">
       ${sec('photos', 'Photos', `
         <div class="dv-drop om-drop-desk" id="omPhDrop" tabindex="0" role="button" aria-label="Upload photos">
@@ -7980,21 +8115,21 @@ function renderOrderMedia(id){
         <button type="button" class="btn primary om-up-phone" id="omPhBtn">${hqi('upload')} Upload photos</button>
         <div class="om-selbar" id="omSelBar" hidden></div>
         <div class="dbx-grid om-grid" id="omGrid"></div>
-        <div class="dbx-bar" style="margin-top:16px">
+        <div class="dbx-bar" style="margin-top:16px${isBr ? ';display:none' : ''}">
           <div class="dbx-path">${b.dropbox_path ? `<span class="muted">Dropbox folder</span><b title="${esc(b.dropbox_path)}">${esc(b.dropbox_path)}</b>` : '<span class="muted">No Dropbox folder yet. It\'s made when the order is marked completed.</span>'}</div>
           <div class="dbx-acts">${b.dropbox_path ? '' : '<button type="button" class="btn small" id="dbxMake">Create folders</button>'}<button type="button" class="btn small" id="dbxPathEdit">${b.dropbox_path ? 'Change' : 'Set path'}</button><button type="button" class="btn small primary" id="dbxSync">⟳ Sync with Dropbox</button></div>
         </div>
-        <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0">${b.photos_synced_at ? 'Last synced with Dropbox ' + esc(fmtDateTime(b.photos_synced_at)) + '. ' : ''}Sync pulls in new photos from the final photos folder. Photos you remove here stay in Dropbox.</p>
-        <details class="dv-alt" ${b.photos_url ? 'open' : ''}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>`)}
+        <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0${isBr ? ';display:none' : ''}">${b.photos_synced_at ? 'Last synced with Dropbox ' + esc(fmtDateTime(b.photos_synced_at)) + '. ' : ''}Sync pulls in new photos from the final photos folder. Photos you remove here stay in Dropbox.</p>
+        <details class="dv-alt" ${b.photos_url ? 'open' : ''}${brHide}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>`)}
       ${sec('videos', 'Videos', `
-        <div class="grid2">
+        <div class="grid2"${brHide}>
           <div><label>Branded video</label><input id="dvVidB" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).brand?.url || '')}" /></div>
           <div><label>Unbranded video</label><input id="dvVidU" placeholder="https://vimeo.com/…" value="${esc(dvVid(b).unbrand?.url || '')}" /></div>
         </div>
-        <p class="muted bk-hint" style="margin:6px 0 0">Vimeo links. The client sees each video titled <b>${esc(dvAddr(b.address))}</b>, with its name as a small tag.</p>
+        <p class="muted bk-hint" style="margin:6px 0 0">${isBr ? 'Vimeo links. Use + Add video for each one and give it a name.' : 'Vimeo links. The client sees each video titled'} ${isBr ? '' : `<b>${esc(dvAddr(b.address))}</b>, with its name as a small tag.`}</p>
         <div id="dvVidMore">${dvVid(b).more.map((v, i) => dvVidRow(v, i)).join('')}</div>
         <button type="button" class="btn small" id="dvVidAdd" style="margin-top:8px">+ Add video</button>`)}
-      ${sec('tour', '3D tour', `
+      <div${brHide}>${sec('tour', '3D tour', `
         <label>3D tour link</label>
         <div class="om-row"><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" />${b.tour_url ? `<a class="btn small" href="${esc(b.tour_url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</div>
         <div id="dvTourPrev"></div>`)}
@@ -8011,7 +8146,7 @@ function renderOrderMedia(id){
         <div class="grid2" style="margin-top:10px">
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
           <div><label>Cover photo</label><p class="muted bk-hint" style="margin:6px 0 0">Always the first photo in the gallery. Drag a different photo to the front to change it.</p></div>
-        </div>`)}
+        </div>`)}</div>
     </div>
     <div class="om-bar"><span class="muted" id="omDirty">Photos, uploads and floor plans save on their own. Links save here.</span><button type="button" class="btn primary" id="omSave">Save media</button></div>
   </div>`;
@@ -8023,7 +8158,7 @@ function renderOrderMedia(id){
   }));
   on('omPreview', () => ordOpenAsClient(b, $('#omPreview'), `delivery/${b.id}`));
   on('omCopy', () => { const u = `${PORTAL_URL}/d/${b.public_token}`; navigator.clipboard?.writeText(u).then(() => toast('Download link copied'), () => prompt('Download link', u)); });
-  on('omSend', () => { BK.goSend = true; location.hash = `#/bookings/${b.id}`; });
+  on('omSend', () => { BK.goSend = true; location.hash = `${base}/${b.id}`; });
   // unsaved link edits: say so in the save bar
   view.querySelectorAll('.om-secs input:not([type=file]):not(#dvSites)').forEach(i => i.addEventListener('input', () => { $('#omDirty').textContent = 'Unsaved changes'; $('#omDirty').classList.add('warn'); }));
   on('omSave', async () => {
@@ -8094,6 +8229,7 @@ async function dsWire(b, a, onSent){
   let tpls; try { tpls = (await dtLoad()).filter(t => t.active); } catch (e) { return fail(e); }
   if (!$('#dsTpl')) return; // navigated away
   sel.innerHTML = tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name.replace(/\s*\(default\)$/i, ''))}</option>`).join('') || '<option value="">No templates — add one in Portal settings</option>';
+  if (isBrand(b) && tpls.some(t => t.key === 'branding')) sel.value = 'branding';
   const tpl = () => tpls.find(x => x.key === sel.value);
   let seq = 0, timer;
   const paint = async () => {
