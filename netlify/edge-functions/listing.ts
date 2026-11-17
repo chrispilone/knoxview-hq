@@ -37,6 +37,7 @@ export default async (req: Request, _ctx: Context) => {
     'cache-control': noStore ? 'private, no-store' : 'public, max-age=0, must-revalidate',
     'netlify-cdn-cache-control': noStore ? 'no-store' : 'public, s-maxage=120, stale-while-revalidate=600',
     'x-robots-tag': mls || data?.preview ? 'noindex' : 'all',
+    'netlify-vary': 'query=preview', // preview links never share a cached copy with the public page
   };
   if (status === 404 || data?.missing) return new Response(offPage('Listing not found', "We couldn't find this property website."), { status: 404, headers });
   if (!data || data.error || status >= 500) return new Response(offPage('Something went wrong', 'Please try again in a minute.'), { status: 502, headers: { ...headers, 'netlify-cdn-cache-control': 'no-store' } });
