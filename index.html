@@ -125,6 +125,7 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .dv-vrow{margin-top:10px}
 .dv-vprev{margin-top:8px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9}.dv-vprev iframe{width:100%;height:100%;border:0;display:block}
 .dv-vprev-bad{margin-top:6px;font-size:12px;color:var(--muted)}
+.dv-vroll{margin-top:8px;width:100%;justify-content:center}
 .dv-drop{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;transition:background .15s,border-color .15s}
 .dv-drop:hover,.dv-drop.over{border-color:var(--accent,#5b8def);background:var(--panel-2)}.dv-drop.busy{opacity:.7;pointer-events:none}
 .dv-plan{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
@@ -6845,6 +6846,7 @@ function dvVidPreview(inp){
   const host = inp.closest('div') || inp.parentNode;
   let box = host.querySelector(':scope > .dv-vprev, :scope > .dv-vprev-bad');
   const url = inp.value.trim(), src = dvVimeoEmbed(url);
+  if (!src) host.querySelector(':scope > .dv-vroll')?.remove();
   if (!url) { box?.remove(); return; }
   if (!src) {
     if (!box || !box.classList.contains('dv-vprev-bad')) { box?.remove(); host.insertAdjacentHTML('beforeend', '<p class="dv-vprev-bad">No preview: this isn\'t a Vimeo video link.</p>'); }
@@ -6852,6 +6854,46 @@ function dvVidPreview(inp){
   }
   if (!box || !box.classList.contains('dv-vprev')) { box?.remove(); host.insertAdjacentHTML('beforeend', '<div class="dv-vprev"><iframe loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video preview"></iframe></div>'); box = host.querySelector(':scope > .dv-vprev'); }
   const fr = box.querySelector('iframe'); if (fr.getAttribute('src') !== src) fr.setAttribute('src', src);
+  if (omIsPhone() && !host.querySelector(':scope > .dv-vroll')) {
+    box.insertAdjacentHTML('afterend', `<button type="button" class="btn small dv-vroll">${hqi('download')} Save to Camera Roll</button>`);
+    host.querySelector(':scope > .dv-vroll').onclick = () => {
+      const label = inp.id === 'dvVidB' ? 'Branded' : inp.id === 'dvVidU' ? 'Unbranded' : (inp.closest('.dv-vrow')?.querySelector('.dv-vlbl')?.value.trim() || '');
+      omSaveVideoToRoll(OMG.b, inp.value.trim(), label);
+    };
+  }
+}
+// Save a Vimeo video to the phone's Camera Roll: confirm, get the MP4 ready (phone-friendly, up to 1080p), then the share sheet ("Save Video")
+async function omSaveVideoToRoll(b, url, label){
+  if (!b || !url) return;
+  const close = () => closeLayer();
+  const shell = inner => { $('#layer').innerHTML = `<div class="overlay" id="ov"></div><div class="modal om-roll" role="dialog" aria-modal="true">${inner}</div>`; $('#ov').onclick = close; };
+  shell(`<h2 style="margin:0 0 6px">Save this video to your Camera Roll?</h2>
+    <p class="muted" style="margin:0 0 4px">${label ? `<b>${esc(label)}</b> · ` : ''}It saves straight to the Photos app on this phone. Videos can take a minute to get ready.</p>
+    <div class="set-actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button type="button" class="btn" id="omVNo">Cancel</button><button type="button" class="btn primary" id="omVGo">${hqi('download')} Save to Camera Roll</button></div>`);
+  $('#omVNo').onclick = close;
+  $('#omVGo').onclick = async () => {
+    shell(`<p style="text-align:center;margin:10px 0" id="omVProg">Getting the video ready…</p>`);
+    let file;
+    try {
+      const { url: dl } = await dbxCall('video_dl', { bookingId: b.id, url, label });
+      const r = await fetch(dl); if (!r.ok || !r.body) throw new Error((await r.text().catch(() => '')) || 'Couldn\'t get the video');
+      const tot = +r.headers.get('content-length') || 0, rd = r.body.getReader(), parts = []; let got = 0;
+      for (;;) { const x = await rd.read(); if (x.done) break; parts.push(x.value); got += x.value.length; const el = $('#omVProg'); if (el) el.textContent = `Getting the video ready… ${tot ? Math.round(got / tot * 100) + '%' : (got / 1048576).toFixed(0) + ' MB'}`; }
+      const name = (r.headers.get('content-disposition') || '').match(/filename="([^"]+)"/)?.[1] || 'video.mp4';
+      file = new File(parts, name, { type: 'video/mp4' });
+    } catch (e) { close(); return fail(e); }
+    if (!(navigator.canShare && navigator.canShare({ files: [file] }))) { // no share sheet: plain download
+      close(); const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); return;
+    }
+    const ok = await new Promise(res => {
+      shell(`<p style="text-align:center;font-weight:600;margin:6px 0 4px">Your video is ready for your Camera Roll.</p>
+        <p class="muted" style="text-align:center;margin:0 0 14px">Tap <b>Save to Camera Roll</b>, then choose <b>Save Video</b>.</p>
+        <button type="button" class="btn primary" id="omVShare" style="width:100%">${hqi('download')} Save to Camera Roll</button>`);
+      $('#omVShare').onclick = () => navigator.share({ files: [file] }).then(() => res(true), e => res(e?.name === 'AbortError' ? false : null)); // must run inside the tap
+      $('#ov').onclick = () => res(false);
+    });
+    close(); if (ok) toast('Video saved to your Camera Roll');
+  };
 }
 function dvWireVidPreview(inp){
   if (!inp || inp._vp) return; inp._vp = true;
@@ -7470,6 +7512,7 @@ async function omUploadLinks(b, items){
   for (const f of items) { const cur = omLink(b, f.name); omLinksSet(b, [{ name: f.name, thumb: u.get(sp(f)) || cur.thumb, view: u.get(vp(f)) || cur.view, dl: cur.dl || null }]); }
 }
 function omGallery(b){
+  OMG.b = b;
   const grid = $('#omGrid'); if (!grid) return;
   const list = omList(b), names = new Set(list.map(f => f.name));
   for (const n of [...OMG.sel]) if (!names.has(n)) OMG.sel.delete(n);
