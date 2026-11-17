@@ -94,6 +94,8 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .pw-box{border:1px solid var(--line,#e3e6eb);border-radius:12px;padding:6px 12px;margin:12px 0}
 .pw-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#eee)}.pw-row:last-child{border:0}.pw-row>div{flex:1;min-width:0}
 .pw-row b{display:block;font-size:13px}.pw-row a{font-size:13px;word-break:break-all}.pw-meta{justify-content:space-between;flex-wrap:wrap}
+.pw-prev{margin:4px 0 14px}.pw-frame{position:relative;overflow:hidden;border:1px solid var(--line,#e3e6eb);border-radius:12px;background:#14130f;min-height:120px;display:grid;place-items:center}
+.pw-frame iframe{position:absolute;top:0;left:0;width:1280px;height:800px;border:0;transform-origin:0 0}
 .pw-facts{display:grid;gap:6px;margin:6px 0 8px}.pw-fact{display:grid;grid-template-columns:120px 1fr 1.3fr auto;gap:6px;align-items:center}.pw-fb{display:flex;gap:4px;align-items:center}
 @media (max-width:640px){.pw-fact{grid-template-columns:1fr 1fr}.pw-fact select{grid-column:1/-1}.pw-fb{grid-column:1/-1;justify-content:flex-end}}
 .cc-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0;font-size:13px}
@@ -6775,13 +6777,23 @@ const PW_ICONS = { price: 'Price ($)', bed: 'Beds', bath: 'Baths', size: 'Size',
 function pwPanel(b){
   if (!b.site_slug) return `<p class="muted bk-hint" style="margin:10px 0">The property website is made when this order is marked <b>Completed</b>.</p>`;
   const u = `https://listing.knoxview.com/${b.site_slug}`;
-  const ours = (b.website_url || '').startsWith(u);
   return `<div class="pw-box">
     <div class="pw-row"><div><b>Branded</b><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace('https://', ''))}</a></div><button type="button" class="btn small" data-pwcopy="${esc(u)}">Copy</button></div>
     <div class="pw-row"><div><b>MLS (unbranded)</b><a href="${esc(u)}/mls" target="_blank" rel="noopener">${esc(u.replace('https://', ''))}/mls</a></div><button type="button" class="btn small" data-pwcopy="${esc(u)}/mls">Copy</button></div>
     <div class="pw-row pw-meta"><span class="muted">${(b.site_views || 0).toLocaleString()} view${b.site_views === 1 ? '' : 's'}${b.site_updated_at ? ` · details edited ${esc(fmtDateTime(b.site_updated_at))}` : ''}</span>
-      <span style="display:flex;gap:6px">${!ours ? `<button type="button" class="btn small" id="pwUseLinks" title="Point the download page's website cards at these links">Use on download page</button>` : ''}<button type="button" class="btn small primary" id="pwEdit">Edit details</button></span></div>
-  </div>`;
+      <span style="display:flex;gap:6px"><a class="btn small" href="${esc(u)}" target="_blank" rel="noopener">Open ↗</a><button type="button" class="btn small primary" id="pwEdit">Edit details</button></span></div>
+  </div>
+  <div class="pw-prev" id="pwPrev" data-id="${b.id}"><div class="pw-frame"><span class="muted">Loading preview…</span></div></div>`;
+}
+// Live preview of the branded website, drawn at desktop width and scaled to fit (a preview link, so it shows even before it's live)
+async function pwWirePreview(b){
+  const box = $('#pwPrev'); if (!box || !b.site_slug) return;
+  let d; try { d = await pwCall('editor', { bookingId: b.id }); } catch (e) { box.querySelector('.pw-frame').innerHTML = `<span class="muted">${esc(e.message)}</span>`; return; }
+  if (!document.body.contains(box)) return;
+  const src = `${d.links.branded}?preview=${encodeURIComponent(d.preview)}`;
+  box.innerHTML = `<div class="pw-frame"><iframe title="Branded property website preview" loading="lazy" src="${esc(src)}"></iframe></div>`;
+  const fit = () => { const f = box.querySelector('.pw-frame'), i = f?.querySelector('iframe'); if (!i) return; const k = f.clientWidth / 1280; i.style.transform = `scale(${k})`; f.style.height = Math.round(800 * k) + 'px'; };
+  fit(); new ResizeObserver(fit).observe(box);
 }
 async function pwCall(action, body){
   const { data, error } = await sb.functions.invoke('listing', { body: { action, ...body } });
@@ -6798,7 +6810,8 @@ async function pwEditor(b){
       <p class="muted bk-hint" style="margin-top:-6px">${d.live ? 'Live' : d.locked ? 'Not live until the order is paid' : 'Not live (turned off or not completed)'} · ${(d.views || 0).toLocaleString()} views ·
         <a href="${esc(d.links.branded)}${d.live ? '' : '?preview=' + encodeURIComponent(d.preview)}" target="_blank" rel="noopener">Preview branded ↗</a> ·
         <a href="${esc(d.links.mls)}${d.live ? '' : '?preview=' + encodeURIComponent(d.preview)}" target="_blank" rel="noopener">Preview MLS ↗</a></p>
-      <div class="grid2"><div><label>Title</label><input id="pwT" maxlength="140" value="${esc(s.title || '')}" /></div><div><label>Subtitle</label><input id="pwS" maxlength="160" value="${esc(s.subtitle || '')}" /></div></div>
+      <div class="grid2"><div><label>Title</label><input id="pwT" maxlength="140" value="${esc(s.title || '')}" /></div><div><label>Subtitle</label><input id="pwS" maxlength="160" value="${esc(s.subtitle || '')}" /></div>
+        <div><label>Design</label><select id="pwTpl">${Object.entries(d.templates || { cooper: 'The Cooper' }).map(([k, l]) => `<option value="${k}" ${s.template === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div></div>
       <label style="margin-top:12px">Details <span class="muted">(blank values are hidden)</span></label>
       <div class="pw-facts">${s.facts.map((f, i) => `<div class="pw-fact" data-i="${i}"><select data-k="icon">${Object.entries(PW_ICONS).map(([k, l]) => `<option value="${k}" ${f.icon === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <input data-k="label" maxlength="40" value="${esc(f.label || '')}" placeholder="Label" /><input data-k="value" maxlength="60" value="${esc(f.value || '')}" placeholder="Value" />
@@ -6814,16 +6827,13 @@ async function pwEditor(b){
       try { const r = await pwCall('save', { bookingId: b.id, site: d.site }); d.site = r.site; b.site = r.site; b.site_updated_at = new Date().toISOString(); toast('Property website saved'); close(); }
       catch (e) { fail(e); btn.disabled = false; } };
   };
-  const read = () => { const s = d.site; s.title = box.querySelector('#pwT').value; s.subtitle = box.querySelector('#pwS').value; s.description = box.querySelector('#pwD').value;
+  const read = () => { const s = d.site; s.template = box.querySelector('#pwTpl').value; s.title = box.querySelector('#pwT').value; s.subtitle = box.querySelector('#pwS').value; s.description = box.querySelector('#pwD').value;
     box.querySelectorAll('.pw-fact').forEach(r => { const f = s.facts[+r.dataset.i]; r.querySelectorAll('[data-k]').forEach(el => f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value); }); };
   draw();
 }
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-pwcopy]'); if (c) { navigator.clipboard?.writeText(c.dataset.pwcopy).then(() => toast('Link copied'), () => prompt('Link', c.dataset.pwcopy)); return; }
   if (e.target.closest('#pwEdit')) { const b = BK.list.find(x => location.hash.includes(x.id)); if (b) pwEditor(b); return; }
-  if (e.target.closest('#pwUseLinks')) { const b = BK.list.find(x => location.hash.includes(x.id)); if (!b) return;
-    const patch = { website_url: `https://listing.knoxview.com/${b.site_slug}`, website_unbranded_url: `https://listing.knoxview.com/${b.site_slug}/mls` };
-    sb.from('bookings').update(patch).eq('id', b.id).then(({ error }) => { if (error) return fail(error); Object.assign(b, patch); toast('Download page now uses the new website'); bkRefresh(b.id); }); }
 });
 /* ----- CubiCasa floor plan status (drafts are made automatically for new photography orders) ----- */
 const CC_LABEL = { Draft: ['Draft · waiting for the scan', ''], New: ['Draft · waiting for the scan', ''], Pending: ['Scan sent · CubiCasa is drawing it', 'warn'],
@@ -7540,14 +7550,14 @@ function ordEmailInvoice(b, a){
 // Link fields in the Media Library -> one save (photos, plans and uploads save on their own)
 function omCollect(b){
   const val = id => { const el = $('#' + id); if (!el) return undefined; const v = el.value.trim(); return v || null; };
-  const ids = ['dvPhotos', 'dvTour', 'dvPlan', 'dvSite', 'dvSite2', 'dvMkt'];
+  const ids = ['dvPhotos', 'dvTour', 'dvPlan', 'dvMkt'];
   const bad = ids.find(id => val(id) && !/^https:\/\//i.test(val(id)));
   if (bad) { toast('Links need to start with https://'); $('#' + bad)?.focus(); return null; }
   const videos = [[val('dvVidB'), 'Branded'], [val('dvVidU'), 'Unbranded'],
     ...[...document.querySelectorAll('#dvVidMore .dv-vrow')].map(r => [r.querySelector('.dv-vurl').value.trim(), r.querySelector('.dv-vlbl').value.trim()])]
     .filter(([url]) => url).map(([url, label]) => ({ url, label, ...((b.videos || []).find(p => p.url === url)?.portrait ? { portrait: true } : {}) }));
   if (videos.some(v => !/^https:\/\//i.test(v.url))) { toast('Video links need to start with https://'); return null; }
-  return { photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'), website_url: val('dvSite'), website_unbranded_url: val('dvSite2'),
+  return { photos_url: val('dvPhotos'), videos, tour_url: val('dvTour'), floorplan_url: val('dvPlan'),
     marketing_url: val('dvMkt'), websites_enabled: $('#dvSites') ? $('#dvSites').checked : b.websites_enabled };
 }
 /* ----- Media Library photo gallery -----
@@ -7981,12 +7991,10 @@ function renderOrderMedia(id){
           <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
         <div id="dvPlans"></div>
         <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>`)}
-      ${sec('site', 'Property websites & marketing', `
+      ${sec('site', 'Property Website', `
         <label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Property website on</b> <span class="muted">(off: the website shows "not available" and the download page hides it)</span></span></label>
         ${pwPanel(b)}
         <div class="grid2" style="margin-top:10px">
-          <div><label>Branded website link <span class="muted">(download page)</span></label><input id="dvSite" value="${esc(b.website_url || '')}" placeholder="https://" /></div>
-          <div><label>Unbranded website link <span class="muted">(download page)</span></label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" placeholder="https://" /></div>
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
           <div><label>Cover photo</label><p class="muted bk-hint" style="margin:6px 0 0">Always the first photo in the gallery. Drag a different photo to the front to change it.</p></div>
         </div>`)}
@@ -8028,7 +8036,7 @@ function renderOrderMedia(id){
   drop.ondragleave = () => drop.classList.remove('over');
   drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files.length) omUploadPhotos(b, e.dataTransfer.files); };
   omGallery(b);
-  dvWireTour();
+  dvWireTour(); pwWirePreview(b);
   dvWire(b);   // videos + floor plans
   dbxWire(b);  // Dropbox photos
 }

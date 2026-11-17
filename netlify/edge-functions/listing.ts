@@ -1,7 +1,9 @@
 // Single property websites: https://listing.knoxview.com/<slug> (branded) and /<slug>/mls (unbranded, MLS-safe).
 // Lives on the HQ Netlify site (listing.knoxview.com is a domain alias there). Also reachable on any host of this site at
 // /l/<slug>[/mls] (testing and deploy previews).
-// Data comes from the Supabase `listing` function; this draws the page (template "signature").
+// Data comes from the Supabase `listing` function; this draws the page in the order's design (TEMPLATES below).
+// The Cooper (`cooper`) is the default design. New designs: add a render function and list it in TEMPLATES (and in the
+// listing function's TEMPLATES so clients can pick it).
 // Photos go through Netlify Image CDN (/.netlify/images), resized per screen and cached.
 import type { Config, Context } from '@netlify/edge-functions';
 
@@ -42,7 +44,8 @@ export default async (req: Request, _ctx: Context) => {
   if (status === 404 || data?.missing) return new Response(offPage('Listing not found', "We couldn't find this property website."), { status: 404, headers });
   if (!data || data.error || status >= 500) return new Response(offPage('Something went wrong', 'Please try again in a minute.'), { status: 502, headers: { ...headers, 'netlify-cdn-cache-control': 'no-store' } });
   if (data.off) return new Response(offPage(data.title || 'Property website', 'This property website is not available right now.'), { status: 200, headers });
-  return new Response(render(data, { origin: url.origin, base, preview }), { status: 200, headers });
+  const draw = TEMPLATES[data.template] || TEMPLATES.cooper;
+  return new Response(draw(data, { origin: url.origin, base, preview }), { status: 200, headers });
 };
 
 export const config: Config = {
@@ -85,7 +88,8 @@ const ICON: Record<string, string> = {
 const ICON_EYE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ic = (k: string, s = 20) => `<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k] || ICON.star}</svg>`;
 
-function render(d: any, o: { origin: string; base: string; preview?: string }) {
+/* ===== The Cooper (default design) ===== */
+function renderCooper(d: any, o: { origin: string; base: string; preview?: string }) {
   const photos: { u: string }[] = d.photos || [];
   const hero = photos[0]?.u;
   const a = d.agent, mls = !!d.mls;
@@ -128,7 +132,7 @@ ${hero ? `<link rel="preload" as="image" imagesrcset="${esc(srcset(hero))}" imag
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>${CSS}</style>
 </head>
-<body class="${mls ? 'mls' : 'branded'}">
+<body class="tpl-cooper ${mls ? 'mls' : 'branded'}">
 ${d.preview ? '<div class="pv">Preview · only you can see this until the website is live</div>' : ''}
 <header class="top" id="top">
   <div class="brand">${!mls && a?.logo ? `<img src="${esc(img(a.logo, 360))}" alt="${esc(a.brokerage || a.name || '')}">` : !mls && a ? `<span class="brand-t">${esc(a.team || a.brokerage || a.name)}</span>` : ''}</div>
@@ -238,6 +242,8 @@ ${a && (a.phone || a.email) ? `<div class="dock">${a.phone ? `<a href="tel:${esc
 <script>${JS}</script>
 </body></html>`;
 }
+
+const TEMPLATES: Record<string, (d: any, o: { origin: string; base: string; preview?: string }) => string> = { cooper: renderCooper };
 
 function offPage(title: string, msg: string) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)}</title>
