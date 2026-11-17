@@ -1239,6 +1239,11 @@ table.dir.ord td{padding:8px 12px}
 .ord-ic.on{color:var(--ok);opacity:1;background:rgba(30,142,90,.12)}
 .ord-ic.paid{color:var(--ok);opacity:1;background:rgba(30,142,90,.12)}
 .ord-ic.unpaid{color:var(--danger);opacity:1;background:rgba(192,57,43,.1)}
+button.ord-ic{border:1px solid transparent;padding:0;cursor:pointer;font:inherit}
+button.ord-ic:hover{border-color:currentColor}
+button.ord-ic:disabled{cursor:default}button.ord-ic:disabled:hover{border-color:transparent}
+.ord-ic.unshot{color:var(--danger);opacity:1;background:rgba(192,57,43,.1)}
+.ord-ic.shot{color:var(--ok);opacity:1;background:rgba(30,142,90,.12)}
 tr.ord-x td,.ord-card.ord-x{opacity:.55}
 tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .ord-tabs button .muted{font-size:11.5px;margin-left:2px}
@@ -1587,7 +1592,10 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
 .od-kicker{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .od-clinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:12px}
 .od-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.od-cta{grid-area:cta;display:flex;gap:8px;align-items:center}
+.od-cta{grid-area:cta;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;align-self:start}
+.od-cta .btn.od-shoot{flex-basis:100%;justify-content:center;font-weight:600}
+.btn.od-shoot.todo{color:var(--danger);border-color:rgba(192,57,43,.45);background:rgba(192,57,43,.07)}.btn.od-shoot.todo:hover{background:rgba(192,57,43,.13)}
+.btn.od-shoot.done{color:var(--ok);border-color:rgba(30,142,90,.45);background:rgba(30,142,90,.1)}.btn.od-shoot.done:hover{background:rgba(30,142,90,.16)}
 .od-cta .btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.od-cta .btn svg{width:16px;height:16px}
 .od-links{grid-area:links;display:flex;flex-wrap:wrap;gap:6px}
 .od-links .btn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}.od-links .btn svg{width:14px;height:14px}
@@ -1636,6 +1644,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
   .od-cta{display:grid;grid-template-columns:1fr 1fr}
   .od-cta .btn,.od-more,.od-more .btn{width:100%;justify-content:center}
   .od-cta:not(:has(#odSend)){grid-template-columns:1fr}
+  .od-cta .btn.od-shoot{grid-column:1/-1}
   .od-menu{left:0;right:0;min-width:0}
   .od-menu button{padding:12px}
   .od-links{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}
@@ -5930,6 +5939,19 @@ const ordThumb = b => b.cover_url || (b.media_files || []).filter(f => f.kind ==
 const ordNo = b => b?.order_no || (b?.number ? '#' + b.number : '');
 const ordTitle = b => (b.media_title || '').trim() || b.address || '';
 const ordShot = b => b.shoot_start && (b.status === 'completed' || b.delivered_at) ? b.shoot_start : null; // "Date shot" fills in once the shoot is marked complete
+// Shoot done = marked complete (or already delivered). Red until then, green after.
+const ordShotDone = b => b.status === 'completed' || !!b.delivered_at;
+async function ordSetShot(b, done){
+  if (!b || b.status === 'cancelled') return false;
+  if (!done && b.delivered_at) { toast('This order was already delivered, so the shoot stays complete.'); return false; }
+  if (!done && !confirm(`Mark the shoot for ${ordNo(b)} as not complete?`)) return false;
+  const patch = { status: done ? 'completed' : 'scheduled' };
+  const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
+  if (error) { fail(error); return false; }
+  Object.assign(b, patch); toast(done ? 'Shoot marked complete' : 'Shoot marked not complete');
+  if (done) dbxAutoFolders(b);
+  return true;
+}
 // Status shown in the list: a sent delivery reads as Delivered
 const ordPill = b => b.status !== 'cancelled' && b.delivered_at ? `<span class="status-pill"><span class="dot" style="background:var(--s-delivered)"></span>Delivered</span>` : bkPill(b.status);
 const ordDate = (d, yr) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: yr || new Date(d).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined }) : '';
@@ -5957,7 +5979,8 @@ function renderBookingList(){
   const pager = rows.length ? dirPager(st, rows.length, 'orders') : '', page = rows.slice(st.page * st.size, (st.page + 1) * st.size);
   const th = (k, l, cls = '') => dirTh({ sort: st.sort || 'shoot', dir }, k, l, cls);
   const agentCell = b => { const a = S.agents.find(x => x.id === b.agent_id); return `<div class="dir-who">${agentAvatar(a || { full_name: bkClient(b) })}<span>${esc(bkClient(b))}</span></div>`; };
-  const icons = b => `<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
+  const shotIc = b => b.status === 'cancelled' ? '' : `<button type="button" class="ord-ic ${ordShotDone(b) ? 'shot' : 'unshot'}" data-shot="${b.id}" ${b.delivered_at ? 'disabled' : ''} title="${ordShotDone(b) ? 'Shoot completed' + (b.delivered_at ? '' : ' · click to undo') : 'Shoot not completed · click to mark complete'}" aria-label="${ordShotDone(b) ? 'Shoot completed' : 'Mark shoot complete'} for order ${ordNo(b)}">${hqi('camera')}</button>`;
+  const icons = b => `${shotIc(b)}<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
     <span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' + (b.paid_at ? ' ' + esc(ordDate(b.paid_at, true)) : '') : 'Unpaid · ' + esc(money(b.total))}">${ORD_ICON.paid}</span>`;
   const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${ordNo(b)}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Media Library · ${esc(omSummary(b))}" aria-label="Media Library for order ${ordNo(b)}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${ordNo(b)}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${ordNo(b)}">${ORD_ICON.more}</button></div>`;
   const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
@@ -5974,7 +5997,7 @@ function renderBookingList(){
       <input type="search" id="bkSearch" placeholder="Search address, agent, #…" value="${esc(BK.q)}" />
     </div>
     ${rows.length ? `<div class="dir-wrap ord-desk"><table class="dir ord"><thead><tr>
-        <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Delivered · Paid">Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+        <th class="ord-th-thumb"></th>${th('address', 'Address')}${th('agent', 'Agent')}${th('status', 'Status', 'm-hide')}${th('shoot', 'Shoot date')}<th class="m-hide">Time</th>${th('submitted', 'Submitted', 'xl-hide')}${th('shot', 'Shot', 'xl-hide')}<th title="Shot · Delivered · Paid">Shot · Delivered · Paid</th><th style="text-align:right">Actions</th></tr></thead><tbody>
       ${page.map(b => `<tr data-id="${b.id}" class="${b.status === 'cancelled' ? 'ord-x' : ''}">
         <td class="ord-td-thumb">${thumb(b)}</td>
         <td class="ord-addr"><b>${esc(ordTitle(b))}</b><small>${esc([b.city, ordNo(b), bkPkgName(b)].filter(Boolean).join(' · '))}</small></td>
@@ -6000,6 +6023,7 @@ function renderBookingList(){
   root.querySelectorAll('[data-edit]').forEach(x => x.onclick = () => { location.hash = `#/bookings/${x.dataset.edit}`; });
   root.querySelectorAll('[data-media]').forEach(x => x.onclick = () => { location.hash = `#/bookings/${x.dataset.media}/media`; });
   root.querySelectorAll('[data-send]').forEach(x => x.onclick = () => openDeliveryModal(x.dataset.send));
+  root.querySelectorAll('[data-shot]').forEach(x => x.onclick = async e => { e.stopPropagation(); const b = BK.list.find(o => o.id === x.dataset.shot); x.disabled = true; await ordSetShot(b, !ordShotDone(b)); renderBookingList(); });
   root.querySelectorAll('[data-more]').forEach(x => x.onclick = e => { e.stopPropagation(); ordMenu(x, BK.list.find(b => b.id === x.dataset.more)); });
   if (rows.length) wireDir(root, st, rows.length, renderBookingList);
 }
@@ -6008,7 +6032,7 @@ function ordMenu(btn, b){
   document.querySelector('.ord-menu')?.remove();
   if (!b) return;
   const m = document.createElement('div'); m.className = 'ord-menu';
-  m.innerHTML = `<button data-m="edit">Manage order</button><button data-m="media">Media Library</button>${b.status !== 'cancelled' ? '<button data-m="send">Send delivery email</button>' : ''}<button data-m="del" class="danger">Delete order</button>`;
+  m.innerHTML = `<button data-m="edit">Manage order</button><button data-m="media">Media Library</button>${b.status !== 'cancelled' ? (ordShotDone(b) ? (b.delivered_at ? '' : '<button data-m="unshot">Mark Not Complete</button>') : '<button data-m="shot">Mark Shoot Complete</button>') + '<button data-m="send">Send delivery email</button>' : ''}<button data-m="del" class="danger">Delete order</button>`;
   document.body.appendChild(m);
   const r = btn.getBoundingClientRect(); m.style.top = `${Math.min(r.bottom + 4, innerHeight - m.offsetHeight - 8)}px`; m.style.left = `${Math.max(8, r.right - m.offsetWidth)}px`;
   const close = () => { m.remove(); document.removeEventListener('click', close, true); };
@@ -6018,6 +6042,7 @@ function ordMenu(btn, b){
     if (k === 'edit') location.hash = `#/bookings/${b.id}`;
     if (k === 'media') location.hash = `#/bookings/${b.id}/media`;
     if (k === 'send') openDeliveryModal(b.id);
+    if ((k === 'shot' || k === 'unshot') && await ordSetShot(b, k === 'shot')) renderBookingList();
     if (k === 'del' && await ordDelete(b)) renderBookingList();
   };
 }
@@ -6782,8 +6807,8 @@ function renderBookingDetail(id){
         <div class="od-more"><button type="button" class="btn" id="odMoreBtn" aria-haspopup="menu" aria-expanded="false">Actions <span aria-hidden="true">▾</span></button>
           <div class="od-menu hidden" id="odMenu" role="menu">
             ${live ? '<button type="button" data-act="resched">' + hqi('calendar') + ' Reschedule</button>' : ''}
-            ${b.status === 'scheduled' ? '<button type="button" id="bkDone">✓ Mark Shoot Complete</button>' : ''}
-            ${b.status === 'completed' ? '<button type="button" id="bkUndone">↺ Mark Not Complete</button>' : ''}
+            ${live && !ordShotDone(b) ? '<button type="button" id="bkDone">' + hqi('camera') + ' Mark Shoot Complete</button>' : ''}
+            ${live && ordShotDone(b) && !b.delivered_at ? '<button type="button" id="bkUndone">' + hqi('camera') + ' Mark Not Complete</button>' : ''}
             ${live && !b.delivered_at ? '<button type="button" id="odDelivered">' + hqi('package') + ' Promote to Delivered</button>' : ''}
             <button type="button" data-act="media">${hqi('image')} Media Library</button>
             <button type="button" data-act="dlpage">${hqi('eye')} Download Page</button>
@@ -6802,6 +6827,7 @@ function renderBookingDetail(id){
             ${live ? '<button type="button" id="bkCancel" class="danger">Cancel Order</button>' : '<button type="button" id="bkRestore">Restore Order</button>'}
             <button type="button" id="odDelete" class="danger">Delete Order</button>
           </div></div>
+        ${live ? `<button type="button" class="btn od-shoot ${ordShotDone(b) ? 'done' : 'todo'}" id="odShoot" title="${ordShotDone(b) ? (b.delivered_at ? 'Shoot completed and delivered' : 'Shoot completed · click to undo') : 'Click once the shoot is done'}">${hqi(ordShotDone(b) ? 'check' : 'camera')}<span>${ordShotDone(b) ? 'Shoot Completed' : 'Mark Shoot Complete'}</span></button>` : ''}
       </div>
     </section>
 
@@ -6954,8 +6980,10 @@ function renderBookingDetail(id){
     if (b.paid) { if (confirm(`Mark order ${ordNo(b)} as unpaid?\n\nThis unlocks a paid invoice so it can be corrected. It's logged. For extra work after payment, create a new order instead.`)) save({ paid: false, paid_at: null, paid_method: null, paid_note: null }, 'Marked unpaid'); return; }
     openMarkPaid(b, (method, note) => save({ paid: true, paid_at: new Date().toISOString(), paid_method: method, paid_note: note || null }, `Marked paid · ${PAY_METHODS[method]}`));
   });
-  on('bkDone', async () => { if (await save({ status: 'completed' }, 'Shoot marked complete')) dbxAutoFolders(b); });
-  on('bkUndone', () => save({ status: 'scheduled' }));
+  const shootToggle = async done => { if (await ordSetShot(b, done)) renderBookingDetail(b.id); };
+  on('bkDone', () => shootToggle(true));
+  on('bkUndone', () => shootToggle(false));
+  on('odShoot', () => shootToggle(!ordShotDone(b)));
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   // --- order lines: add from services, custom items, remove ---
   // coupon on this order: discount = other discount + coupon amount (worked out on the current subtotal)
