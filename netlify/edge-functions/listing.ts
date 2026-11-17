@@ -53,8 +53,8 @@ export const config: Config = {
 
 /* ------------------------------------------------------------------ */
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-const img = (u: string, w: number, h?: number) => `/.netlify/images?url=${encodeURIComponent(u)}&w=${w}${h ? `&h=${h}&fit=cover` : ''}&q=${w > 1600 ? 80 : 75}`;
-const srcset = (u: string, ws = [640, 1080, 1600, 2400]) => ws.map(w => `${img(u, w)} ${w}w`).join(', ');
+const img = (u: string, w: number, h?: number) => `/.netlify/images?url=${encodeURIComponent(u)}&w=${w}${h ? `&h=${h}&fit=cover` : ''}&q=${w > 1600 ? 80 : 72}`;
+const srcset = (u: string, ws = [640, 1080, 1600, 2048]) => ws.map(w => `${img(u, w)} ${w}w`).join(', ');
 const tel = (p: string) => String(p || '').replace(/[^\d+]/g, '').replace(/^(\d{10})$/, '+1$1');
 
 const ICON: Record<string, string> = {
@@ -108,7 +108,7 @@ function render(d: any, o: { origin: string; base: string; preview?: string }) {
   const longDesc = desc.length > 700;
   const mapQ = encodeURIComponent(d.address.full);
   const lb = JSON.stringify({
-    photos: photos.map(p => ({ s: img(p.u, 2400), m: img(p.u, 1280) })),
+    photos: photos.map(p => ({ s: img(p.u, 2048), m: img(p.u, 1280) })),
     plans: (d.floorplans || []).filter((f: any) => !f.pdf).map((f: any) => ({ s: img(f.u, 2400), m: img(f.u, 1280), name: f.name })),
   }).replace(/</g, '\\u003c');
   const shown = photos.slice(1, 9);
