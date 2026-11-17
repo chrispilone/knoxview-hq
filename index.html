@@ -1527,6 +1527,16 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
 .od-title{grid-area:title;min-width:0}
 .od-title h1{margin:0;font-family:var(--font-display);font-size:26px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
 .od-sub{margin:3px 0 8px;color:var(--muted);font-size:13.5px}
+.cp-panel{margin-top:18px}.cp-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.cp-list{display:grid;gap:8px;margin-top:12px}
+.cp-item{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;font:inherit;color:inherit}
+.cp-item:hover{border-color:var(--sec)}.cp-item.off{opacity:.65}
+.cp-item .cp-code{font-weight:700;letter-spacing:.05em;padding:5px 9px;border:1.5px dashed var(--sec);border-radius:7px;color:var(--sec);white-space:nowrap}
+.cp-item .cp-body{flex:1;min-width:0;display:flex;flex-direction:column}.cp-item .cp-body small{color:var(--muted);font-size:12.5px}
+.cp-st{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--muted);white-space:nowrap}.cp-st.on{background:#e6f4ec;color:var(--ok)}
+.bk-cp span:last-child{color:var(--ok)}.bk-cptick{margin:6px 0 0;font-size:13.5px}.bk-cprow,.bk-cprow-od .bk-addrow{margin:6px 0 4px}
+.bk-cprow-od{display:block!important}.bk-cprow-od .bk-addrow{display:flex}.bk-cprow-od .bk-addrow.hidden{display:none}
+.linkbtn{background:none;border:0;padding:0;color:var(--sec);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer}
 .od-kicker{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .od-clinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:12px}
 .od-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -5893,10 +5903,11 @@ function bkQuote(d){
   const fee = pkg && pkg.large_fee != null ? Number(pkg.large_fee) : Number(set.large_fee);
   if (large && fee > 0) items.push({ name: 'Large property fee', kind: 'fee', price: fee });
   const subtotal = items.reduce((t, i) => t + i.price, 0);
-  const discount = Math.min(subtotal, Math.max(0, Number(d.discount) || 0));
+  const couponAmt = d.coupon ? cpOff(d.coupon, subtotal) : 0;
+  const discount = Math.min(subtotal, Math.max(0, Number(d.discount) || 0) + couponAmt);
   const duration = d.custom ? (Number(d.customMin) || 60)
     : ((pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + (large ? Number(set.large_minutes ?? 30) : 0)) || 60;
-  return { items, subtotal, discount, total: subtotal - discount, duration, large, pkg, adds };
+  return { items, subtotal, discount, couponAmt, total: Math.round((subtotal - discount) * 100) / 100, duration, large, pkg, adds };
 }
 
 /* ----- Openings: working hours minus anything on your Google Calendar (all-day events block the whole day) ----- */
@@ -6274,6 +6285,9 @@ function bkPaintSummary(){
   box.innerHTML = `<h2>Order summary</h2>
     ${q.items.length ? `<div class="bk-lines">${q.items.map(i => `<div><span>${esc(i.name)}</span><span>${money(i.price)}</span></div>`).join('')}
       <div class="bk-disc"><span>Discount</span><span><input id="bkDisc" type="number" min="0" step="1" inputmode="decimal" value="${esc(d.discount)}" placeholder="0" /></span></div>
+      ${d.coupon ? `<div class="bk-cp"><span>Coupon <b>${esc(d.coupon.code)}</b> <button type="button" class="linkbtn" id="bkCpX">Remove</button></span><span>−${money(q.couponAmt)}</span></div>`
+        : `<label class="check bk-cptick"><input type="checkbox" id="bkCpOn" ${d.cpOn ? 'checked' : ''} /> Coupon code</label>
+          ${d.cpOn ? `<div class="bk-addrow bk-cprow"><input id="bkCpCode" value="${esc(d.cpCode || '')}" placeholder="Code" style="text-transform:uppercase" autocomplete="off" /><button type="button" class="btn small" id="bkCpApply">Apply</button></div>` : ''}`}
       <div class="bk-total"><span>Total</span><span>${money(q.total)}</span></div></div>` : '<p class="muted">Pick services to see the price.</p>'}
     <p class="muted bk-hint">Shoot length: about ${q.duration} minutes${d.invoice === 'no' ? ' · No invoice' : d.invoice === 'yes' ? (d.paid ? ' · Invoice, paid' : ' · Invoice') : ''}</p>
     <div class="bk-opts">
@@ -6288,6 +6302,15 @@ function bkPaintSummary(){
       <button type="button" class="btn primary" id="bkMPlace" ${missing.length ? 'disabled' : ''}>Place order</button>`;
     $('#bkMPlace').onclick = () => bkSubmit(); }
   const disc = $('#bkDisc'); if (disc) disc.onchange = () => { d.discount = disc.value; bkPaintSummary(); };
+  const cpOnBox = $('#bkCpOn'); if (cpOnBox) cpOnBox.onchange = e => { d.cpOn = e.target.checked; bkPaintSummary(); if (d.cpOn) $('#bkCpCode')?.focus(); };
+  const cpIn = $('#bkCpCode'); if (cpIn) { cpIn.oninput = () => { d.cpCode = cpIn.value; }; cpIn.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#bkCpApply').click(); } }; }
+  const cpAp = $('#bkCpApply'); if (cpAp) cpAp.onclick = async () => {
+    const r = await cpFind(d.cpCode, q.subtotal).catch(e => ({ err: e.message }));
+    if (r.err) return toast(r.err);
+    if (r.warn && !confirm(`${r.warn} Use it on this order anyway?`)) return;
+    d.coupon = r.c; bkPaintSummary(); toast(`${r.c.code} applied`);
+  };
+  const cpX = $('#bkCpX'); if (cpX) cpX.onclick = () => { d.coupon = null; bkPaintSummary(); };
   const mp = $('#bkMkProj'); if (mp) mp.onchange = e => { d.mkProjects = e.target.checked; bkPaintSummary(); };
   const ch = $('#bkChat'); if (ch) ch.onchange = e => { d.postChat = e.target.checked; };
   $('#bkClear').onclick = () => { if (!confirm('Clear this order and start over?')) return; BK.draft = null; renderOrderForm(); };
@@ -6324,7 +6347,7 @@ async function bkSubmit(){
     const row = { agent_id: agentId, client_name: d.newClient ? d.client.name.trim() : null, client_email: d.newClient ? d.client.email.trim() || null : null, client_phone: d.newClient ? d.client.phone.trim() || null : null,
       address: d.address.trim(), media_title: d.mt_on && (d.media_title || '').trim() ? d.media_title.trim().slice(0, 120) : null, city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
       occupancy: d.occupancy || null, entry: d.entry || null, access_notes: d.access_notes.trim() || null, notes: d.notes.trim() || null,
-      items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, invoice: d.invoice === 'yes', paid: d.invoice === 'yes' && d.paid, paid_at: d.invoice === 'yes' && d.paid ? new Date().toISOString() : null,
+      items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, coupon_id: d.coupon && q.couponAmt ? d.coupon.id : null, coupon_code: d.coupon && q.couponAmt ? d.coupon.code : null, coupon_discount: q.couponAmt || 0, invoice: d.invoice === 'yes', paid: d.invoice === 'yes' && d.paid, paid_at: d.invoice === 'yes' && d.paid ? new Date().toISOString() : null,
       order_page_id: [q.pkg, ...q.adds].some(x => x && bkPageItems(bkAgentPage(d)).some(i => i.svc.id === x.id)) ? bkAgentPage(d)?.id || null : null,
       shoot_start: start.toISOString(), shoot_end: end.toISOString(), duration_min: q.duration, created_by: S.me.id };
     const { data: b, error } = await sb.from('bookings').insert(row).select().single();
@@ -6728,7 +6751,9 @@ function renderBookingDetail(id){
             <button type="button" class="btn small" data-inv="copypay">${hqi('link')} Copy Payment Link</button>` : ''}
           </div>
           <div class="bk-lines">${(b.items || []).map((i, k) => `<div><span>${esc(i.name)}${i.kind === 'custom' ? ' <span class="muted">(custom)</span>' : ''}</span><span>${money(i.price)}${b.paid ? '' : ` <button type="button" class="bk-rmline" data-rmline="${k}" title="Remove from order" aria-label="Remove ${esc(i.name)}">✕</button>`}</span></div>`).join('') || '<div><span class="muted">No line items</span><span></span></div>'}
-            ${Number(b.discount) ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ''}
+            ${b.coupon_code ? `<div class="bk-cp"><span>Coupon <b>${esc(b.coupon_code)}</b>${b.paid ? '' : ' <button type="button" class="linkbtn" id="odCpX">Remove</button>'}</span><span>−${money(Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0))}</span></div>` : ''}
+            ${(Number(b.discount) || 0) - (b.coupon_code ? Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0) : 0) > 0 ? `<div><span>Discount</span><span>−${money((Number(b.discount) || 0) - (b.coupon_code ? Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0) : 0))}</span></div>` : ''}
+            ${!b.paid && !b.coupon_code ? `<div class="bk-cprow-od"><label class="check bk-cptick"><input type="checkbox" id="odCpOn" /> Coupon code</label><span class="bk-addrow hidden" id="odCpRow"><input id="odCpCode" placeholder="Code" style="text-transform:uppercase" autocomplete="off" /><button type="button" class="btn small" id="odCpApply">Apply</button></span></div>` : ''}
             ${Number(b.tax) ? `<div><span>Tax</span><span>${money(b.tax)}</span></div>` : ''}
             <div class="bk-total"><span>Total</span><span>${money(b.total)}</span></div>
             ${Number(b.credit_applied) ? `<div><span>Account credit applied</span><span>−${money(b.credit_applied)}</span></div>` : ''}
@@ -6787,12 +6812,32 @@ function renderBookingDetail(id){
   on('bkUndone', () => save({ status: 'scheduled' }));
   const rq = $('#dvReqPay'); if (rq) rq.onchange = () => save({ require_payment: rq.checked }, rq.checked ? 'Payment required before download' : 'Downloads open without payment');
   // --- order lines: add from services, custom items, remove ---
+  // coupon on this order: discount = other discount + coupon amount (worked out on the current subtotal)
+  const cpOther = () => Math.max(0, (Number(b.discount) || 0) - (b.coupon_code ? Math.min(Number(b.discount) || 0, Number(b.coupon_discount) || 0) : 0));
+  const priced = (subtotal, coupon, keepAmt) => {
+    const amt = coupon ? cpOff(coupon, subtotal) : keepAmt || 0, discount = Math.min(subtotal, cpOther() + amt);
+    return { discount, coupon_discount: amt, total: Math.round((subtotal - discount + (Number(b.tax) || 0)) * 100) / 100 };
+  };
   const saveLines = async (items, msg) => {
     if (b.paid) return toast('This invoice is paid. Mark it unpaid first to change it.');
     const subtotal = Math.round(items.reduce((t, i) => t + (Number(i.price) || 0), 0) * 100) / 100;
+    if (b.coupon_id) { await loadCoupons().catch(() => {}); const c = CP.list.find(x => x.id === b.coupon_id); return save({ items, subtotal, ...priced(subtotal, c, Math.min(subtotal, Number(b.coupon_discount) || 0)) }, msg); }
     const total = Math.round((subtotal - (Number(b.discount) || 0) + (Number(b.tax) || 0)) * 100) / 100;
     save({ items, subtotal, total }, msg);
   };
+  on('odCpOn', () => { const on = $('#odCpOn').checked; $('#odCpRow').classList.toggle('hidden', !on); if (on) $('#odCpCode').focus(); });
+  const odCpIn = $('#odCpCode'); if (odCpIn) odCpIn.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#odCpApply').click(); } };
+  on('odCpApply', async () => {
+    const sub = Number(b.subtotal ?? b.total) || 0, r = await cpFind($('#odCpCode').value, sub).catch(e => ({ err: e.message }));
+    if (r.err) return toast(r.err);
+    if (r.warn && !confirm(`${r.warn} Use it on this order anyway?`)) return;
+    save({ coupon_id: r.c.id, coupon_code: r.c.code, ...priced(sub, r.c) }, `Coupon ${r.c.code} applied`);
+  });
+  on('odCpX', () => {
+    if (!confirm(`Take coupon ${b.coupon_code} off this order?`)) return;
+    const sub = Number(b.subtotal ?? b.total) || 0, discount = Math.min(sub, cpOther());
+    save({ coupon_id: null, coupon_code: null, coupon_discount: 0, discount, total: Math.round((sub - discount + (Number(b.tax) || 0)) * 100) / 100 }, 'Coupon removed');
+  });
   on('bkAddSvcBtn', () => {
     const s = BK.services.find(x => x.id === $('#bkAddSvc').value); if (!s) return toast('Choose a service first');
     saveLines([...(b.items || []), { id: s.id, name: s.name, kind: s.kind === 'package' ? 'package' : 'service', price: Number(s.price) || 0, minutes: s.duration_min || 0, ...(s.includes ? { includes: s.includes } : {}) }], `${s.name} added`);
@@ -7559,7 +7604,7 @@ const opAgents = id => S.agents.filter(a => agentPageId(a) === id); // everyone 
 const opOwn = id => S.agents.filter(a => a.custom_order_page_id === id); // assigned one by one
 async function renderOrderPages(){
   const root = $('#orderPagesView');
-  if (!OP.loaded || !BK.loaded || !S.companiesLoaded) { root.innerHTML = '<p class="muted">Loading order pages…</p>'; try { await Promise.all([loadOrderPages(), loadBookingData(), loadCompanies().then(() => { S.companiesLoaded = true; })]); } catch (e) { return fail(e); } if (S.view !== 'orderpages') return; }
+  if (!OP.loaded || !BK.loaded || !S.companiesLoaded) { root.innerHTML = '<p class="muted">Loading order pages…</p>'; try { await Promise.all([loadOrderPages(), loadBookingData(), loadCoupons(), loadCompanies().then(() => { S.companiesLoaded = true; })]); } catch (e) { return fail(e); } if (S.view !== 'orderpages') return; }
   if (OP.sub) return renderOrderPageEdit(OP.sub === 'new' ? null : OP.pages.find(p => p.id === OP.sub));
   OP.draft = null;
   root.innerHTML = `<div class="page-head"><div><h1>Order Pages</h1><p>Custom order pages for agents in the client portal. Everyone else gets the default order page.</p></div>
@@ -7580,6 +7625,7 @@ async function renderOrderPages(){
           <small>${n} service${n === 1 ? '' : 's'} · ${ag.length} agent${ag.length === 1 ? '' : 's'}${S.companies.some(c => c.custom_order_page_id === pg.id) ? ` · ${S.companies.filter(c => c.custom_order_page_id === pg.id).length} compan${S.companies.filter(c => c.custom_order_page_id === pg.id).length === 1 ? 'y' : 'ies'}` : ''}${pg.active ? '' : ' · <b>Off</b>'}</small>
           ${ag.length ? `<small class="op-who">${esc(ag.slice(0, 4).map(a => a.full_name).join(', '))}${ag.length > 4 ? ` +${ag.length - 4} more` : ''}</small>` : ''}</span></a>`; }).join('')}</div>`
     : `<div class="panel" style="text-align:center;padding:34px"><p style="margin:0 0 6px"><b>No custom order pages yet</b></p><p class="muted" style="margin:0 0 14px">Make one for a team or an agent with special packages or pricing, then assign it to their account.</p><button class="btn primary" id="opNew2">+ New order page</button></div>`}`;
+  root.insertAdjacentHTML('beforeend', couponsPanel()); wireCoupons();
   const go = () => { location.hash = '#/orderpages/new'; };
   $('#opNew').onclick = go; const n2 = $('#opNew2'); if (n2) n2.onclick = go;
   $('#opDefault').onclick = () => openBookingSettings();
@@ -7775,6 +7821,101 @@ function openUpsellEdit(u){
     const { error } = await sb.from('booking_upsells').delete().eq('id', u.id);
     if (error) return fail(error);
     BK.upsells = BK.upsells.filter(x => x.id !== u.id); back();
+  };
+}
+
+/* ===================== COUPON CODES =====================
+   Managed on HQ → Order Pages → Coupon Codes. Clients enter a code at checkout (the booking function checks it again
+   when the order is saved); in HQ a code can go on a new order or an existing unpaid one. Table: coupons.
+   On an order: bookings.coupon_id / coupon_code / coupon_discount (coupon_discount is part of bookings.discount). */
+const CP = { list: [], uses: {}, loaded: false };
+async function loadCoupons(force){
+  if (CP.loaded && !force) return;
+  const [c, u] = await Promise.all([sb.from('coupons').select('*').order('created_at', { ascending: false }),
+    sb.from('bookings').select('coupon_id').not('coupon_id', 'is', null).neq('status', 'cancelled')]);
+  if (c.error) throw c.error;
+  CP.list = c.data || []; CP.uses = {}; (u.data || []).forEach(r => { CP.uses[r.coupon_id] = (CP.uses[r.coupon_id] || 0) + 1; }); CP.loaded = true;
+}
+const cpLabel = c => c.kind === 'percent' ? `${+c.value}% off` : `${money(c.value)} off`;
+const cpOff = (c, sub) => !c || sub < +(c.min_total || 0) ? 0 : Math.round(Math.min(sub, c.kind === 'percent' ? sub * +c.value / 100 : +c.value) * 100) / 100;
+const cpDay = v => v ? new Date(v).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+function cpStatus(c){
+  const now = Date.now();
+  if (!c.active) return ['Off', 'off'];
+  if (c.starts_at && +new Date(c.starts_at) > now) return ['Starts ' + cpDay(c.starts_at), 'off'];
+  if (c.expires_at && +new Date(c.expires_at) <= now) return ['Expired', 'off'];
+  if (c.max_uses && (CP.uses[c.id] || 0) >= c.max_uses) return ['Used up', 'off'];
+  return ['Active', 'on'];
+}
+// Find a code for an order in HQ. Returns { c } or { err }; warn = a limit HQ can choose to override.
+async function cpFind(code, sub){
+  await loadCoupons(true);
+  const c = CP.list.find(x => x.code.toUpperCase() === String(code || '').trim().toUpperCase());
+  if (!c) return { err: 'No coupon code like that. Add it under Order Pages → Coupon Codes.' };
+  const [st, k] = cpStatus(c);
+  if (sub < +(c.min_total || 0)) return { err: `${c.code} needs an order of at least ${money(c.min_total)}.` };
+  return { c, warn: k === 'off' ? `${c.code} is ${st.toLowerCase()}.` : '' };
+}
+function couponsPanel(){
+  return `<section class="panel cp-panel" id="cpPanel"><div class="cp-head"><div><h3 class="bk-sub" style="margin:0">Coupon Codes</h3>
+      <p class="muted bk-hint" style="margin:2px 0 0">Clients tick “I have a coupon code” at checkout on every order page. You can also add one to an order in HQ.</p></div>
+      <button type="button" class="btn primary small" id="cpNew">+ New coupon code</button></div>
+    ${CP.list.length ? `<div class="cp-list">${CP.list.map(c => { const [st, k] = cpStatus(c), n = CP.uses[c.id] || 0; return `
+      <button type="button" class="cp-item ${k}" data-cp="${c.id}"><span class="cp-code">${esc(c.code)}</span>
+        <span class="cp-body"><b>${esc(cpLabel(c))}${c.description ? ` <span class="muted" style="font-weight:400">· ${esc(c.description)}</span>` : ''}</b>
+          <small>${[`Used ${n}${c.max_uses ? ' of ' + c.max_uses : ''} time${(c.max_uses || n) === 1 ? '' : 's'}`, c.once_per_client && 'Once per client', +c.min_total ? `Orders ${money(c.min_total)}+` : '', c.expires_at && `Ends ${cpDay(c.expires_at)}`].filter(Boolean).join(' · ')}</small></span>
+        <span class="cp-st ${k}">${esc(st)}</span></button>`; }).join('')}</div>`
+      : '<p class="muted" style="margin:12px 0 0">No coupon codes yet.</p>'}
+  </section>`;
+}
+function wireCoupons(){
+  const n = $('#cpNew'); if (n) n.onclick = () => openCouponEdit(null);
+  document.querySelectorAll('#cpPanel [data-cp]').forEach(x => x.onclick = () => openCouponEdit(CP.list.find(c => c.id === x.dataset.cp)));
+}
+function openCouponEdit(c){
+  const isNew = !c; c = c || { code: '', description: '', kind: 'percent', value: '', min_total: 0, max_uses: null, once_per_client: false, starts_at: null, expires_at: null, active: true };
+  const ymd = v => v ? new Date(v).toLocaleDateString('en-CA') : '', used = isNew ? 0 : (CP.uses[c.id] || 0);
+  const box = document.createElement('div');
+  box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal" style="z-index:62"><h2>${isNew ? 'New coupon code' : 'Edit ' + esc(c.code)}</h2>
+    <form id="cpForm"><div class="grid2">
+      <div><label>Code</label><input name="code" required maxlength="40" pattern="[A-Za-z0-9_-]+" title="Letters, numbers, - and _" value="${esc(c.code)}" placeholder="SPRING20" style="text-transform:uppercase" autocomplete="off" /></div>
+      <div><label>Shown to the client <span class="muted">(optional)</span></label><input name="description" maxlength="80" value="${esc(c.description || '')}" placeholder="Spring special" /></div>
+      <div><label>Discount type</label><select name="kind"><option value="percent" ${c.kind === 'percent' ? 'selected' : ''}>Percent off</option><option value="amount" ${c.kind === 'amount' ? 'selected' : ''}>Dollar amount off</option></select></div>
+      <div><label>Amount <span class="muted" id="cpUnit">${c.kind === 'percent' ? '(%)' : '($)'}</span></label><input name="value" type="number" min="0.01" step="0.01" required value="${esc(c.value)}" placeholder="${c.kind === 'percent' ? '10' : '25'}" /></div>
+      <div><label>Minimum order <span class="muted">($, optional)</span></label><input name="min_total" type="number" min="0" step="1" value="${+c.min_total || ''}" placeholder="None" /></div>
+      <div><label>Total uses allowed <span class="muted">(blank = no limit)</span></label><input name="max_uses" type="number" min="1" step="1" value="${c.max_uses || ''}" placeholder="No limit" /></div>
+      <div><label>Starts <span class="muted">(optional)</span></label><input name="starts_at" type="date" value="${ymd(c.starts_at)}" /></div>
+      <div><label>Ends after <span class="muted">(optional)</span></label><input name="expires_at" type="date" value="${ymd(c.expires_at)}" /></div>
+      <div class="full"><label class="check"><input type="checkbox" name="once_per_client" ${c.once_per_client ? 'checked' : ''} /> Once per client <span class="muted">(each email can use it one time)</span></label>
+        <label class="check"><input type="checkbox" name="active" ${c.active ? 'checked' : ''} /> On: clients can use this code</label>
+        ${isNew ? '' : `<p class="muted bk-hint">Used on ${used} order${used === 1 ? '' : 's'} so far (cancelled orders don't count).</p>`}</div>
+    </div>
+    <div class="actions">${isNew ? '' : `<button type="button" class="btn danger" id="cpDel" style="margin-right:auto">Delete</button>`}<button type="button" class="btn" id="cpCancel">Cancel</button><button class="btn primary">Save</button></div></form></div>`;
+  document.body.appendChild(box);
+  const close = () => box.remove(), f = box.querySelector('#cpForm');
+  box.querySelector('.overlay').onclick = close; box.querySelector('#cpCancel').onclick = close;
+  f.kind.onchange = () => { box.querySelector('#cpUnit').textContent = f.kind.value === 'percent' ? '(%)' : '($)'; };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const code = f.code.value.trim().toUpperCase(), value = Number(f.value.value);
+    if (!/^[A-Z0-9_-]+$/.test(code)) return toast('Use letters, numbers, - and _ only');
+    if (f.kind.value === 'percent' && value > 100) return toast('A percent can be 100 at most');
+    if (CP.list.some(x => x.code.toUpperCase() === code && x.id !== c.id)) return toast(`${code} already exists`);
+    const row = { code, description: f.description.value.trim() || null, kind: f.kind.value, value, min_total: Number(f.min_total.value) || 0,
+      max_uses: Number(f.max_uses.value) > 0 ? Math.floor(Number(f.max_uses.value)) : null, once_per_client: f.once_per_client.checked, active: f.active.checked,
+      starts_at: f.starts_at.value ? new Date(f.starts_at.value + 'T00:00:00').toISOString() : null,
+      expires_at: f.expires_at.value ? new Date(f.expires_at.value + 'T23:59:59').toISOString() : null, updated_at: new Date().toISOString() };
+    if (row.starts_at && row.expires_at && row.expires_at < row.starts_at) return toast('The end date is before the start date');
+    const r = isNew ? await sb.from('coupons').insert({ ...row, created_by: S.me?.id || null }).select().single() : await sb.from('coupons').update(row).eq('id', c.id).select().single();
+    if (r.error) return fail(r.error);
+    toast(isNew ? `${code} created` : 'Saved'); close(); await loadCoupons(true); if (S.view === 'orderpages') renderOrderPages();
+  };
+  const del = box.querySelector('#cpDel');
+  if (del) del.onclick = async () => {
+    if (!confirm(used ? `${c.code} is on ${used} order${used === 1 ? '' : 's'}. Those orders keep their discount.\n\nDelete it anyway? (Turning it off keeps the history.)` : `Delete ${c.code}?`)) return;
+    const { error } = await sb.from('coupons').delete().eq('id', c.id);
+    if (error) return fail(error);
+    close(); await loadCoupons(true); if (S.view === 'orderpages') renderOrderPages();
   };
 }
 
