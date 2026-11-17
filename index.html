@@ -91,6 +91,10 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-ghost b{position:absolute;top:-8px;right:-8px;background:var(--accent,#5b8def);color:#fff;border-radius:999px;font-size:12px;padding:2px 8px}
 .om-selbar{position:sticky;top:8px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--accent,#5b8def);box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .om-selbar b{margin-right:auto}.om-selbar[hidden]{display:none}
+.cc-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0;font-size:13px}
+.cc-pill{padding:2px 9px;border-radius:999px;background:var(--line,#eee);font-weight:600;font-size:12px}
+.cc-pill.ok{background:#e3f6ea;color:#17703a}.cc-pill.warn{background:#fff3d6;color:#8a5a00}
+.cc-err{color:#b42318;font-size:12px}
 .om-grid.dropping{outline:2px dashed var(--accent,#5b8def);outline-offset:4px;border-radius:10px}
 /* Media Library viewer */
 .om-lb{position:fixed;inset:0;z-index:10000;background:rgba(10,14,22,.97);display:flex;flex-direction:column;color:#fff}
@@ -6760,6 +6764,29 @@ function dvVidRow(v, i){
 const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
 // Every floor plan on the order: synced from Dropbox (floorplan_files) + uploaded here (media_files kind floorplan)
 const dvAllPlans = b => [...(b.floorplan_files || []).map(f => ({ ...f, from: 'dbx' })), ...dvPlansOf(b).map(f => ({ ...f, from: 'upload' }))];
+/* ----- CubiCasa floor plan status (drafts are made automatically for new photography orders) ----- */
+const CC_LABEL = { Draft: ['Draft · waiting for the scan', ''], New: ['Draft · waiting for the scan', ''], Pending: ['Scan sent · CubiCasa is drawing it', 'warn'],
+  Fixing: ['CubiCasa is fixing it', 'warn'], Ready: ['Ready · floor plan imported', 'ok'], Deleted: ['Draft deleted', ''] };
+function ccLine(b){
+  const st = b.cubicasa_status, [txt, cls] = CC_LABEL[st] || [st || '', ''];
+  const pkg = { base: 'Free', plus: 'Plus', plus_3d: 'Plus + 3D' }[b.cubicasa_package] || '';
+  const body = b.cubicasa_order_id
+    ? `<span class="cc-pill ${cls}">${esc(txt || 'Linked')}</span>${pkg && st !== 'Ready' ? `<span class="muted">${pkg} draft</span>` : ''}${b.cubicasa_ready_at ? `<span class="muted">${esc(fmtDateTime(b.cubicasa_ready_at))}</span>` : ''}
+       <button type="button" class="btn small" data-cc="check" data-id="${b.id}">${st === 'Ready' ? 'Re-import' : 'Check now'}</button>`
+    : `<span class="muted">No CubiCasa draft</span><button type="button" class="btn small" data-cc="draft" data-id="${b.id}">Create draft</button>`;
+  return `<div class="cc-line"><b>Floor plan (CubiCasa)</b>${body}${b.cubicasa_error ? `<span class="cc-err" title="${esc(b.cubicasa_error)}">⚠ ${esc(b.cubicasa_error.slice(0, 90))}</span>` : ''}</div>`;
+}
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-cc]'); if (!btn) return;
+  btn.disabled = true; const was = btn.textContent; btn.textContent = btn.dataset.cc === 'draft' ? 'Creating…' : 'Checking…';
+  try {
+    const r = await dbxCall(btn.dataset.cc === 'draft' ? 'cubicasa_draft' : 'cubicasa_event', { bookingId: btn.dataset.id });
+    toast(r.skipped ? `No draft: ${r.skipped}` : btn.dataset.cc === 'draft' ? 'CubiCasa draft created' : r.imported ? `Floor plan imported (${r.imported} file${r.imported === 1 ? '' : 's'})` : `CubiCasa: ${r.status || 'no change'}`);
+    const { data: fresh } = await sb.from('bookings').select('*').eq('id', btn.dataset.id).maybeSingle();
+    const b = BK.list.find(x => x.id === btn.dataset.id); if (fresh && b) Object.assign(b, fresh);
+    bkRefresh(btn.dataset.id);
+  } catch (err) { fail(err); btn.disabled = false; btn.textContent = was; }
+});
 async function dvPaintPlans(b){
   const box = $('#dvPlans'); if (!box) return;
   const plans = dvAllPlans(b), isPdf = f => /\.pdf$/i.test(f.name || f.url || '');
@@ -7114,6 +7141,7 @@ function renderBookingDetail(id){
             ['photos', 'Photos', s.photos ? String(s.photos) : s.linkPhotos ? 'Link' : ''], ['videos', 'Videos', s.videos ? String(s.videos) : ''], ['tour', '3D tour', s.tour ? '✓' : ''],
             ['plans', 'Floor plans', s.plans ? String(s.plans) : ''], ['site', 'Websites', b.websites_enabled === false ? 'Off' : s.sites ? String(s.sites) : '']]
             .map(([k, l, v]) => `<a class="om-chip ${v ? 'on' : ''}" href="#/bookings/${b.id}/media" data-omk="${k}">${OM_IC[k]}<span>${l}</span><b>${v || '—'}</b></a>`).join(''); })()}</div>
+          ${ccLine(b)}
           <p class="muted bk-hint" style="margin:8px 0 0">Photos, videos, 3D tour, floor plans and websites: everything the client's download page shows. Add or remove media in the Media Library.</p>
           <div class="bk-actions"><a class="btn primary" href="#/bookings/${b.id}/media">${ORD_ICON.media} Open Media Library</a></div>`)}
 
@@ -7886,6 +7914,7 @@ function renderOrderMedia(id){
         <div class="om-row"><input id="dvTour" placeholder="Zillow 3D / Matterport link" value="${esc(b.tour_url || '')}" />${b.tour_url ? `<a class="btn small" href="${esc(b.tour_url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</div>
         <div id="dvTourPrev"></div>`)}
       ${sec('plans', 'Floor plans', `
+        ${ccLine(b)}
         <div class="dv-drop" id="dvDrop" tabindex="0" role="button" aria-label="Upload floor plans">
           <input type="file" id="dvPlanFile" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden />
           <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
