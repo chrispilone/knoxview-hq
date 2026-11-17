@@ -105,6 +105,9 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-lb-tip{font-size:12px;opacity:.6;text-align:center;padding:0 0 10px}
 @media (max-width:640px){.om-lb-stage{padding:0 6px 12px}.om-lb-nav{display:none}.om-lb-tip{display:none}}
 .dv-plan .dv-pthumb{cursor:zoom-in}
+.om-roll .om-q{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-top:8px;cursor:pointer}
+.om-roll .om-q:has(input:checked){border-color:var(--accent,#5b8def);background:color-mix(in srgb,var(--accent,#5b8def) 8%,var(--panel))}
+.om-rec{display:inline-block;margin-left:4px;padding:1px 8px;border-radius:999px;background:#2e7d4f;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
 /* Media Library gallery on phones: two bigger photos per row, smaller controls that don't cover the photo */
 @media (max-width:640px){
   .dbx-grid.om-grid{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -7488,9 +7491,12 @@ function omPaintThumbs(b){
     if (ph) ph.outerHTML = `<img src="${esc(l.thumb)}" alt="" draggable="false" loading="lazy" />`; else if (img && img.getAttribute('src') !== l.thumb) img.src = l.thumb;
   });
 }
+// Phones: picked photos can go straight to the Camera Roll (Photos) through the share sheet
+const omIsPhone = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
 function omSelBar(b){
   const bar = $('#omSelBar'), n = OMG.sel.size, grid = $('#omGrid'); if (!bar) return;
   grid?.classList.toggle('selecting', n > 0);
+  const sv = $('#omSave'); if (sv) { const roll = n > 0 && omIsPhone(); sv.dataset.roll = roll ? '1' : ''; sv.textContent = roll ? `Save to Camera Roll (${n})` : 'Save media'; }
   bar.hidden = !n; if (!n) return;
   bar.innerHTML = `<b>${n} selected</b><button type="button" class="btn small" data-mv="front">Move to front</button><button type="button" class="btn small" data-mv="end">Move to end</button>
     <button type="button" class="btn small" data-rmsel>Remove</button><button type="button" class="btn small" data-clr>Clear</button>`;
@@ -7656,6 +7662,61 @@ function omViewer(items, i, opts = {}){
   document.addEventListener('keydown', key, true);
   paint(); el.focus();
 }
+// Save picked photos to the phone's Camera Roll: confirm + pick quality, get the files ready, then the share sheet ("Save N Images").
+// iOS only opens the share sheet from a tap, so there's a second "Save to Camera Roll" tap once the files are ready.
+async function omSaveToRoll(b, names){
+  if (!names.length) return;
+  const list = omList(b).filter(f => names.includes(f.name)), n = list.length, one = n === 1;
+  const close = () => closeLayer();
+  const shell = inner => { $('#layer').innerHTML = `<div class="overlay" id="ov"></div><div class="modal om-roll" role="dialog" aria-modal="true">${inner}</div>`; $('#ov').onclick = close; };
+  shell(`<h2 style="margin:0 0 6px">Save ${one ? 'this photo' : n + ' photos'} to your Camera Roll?</h2>
+    <p class="muted" style="margin:0 0 14px">${one ? 'It saves' : 'They save'} straight to the Photos app on this phone.</p>
+    <label class="check om-q"><input type="radio" name="omq" value="web" checked /> <span><b>Web quality</b> <span class="om-rec">Recommended</span> <span class="muted">(MLS, online &amp; social media)</span></span></label>
+    <label class="check om-q"><input type="radio" name="omq" value="high" /> <span><b>Full resolution</b> <span class="muted">(print &amp; large displays)</span></span></label>
+    <div class="set-actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button type="button" class="btn" id="omRollNo">Cancel</button><button type="button" class="btn primary" id="omRollGo">${hqi('download')} Save to Camera Roll</button></div>`);
+  $('#omRollNo').onclick = close;
+  $('#omRollGo').onclick = async () => {
+    const q = document.querySelector('[name=omq]:checked')?.value || 'web';
+    if (list.some(f => f.src === 'upload' && !omLink(b, f.name).view)) await omUploadLinks(b, list.filter(f => f.src === 'upload'));
+    const src = async f => {
+      const l = omLink(b, f.name);
+      if (q === 'web') return l.view || l.dl;
+      return l.dl || (f.src === 'upload' ? (await sb.storage.from('delivery').createSignedUrl(f.path, 600, { download: f.name })).data?.signedUrl : null);
+    };
+    const canShare = navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.jpg', { type: 'image/jpeg' })] });
+    if (!canShare) { // no share sheet (e.g. a computer): plain downloads
+      close(); for (const [i, f] of list.entries()) { const u = await src(f); if (u) setTimeout(() => { const a = document.createElement('a'); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }, i * 450); }
+      return toast(`Downloading ${n} photo${one ? '' : 's'}…`);
+    }
+    for (let i = 0; i < n; i += 10) { // iOS handles batches of up to 10 nicely
+      const chunk = list.slice(i, i + 10), label = n > 10 ? ` (${i + 1}–${i + chunk.length} of ${n})` : '';
+      shell(`<p style="text-align:center;margin:10px 0" id="omRollProg">Getting ${chunk.length === 1 ? 'your photo' : chunk.length + ' photos'} ready${label}…</p>`);
+      let files;
+      try {
+        const done = new Array(chunk.length).fill(0), tot = new Array(chunk.length).fill(0);
+        const tick = () => { const a = done.reduce((x, y) => x + y, 0), t = tot.reduce((x, y) => x + y, 0), el = $('#omRollProg'); if (el && t) el.textContent = `Getting photos ready${label}… ${Math.round(a / t * 100)}%`; };
+        files = await Promise.all(chunk.map(async (f, j) => {
+          const u = await src(f); if (!u) throw new Error(`${f.name} isn't available`);
+          const r = await fetch(u); if (!r.ok || !r.body) throw new Error(`Couldn't get ${f.name}`);
+          tot[j] = +r.headers.get('content-length') || 0;
+          const rd = r.body.getReader(), parts = [];
+          for (;;) { const x = await rd.read(); if (x.done) break; parts.push(x.value); done[j] += x.value.length; tick(); }
+          const name = q === 'web' ? f.name.replace(/\.[^.]+$/, '') + '.jpg' : f.name;
+          return new File(parts, name, { type: r.headers.get('content-type') || 'image/jpeg' });
+        }));
+      } catch (e) { close(); return fail(e); }
+      const ok = await new Promise(res => {
+        shell(`<p style="text-align:center;font-weight:600;margin:6px 0 4px">${files.length === 1 ? 'Your photo is' : files.length + ' photos are'} ready for your Camera Roll${label}.</p>
+          <p class="muted" style="text-align:center;margin:0 0 14px">Tap <b>Save to Camera Roll</b>, then choose <b>${files.length === 1 ? 'Save Image' : `Save ${files.length} Images`}</b>.</p>
+          <button type="button" class="btn primary" id="omRollShare" style="width:100%">${hqi('download')} Save to Camera Roll</button>`);
+        $('#omRollShare').onclick = () => navigator.share({ files }).then(() => res(true), e => res(e?.name === 'AbortError' ? false : null)); // must run inside the tap
+        $('#ov').onclick = () => res(false);
+      });
+      if (ok === false) break;
+    }
+    close(); toast('Saved to your Camera Roll');
+  };
+}
 async function omViewPhotos(b, i){
   const list = omList(b);
   if (list.some(f => f.src === 'upload' && !omLink(b, f.name).view)) await omUploadLinks(b, list.filter(f => f.src === 'upload'));
@@ -7806,6 +7867,7 @@ function renderOrderMedia(id){
   // unsaved link edits: say so in the save bar
   view.querySelectorAll('.om-secs input:not([type=file]):not(#dvSites)').forEach(i => i.addEventListener('input', () => { $('#omDirty').textContent = 'Unsaved changes'; $('#omDirty').classList.add('warn'); }));
   on('omSave', async () => {
+    if ($('#omSave').dataset.roll) return omSaveToRoll(b, omList(b).map(f => f.name).filter(n => OMG.sel.has(n)));
     const patch = omCollect(b); if (!patch) return;
     const btn = $('#omSave'); btn.disabled = true;
     const { error } = await sb.from('bookings').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', b.id);
