@@ -91,6 +91,7 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-ghost b{position:absolute;top:-8px;right:-8px;background:var(--accent,#5b8def);color:#fff;border-radius:999px;font-size:12px;padding:2px 8px}
 .om-selbar{position:sticky;top:8px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--accent,#5b8def);box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .om-selbar b{margin-right:auto}.om-selbar[hidden]{display:none}
+.sp-inv{margin:12px 0 4px;padding:10px 12px;border:1px solid var(--line,#e3e6eb);border-radius:10px;background:#fafbfc}.sp-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0}.sp-st{font-size:12px;padding:1px 8px;border-radius:999px;background:#fff3d6;color:#8a5a00}.sp-st.ok{background:#e3f6ea;color:#17703a}
 .pw-box{border:1px solid var(--line,#e3e6eb);border-radius:12px;padding:6px 12px;margin:12px 0}
 .pw-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#eee)}.pw-row:last-child{border:0}.pw-row>div{flex:1;min-width:0}
 .pw-row b{display:block;font-size:13px}.pw-row a{font-size:13px;word-break:break-all}.pw-meta{justify-content:space-between;flex-wrap:wrap}
@@ -6771,6 +6772,18 @@ function dvVidRow(v, i){
 const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
 // Every floor plan on the order: synced from Dropbox (floorplan_files) + uploaded here (media_files kind floorplan)
 const dvAllPlans = b => [...(b.floorplan_files || []).map(f => ({ ...f, from: 'dbx' })), ...dvPlansOf(b).map(f => ({ ...f, from: 'upload' }))];
+/* ----- Spiro-imported orders: how the order was billed in Spiro and the Spiro invoice(s) it's on ----- */
+function spiroInvHTML(b){
+  if (b.source !== 'spiro' && !(b.spiro_invoices || []).length) return '';
+  const a = S.agents.find(x => x.id === b.agent_id), co = a && S.companies.find(c => c.id === a.company_id);
+  const inv = b.spiro_invoices || [];
+  const who = b.bill_to === 'company' ? `Billed to <b>${esc(co?.name || 'their company')}</b> on the monthly company invoice` : 'Billed to the client';
+  const rows = inv.map(i => `<div class="sp-row"><span><b>${esc(i.ref || 'Invoice')}</b> · ${esc(i.payee === 'Company' ? (i.payee_name || 'Company') : 'Agent')}${i.orders > 1 ? ` · ${i.orders} orders` : ''}</span>
+    <span>${i.total != null ? money(i.total) : ''} <span class="sp-st ${i.status === 'Paid' ? 'ok' : ''}">${esc(i.status === 'Paid' && i.paid_at ? 'Paid ' + fmtDate(i.paid_at) : i.status || '')}</span></span></div>`).join('');
+  return `<div class="sp-inv"><p class="muted bk-hint" style="margin:0 0 6px">Imported from Spiro · order ${esc(b.order_no || '')}${b.imported_at ? ' · ' + esc(fmtDate(b.imported_at)) : ''}</p>
+    <p style="margin:0 0 6px;font-size:13px">${who}.</p>
+    ${rows || `<p class="muted bk-hint" style="margin:0">Not on a Spiro invoice yet${b.bill_to === 'company' ? ' (company invoices go out on the 1st of the month)' : ''}.</p>`}</div>`;
+}
 /* ----- Property websites (listing.knoxview.com/<slug>, /mls = unbranded). Made automatically when an order is completed;
    the client edits the same fields from their account. The `listing` edge function serves editor/save. ----- */
 const PW_ICONS = { price: 'Price ($)', bed: 'Beds', bath: 'Baths', size: 'Size', lot: 'Lot', year: 'Year built', garage: 'Garage', home: 'Home', pool: 'Pool', view: 'View', star: 'Star' };
@@ -7192,6 +7205,7 @@ function renderBookingDetail(id){
             <div class="bk-total"><span>Amount due</span><span>${money(due)}</span></div></div>
           ${Number(b.credit_applied) && !b.paid ? `<p class="muted bk-hint" style="margin:6px 0 0">${money(b.credit_applied)} of the client's account credit is on this invoice. <button type="button" class="btn small" id="bkCreditBack">Return credit to their account</button></p>` : ''}
           <p class="muted bk-hint" style="margin:6px 0 0">Invoice date ${esc(fmtDate(b.invoice_sent_at || b.created_at))} · due ${esc(fmtDate(b.invoice_due_at || b.invoice_sent_at || b.created_at))}${b.paid && b.paid_note ? ` · Note: ${esc(b.paid_note)}` : ''}</p>
+          ${spiroInvHTML(b)}
           ${b.paid ? `<p class="muted bk-hint" style="margin:10px 0 0">${hqi('lock')} This invoice is paid, so its line items are locked. To correct it, mark it unpaid first.</p>` : `<div class="bk-addline">
             <label>Add a service</label>
             <div class="bk-addrow"><select id="bkAddSvc">${BK.services.filter(x => x.active !== false).length
