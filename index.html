@@ -126,6 +126,8 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .dv-vprev{margin-top:8px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9}.dv-vprev iframe{width:100%;height:100%;border:0;display:block}
 .dv-vprev-bad{margin-top:6px;font-size:12px;color:var(--muted)}
 .dv-vroll{margin-top:8px;width:100%;justify-content:center}
+.om-up-phone{display:none}
+@media (max-width:640px){.om-drop-desk{display:none}.om-up-phone{display:flex;width:100%;justify-content:center;gap:8px;padding:14px;font-size:16px}}
 .dv-drop{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;transition:background .15s,border-color .15s}
 .dv-drop:hover,.dv-drop.over{border-color:var(--accent,#5b8def);background:var(--panel-2)}.dv-drop.busy{opacity:.7;pointer-events:none}
 .dv-plan{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
@@ -2043,6 +2045,7 @@ const HQI = {
   pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
   check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
   download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 21h14"/>',
   pencil: '<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
   folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
@@ -7516,7 +7519,6 @@ function omGallery(b){
   const grid = $('#omGrid'); if (!grid) return;
   const list = omList(b), names = new Set(list.map(f => f.name));
   for (const n of [...OMG.sel]) if (!names.has(n)) OMG.sel.delete(n);
-  $('#omGalHint').innerHTML = list.length ? `<b>${list.length} photo${list.length === 1 ? '' : 's'}</b> · Click a photo to enlarge it. Drag to reorder. Shift-click or ${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}-click (or tick the corner box) to pick several, then drag them together. This order is what the client sees and downloads.` : 'No photos yet. Sync with Dropbox or drag photos in above.';
   grid.innerHTML = list.map((f, i) => {
     const l = omLink(b, f.name), up = f.src === 'upload';
     return `<div class="dbx-tile om-tile ${OMG.sel.has(f.name) ? 'sel' : ''}" data-name="${esc(f.name)}"><span class="dbx-n">${i + 1}</span>${up ? '<span class="om-src" title="Uploaded in HQ (not in Dropbox)">HQ</span>' : ''}
@@ -7788,6 +7790,7 @@ async function omUploadPhotos(b, files){
   try {
     for (const [i, f] of ok.entries()) {
       if (label) label.textContent = `Uploading ${i + 1} of ${ok.length}…`;
+      const pb = $('#omPhBtn'); if (pb) { pb.disabled = true; pb.textContent = `Uploading ${i + 1} of ${ok.length}…`; }
       const base = `${b.id}/photos/${Date.now()}-${f.name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '-')}`, obj = p => `${SUPABASE_URL}/storage/v1/object/delivery/${p}`;
       const { error } = await sb.storage.from('delivery').upload(base, f, { contentType: f.type || 'image/jpeg', upsert: false });
       if (error) throw error;
@@ -7823,6 +7826,7 @@ async function omUploadPhotos(b, files){
     omGallery(b); omCoverCheck(b, prevFirst);
   }
   if ($('#omPhDrop')) { drop.classList.remove('busy'); label.textContent = 'Drag photos here'; }
+  const pb = $('#omPhBtn'); if (pb) { pb.disabled = false; pb.innerHTML = `${hqi('upload')} Upload photos`; }
   omPaintCounts(b);
 }
 // Section header counts (✓ when something is there)
@@ -7857,17 +7861,17 @@ function renderOrderMedia(id){
     <p class="muted bk-hint om-note">Everything in the Media Library shows on the client's download page${b.paid || b.require_payment === false ? '' : ' (watermarked previews until the order is paid)'} and will feed the property website. Add or remove media here.</p>
     <div class="ap-secs om-secs">
       ${sec('photos', 'Photos', `
-        <div class="dv-drop" id="omPhDrop" tabindex="0" role="button" aria-label="Upload photos">
+        <div class="dv-drop om-drop-desk" id="omPhDrop" tabindex="0" role="button" aria-label="Upload photos">
           <input type="file" id="omPhFile" accept="image/jpeg,image/png,image/webp" multiple hidden />
           <b>Drag photos here</b> <span class="muted">or tap to choose · JPG, PNG or WEBP · a photo with the same name replaces it in place</span></div>
-        <div class="dbx-bar" style="margin-top:12px">
+        <button type="button" class="btn primary om-up-phone" id="omPhBtn">${hqi('upload')} Upload photos</button>
+        <div class="om-selbar" id="omSelBar" hidden></div>
+        <div class="dbx-grid om-grid" id="omGrid"></div>
+        <div class="dbx-bar" style="margin-top:16px">
           <div class="dbx-path">${b.dropbox_path ? `<span class="muted">Dropbox folder</span><b title="${esc(b.dropbox_path)}">${esc(b.dropbox_path)}</b>` : '<span class="muted">No Dropbox folder yet. It\'s made when the order is marked completed.</span>'}</div>
           <div class="dbx-acts">${b.dropbox_path ? '' : '<button type="button" class="btn small" id="dbxMake">Create folders</button>'}<button type="button" class="btn small" id="dbxPathEdit">${b.dropbox_path ? 'Change' : 'Set path'}</button><button type="button" class="btn small primary" id="dbxSync">⟳ Sync with Dropbox</button></div>
         </div>
         <p class="muted bk-hint" id="dbxInfo" style="margin:6px 0 0">${b.photos_synced_at ? 'Last synced with Dropbox ' + esc(fmtDateTime(b.photos_synced_at)) + '. ' : ''}Sync pulls in new photos from the final photos folder. Photos you remove here stay in Dropbox.</p>
-        <p class="muted bk-hint" style="margin:10px 0 0" id="omGalHint"></p>
-        <div class="om-selbar" id="omSelBar" hidden></div>
-        <div class="dbx-grid om-grid" id="omGrid"></div>
         <details class="dv-alt" ${b.photos_url ? 'open' : ''}><summary class="muted">Or use a Dropbox shared link</summary><input id="dvPhotos" placeholder="https://www.dropbox.com/scl/fo/…" value="${esc(b.photos_url || '')}" /><p class="muted bk-hint" style="margin:4px 0 0">Only used when nothing has been synced.</p></details>`)}
       ${sec('videos', 'Videos', `
         <div class="grid2">
@@ -7926,6 +7930,7 @@ function renderOrderMedia(id){
   // photo uploads
   const drop = $('#omPhDrop'), inp = $('#omPhFile');
   drop.onclick = () => inp.click();
+  const pb = $('#omPhBtn'); if (pb) pb.onclick = () => inp.click();
   drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
   inp.onchange = () => { if (inp.files.length) omUploadPhotos(b, inp.files); inp.value = ''; };
   drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
