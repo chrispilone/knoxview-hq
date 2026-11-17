@@ -105,6 +105,17 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-lb-tip{font-size:12px;opacity:.6;text-align:center;padding:0 0 10px}
 @media (max-width:640px){.om-lb-stage{padding:0 6px 12px}.om-lb-nav{display:none}.om-lb-tip{display:none}}
 .dv-plan .dv-pthumb{cursor:zoom-in}
+/* Media Library gallery on phones: two bigger photos per row, smaller controls that don't cover the photo */
+@media (max-width:640px){
+  .dbx-grid.om-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .dbx-grid.om-grid .om-tile{padding:4px}
+  .dbx-grid.om-grid .om-tile small{display:block;font-size:10.5px;margin-top:3px}
+  .dbx-grid.om-grid .dbx-n{top:7px;left:7px;font-size:10px;padding:0 6px}
+  .dbx-grid.om-grid .om-x{top:7px;right:7px;width:20px;height:20px;font-size:10px;background:rgba(0,0,0,.45)}
+  .dbx-grid.om-grid .om-chk{bottom:27px;right:7px;width:20px;height:20px;border-width:1.5px;font-size:11px;border-radius:5px}
+  .dbx-grid.om-grid .om-src{top:7px;right:32px;font-size:9px}
+  .om-selbar{gap:6px;padding:8px}.om-selbar b{width:100%}
+}
 .dv-tprev{margin-top:8px;border-radius:10px;overflow:hidden;background:var(--panel-2);aspect-ratio:16/9;border:1px solid var(--border)}.dv-tprev iframe{width:100%;height:100%;border:0;display:block}
 @media (max-width:520px){.dbx-grid{grid-template-columns:repeat(3,1fr);gap:6px}.dbx-tile small{display:none}}
 .dv-h{font-size:14px;margin:18px 0 8px;display:flex;gap:8px;align-items:baseline}.dv-h:first-of-type{margin-top:6px}.dv-h .muted{font-weight:400;font-size:12.5px}
