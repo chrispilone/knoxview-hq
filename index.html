@@ -90,10 +90,10 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-ghost img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:6px}
 .om-ghost b{position:absolute;top:-8px;right:-8px;background:var(--accent,#5b8def);color:#fff;border-radius:999px;font-size:12px;padding:2px 8px}
 .om-selbar{position:sticky;top:8px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--accent,#5b8def);box-shadow:0 6px 18px rgba(0,0,0,.08)}
-.om-selbar b{margin-right:auto}
+.om-selbar b{margin-right:auto}.om-selbar[hidden]{display:none}
 .om-grid.dropping{outline:2px dashed var(--accent,#5b8def);outline-offset:4px;border-radius:10px}
 /* Media Library viewer */
-.om-lb{position:fixed;inset:0;z-index:10000;background:rgba(10,14,22,.94);display:flex;flex-direction:column;color:#fff}
+.om-lb{position:fixed;inset:0;z-index:10000;background:rgba(10,14,22,.97);display:flex;flex-direction:column;color:#fff}
 .om-lb-top{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px}
 .om-lb-top .om-lb-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9}
 .om-lb-top .btn{background:rgba(255,255,255,.12);color:#fff;border-color:transparent}
@@ -7427,8 +7427,9 @@ async function omMutate(b, fn){
   return true;
 }
 // Cover = first photo: refresh it (server makes a small public copy) when the first photo changed
+const omFirstKey = b => { const f = omList(b)[0]; return f ? `${f.src || 'dbx'}:${f.path || f.url}` : null; };
 async function omCoverCheck(b, prevFirst){
-  const first = omList(b)[0]?.name || null;
+  const first = omFirstKey(b);
   if (first === prevFirst && (b.cover_url || !first)) return;
   try { const r = await dbxCall('cover', { bookingId: b.id }); b.cover_url = r.cover_url; omPaintHead(b); } catch (_) { /* only super admins can refresh the cover */ }
 }
@@ -7490,7 +7491,7 @@ function omSelBar(b){
   bar.querySelector('[data-rmsel]').onclick = () => omRemove(b, [...OMG.sel]);
 }
 async function omSaveOrder(b, names){
-  const prevFirst = omList(b)[0]?.name || null;
+  const prevFirst = omFirstKey(b);
   try {
     await omMutate(b, d => {
       const cur = (d.photo_files || []).filter(f => f && f.name), by = new Map(cur.map(f => [f.name, f]));
@@ -7504,7 +7505,7 @@ async function omRemove(b, names){
   if (!names.length) return;
   const list = omList(b), pick = list.filter(f => names.includes(f.name)), dbx = pick.filter(f => f.src !== 'upload').length;
   if (!confirm(`Remove ${pick.length === 1 ? pick[0].name : pick.length + ' photos'} from the Media Library?\n\n${dbx ? 'Dropbox photos stay in Dropbox and won\'t come back on the next sync. ' : ''}${pick.length - dbx ? 'Photos uploaded in HQ are deleted.' : ''}\nThe client won't see ${pick.length === 1 ? 'it' : 'them'} anymore.`)) return;
-  const prevFirst = list[0]?.name || null, gone = [];
+  const prevFirst = omFirstKey(b), gone = [];
   try {
     await omMutate(b, d => {
       const cur = (d.photo_files || []).filter(f => f && f.name), drop = new Set(names);
@@ -7687,7 +7688,7 @@ async function omUploadPhotos(b, files){
   } catch (e) { fail(e); }
   if (added.length) {
     // a photo with the same name as one in the gallery replaces it in place (e.g. after a quick edit); the rest go at the end
-    const prevFirst = omList(b)[0]?.name || null, replacedUploads = []; let replaced = 0;
+    const prevFirst = omFirstKey(b), replacedUploads = []; let replaced = 0;
     try {
       await omMutate(b, d => {
         const cur = (d.photo_files || []).filter(f => f && f.name).slice();
