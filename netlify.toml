@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+
+# Property websites (listing.knoxview.com, an alias of this site): netlify/edge-functions/listing.ts draws them.
+# Photos come from the Supabase media function and are resized by Netlify Image CDN.
+[images]
+  remote_images = ['https://sqlkswwwpkzadrrbhqip\.supabase\.co/functions/v1/media.*', 'https://sqlkswwwpkzadrrbhqip\.supabase\.co/storage/v1/object/public/.*', 'https://knoxview-booking\.netlify\.app/img/.*']
