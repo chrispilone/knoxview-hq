@@ -1,6 +1,10 @@
 [build]
   publish = "."
 
+# index.html carries the Google Maps browser key (public by design, locked to our sites); don't fail builds on it
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = "index.html"
+
 # Property websites (listing.knoxview.com, an alias of this site): netlify/edge-functions/listing.ts draws them.
 # Photos come from the Supabase media function and are resized by Netlify Image CDN.
 [images]
