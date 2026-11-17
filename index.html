@@ -91,6 +91,11 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-ghost b{position:absolute;top:-8px;right:-8px;background:var(--accent,#5b8def);color:#fff;border-radius:999px;font-size:12px;padding:2px 8px}
 .om-selbar{position:sticky;top:8px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--accent,#5b8def);box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .om-selbar b{margin-right:auto}.om-selbar[hidden]{display:none}
+.pw-box{border:1px solid var(--line,#e3e6eb);border-radius:12px;padding:6px 12px;margin:12px 0}
+.pw-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#eee)}.pw-row:last-child{border:0}.pw-row>div{flex:1;min-width:0}
+.pw-row b{display:block;font-size:13px}.pw-row a{font-size:13px;word-break:break-all}.pw-meta{justify-content:space-between;flex-wrap:wrap}
+.pw-facts{display:grid;gap:6px;margin:6px 0 8px}.pw-fact{display:grid;grid-template-columns:120px 1fr 1.3fr auto;gap:6px;align-items:center}.pw-fb{display:flex;gap:4px;align-items:center}
+@media (max-width:640px){.pw-fact{grid-template-columns:1fr 1fr}.pw-fact select{grid-column:1/-1}.pw-fb{grid-column:1/-1;justify-content:flex-end}}
 .cc-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0;font-size:13px}
 .cc-pill{padding:2px 9px;border-radius:999px;background:var(--line,#eee);font-weight:600;font-size:12px}
 .cc-pill.ok{background:#e3f6ea;color:#17703a}.cc-pill.warn{background:#fff3d6;color:#8a5a00}
@@ -6764,6 +6769,62 @@ function dvVidRow(v, i){
 const dvPlansOf = b => (b.media_files || []).filter(f => f.kind === 'floorplan');
 // Every floor plan on the order: synced from Dropbox (floorplan_files) + uploaded here (media_files kind floorplan)
 const dvAllPlans = b => [...(b.floorplan_files || []).map(f => ({ ...f, from: 'dbx' })), ...dvPlansOf(b).map(f => ({ ...f, from: 'upload' }))];
+/* ----- Property websites (listing.knoxview.com/<slug>, /mls = unbranded). Made automatically when an order is completed;
+   the client edits the same fields from their account. The `listing` edge function serves editor/save. ----- */
+const PW_ICONS = { price: 'Price ($)', bed: 'Beds', bath: 'Baths', size: 'Size', lot: 'Lot', year: 'Year built', garage: 'Garage', home: 'Home', pool: 'Pool', view: 'View', star: 'Star' };
+function pwPanel(b){
+  if (!b.site_slug) return `<p class="muted bk-hint" style="margin:10px 0">The property website is made when this order is marked <b>Completed</b>.</p>`;
+  const u = `https://listing.knoxview.com/${b.site_slug}`;
+  const ours = (b.website_url || '').startsWith(u);
+  return `<div class="pw-box">
+    <div class="pw-row"><div><b>Branded</b><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace('https://', ''))}</a></div><button type="button" class="btn small" data-pwcopy="${esc(u)}">Copy</button></div>
+    <div class="pw-row"><div><b>MLS (unbranded)</b><a href="${esc(u)}/mls" target="_blank" rel="noopener">${esc(u.replace('https://', ''))}/mls</a></div><button type="button" class="btn small" data-pwcopy="${esc(u)}/mls">Copy</button></div>
+    <div class="pw-row pw-meta"><span class="muted">${(b.site_views || 0).toLocaleString()} view${b.site_views === 1 ? '' : 's'}${b.site_updated_at ? ` · details edited ${esc(fmtDateTime(b.site_updated_at))}` : ''}</span>
+      <span style="display:flex;gap:6px">${!ours ? `<button type="button" class="btn small" id="pwUseLinks" title="Point the download page's website cards at these links">Use on download page</button>` : ''}<button type="button" class="btn small primary" id="pwEdit">Edit details</button></span></div>
+  </div>`;
+}
+async function pwCall(action, body){
+  const { data, error } = await sb.functions.invoke('listing', { body: { action, ...body } });
+  if (error) { let m = 'Request failed'; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+  return data;
+}
+async function pwEditor(b){
+  let d; try { d = await pwCall('editor', { bookingId: b.id }); } catch (e) { return fail(e); }
+  const box = document.createElement('div'); document.body.appendChild(box);
+  const close = () => box.remove();
+  const draw = () => {
+    const s = d.site;
+    box.innerHTML = `<div class="overlay" style="z-index:61"></div><div class="modal wide" style="z-index:62"><h2>Property website</h2>
+      <p class="muted bk-hint" style="margin-top:-6px">${d.live ? 'Live' : d.locked ? 'Not live until the order is paid' : 'Not live (turned off or not completed)'} · ${(d.views || 0).toLocaleString()} views ·
+        <a href="${esc(d.links.branded)}${d.live ? '' : '?preview=' + encodeURIComponent(d.preview)}" target="_blank" rel="noopener">Preview branded ↗</a> ·
+        <a href="${esc(d.links.mls)}${d.live ? '' : '?preview=' + encodeURIComponent(d.preview)}" target="_blank" rel="noopener">Preview MLS ↗</a></p>
+      <div class="grid2"><div><label>Title</label><input id="pwT" maxlength="140" value="${esc(s.title || '')}" /></div><div><label>Subtitle</label><input id="pwS" maxlength="160" value="${esc(s.subtitle || '')}" /></div></div>
+      <label style="margin-top:12px">Details <span class="muted">(blank values are hidden)</span></label>
+      <div class="pw-facts">${s.facts.map((f, i) => `<div class="pw-fact" data-i="${i}"><select data-k="icon">${Object.entries(PW_ICONS).map(([k, l]) => `<option value="${k}" ${f.icon === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <input data-k="label" maxlength="40" value="${esc(f.label || '')}" placeholder="Label" /><input data-k="value" maxlength="60" value="${esc(f.value || '')}" placeholder="Value" />
+        <span class="pw-fb"><button type="button" class="btn small" data-mv="${i},-1" ${i ? '' : 'disabled'}>↑</button><button type="button" class="btn small" data-mv="${i},1" ${i < s.facts.length - 1 ? '' : 'disabled'}>↓</button>
+        <label class="check" style="margin:0"><input type="checkbox" data-k="show" ${f.show !== false ? 'checked' : ''} /> Show</label></span></div>`).join('')}</div>
+      <button type="button" class="btn small" id="pwAdd" ${s.facts.length >= 12 ? 'disabled' : ''}>+ Add a detail</button>
+      <label style="margin-top:12px">Description</label><textarea id="pwD" rows="8" maxlength="6000" placeholder="Blank line between paragraphs">${esc(s.description || '')}</textarea>
+      <div class="actions"><button class="btn" id="pwX">Close</button><button class="btn primary" id="pwOk">Save</button></div></div>`;
+    box.querySelector('.overlay').onclick = close; box.querySelector('#pwX').onclick = close;
+    box.querySelectorAll('[data-mv]').forEach(x => x.onclick = () => { read(); const [i, dd] = x.dataset.mv.split(',').map(Number); const f = d.site.facts; [f[i], f[i + dd]] = [f[i + dd], f[i]]; draw(); });
+    box.querySelector('#pwAdd').onclick = () => { read(); d.site.facts.push({ k: 'f' + Date.now().toString(36), icon: 'star', label: '', value: '', show: true }); draw(); };
+    box.querySelector('#pwOk').onclick = async () => { read(); const btn = box.querySelector('#pwOk'); btn.disabled = true;
+      try { const r = await pwCall('save', { bookingId: b.id, site: d.site }); d.site = r.site; b.site = r.site; b.site_updated_at = new Date().toISOString(); toast('Property website saved'); close(); }
+      catch (e) { fail(e); btn.disabled = false; } };
+  };
+  const read = () => { const s = d.site; s.title = box.querySelector('#pwT').value; s.subtitle = box.querySelector('#pwS').value; s.description = box.querySelector('#pwD').value;
+    box.querySelectorAll('.pw-fact').forEach(r => { const f = s.facts[+r.dataset.i]; r.querySelectorAll('[data-k]').forEach(el => f[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value); }); };
+  draw();
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-pwcopy]'); if (c) { navigator.clipboard?.writeText(c.dataset.pwcopy).then(() => toast('Link copied'), () => prompt('Link', c.dataset.pwcopy)); return; }
+  if (e.target.closest('#pwEdit')) { const b = BK.list.find(x => location.hash.includes(x.id)); if (b) pwEditor(b); return; }
+  if (e.target.closest('#pwUseLinks')) { const b = BK.list.find(x => location.hash.includes(x.id)); if (!b) return;
+    const patch = { website_url: `https://listing.knoxview.com/${b.site_slug}`, website_unbranded_url: `https://listing.knoxview.com/${b.site_slug}/mls` };
+    sb.from('bookings').update(patch).eq('id', b.id).then(({ error }) => { if (error) return fail(error); Object.assign(b, patch); toast('Download page now uses the new website'); bkRefresh(b.id); }); }
+});
 /* ----- CubiCasa floor plan status (drafts are made automatically for new photography orders) ----- */
 const CC_LABEL = { Draft: ['Draft · waiting for the scan', ''], New: ['Draft · waiting for the scan', ''], Pending: ['Scan sent · CubiCasa is drawing it', 'warn'],
   Fixing: ['CubiCasa is fixing it', 'warn'], Ready: ['Ready · floor plan imported', 'ok'], Deleted: ['Draft deleted', ''] };
@@ -7921,10 +7982,11 @@ function renderOrderMedia(id){
         <div id="dvPlans"></div>
         <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>`)}
       ${sec('site', 'Property websites & marketing', `
-        <label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Show property websites</b> <span class="muted">(branded + unbranded cards on the download page; "coming soon" until a link is added)</span></span></label>
+        <label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Property website on</b> <span class="muted">(off: the website shows "not available" and the download page hides it)</span></span></label>
+        ${pwPanel(b)}
         <div class="grid2" style="margin-top:10px">
-          <div><label>Branded property website</label><input id="dvSite" value="${esc(b.website_url || '')}" placeholder="https://" /></div>
-          <div><label>Unbranded property website</label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" placeholder="https://" /></div>
+          <div><label>Branded website link <span class="muted">(download page)</span></label><input id="dvSite" value="${esc(b.website_url || '')}" placeholder="https://" /></div>
+          <div><label>Unbranded website link <span class="muted">(download page)</span></label><input id="dvSite2" value="${esc(b.website_unbranded_url || '')}" placeholder="https://" /></div>
           <div><label>Marketing content link</label><input id="dvMkt" placeholder="Canva, social posts…" value="${esc(b.marketing_url || '')}" /></div>
           <div><label>Cover photo</label><p class="muted bk-hint" style="margin:6px 0 0">Always the first photo in the gallery. Drag a different photo to the front to change it.</p></div>
         </div>`)}
