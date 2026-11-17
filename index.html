@@ -78,6 +78,8 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 @media (max-width:520px){.dbx-grid{grid-template-columns:repeat(3,1fr);gap:6px}.dbx-tile small{display:none}}
 .dv-h{font-size:14px;margin:18px 0 8px;display:flex;gap:8px;align-items:baseline}.dv-h:first-of-type{margin-top:6px}.dv-h .muted{font-weight:400;font-size:12.5px}
 .dv-vrow{margin-top:10px}
+.dv-vprev{margin-top:8px;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9}.dv-vprev iframe{width:100%;height:100%;border:0;display:block}
+.dv-vprev-bad{margin-top:6px;font-size:12px;color:var(--muted)}
 .dv-drop{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;transition:background .15s,border-color .15s}
 .dv-drop:hover,.dv-drop.over{border-color:var(--accent,#5b8def);background:var(--panel-2)}.dv-drop.busy{opacity:.7;pointer-events:none}
 .dv-plan{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
@@ -6750,10 +6752,37 @@ async function dvUpload(b, files){
   dvPaintPlans(b);
   if ($('#omSum')) omPaintCounts(b);
 }
+// Vimeo link -> player embed URL (vimeo.com/ID, vimeo.com/ID/HASH, player.vimeo.com/video/ID?h=HASH, channels/showcase links). null = not a Vimeo video link.
+function dvVimeoEmbed(u){
+  const m = String(u || '').match(/vimeo\.com\/(?:.*?\/)?(?:video\/|videos\/)?(\d{6,})(?:\/([0-9a-f]{6,}))?(?:.*[?&]h=([0-9a-f]+))?/i);
+  if (!m) return null;
+  const h = m[2] || m[3];
+  return `https://player.vimeo.com/video/${m[1]}?${h ? `h=${h}&` : ''}title=0&byline=0&portrait=0&dnt=1`;
+}
+// Live player preview under a video link field: shows the video as soon as a Vimeo link is in the box.
+function dvVidPreview(inp){
+  const host = inp.closest('div') || inp.parentNode;
+  let box = host.querySelector(':scope > .dv-vprev, :scope > .dv-vprev-bad');
+  const url = inp.value.trim(), src = dvVimeoEmbed(url);
+  if (!url) { box?.remove(); return; }
+  if (!src) {
+    if (!box || !box.classList.contains('dv-vprev-bad')) { box?.remove(); host.insertAdjacentHTML('beforeend', '<p class="dv-vprev-bad">No preview: this isn\'t a Vimeo video link.</p>'); }
+    return;
+  }
+  if (!box || !box.classList.contains('dv-vprev')) { box?.remove(); host.insertAdjacentHTML('beforeend', '<div class="dv-vprev"><iframe loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video preview"></iframe></div>'); box = host.querySelector(':scope > .dv-vprev'); }
+  const fr = box.querySelector('iframe'); if (fr.getAttribute('src') !== src) fr.setAttribute('src', src);
+}
+function dvWireVidPreview(inp){
+  if (!inp || inp._vp) return; inp._vp = true;
+  let t; inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => dvVidPreview(inp), 400); });
+  inp.addEventListener('change', () => dvVidPreview(inp));
+  dvVidPreview(inp);
+}
 function dvWire(b){
   const more = $('#dvVidMore'); if (!more) return;
-  const wireRows = () => more.querySelectorAll('.dv-vdel').forEach(x => x.onclick = () => x.closest('.dv-vrow').remove());
+  const wireRows = () => { more.querySelectorAll('.dv-vdel').forEach(x => x.onclick = () => x.closest('.dv-vrow').remove()); more.querySelectorAll('.dv-vurl').forEach(dvWireVidPreview); };
   wireRows();
+  dvWireVidPreview($('#dvVidB')); dvWireVidPreview($('#dvVidU'));
   $('#dvVidAdd').onclick = () => { more.insertAdjacentHTML('beforeend', dvVidRow(null)); wireRows(); more.lastElementChild.querySelector('input').focus(); };
   const drop = $('#dvDrop'), inp = $('#dvPlanFile');
   drop.onclick = () => inp.click();
