@@ -7623,6 +7623,7 @@ const OM_IC = {
   tour: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg>',
   plans: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h7v9M14 3v6h7M14 15h7"/></svg>',
   site: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/></svg>',
+  kit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10.5 9.2v5.6l4.6-2.8z"/></svg>',
 };
 ORD_ICON.media = OM_IC.photos;
 // What's delivered on an order (counts used in the Media Library, the order page and the order list)
@@ -8085,6 +8086,8 @@ function omPaintCounts(b){
   set('tour', s.tour ? 'Added' : 'None yet', s.tour);
   set('plans', s.plans ? `${s.plans} file${s.plans === 1 ? '' : 's'}` : 'None yet', s.plans);
   set('site', b.websites_enabled === false ? 'Hidden' : s.sites ? `${s.sites} live` : 'Coming soon', s.sites || s.marketing);
+  const kh = (b.kit?.hidden || []).length, kitOn = b.status === 'completed' && s.photos >= 3;
+  set('kit', kitOn ? `${15 - kh} Reel${15 - kh === 1 ? '' : 's'}` : 'When completed', kitOn);
   const sum = $('#omSum'); if (sum) sum.textContent = omSummary(b);
 }
 function renderOrderMedia(id){
@@ -8140,6 +8143,9 @@ function renderOrderMedia(id){
           <b>Drag floor plans here</b> <span class="muted">or tap to choose · JPG, PNG or PDF</span></div>
         <div id="dvPlans"></div>
         <details class="dv-alt" ${b.floorplan_url ? 'open' : ''}><summary class="muted">Or use a Dropbox link</summary><input id="dvPlan" placeholder="Dropbox link to the floor plan file or folder" value="${esc(b.floorplan_url || '')}" /></details>`)}
+      ${sec('kit', 'Social Media Kit', `
+        <p class="muted bk-hint" style="margin:0 0 12px">15 vertical Reels made from the first photos in the gallery and the property website details. The client picks Coming Soon, Just Listed or Just Sold and saves any Reel straight to their phone. Turn off a Reel to hide it from the client.</p>
+        <div id="omKit"></div>`)}
       ${sec('site', 'Property Website', `
         <label class="check"><input type="checkbox" id="dvSites" ${b.websites_enabled !== false ? 'checked' : ''} /> <span><b>Property website on</b> <span class="muted">(off: the website shows "not available" and the download page hides it)</span></span></label>
         ${pwPanel(b)}
@@ -8186,8 +8192,30 @@ function renderOrderMedia(id){
   drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files.length) omUploadPhotos(b, e.dataTransfer.files); };
   omGallery(b);
   dvWireTour(); pwWirePreview(b);
+  kitWire(b);  // Social Media Kit (loads when its section is opened)
   dvWire(b);   // videos + floor plans
   dbxWire(b);  // Dropbox photos
+}
+
+/* ----- Social Media Kit: the same kit.js the client's download page uses (served by the booking portal). Drawn in the
+   browser from the `listing` function's "kit" data; photos come through this site's Netlify Image CDN so the Reels can be
+   recorded. Hidden Reels are saved on the order (bookings.kit.hidden). ----- */
+const KITS = {};
+let kitJs = null;
+const kitLoadJs = () => (kitJs ||= new Promise((res, rej) => { if (window.KVKit) return res(); const s = document.createElement('script'); s.src = `${PORTAL_URL}/kit.js?v=1`; s.onload = res; s.onerror = () => { kitJs = null; rej(new Error('The Social Media Kit could not load.')); }; document.head.appendChild(s); }));
+function kitWire(b){
+  const sec = document.querySelector('.om-sec[data-k="kit"]'); if (!sec) return;
+  const go = async () => {
+    const host = $('#omKit'); if (!host || !sec.open) return;
+    if (KITS[b.id]) return KITS[b.id].attach(host);
+    try { await kitLoadJs(); } catch (e) { host.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+    if (KITS[b.id]) return KITS[b.id].attach(host);
+    KITS[b.id] = window.KVKit.mount(host, { mode: 'hq', key: b.id,
+      img: (u, w) => `/.netlify/images?url=${encodeURIComponent(u)}&w=${w}&q=82`,
+      load: () => pwCall('kit', { bookingId: b.id }),
+      saveHidden: async hidden => { const r = await pwCall('kit-save', { bookingId: b.id, hidden }); b.kit = r.kit; omPaintCounts(b); } });
+  };
+  sec.addEventListener('toggle', go); go();
 }
 
 /* ----- Delivery emails (deliver edge function; templates in delivery_templates) ----- */
