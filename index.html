@@ -1498,6 +1498,13 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.lp-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 4px}.lp-price{font-size:24px;font-weight:700;color:var(--text)}
+.lp-meta{font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5}
+.lp-notes{margin:0 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:9px}.lp-notes h4{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.lp-notes ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.55}
+.lp-hist{margin:10px 0 0;font-size:13px}.lp-hist summary{cursor:pointer;color:var(--muted)}.lp-hist .lp-h{padding:8px 0;border-top:1px solid var(--border)}.lp-hist .lp-h b{font-weight:600}.lp-hist ul{margin:4px 0 0;padding-left:18px}
+.lp-bud{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px}.lp-bar{flex:1;min-width:180px;height:8px;border-radius:5px;background:var(--border);overflow:hidden}.lp-bar i{display:block;height:100%;background:var(--accent)}
+.lp-bar.warn i{background:#d9822b}.lp-bar.full i{background:#c0392b}
 .zs-now{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 12px}
 .zs-now>div{border:1px solid var(--border);border-radius:9px;padding:8px 10px;text-align:center}.zs-now b{display:block;font-size:18px}.zs-now small{color:var(--muted);font-size:12px}
 .zs-hist{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:9px;margin:0 0 12px}
@@ -4024,14 +4031,16 @@ async function renderSettings(){
       ['dropbox', 'Dropbox', 'Order folders, photo sync and client downloads', '#/settings/delivery'],
       ['resend', 'Resend', 'Sends portal emails: sign-in codes, invoices and deliveries (mail.knoxview.com)', ''],
       ['twilio', 'Twilio Verify', 'Sign-in codes by text for clients', ''],
-      ['quo', 'Quo', 'Business texts: delivery links (and sign-in codes if Twilio is off)', ''],
+      ['quo', 'Quo', 'Business texts: booking confirmations and delivery links (never sign-in codes)', ''],
+      ['rentcast', 'RentCast', 'List price and listing status on each order (budget below)', ''],
       ['vimeo', 'Vimeo', 'Video links on deliveries', ''],
       ['zillow', 'Zillow Stat Tracker', 'Views, saves and days on Zillow on each order (filled in from Claude)', ''],
       ['supabase', 'Supabase', 'HQ and portal database, logins and file storage', ''],
       ['netlify', 'Netlify', 'Hosts hq.knoxview.com and the booking portal', ''],
     ];
     body.innerHTML = card('Integrations', `<div class="set-itg">${ITG.map(([k, n, d, href]) => `<div class="set-itg-row"><span class="set-itg-dot" data-st="${k}"></span>
-        <span class="set-itg-main"><b>${n}</b><small>${d}</small></span><span class="set-itg-st" id="itg-${k}"><span class="muted">—</span></span>${href ? `<a class="btn small" href="${href}">Open</a>` : ''}</div>`).join('')}</div>`, 'Everything HQ is connected to. Status is checked live where HQ can see it.');
+        <span class="set-itg-main"><b>${n}</b><small>${d}</small></span><span class="set-itg-st" id="itg-${k}"><span class="muted">—</span></span>${href ? `<a class="btn small" href="${href}">Open</a>` : ''}</div>`).join('')}</div>`, 'Everything HQ is connected to. Status is checked live where HQ can see it.')
+      + card('List prices (RentCast)', '<div id="lpSet"><p class="muted">Loading…</p></div>', 'Delivered orders are checked every Monday at 7 AM for 45 days, one request per city. "Check now" on an order is one request. Automatic checks stop at your cap; you get a notification at 10 left and when it is reached.');
     const mark = (k, ok, label) => { const el = $(`#itg-${k}`); if (!el) return; el.innerHTML = `<span class="${ok === true ? 'set-ok' : ok === false ? 'set-off' : 'muted'}">${esc(label)}</span>`;
       const d = body.querySelector(`[data-st=${k}]`); if (d) d.dataset.ok = ok === true ? '1' : ok === false ? '0' : ''; };
     for (const k of ['vimeo', 'zillow', 'supabase', 'netlify']) mark(k, true, k === 'vimeo' ? 'Links' : 'In use');
@@ -4042,8 +4051,8 @@ async function renderSettings(){
     sb.functions.invoke('auth-code', { body: { action: 'status' } }).then(({ data }) => {
       mark('resend', !!data?.resend, data?.resend ? 'Connected' : 'Not set up');
       mark('twilio', data?.twilio?.ok ?? !!data?.twilio?.configured, data?.twilio?.ok ? 'Connected' : data?.twilio?.configured ? 'Check setup' : 'Not set up');
-      mark('quo', !!data?.quo, data?.quo ? 'Connected' : 'Not set up');
-    }).catch(() => ['resend', 'twilio', 'quo'].forEach(k => mark(k, null, 'Unknown')));
+    }).catch(() => ['resend', 'twilio'].forEach(k => mark(k, null, 'Unknown')));
+    lpSettings(mark);
   }
 
   if (sec === 'email' || sec === 'sms') {
@@ -5849,6 +5858,80 @@ async function loadBookingData(force){
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
 
+/* ----- Listing (order card): list price + status from RentCast (weekly city sweep, or "Check now" = 1 request), the agent's
+   property website, or typed in here. Each check is saved with its date and 2-3 notes (table listing_checks). The
+   listprice edge function keeps RentCast inside the monthly budget set in Settings → Integrations. ----- */
+const LP_SRC = { rentcast: 'RentCast', agent: 'the agent (property website)', manual: 'entered in HQ', rentcast_city: 'RentCast weekly check', rentcast_address: 'RentCast (Check now)' };
+function lpHTML(b){
+  const n = b.listing_notes, st = String(b.listing_status || ''), active = /^active$/i.test(st);
+  const top = b.list_price != null
+    ? `<div class="lp-top"><span class="lp-price">${esc(money(b.list_price))}</span>${st ? `<span class="status-pill"><span class="dot" style="background:${active ? 'var(--ok)' : 'var(--muted)'}"></span>${esc(active ? 'Active' : 'Off market')}</span>` : ''}</div>
+       <p class="lp-meta">${[b.listed_on && `Listed ${esc(fmtDate(b.listed_on))}`, b.listing_dom != null && `${b.listing_dom} day${b.listing_dom === 1 ? '' : 's'} on market`,
+         (b.listing_agent || b.listing_office) && esc([b.listing_agent, b.listing_office].filter(Boolean).join(', ')), b.listing_mls && `MLS ${esc(b.listing_mls)}`].filter(Boolean).join(' · ')}
+         ${b.listing_source ? `<br>From ${esc(LP_SRC[b.listing_source] || b.listing_source)}${b.listing_checked_at ? ` · checked ${esc(fmtDate(b.listing_checked_at))}` : ''}` : ''}</p>`
+    : `<p class="muted" style="margin:0 0 10px">No list price yet.${b.listing_checked_at ? ` Last checked ${esc(fmtDate(b.listing_checked_at))}.` : ''} Delivered orders are checked every Monday for 45 days, or check now.</p>`;
+  const notes = n?.bullets?.length ? `<div class="lp-notes"><h4>Notes from the ${esc(fmtDate(n.at))} check</h4><ul>${n.bullets.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+  return `${top}${notes}<div class="zs-acts"><button type="button" class="btn small primary" data-lp="check">Check now</button><button type="button" class="btn small" data-lp="edit">${b.list_price != null ? 'Edit price' : 'Enter price'}</button>
+    <span class="muted" style="font-size:12px">Check now uses 1 RentCast lookup</span></div><div id="lpHist"></div>`;
+}
+async function lpHistory(b){
+  const { data } = await sb.from('listing_checks').select('*').eq('booking_id', b.id).order('at', { ascending: false }).limit(30);
+  const box = $('#lpHist'); if (!box || !data?.length) return;
+  box.innerHTML = `<details class="lp-hist"><summary>Check history (${data.length})</summary>${data.map(c => `<div class="lp-h"><b>${esc(fmtDate(c.at))}</b> <span class="muted">· ${esc(LP_SRC[c.source] || c.source)}${c.found ? (c.price ? ' · ' + esc(money(c.price)) : '') : ' · not found'}</span>
+    ${(c.bullets || []).length ? `<ul>${c.bullets.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</div>`).join('')}</details>`;
+}
+async function lpCall(body){
+  const { data, error } = await sb.functions.invoke('listprice', { body });
+  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} throw new Error(m); }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+async function lpReload(id){
+  const { data: fresh } = await sb.from('bookings').select('*').eq('id', id).maybeSingle();
+  const b = BK.list.find(x => x.id === id); if (fresh && b) Object.assign(b, fresh);
+  const box = $('#lpPanel'); if (box && b) { box.innerHTML = lpHTML(b); lpHistory(b); const m = box.closest('details')?.querySelector('.od-meta'); if (m) m.textContent = b.list_price != null ? money(b.list_price) : ''; }
+}
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-lp]'); if (!btn) return;
+  const id = btn.closest('#lpPanel')?.dataset.id; if (!id) return;
+  const b = BK.list.find(x => x.id === id); if (!b) return;
+  if (btn.dataset.lp === 'edit') {
+    const v = prompt('List price (leave blank to clear)', b.list_price != null ? String(Math.round(b.list_price)) : '');
+    if (v == null) return;
+    try { await lpCall({ action: 'manual', bookingId: id, price: v.trim() }); toast(v.trim() ? 'List price saved' : 'List price cleared'); lpReload(id); } catch (err) { fail(err); }
+    return;
+  }
+  btn.disabled = true; const was = btn.textContent; btn.textContent = 'Checking…';
+  try {
+    let r = await lpCall({ action: 'check', bookingId: id });
+    if (r.needsOk) {
+      if (!confirm(`This month's RentCast budget is used (${r.used} of ${r.allowed}, resets ${fmtDate(r.resets)}).\n\nLook this one up anyway? Lookups past RentCast's free 50 cost $0.20 each.`)) { btn.disabled = false; btn.textContent = was; return; }
+      r = await lpCall({ action: 'check', bookingId: id, allowOver: true });
+    }
+    toast(r.found ? `Found: ${money(r.list_price)} (${r.used} of ${r.allowed} lookups used)` : `No listing found yet (${r.used} of ${r.allowed} lookups used)`);
+    lpReload(id);
+  } catch (err) { fail(err); btn.disabled = false; btn.textContent = was; }
+});
+async function lpSettings(mark){
+  const box = $('#lpSet'); if (!box) return;
+  let st; try { st = await lpCall({ action: 'status' }); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; mark?.('rentcast', null, 'Unknown'); mark?.('quo', null, 'Unknown'); return; }
+  mark?.('rentcast', st.rentcast, st.rentcast ? 'Connected' : 'Not set up'); mark?.('quo', st.quo, st.quo ? 'Connected' : 'Not set up');
+  const pct = st.allowed ? Math.min(100, Math.round(st.used / st.allowed * 100)) : 100;
+  box.innerHTML = `<div class="lp-bud"><b>${st.used} of ${st.allowed} used</b><div class="lp-bar ${st.left === 0 ? 'full' : st.left <= 10 ? 'warn' : ''}"><i style="width:${pct}%"></i></div>
+      <span class="muted">resets ${esc(fmtDate(st.end))}${st.extra ? ` · includes ${st.extra} extra this month` : ''}</span></div>
+    <p class="muted bk-hint" style="margin:0 0 12px">${st.pending} recent order${st.pending === 1 ? '' : 's'} waiting for a list price · ${st.older} older order${st.older === 1 ? '' : 's'} never checked</p>
+    <div class="zs-form" style="grid-template-columns:repeat(3,minmax(0,1fr));align-items:end">
+      <div><label>Monthly cap</label><input type="number" id="lpCap" min="0" max="5000" value="${st.cap}" /></div>
+      <div><label>Allow extra this month</label><input type="number" id="lpExtra" min="0" max="5000" value="${st.extra || 0}" /></div>
+      <div><button type="button" class="btn" id="lpSave">Save</button></div>
+      <label class="check full"><input type="checkbox" id="lpBack" ${st.backfill ? 'checked' : ''} /> Use leftover lookups on older orders (last week of each month, newest first, keeps 5 for Check now)</label>
+    </div>
+    <p class="muted bk-hint">RentCast's free plan includes 50 a month; each one past that is $0.20. A cap of 50 never costs anything.</p>`;
+  $('#lpSave').onclick = async () => {
+    try { await lpCall({ action: 'settings', cap: +$('#lpCap').value, extra: +$('#lpExtra').value, backfill: $('#lpBack').checked }); toast('Saved'); lpSettings(); } catch (e) { fail(e); }
+  };
+  $('#lpBack').onchange = async () => { try { await lpCall({ action: 'settings', backfill: $('#lpBack').checked }); toast('Saved'); } catch (e) { fail(e); } };
+}
 /* ----- Zillow Stat Tracker (order card): the order's Zillow link + dated snapshots of views / saves / days on Zillow.
    Usually filled from Claude (Chris pastes a link in his Zillow Stat Tracker project; Claude reads the page and saves here),
    or by hand below. Clients see it on their listing card. Tables: zillow_listings, zillow_stats. */
@@ -7319,6 +7402,7 @@ async function ordDelete(b){
 function renderBookingDetail(id){
   const b = BK.list.find(x => x.id === id);
   if (b && !isBrand(b)) queueMicrotask(() => renderZillowPanel(b).catch(e => console.warn('zillow panel', e)));
+  if (b && !isBrand(b)) queueMicrotask(() => lpHistory(b).catch(e => console.warn('listing history', e)));
   if (!b) { $('#bookingsView').innerHTML = `<a href="${S.view === 'branding' ? '#/branding' : '#/bookings'}" class="bk-back">← ${S.view === 'branding' ? 'Branding' : 'Orders'}</a><p class="muted">That ${S.view === 'branding' ? 'session' : 'order'} wasn't found.</p>`; return; }
   const isBr = isBrand(b), base = ordBase(b);
   const a = S.agents.find(x => x.id === b.agent_id);
@@ -7524,6 +7608,7 @@ function renderBookingDetail(id){
         ${live ? sec('send', 'Delivery Email', b.delivered_at ? 'Last sent ' + esc(ordDate(b.delivered_at, true)) : 'Not sent yet', `<div id="dsPanel">${dsFormHTML(b, a)}</div>`) : ''}
       </div>
       <div class="od-side ap-secs">
+        ${isBr ? '' : sec('listing', 'Listing', b.list_price ? esc(money(b.list_price)) : '', `<div id="lpPanel" data-id="${b.id}">${lpHTML(b)}</div>`)}
         ${isBr ? '' : sec('zillow', 'Zillow Stats', '', '<div id="zsPanel"><p class="muted" style="margin:0">Loading…</p></div>')}
         ${sec('activity', isBr ? 'Session Activity' : 'Order Activity', '', '<div id="bkAct"><p class="muted">Open to load…</p></div>')}
       </div>
