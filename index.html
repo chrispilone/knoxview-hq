@@ -1498,6 +1498,13 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.spi-sum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.spi-sum>div{border:1px solid var(--border);border-radius:9px;padding:8px 12px;min-width:120px}.spi-sum b{display:block;font-size:18px}.spi-sum small{color:var(--muted);font-size:12px}
+.spi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.spi-bar input,.spi-bar select{max-width:220px}
+.spi-tbl{border:1px solid var(--border);border-radius:9px;max-height:520px;overflow:auto}.spi-tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
+.spi-tbl th,.spi-tbl td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:middle}.spi-tbl th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;z-index:1}
+.spi-tbl td.n{text-align:right;font-variant-numeric:tabular-nums}.spi-tbl tr.sub td{background:var(--bg);font-size:12.5px}.spi-cl{cursor:pointer}.spi-cl:hover td{background:var(--hover,rgba(0,0,0,.03))}
+.spi-run{border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:0 0 12px}.spi-prog{height:8px;border-radius:5px;background:var(--border);overflow:hidden;margin:8px 0}.spi-prog i{display:block;height:100%;background:var(--accent)}
+.spi-log{max-height:220px;overflow:auto;font-size:12.5px;line-height:1.55;margin:6px 0 0}.spi-log .w{color:#b35c00}.spi-log .e{color:#c0392b}
 .lp-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 4px}.lp-price{font-size:24px;font-weight:700;color:var(--text)}
 .lp-meta{font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5}
 .lp-notes{margin:0 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:9px}.lp-notes h4{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -3873,6 +3880,7 @@ const SET_SECTIONS = [
   ['invoicing', 'Invoicing', 'Payment options & invoices'],
   ['delivery', 'Delivery & Dropbox', 'Order folders & photos'],
   ['integrations', 'Integrations', 'Connected services'],
+  ['spiro', 'Spiro Import', 'Bring delivered Spiro orders into HQ'],
   ['email', 'Email Templates', 'Every email HQ sends'],
   ['sms', 'SMS Templates', 'Every text HQ sends'],
 ];
@@ -4023,6 +4031,7 @@ async function renderSettings(){
     }).catch(e => { const box = $('#dbxStatus'); if (box) box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; });
   }
 
+  if (sec === 'spiro') { body.innerHTML = card('Spiro Import', '<div id="spiBox"><p class="muted">Loading delivered Spiro orders…</p></div>', 'Only delivered Spiro orders come over: services and price, invoices and paid status, photos (from the Dropbox folder, or copied from Spiro when Dropbox is missing them), videos, 3D tour and floor plans. Resync replaces an order\'s services, price, status and invoices with Spiro\'s; photos hidden in HQ stay hidden, and HQ-only details (website edits, list price, notes) are kept.'); spiRender(true); }
   if (sec === 'integrations') {
     const ITG = [
       ['google', 'Google Calendar & Gmail', 'Shoots on your calendar, openings, Mail and task suggestions from your inbox', '#/calendar'],
@@ -5858,6 +5867,141 @@ async function loadBookingData(force){
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
 
+/* ----- Spiro Import (Settings): delivered Spiro orders by client, imported one at a time through the dropbox function
+   (spiro_delivered lists them, spiro_pull imports / resyncs one; it answers more:true while photos are still being copied
+   from Spiro, so the same order is called again). Runs while this tab is open; the queue is saved in this browser so it
+   picks up where it left off. ----- */
+const SPI = { orders: null, q: [], running: false, paused: false, done: 0, total: 0, log: [], cur: '', open: new Set(), filter: 'all', search: '' };
+const SPI_KEY = 'hq_spiro_queue';
+function spiSaveQ(){ try { SPI.q.length ? localStorage.setItem(SPI_KEY, JSON.stringify({ q: SPI.q, total: SPI.total, done: SPI.done })) : localStorage.removeItem(SPI_KEY); } catch (_) {} }
+function spiSavedQ(){ try { return JSON.parse(localStorage.getItem(SPI_KEY) || 'null'); } catch (_) { return null; } }
+function spiClients(){
+  const by = new Map();
+  for (const o of SPI.orders || []) {
+    const c = by.get(o.agentId) || { id: o.agentId, name: o.agent || 'Unknown', company: o.company || '', orders: [], inHq: 0, last: null };
+    c.orders.push(o); if (o.hq) { c.inHq++; if (!c.last || o.hq.imported_at > c.last) c.last = o.hq.imported_at; }
+    by.set(o.agentId, c);
+  }
+  return [...by.values()].sort((a, b) => b.orders.length - a.orders.length || a.name.localeCompare(b.name));
+}
+async function spiLoad(){ const r = await dbxCall('spiro_delivered'); SPI.orders = r.orders || []; }
+async function spiRender(load){
+  const box = $('#spiBox'); if (!box) return;
+  if (load || !SPI.orders) { try { await spiLoad(); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; } }
+  const cl = spiClients(), all = SPI.orders.length, inHq = SPI.orders.filter(o => o.hq).length;
+  const saved = !SPI.running && spiSavedQ();
+  const q = SPI.search.trim().toLowerCase();
+  const shown = cl.filter(c => (SPI.filter === 'all' || (SPI.filter === 'none' && !c.inHq) || (SPI.filter === 'part' && c.inHq && c.inHq < c.orders.length) || (SPI.filter === 'full' && c.inHq === c.orders.length))
+    && (!q || (c.name + ' ' + c.company).toLowerCase().includes(q)));
+  box.innerHTML = `<div class="spi-sum"><div><b>${all.toLocaleString()}</b><small>delivered in Spiro</small></div><div><b>${cl.length}</b><small>clients</small></div>
+      <div><b>${inHq.toLocaleString()}</b><small>in HQ</small></div><div><b>${(all - inHq).toLocaleString()}</b><small>left to import</small></div></div>
+    <div id="spiRun">${spiRunHTML(saved)}</div>
+    <div class="spi-bar"><input type="search" id="spiQ" placeholder="Search clients" value="${esc(SPI.search)}" />
+      <select id="spiF">${[['all', 'All clients'], ['none', 'Not imported'], ['part', 'Partly imported'], ['full', 'Fully imported']].map(([v, l]) => `<option value="${v}" ${SPI.filter === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" data-spi="all-import" ${SPI.running ? 'disabled' : ''}>Import everyone</button>
+      <button type="button" class="btn small" data-spi="all-resync" ${SPI.running ? 'disabled' : ''}>Resync everyone</button>
+      <button type="button" class="btn small" data-spi="reload" ${SPI.running ? 'disabled' : ''}>Refresh list</button></div>
+    <div class="spi-tbl"><table><thead><tr><th>Client</th><th>Company</th><th class="n">Delivered</th><th class="n">In HQ</th><th>Last synced</th><th></th></tr></thead><tbody>
+    ${shown.map(c => `<tr class="spi-cl" data-cl="${esc(c.id)}"><td><b>${esc(c.name)}</b></td><td>${esc(c.company)}</td><td class="n">${c.orders.length}</td><td class="n">${c.inHq}</td>
+        <td>${c.last ? esc(fmtDate(c.last)) : '<span class="muted">—</span>'}</td>
+        <td style="white-space:nowrap">${c.inHq < c.orders.length ? `<button type="button" class="btn small primary" data-spi="cl-import" data-id="${esc(c.id)}" ${SPI.running ? 'disabled' : ''}>Import</button>` : ''}
+          ${c.inHq ? `<button type="button" class="btn small" data-spi="cl-resync" data-id="${esc(c.id)}" ${SPI.running ? 'disabled' : ''}>Resync</button>` : ''}</td></tr>
+      ${SPI.open.has(c.id) ? c.orders.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map(o => `<tr class="sub"><td colspan="2">${esc(o.address || '')}</td><td class="n">${esc(fmtDate(o.date))}</td>
+        <td class="n">${o.hq ? `<a href="#/bookings/${o.hq.id}">#${o.hq.number}</a>` : '<span class="muted">—</span>'}</td><td>${o.hq?.imported_at ? esc(fmtDate(o.hq.imported_at)) : ''}</td>
+        <td><button type="button" class="btn small" data-spi="one" data-id="${esc(o.orderId)}" ${SPI.running ? 'disabled' : ''}>${o.hq ? 'Resync' : 'Import'}</button></td></tr>`).join('') : ''}`).join('')
+      || `<tr><td colspan="6" class="muted">No clients match.</td></tr>`}</tbody></table></div>`;
+  $('#spiQ').oninput = e => { SPI.search = e.target.value; clearTimeout(SPI.t); SPI.t = setTimeout(() => { spiRender(); $('#spiQ')?.focus(); const i = $('#spiQ'); if (i) i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  $('#spiF').onchange = e => { SPI.filter = e.target.value; spiRender(); };
+}
+function spiRunHTML(saved){
+  if (!SPI.running && !SPI.log.length && !saved) return '';
+  const pct = SPI.total ? Math.round(SPI.done / SPI.total * 100) : 0;
+  return `<div class="spi-run"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <b>${SPI.running ? (SPI.paused ? 'Pausing after this order…' : `Importing ${Math.min(SPI.done + 1, SPI.total)} of ${SPI.total}`) : saved ? `Unfinished run: ${saved.q.length} order${saved.q.length === 1 ? '' : 's'} left` : `Finished: ${SPI.done} of ${SPI.total}`}</b>
+      ${SPI.cur && SPI.running ? `<span class="muted">${esc(SPI.cur)}</span>` : ''}<span style="flex:1"></span>
+      ${SPI.running ? `<button type="button" class="btn small" data-spi="pause">Pause</button>` : saved ? `<button type="button" class="btn small primary" data-spi="resume">Resume</button><button type="button" class="btn small" data-spi="discard">Discard</button>` : ''}</div>
+    ${SPI.running || SPI.total ? `<div class="spi-prog"><i style="width:${pct}%"></i></div>` : ''}
+    <div class="spi-log">${SPI.log.slice(-200).reverse().map(l => `<div class="${l.c || ''}">${l.h}</div>`).join('')}</div></div>`;
+}
+function spiPaintRun(){ const r = $('#spiRun'); if (r) r.innerHTML = spiRunHTML(!SPI.running && spiSavedQ()); }
+// one order, repeated while photos are still being copied from Spiro
+async function spiPullOne(orderId){
+  let last = null, fails = 0, bookingId = null;
+  for (let n = 0; n < 10; n++) {
+    try { last = await dbxCall('spiro_pull', bookingId ? { bookingId } : { orderId }); }
+    catch (e) { if (++fails <= 2) { await new Promise(r => setTimeout(r, 15000)); continue; } throw e; }
+    bookingId = last.bookingId; if (!last.more) break;
+  }
+  return last;
+}
+function spiNote(o, r){
+  const d = r.dropbox || {}, w = [];
+  if (!d.found) w.push('no Dropbox folder');
+  if ((r.log || []).some(x => /No Dropbox folder found, made/.test(x))) w.push('made a new Dropbox folder');
+  if ((d.missing || []).length && !d.photosCopied) w.push(`${d.missing.length} delivered photo${d.missing.length === 1 ? '' : 's'} missing`);
+  if (!(r.invoices || []).length) w.push('no Spiro invoice');
+  const h = `<a href="#/bookings/${r.bookingId}">#${r.number}</a> ${esc(o.agent || '')} · ${esc(String(o.address || '').split(',')[0])} · ${d.found ? `${d.matched ?? 0}/${d.delivered ?? 0} photos${d.photosCopied ? `, ${d.photosCopied} copied from Spiro` : ''}` : 'no photos'} · ${(r.invoices || []).length} invoice${(r.invoices || []).length === 1 ? '' : 's'} · ${r.paid ? 'paid' : 'unpaid'}${w.length ? ` · ${w.join(', ')}` : ''}`;
+  return { h, c: w.length ? 'w' : '' };
+}
+async function spiStart(ids, label){
+  if (SPI.running) return;
+  ids = [...new Set(ids)]; if (!ids.length) return toast('Nothing to do');
+  SPI.q = ids; SPI.total = ids.length; SPI.done = 0; SPI.log = [{ h: `<b>${esc(label)}</b>: ${ids.length} order${ids.length === 1 ? '' : 's'}` }];
+  spiSaveQ(); spiRun();
+}
+async function spiRun(){
+  SPI.running = true; SPI.paused = false; spiRender();
+  const byId = new Map((SPI.orders || []).map(o => [o.orderId, o]));
+  while (SPI.q.length && !SPI.paused) {
+    const id = SPI.q[0], o = byId.get(id) || { agent: '', address: id };
+    SPI.cur = `${o.agent} · ${String(o.address || '').split(',')[0]}`; spiPaintRun();
+    try {
+      const r = await spiPullOne(id);
+      SPI.log.push(spiNote(o, r));
+      if (o.orderId) o.hq = { id: r.bookingId, number: r.number, imported_at: new Date().toISOString() };
+    } catch (e) { SPI.log.push({ h: `${esc(o.agent || '')} · ${esc(String(o.address || '').split(',')[0])}: ${esc(e.message)}`, c: 'e' }); }
+    SPI.q.shift(); SPI.done++; spiSaveQ(); spiPaintRun();
+  }
+  const stopped = SPI.paused && SPI.q.length;
+  SPI.running = false; SPI.paused = false; SPI.cur = '';
+  if (!stopped) { SPI.log.push({ h: `<b>Done.</b> ${SPI.done} order${SPI.done === 1 ? '' : 's'}, ${SPI.log.filter(l => l.c === 'w').length} to check, ${SPI.log.filter(l => l.c === 'e').length} failed.` }); spiSaveQ(); }
+  toast(stopped ? `Paused, ${SPI.q.length} left` : 'Spiro import finished');
+  try { await reloadBookings(); } catch (_) {}
+  spiRender();
+}
+document.addEventListener('click', async e => {
+  const cl = e.target.closest('tr.spi-cl'); const btn = e.target.closest('[data-spi]');
+  if (cl && !btn) { const id = cl.dataset.cl; SPI.open.has(id) ? SPI.open.delete(id) : SPI.open.add(id); return spiRender(); }
+  if (!btn) return;
+  const a = btn.dataset.spi, cls = SPI.orders ? spiClients() : [];
+  const newest = list => list.slice().sort((x, y) => String(y.date).localeCompare(String(x.date))).map(o => o.orderId);
+  if (a === 'pause') { SPI.paused = true; spiPaintRun(); return; }
+  if (a === 'discard') { if (!confirm('Forget the unfinished run? Orders already imported stay in HQ.')) return; localStorage.removeItem(SPI_KEY); SPI.log = []; SPI.total = 0; return spiRender(); }
+  if (a === 'resume') { const sv = spiSavedQ(); if (!sv) return; SPI.q = sv.q; SPI.total = sv.total; SPI.done = sv.done; SPI.log = [{ h: '<b>Resumed</b>' }]; return spiRun(); }
+  if (a === 'reload') return spiRender(true);
+  if (a === 'one') { const o = SPI.orders.find(x => x.orderId === btn.dataset.id); return spiStart([btn.dataset.id], `${o?.hq ? 'Resync' : 'Import'} ${o?.address || ''}`); }
+  const c = cls.find(x => x.id === btn.dataset.id);
+  if (a === 'cl-import' && c) return spiStart(newest(c.orders.filter(o => !o.hq)), `Import ${c.name}`);
+  if (a === 'cl-resync' && c) return spiStart(newest(c.orders.filter(o => o.hq)), `Resync ${c.name}`);
+  if (a === 'all-import') { const ids = cls.flatMap(x => newest(x.orders.filter(o => !o.hq)));
+    if (!confirm(`Import ${ids.length.toLocaleString()} delivered Spiro orders, biggest clients first?\n\nThis takes a few hours. Keep this HQ tab open; you can pause and resume.`)) return; return spiStart(ids, 'Import everyone'); }
+  if (a === 'all-resync') { const ids = cls.flatMap(x => newest(x.orders.filter(o => o.hq)));
+    if (!confirm(`Resync all ${ids.length.toLocaleString()} imported orders from Spiro?\n\nServices, price, status and invoices are replaced with Spiro's.`)) return; return spiStart(ids, 'Resync everyone'); }
+});
+// "Resync from Spiro" on an imported order
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-spresync]'); if (!btn) return;
+  if (!confirm('Resync this order from Spiro?\n\nServices, price, status and invoices are replaced with Spiro\'s. Photos hidden in HQ stay hidden.')) return;
+  btn.disabled = true; const was = btn.textContent; btn.textContent = 'Resyncing…';
+  try {
+    const b = BK.list.find(x => x.id === btn.dataset.spresync);
+    const r = await spiPullOne(b.spiro_order_id);
+    const { data: fresh } = await sb.from('bookings').select('*').eq('id', b.id).maybeSingle(); if (fresh) Object.assign(b, fresh);
+    toast(`Resynced: ${(r.invoices || []).length} invoice${(r.invoices || []).length === 1 ? '' : 's'}, ${r.paid ? 'paid' : 'unpaid'}${r.dropbox?.photosCopied ? `, ${r.dropbox.photosCopied} photos copied` : ''}`);
+    bkRefresh(b.id);
+  } catch (err) { fail(err); btn.disabled = false; btn.textContent = was; }
+});
 /* ----- Listing (order card): list price + status from RentCast (weekly city sweep, or "Check now" = 1 request), the agent's
    property website, or typed in here. Each check is saved with its date and 2-3 notes (table listing_checks). The
    listprice edge function keeps RentCast inside the monthly budget set in Settings → Integrations. ----- */
@@ -7138,7 +7282,8 @@ function spiroInvHTML(b){
     <span>${i.total != null ? money(i.total) : ''} <span class="sp-st ${i.status === 'Paid' ? 'ok' : ''}">${esc(i.status === 'Paid' && i.paid_at ? 'Paid ' + fmtDate(i.paid_at) : i.status || '')}</span></span></div>`).join('');
   return `<div class="sp-inv"><p class="muted bk-hint" style="margin:0 0 6px">Imported from Spiro · order ${esc(b.order_no || '')}${b.imported_at ? ' · ' + esc(fmtDate(b.imported_at)) : ''}</p>
     <p style="margin:0 0 6px;font-size:13px">${who}.</p>
-    ${rows || `<p class="muted bk-hint" style="margin:0">Not on a Spiro invoice yet${b.bill_to === 'company' ? ' (company invoices go out on the 1st of the month)' : ''}.</p>`}</div>`;
+    ${rows || `<p class="muted bk-hint" style="margin:0">Not on a Spiro invoice yet${b.bill_to === 'company' ? ' (company invoices go out on the 1st of the month)' : ''}.</p>`}
+    ${b.spiro_order_id && isSuperAdmin() ? `<div class="bk-actions" style="margin-top:8px"><button type="button" class="btn small" data-spresync="${b.id}">Resync from Spiro</button></div>` : ''}</div>`;
 }
 /* ----- Property websites (listing.knoxview.com/<slug>, /mls = unbranded). Made automatically when an order is completed;
    the client edits the same fields from their account. The `listing` edge function serves editor/save. ----- */
