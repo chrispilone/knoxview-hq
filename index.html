@@ -1498,6 +1498,8 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.cc-warn{background:#fff6e0;border:1px solid #e9c46a;color:#6b4a00;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:14px}
+.cc-heard{margin:0 0 14px;border-left:4px solid #7a4fd1}.cc-heard h3{margin:0 0 8px}.cc-hr{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;padding:8px 0;border-top:1px solid var(--border)}.cc-hr:first-of-type{border-top:0}
 .cc-wrap{max-width:860px;margin:0 auto}.cc-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}.cc-top h1{margin:0}
 .cc-seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:3px;background:var(--panel)}.cc-seg button{border:0;background:none;padding:8px 16px;border-radius:999px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;min-height:40px}.cc-seg button.on{background:var(--accent);color:var(--on-accent)}
 .cc-hero{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin:0 0 14px}.cc-hero h2{margin:2px 0;font-size:26px}.cc-date{margin:0;text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:700;color:var(--muted)}
@@ -6010,7 +6012,7 @@ function careCard(it, i){
       ${c.push_note ? `<p class="muted cc-small">Pushed before: ${esc(c.push_note)}</p>` : ''}
       ${CARE.noteFor === i ? `<div class="cc-note"><textarea id="ccNote" rows="2" placeholder="Note (optional): what you talked about">${esc(lastCall?.note || '')}</textarea><button type="button" class="btn small primary" data-cc-act="savenote" data-i="${i}">Save note</button></div>` : ''}
       <div class="cc-acts">
-        ${done ? `<button type="button" class="btn small" data-cc-act="note" data-i="${i}">${lastCall?.note ? 'Edit note' : 'Add note'}</button><button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button><button type="button" class="btn small" data-cc-act="undo" data-i="${i}">Undo</button>`
+        ${done ? `<button type="button" class="btn small" data-cc-act="note" data-i="${i}">${lastCall?.note ? 'Edit note' : 'Add note'}</button><button type="button" class="btn small" data-cc-act="vmtext" data-i="${i}">Voicemail text</button><button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button><button type="button" class="btn small" data-cc-act="undo" data-i="${i}">Undo</button>`
         : `${num ? `<a class="btn primary cc-call" href="tel:${esc(tel)}" data-cc-act="dial" data-i="${i}">Call ${esc(num)}</a><button type="button" class="btn" data-cc-act="copy" data-i="${i}">Copy number</button>` : '<span class="muted">No phone on file</span>'}
           <button type="button" class="btn primary" data-cc-act="done" data-i="${i}">Done</button>
           <button type="button" class="btn" data-cc-act="vm" data-i="${i}">Left a voicemail</button>
@@ -6047,12 +6049,66 @@ function careToday(){
       ${counts.first ? `<p class="cc-plus">+ ${counts.first} first-time follow-up${counts.first === 1 ? '' : 's'}</p>` : ''}${counts.follow ? `<p class="cc-plus">+ ${counts.follow} follow-up${counts.follow === 1 ? '' : 's'} you set</p>` : ''}
       <p class="muted cc-small">Best after 10:30 AM, once sales meetings wrap.</p></div>
       <div class="cc-game">${careRing(done, items.length)}<div><b>${careStreak()}</b><small>day streak</small></div><div><b>${careWeek()}</b><small>this week</small></div></div></div>
+    ${careBanner()}${careHeard()}
     ${items.length ? order.map(s => { const list = items.map((it, i) => [it, i]).filter(([it]) => it.s === s); if (!list.length) return '';
       return `<h3 class="cc-sh">${esc(s === 'care' ? 'Care calls' : s === 'first' ? 'First-time follow-ups' : s === 'follow' ? 'Follow-ups you set' : s === 'feedback' ? 'Feedback calls' : 'From yesterday')} <em>${list.length}</em></h3>${list.map(([it, i]) => careCard(it, i)).join('')}`; }).join('')
       : '<div class="panel"><p class="muted" style="margin:0">Nobody is due today. Everyone has been contacted recently.</p></div>'}
     <details class="cc-q"><summary>Questions to ask</summary><ul>${(CARE.set.questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul></details>
-    <p class="muted cc-small" style="margin-top:14px">Roster ${sync ? `last synced ${esc(fmtDateTime(sync.at))} from ${sync.spiroOrders} Spiro and ${sync.hqOrders} HQ orders` : 'not synced yet'}.</p>`;
+    <p class="muted cc-small" style="margin-top:14px">Roster ${sync ? `last synced ${esc(fmtDateTime(sync.at))} from ${sync.spiroOrders} Spiro and ${sync.hqOrders} HQ orders` : 'not synced yet'}.
+      Quo calls and texts ${CARE.set.lastQuo ? `last checked ${esc(fmtDateTime(CARE.set.lastQuo.at))}` : 'not checked yet'}. <button type="button" class="btn small" id="ccQuoNow">Sync calls now</button></p>`;
+  const qb = $('#ccQuoNow'); if (qb) qb.onclick = () => careQuoNow(qb);
 }
+function careBanner(){
+  const lq = CARE.set.lastQuo, rs = CARE.set.lastSync, warn = [];
+  const old = iso => !iso || Date.now() - new Date(iso).getTime() > 36 * 36e5;
+  if (old(rs?.at)) warn.push('The roster has not synced from Spiro in over 36 hours.');
+  if (old(lq?.at)) warn.push('Quo calls and texts have not been checked in over 36 hours.');
+  if (lq?.errors?.length) warn.push(`Last Quo check had ${lq.errors.length} problem${lq.errors.length === 1 ? '' : 's'}: ${lq.errors[0]}`);
+  return warn.length ? `<div class="cc-warn">${warn.map(esc).join('<br>')}<br><span class="cc-small">Try "Sync calls now" below or "Sync roster now" in Settings. If it keeps happening, ask Claude to check the care function.</span></div>` : '';
+}
+function careHeard(){
+  const list = CARE.clients.filter(c => c.suggest?.date && !c.followup_on);
+  if (!list.length) return '';
+  return `<div class="panel cc-heard"><h3>Heard on your calls</h3>${list.map(c => `<div class="cc-hr"><div><b>${esc(c.name)}</b> · ${esc(c.suggest.about || 'follow up')}
+      ${c.suggest.quote ? `<p class="cc-last">“${esc(c.suggest.quote)}”</p>` : ''}<small class="muted">from your call ${esc(fmtDate(c.suggest.at))}</small></div>
+    <div class="cc-acts"><input type="date" value="${esc(c.suggest.date)}" data-hd="${c.id}"/><button type="button" class="btn small primary" data-heard="set" data-id="${c.id}">Set follow-up</button><button type="button" class="btn small" data-heard="no" data-id="${c.id}">Dismiss</button></div></div>`).join('')}</div>`;
+}
+async function careQuoNow(btn){
+  btn.disabled = true; btn.textContent = 'Checking Quo…';
+  try { const { data, error } = await sb.functions.invoke('care', { body: { action: 'quo_sync' } }); if (error) throw new Error((await error.context.json().catch(() => ({}))).error || error.message);
+    toast(`Quo: ${data.calls} call${data.calls === 1 ? '' : 's'}, ${data.notes} note${data.notes === 1 ? '' : 's'}, ${data.texts} text thread${data.texts === 1 ? '' : 's'}`);
+    CARE.loaded = false; await careLoad(true); CARE.day = CARE.days.find(d => d.day === ccToday()) || CARE.day; careToday(); }
+  catch (e) { fail(e); btn.disabled = false; btn.textContent = 'Sync calls now'; }
+}
+async function careVmText(c){
+  const wrap = document.createElement('div'); wrap.className = 'cc-modal';
+  wrap.innerHTML = `<div class="panel"><h3 style="margin:0 0 8px">Text for ${esc(c.call_name || c.name)}</h3><p class="muted cc-small" id="vmS">Finding your voicemail in Quo…</p>
+    <textarea id="vmT" rows="5" style="width:100%" placeholder="Drafting…"></textarea>
+    <div class="bk-actions"><button type="button" class="btn" data-x>Close</button><button type="button" class="btn primary" data-copy disabled>Copy text for Quo</button></div></div>`;
+  document.body.appendChild(wrap);
+  wrap.querySelector('[data-x]').onclick = () => wrap.remove();
+  wrap.querySelector('[data-copy]').onclick = async () => { const t = wrap.querySelector('#vmT').value; try { await navigator.clipboard.writeText(t); toast('Copied. Paste it into Quo and send.'); wrap.remove(); } catch (_) { wrap.querySelector('#vmT').select(); } };
+  for (let k = 0; k < 4; k++) {
+    const { data, error } = await sb.functions.invoke('care', { body: { action: 'vmtext', clientId: c.id } });
+    if (!document.body.contains(wrap)) return;
+    if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} wrap.querySelector('#vmS').textContent = m; return; }
+    if (data.pending) { wrap.querySelector('#vmS').textContent = 'Quo is still transcribing your voicemail. Checking again in 20 seconds…'; await new Promise(r => setTimeout(r, 20000)); continue; }
+    wrap.querySelector('#vmT').value = data.text; wrap.querySelector('[data-copy]').disabled = false;
+    wrap.querySelector('#vmS').textContent = data.fromVoicemail ? 'Drafted from your voicemail, in your texting style. Edit it if you like; nothing is sent until you paste it into Quo.' : 'No voicemail transcript found yet, so this is a friendly check-in. Edit before sending.';
+    return;
+  }
+  wrap.querySelector('#vmS').textContent = 'The voicemail transcript is not ready yet. Try "Voicemail text" again in a minute.';
+}
+document.addEventListener('click', async e => {
+  const h = e.target.closest('[data-heard]'); if (!h) return;
+  const c = CARE.byId.get(h.dataset.id); if (!c) return;
+  if (h.dataset.heard === 'set') {
+    const date = document.querySelector(`[data-hd="${c.id}"]`)?.value || c.suggest.date;
+    const u = { followup_on: date, followup_note: c.suggest.about || null, suggest: null }; Object.assign(c, u);
+    const { error } = await sb.from('cc_clients').update(u).eq('id', c.id); if (error) return fail(error); toast(`Follow-up set for ${fmtDate(date)}`);
+  } else { c.suggest = null; await sb.from('cc_clients').update({ suggest: null }).eq('id', c.id); }
+  careToday();
+});
 async function careLog(i, outcome){
   const it = CARE.day.items[i], c = CARE.byId.get(it.c); if (!c) return;
   const kind = { follow: 'followup', first: 'first', feedback: 'feedback', care: 'care', carry: it.s0 === 'follow' ? 'followup' : it.s0 || 'care' }[it.s] || 'care';
@@ -6123,7 +6179,8 @@ document.addEventListener('click', async e => {
   if (a === 'dial') return; // the tel: link opens the phone app
   if (a === 'copy') { try { await navigator.clipboard.writeText(ccNum(c)); toast(`Copied. Open Quo and paste to call ${c.call_name || c.name}.`); } catch (_) { prompt('Copy this number', ccNum(c)); } return; }
   if (a === 'done') return careLog(i, 'talked');
-  if (a === 'vm') return careLog(i, 'voicemail');
+  if (a === 'vm') { await careLog(i, 'voicemail'); return careVmText(c); }
+  if (a === 'vmtext') return careVmText(c);
   if (a === 'undo') return careUndo(i);
   if (a === 'push') return carePush(i);
   if (a === 'fu') return careFollow(c);
@@ -6196,7 +6253,21 @@ function careSettings(){
     <p class="muted cc-small">Changes apply from tomorrow's list (today's stays as it is). Tiers update on the next roster sync.</p></div>
     <div class="panel" style="margin-top:12px"><h3 style="margin:0 0 6px">Roster</h3>
       <p class="muted cc-small" style="margin:0 0 10px">${CARE.clients.length} clients (Tier 1: ${[1, 2, 3, 4].map(t => CARE.clients.filter(c => c.tier === t).length).join(' · Tier ')}). Synced nightly at 11:45 PM from Spiro and HQ orders${sync ? `; last ${esc(fmtDateTime(sync.at))}` : ''}.</p>
-      <div class="bk-actions"><button type="button" class="btn" id="ccsSync">Sync roster now</button><button type="button" class="btn" id="ccsRebuild">Rebuild today's list</button></div></div>`;
+      <div class="bk-actions"><button type="button" class="btn" id="ccsSync">Sync roster now</button><button type="button" class="btn" id="ccsRebuild">Rebuild today's list</button></div></div>
+    ${(st.unknown || []).filter(u => !u.dismissed).length ? `<div class="panel" style="margin-top:12px"><h3 style="margin:0 0 6px">Numbers Quo couldn't match</h3>
+      <p class="muted cc-small" style="margin:0 0 10px">Calls of a minute or more with numbers that aren't on any client. Link one to a client (a team member or second phone) and future calls match automatically.</p>
+      ${(st.unknown || []).filter(u => !u.dismissed).map(u => `<div class="cc-hr"><div><b>${esc(u.number)}</b><br><small class="muted">${esc(fmtDateTime(u.at))} · ${Math.round(u.duration / 60)} min · ${esc(u.direction)}</small></div>
+        <div class="cc-acts"><select data-unk="${esc(u.call)}"><option value="">Link to client…</option>${CARE.clients.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+        <button type="button" class="btn small" data-unkno="${esc(u.call)}">Ignore</button></div></div>`).join('')}</div>` : ''}`;
+  box.querySelectorAll('[data-unk]').forEach(sel => sel.onchange = async () => {
+    const c = CARE.byId.get(sel.value), u = (st.unknown || []).find(x => x.call === sel.dataset.unk); if (!c || !u) return;
+    const alt = [...new Set([...(c.alt_phones || []), u.number])];
+    const { error } = await sb.from('cc_clients').update({ alt_phones: alt }).eq('id', c.id); if (error) return fail(error);
+    c.alt_phones = alt; u.dismissed = true; await sb.from('booking_settings').update({ care: st }).eq('id', 1);
+    toast(`${u.number} linked to ${c.name}. Their calls match from the next Quo check.`); careSettings();
+  });
+  box.querySelectorAll('[data-unkno]').forEach(b => b.onclick = async () => { const u = (st.unknown || []).find(x => x.call === b.dataset.unkno); if (!u) return; u.dismissed = true;
+    await sb.from('booking_settings').update({ care: st }).eq('id', 1); careSettings(); });
   $('#ccsSave').onclick = async () => {
     const nums = sel => [...box.querySelectorAll(sel)].map(x => +x.value);
     const care = { ...st, perDay: +$('#ccsPer').value || 6, tier1PerDay: +$('#ccsT1').value || 0, quiet: +$('#ccsQ').value || 30, tiers: nums('.ccsTier'), cadence: nums('.ccsCad'),
