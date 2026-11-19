@@ -1544,6 +1544,41 @@ body.cc-noscroll{overflow:hidden}
 .cc-yay{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 20px;font-weight:700;font-size:18px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 @keyframes ccfall{to{transform:translateY(110vh) rotate(720deg)}}
 @media(max-width:640px){.cc-hero h2{font-size:22px}}
+/* Virtual Staging */
+.sg-wrap{max-width:1100px;margin:0 auto}.sg-wrap .page-head{justify-content:space-between}.sg-wrap h1{margin:0}
+.sg-note{background:var(--sec-soft);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13.5px;margin:0 0 14px}
+.sg-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;border:2px dashed var(--border);border-radius:14px;background:var(--panel);padding:34px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.sg-drop:hover,.sg-drop.over{border-color:var(--accent);background:var(--sec-soft)}.sg-drop b{font-size:16px}.sg-drop .muted{font-size:13px}
+.sg-drop-ic svg{width:34px;height:34px;color:var(--muted)}
+.sg-set{margin-top:18px}.sg-set-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px}.sg-set-head h2{margin:0;font-size:17px}
+.sg-set-act{display:flex;gap:8px}.sg-set-act svg{width:15px;height:15px;vertical-align:-3px}
+.sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sg-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}.sg-card.ok{border-color:var(--ok)}
+.sg-img{position:relative;aspect-ratio:3/2;background:var(--panel-2);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sg-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;-webkit-touch-callout:none}
+.sg-before{opacity:0}.sg-before.show,.sg-img.peek .sg-before{opacity:1}
+.sg-badge{position:absolute;left:8px;bottom:8px;background:rgba(29,50,80,.82);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;letter-spacing:.02em}
+.sg-img.peek .sg-badge{display:none}.sg-hold{position:absolute;right:8px;bottom:8px;font-size:11px;background:rgba(255,255,255,.85);color:#1d3250;padding:3px 7px;border-radius:6px}
+.sg-busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(244,242,238,.78);color:#1d3250;font-size:13px;font-weight:500;padding:12px;text-align:center}
+.sg-meta{display:flex;align-items:center;gap:8px;padding:10px 12px 0}.sg-meta small{font-size:12px}
+.sg-ver{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}.sg-ver button{border:1px solid var(--border);background:none;border-radius:6px;width:24px;height:24px;color:var(--text)}.sg-ver button:disabled{opacity:.35}
+.sg-qc{margin:6px 12px 0;font-size:12.5px;color:var(--warn)}
+.sg-act{display:flex;align-items:center;gap:2px;padding:6px 8px 10px}.sg-act .btn{margin-left:auto}.sg-act .btn svg{width:13px;height:13px;vertical-align:-2px}
+.sg-act .icon-btn svg{width:19px;height:19px}.sg-act .icon-btn.on{color:var(--ok)}.sg-act .icon-btn.on.bad{color:var(--warn)}.sg-act .icon-btn:disabled{opacity:.35}
+.sg-recent{margin-top:26px}.sg-recent h2{font-size:15px;margin:0 0 8px}.sg-list{display:flex;flex-direction:column;gap:6px}
+.sg-row{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text)}.sg-row.on{border-color:var(--accent)}
+.sg-label{width:min(980px,calc(100% - 24px))}.sg-sub{margin:-8px 0 12px;font-size:13px}.sg-top{margin-bottom:12px}
+.sg-lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.sg-lcard{border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px}.sg-lcard label{font-size:12px;margin-top:4px}
+.sg-lthumb{position:relative;aspect-ratio:3/2;border-radius:7px;overflow:hidden;background:var(--panel-2)}.sg-lthumb img{width:100%;height:100%;object-fit:cover}
+.sg-num{position:absolute;top:6px;left:6px;background:rgba(29,50,80,.85);color:#fff;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.sg-state{font-size:11.5px;min-height:15px}.sg-state.sg-warn{color:var(--warn)}
+.sg-label .actions{align-items:center}.sg-est{margin-right:auto;font-size:13px}
+.sg-ta{width:100%;font-family:inherit;font-size:13px;line-height:1.5}
+.sg-vers{margin-top:12px}.sg-vrow,.sg-prow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border)}.sg-vrow small{font-size:12px}
+.sg-prow span{display:flex;flex-direction:column}.sg-prow small{font-size:12px}.sg-prow.off{opacity:.6}
+@media(max-width:640px){.sg-grid{grid-template-columns:1fr}.sg-lgrid{grid-template-columns:1fr 1fr}.sg-drop{padding:26px 12px}.sg-label .actions{flex-wrap:wrap}.sg-est{flex-basis:100%}}
+
 .spi-sum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.spi-sum>div{border:1px solid var(--border);border-radius:9px;padding:8px 12px;min-width:120px}.spi-sum b{display:block;font-size:18px}.spi-sum small{color:var(--muted);font-size:12px}
 .spi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.spi-bar input,.spi-bar select{max-width:220px}
 .spi-tbl{border:1px solid var(--border);border-radius:9px;max-height:520px;overflow:auto}.spi-tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -1934,6 +1969,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
       <a href="#/care" data-view="care" title="Client Care · who to call today" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span class="lbl">Client Care</span></a>
       <a href="#/bookings" data-view="bookings" title="Orders · shoots, listings, deliveries and payments" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Orders</span></a>
       <a href="#/branding" data-view="branding" title="Branding · headshots, lifestyle shoots, brand videos and other non-listing media" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.5"/><path d="M5.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><path d="M17.5 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="lbl">Branding</span></a>
+      <a href="#/staging" data-view="staging" title="Virtual Staging · stage empty rooms" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v4H3z"/><path d="M5 17v2M19 17v2"/></svg><span class="lbl">Virtual Staging</span></a>
       <button type="button" class="nav-group" id="clientsTab" data-grp="clients" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
       <div class="nav-sub" id="clientsSub">
         <a href="#/companies" data-view="companies" title="Companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/></svg><span class="lbl">Companies</span></a>
@@ -2055,6 +2091,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
     <!-- Bookings (owner only for now) -->
     <div id="bookingsView" class="hidden"></div>
     <div id="careView" class="hidden"></div>
+    <div id="stagingView" class="hidden"></div>
     <div id="settingsView" class="hidden"></div>
     <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
@@ -2222,9 +2259,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'care' ? isSuperAdmin() : v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','care','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','care','staging','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
@@ -2597,7 +2634,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','care','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','care','staging','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2660,6 +2697,8 @@ function render(){
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#careView').classList.toggle('hidden', S.view !== 'care');
   if (S.view === 'care') renderCare(); else if (typeof careSheetClose === 'function' && CARE.sheet != null) careSheetClose();
+  $('#stagingView').classList.toggle('hidden', S.view !== 'staging');
+  if (S.view === 'staging') renderStaging();
   $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
   if (S.view === 'settings') renderSettings();
   $('#bookingsView').classList.toggle('hidden', !inOrders());
@@ -3931,6 +3970,7 @@ const SET_SECTIONS = [
   ['delivery', 'Delivery & Dropbox', 'Order folders & photos'],
   ['integrations', 'Integrations', 'Connected services'],
   ['spiro', 'Spiro Import', 'Bring delivered Spiro orders into HQ'],
+  ['staging', 'Virtual Staging', 'Image engine, instructions & presets'],
   ['email', 'Email Templates', 'Every email HQ sends'],
   ['sms', 'SMS Templates', 'Every text HQ sends'],
 ];
@@ -4081,6 +4121,7 @@ async function renderSettings(){
     }).catch(e => { const box = $('#dbxStatus'); if (box) box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; });
   }
 
+  if (sec === 'staging') sgSettings(body, card);
   if (sec === 'spiro') { body.innerHTML = card('Spiro Import', '<div id="spiBox"><p class="muted">Loading delivered Spiro orders…</p></div>', 'Only delivered Spiro orders come over: services and price, invoices and paid status, photos (from the Dropbox folder, or copied from Spiro when Dropbox is missing them), videos, 3D tour and floor plans. Resync replaces an order\'s services, price, status and invoices with Spiro\'s; photos hidden in HQ stay hidden, and HQ-only details (website edits, list price, notes) are kept.'); spiRender(true); }
   if (sec === 'integrations') {
     const ITG = [
@@ -5916,6 +5957,370 @@ async function loadBookingData(force){
   BK.services = s.data || []; BK.settings = st.data; BK.list = b.data || []; BK.upsells = u.data || []; BK.loaded = true;
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
+
+/* ===================== VIRTUAL STAGING (#/staging) =====================
+   Drop 1–10 photos → label each room (Claude pre-fills its guess) → Confirm & Stage.
+   Claude (staging edge function) reads each photo and writes the prompt from the Standing Instructions + preset;
+   the image engine (Google or OpenAI, Settings → Virtual Staging) renders it. Order keeps the set consistent:
+   the first room renders alone, the other rooms use it as a style reference, then extra angles of a room use
+   that room as their reference. Claude reviews every render against the original and retries once on a fail.
+   All resizing/JPEG work happens here in the browser; the function only moves bytes. Bucket: staging. */
+const SG = { loaded: false, status: null, presets: [], batches: [], batch: null, photos: [], outputs: {}, view: {}, run: null, busy: {} };
+const SG_ROOMS = ['Living Room', 'Family Room', 'Great Room', 'Bedroom', 'Primary Bedroom', 'Kitchen', 'Dining Room', 'Office', 'Bonus Room', 'Loft', 'Game Room', 'Basement', 'Sunroom', 'Nursery', 'Covered Porch', 'Deck'];
+const SG_MAX = 10;
+const SG_ICON = {
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-7c1.5 0 2.5 1 2.2 2.6L12.6 10H19a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 17.8 20H7"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13V4H4v9zM7 13l4 7c1.5 0 2.5-1 2.2-2.6L12.6 14H19a2 2 0 0 0 2-2.3l-1.2-6A2 2 0 0 0 17.8 4H7"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+};
+
+async function sgCall(body){
+  const { data, error } = await sb.functions.invoke('staging', { body });
+  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} throw new Error(m); }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+const sgEngineName = s => (s?.engine === 'openai' ? 'OpenAI GPT Image' : 'Google Nano Banana 2');
+const sgEngineReady = s => !!(s && (s.engine === 'openai' ? s.openai : s.google));
+const sgPerPhoto = s => !s ? 0.15 : (s.engine === 'openai' ? ({ low: 0.013, medium: 0.05, high: 0.2 })[s.openai_quality] ?? 0.2 : ({ '1K': 0.08, '2K': 0.12, '4K': 0.16 })[s.google_size] ?? 0.12) + 0.03;
+const sgMoney = n => '$' + (Number(n) || 0).toFixed(2);
+
+const SG_URL = new Map(); // path -> { url, exp }
+async function sgUrls(paths){
+  const now = Date.now(), need = [...new Set(paths.filter(p => p && !(SG_URL.get(p)?.exp > now + 60e3)))];
+  if (need.length) {
+    const { data, error } = await sb.storage.from('staging').createSignedUrls(need, 3600);
+    if (error) throw error;
+    (data || []).forEach(d => d.signedUrl && SG_URL.set(d.path, { url: d.signedUrl, exp: now + 3500e3 }));
+  }
+  return p => SG_URL.get(p)?.url || '';
+}
+
+// ---- browser image work ----
+async function sgBitmap(src){ // File/Blob or URL
+  const blob = typeof src === 'string' ? await (await fetch(src)).blob() : src;
+  try { return await createImageBitmap(blob); }
+  catch (_) { // fallback (some Safari HEIC cases): through an <img>
+    const u = URL.createObjectURL(blob);
+    try { const im = new Image(); im.src = u; await im.decode(); return im; } finally { setTimeout(() => URL.revokeObjectURL(u), 5000); }
+  }
+}
+async function sgJpeg(src, maxEdge, q = 0.9){
+  const bm = await sgBitmap(src);
+  const W = bm.width || bm.naturalWidth, H = bm.height || bm.naturalHeight, k = maxEdge ? Math.min(1, maxEdge / Math.max(W, H)) : 1;
+  const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
+  const blob = await new Promise((ok, no) => c.toBlob(b => b ? ok(b) : no(new Error('Could not make a JPEG')), 'image/jpeg', q));
+  return { blob, w: c.width, h: c.height, srcW: W, srcH: H };
+}
+async function sgUpload(path, blob){
+  const { error } = await sb.storage.from('staging').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+}
+async function sgPool(items, n, fn){ const q = [...items]; await Promise.all(Array.from({ length: Math.min(n, q.length) }, async () => { while (q.length) await fn(q.shift()); })); }
+
+// ---- data ----
+async function sgLoad(){
+  const [st, pr, bt] = await Promise.all([
+    sgCall({ action: 'status' }).catch(e => ({ error: e.message })),
+    sb.from('staging_presets').select('*').order('sort'),
+    sb.from('staging_batches').select('id, created_at, title, preset_id, booking_id, staging_photos(count)').order('created_at', { ascending: false }).limit(20),
+  ]);
+  SG.status = st; SG.presets = pr.data || []; SG.batches = bt.data || []; SG.loaded = true;
+}
+async function sgOpenBatch(id){
+  const { data: b } = await sb.from('staging_batches').select('*').eq('id', id).single();
+  const { data: ph } = await sb.from('staging_photos').select('*, staging_outputs(*)').eq('batch_id', id).order('sort');
+  SG.batch = b; SG.photos = ph || []; SG.outputs = {}; SG.view = {};
+  for (const p of SG.photos) { SG.outputs[p.id] = (p.staging_outputs || []).sort((a, z) => a.created_at.localeCompare(z.created_at)); delete p.staging_outputs; SG.view[p.id] = SG.outputs[p.id].length - 1; }
+}
+
+// ---- page ----
+async function renderStaging(){
+  const root = $('#stagingView');
+  if (!SG.loaded) { root.innerHTML = '<div class="panel"><p class="muted">Loading Virtual Staging…</p></div>'; try { await sgLoad(); } catch (e) { root.innerHTML = `<div class="panel"><p class="muted">${esc(e.message)}</p></div>`; return; } if (S.view !== 'staging') return; }
+  const st = SG.status || {};
+  const ready = sgEngineReady(st);
+  root.innerHTML = `<div class="sg-wrap">
+    <div class="page-head"><div><h1>Virtual Staging</h1><p class="muted">${st.error ? esc(st.error) : `${esc(sgEngineName(st))} · Standing Instructions v${st.version || 1} · ${sgMoney(st.spent)} of ${sgMoney(st.cap_usd)} this month`}</p></div>
+      <a class="btn small" href="#/settings/staging">Staging settings</a></div>
+    ${!st.error && !ready ? `<div class="sg-note">The image engine isn't connected yet. Room detection and Claude's prompts work now; staging starts once ${st.engine === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY'} is added. <a href="#/settings/staging">How to connect</a></div>` : ''}
+    <label class="sg-drop" id="sgDrop"><input type="file" id="sgFile" accept="image/*" multiple hidden />
+      <span class="sg-drop-ic">${SG_ICON.img}</span><b>Drop 1–${SG_MAX} photos to stage</b><span class="muted">or tap to choose · rooms of one house stage as a matching set</span></label>
+    <div id="sgBatch"></div>
+    <section class="sg-recent"><h2>Recent sets</h2>${SG.batches.length ? `<div class="sg-list">${SG.batches.map(b => `<button type="button" class="sg-row ${SG.batch?.id === b.id ? 'on' : ''}" data-sg-open="${b.id}"><b>${esc(b.title || 'Staging set')}</b><small class="muted">${new Date(b.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${b.staging_photos?.[0]?.count ?? 0} photos${b.preset_id ? ' · ' + esc(SG.presets.find(p => p.id === b.preset_id)?.name || '') : ''}</small></button>`).join('')}</div>` : '<p class="muted">Nothing staged yet.</p>'}</section>
+  </div>`;
+  const drop = $('#sgDrop'), file = $('#sgFile');
+  file.onchange = () => { if (file.files.length) sgStart([...file.files]); file.value = ''; };
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { const f = [...(e.dataTransfer?.files || [])].filter(x => /^image\//.test(x.type) || /\.(heic|heif)$/i.test(x.name)); if (f.length) sgStart(f); });
+  root.querySelectorAll('[data-sg-open]').forEach(b => b.onclick = async () => { try { await sgOpenBatch(b.dataset.sgOpen); renderStaging(); } catch (e) { fail(e); } });
+  sgRenderBatch();
+}
+
+// ---- 1. drop → upload → label ----
+async function sgStart(files){
+  if (SG.run) return toast('A set is still staging. Open it again when it finishes.');
+  if (files.length > SG_MAX) { toast(`Up to ${SG_MAX} photos at a time. Using the first ${SG_MAX}.`); files = files.slice(0, SG_MAX); }
+  const preset = SG.presets.find(p => p.active) || null;
+  const bid = crypto.randomUUID();
+  const title = `${files.length} photo${files.length === 1 ? '' : 's'} · ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  const { error } = await sb.from('staging_batches').insert({ id: bid, created_by: S.me.id, preset_id: preset?.id || null, title, prompt_version: SG.status?.version || null });
+  if (error) return fail(error);
+  const photos = files.map((f, i) => ({ id: crypto.randomUUID(), batch_id: bid, sort: i, file_name: f.name, original_path: `in/${bid}/${String(i + 1).padStart(2, '0')}.jpg`, _file: f, _thumb: URL.createObjectURL(f), room_label: null, room_guess: null, same_as: null, _state: 'Uploading…' }));
+  SG.batch = { id: bid, title, preset_id: preset?.id || null, notes: '' }; SG.photos = photos; SG.outputs = {}; SG.view = {};
+  photos.forEach(p => { SG.outputs[p.id] = []; });
+  sgLabelModal();
+  // upload (2048px JPEG work copy) then let Claude guess the room, 3 at a time
+  await sgPool(photos, 3, async p => {
+    try {
+      const j = await sgJpeg(p._file, 2048, 0.9);
+      await sgUpload(p.original_path, j.blob);
+      p.width = j.w; p.height = j.h;
+      const { error } = await sb.from('staging_photos').insert({ id: p.id, batch_id: bid, sort: p.sort, file_name: p.file_name, original_path: p.original_path, width: j.w, height: j.h });
+      if (error) throw error;
+      p._state = 'Detecting room…'; sgLabelUpdate(p);
+      const r = await sgCall({ action: 'analyze', photoId: p.id });
+      p.room_guess = r.room_guess; p.analysis = r.analysis; p._state = r.analysis?.stageable === false ? 'May not need staging' : '';
+      if (!p._touched) p.room_label = r.room_guess === 'Other' ? null : r.room_guess;
+    } catch (e) { p._state = 'Room detection failed: ' + (e.message || e); p._err = !p.width; }
+    sgLabelUpdate(p);
+  });
+}
+
+function sgLabelModal(){
+  const ps = SG.photos, st = SG.status || {};
+  const presetOpts = SG.presets.filter(p => p.active || p.id === SG.batch.preset_id).map(p => `<option value="${p.id}" ${p.id === SG.batch.preset_id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal wide sg-label"><h2>Label each room</h2>
+    <p class="muted sg-sub">Claude fills in its best guess. Fix anything it got wrong, and link photos that show the same room so they get identical furniture.</p>
+    <div class="grid2 sg-top"><div><label>Style preset</label><select id="sgPreset">${presetOpts}</select></div>
+      <div><label>Notes for this set <span class="muted">(optional)</span></label><input id="sgNotes" placeholder="e.g. warmer wood tones, king bed in the primary" /></div></div>
+    <div class="sg-lgrid">${ps.map((p, i) => `<div class="sg-lcard" data-p="${p.id}">
+      <div class="sg-lthumb"><img src="${p._thumb}" alt="" /><span class="sg-num">${i + 1}</span></div>
+      <label>Room</label><select data-room="${p.id}"><option value="">Choose…</option>${SG_ROOMS.map(r => `<option>${r}</option>`).join('')}<option value="__other">Other…</option></select>
+      <input class="hidden" data-other="${p.id}" placeholder="Type the room" />
+      <label>Same room as</label><select data-same="${p.id}"><option value="">None</option>${ps.map((q, j) => q.id === p.id ? '' : `<option value="${q.id}">Photo ${j + 1}</option>`).join('')}</select>
+      <small class="sg-state muted" data-state="${p.id}">${esc(p._state || '')}</small></div>`).join('')}</div>
+    <div class="actions"><span class="muted sg-est" id="sgEst"></span><button class="btn" type="button" id="sgCancel">Cancel</button><button class="btn primary" type="button" id="sgGo" disabled>Confirm &amp; Stage</button></div>
+  </div>`;
+  const est = () => { const n = SG.photos.filter(p => !p._err).length; $('#sgEst').textContent = `${n} photo${n === 1 ? '' : 's'} · about ${sgMoney(n * sgPerPhoto(st))}${sgEngineReady(st) ? '' : ' · engine not connected'}`; };
+  est();
+  ps.forEach(p => {
+    const sel = document.querySelector(`[data-room="${p.id}"]`), oth = document.querySelector(`[data-other="${p.id}"]`), same = document.querySelector(`[data-same="${p.id}"]`);
+    sel.onchange = () => { p._touched = true; oth.classList.toggle('hidden', sel.value !== '__other'); p.room_label = sel.value === '__other' ? (oth.value.trim() || null) : (sel.value || null); if (sel.value === '__other') oth.focus(); sgLabelReady(); };
+    oth.oninput = () => { p._touched = true; p.room_label = oth.value.trim() || null; sgLabelReady(); };
+    same.onchange = () => { p.same_as = same.value || null; if (p.same_as) { const h = SG.photos.find(x => x.id === p.same_as); if (h?.room_label && !p._touched) { p.room_label = h.room_label; sgLabelUpdate(p); } } };
+  });
+  $('#sgCancel').onclick = async () => { closeLayer(); const id = SG.batch?.id; SG.batch = null; SG.photos = []; if (id) await sb.from('staging_batches').delete().eq('id', id); SG.loaded = false; renderStaging(); };
+  $('#sgGo').onclick = sgConfirm;
+}
+function sgLabelUpdate(p){
+  const sel = document.querySelector(`[data-room="${p.id}"]`), oth = document.querySelector(`[data-other="${p.id}"]`), stt = document.querySelector(`[data-state="${p.id}"]`);
+  if (!sel) return;
+  if (p.room_label && SG_ROOMS.includes(p.room_label)) { sel.value = p.room_label; oth.classList.add('hidden'); }
+  else if (p.room_label) { sel.value = '__other'; oth.value = p.room_label; oth.classList.remove('hidden'); }
+  stt.textContent = p._state || (p.room_guess ? (p._touched && p.room_label !== p.room_guess ? `Claude guessed ${p.room_guess}` : 'Claude’s guess') : '');
+  stt.classList.toggle('sg-warn', !!p._err || /fail|may not/i.test(p._state || ''));
+  sgLabelReady();
+}
+function sgLabelReady(){
+  const go = $('#sgGo'); if (!go) return;
+  const live = SG.photos.filter(p => !p._err);
+  go.disabled = !live.length || live.some(p => !p.width || !p.room_label);
+}
+async function sgConfirm(){
+  const preset_id = $('#sgPreset').value || null, notes = $('#sgNotes').value.trim() || null;
+  const live = SG.photos.filter(p => !p._err);
+  closeLayer();
+  Object.assign(SG.batch, { preset_id, notes });
+  try {
+    await sb.from('staging_batches').update({ preset_id, notes }).eq('id', SG.batch.id);
+    await Promise.all(live.map(p => sb.from('staging_photos').update({ room_label: p.room_label, same_as: p.same_as && live.some(x => x.id === p.same_as) ? p.same_as : null }).eq('id', p.id)));
+  } catch (e) { return fail(e); }
+  SG.photos = live; SG.loaded = false; await renderStaging();
+  sgRun();
+}
+
+// ---- 2. stage the set: first room → other rooms (style ref) → extra angles (same-room ref) ----
+async function sgRun(){
+  if (SG.run) return;
+  const bid = SG.batch.id, ps = SG.photos;
+  const heroes = ps.filter(p => !p.same_as || !ps.some(x => x.id === p.same_as)), followers = ps.filter(p => !heroes.includes(p));
+  SG.run = { bid, stop: false, allowOver: false };
+  const refOf = p => { const o = (SG.outputs[p.id] || []).filter(x => x.qc_path); const ok = o.filter(x => x.qc?.pass !== false); return (ok.at(-1) || o.at(-1))?.qc_path || null; };
+  try {
+    if (heroes[0]) await sgStageOne(heroes[0], []);
+    const style = heroes[0] && refOf(heroes[0]);
+    if (!SG.run.stop) await sgPool(heroes.slice(1), 3, p => SG.run.stop ? null : sgStageOne(p, style ? [style] : []));
+    if (!SG.run.stop) await sgPool(followers, 3, p => { const r = refOf(ps.find(x => x.id === p.same_as)); return SG.run.stop ? null : sgStageOne(p, r ? [r] : (style ? [style] : []), !!r); });
+  } finally { const done = SG.run; SG.run = null; if (SG.batch?.id === done.bid && !done.stop) toast('Staging finished'); sgRenderBatch(); }
+}
+async function sgStageOne(p, refs, sameRoom = false, issues = [], retry = 0){
+  const live = () => SG.batch && SG.photos.includes(p);
+  p._error = null; SG.busy[p.id] = retry ? 'Fixing what review flagged…' : 'Claude is writing the prompt and staging…'; sgRenderBatch();
+  try {
+    let r = await sgCall({ action: 'stage', photoId: p.id, refs, sameRoom, issues, allowOver: !!SG.run?.allowOver });
+    if (r.needsOk) {
+      if (!confirm(`This month's staging budget is used (${sgMoney(r.spent)} of ${sgMoney(r.cap)}).\n\nKeep staging this set anyway?`)) { if (SG.run) SG.run.stop = true; delete SG.busy[p.id]; sgRenderBatch(); return; }
+      if (SG.run) SG.run.allowOver = true;
+      r = await sgCall({ action: 'stage', photoId: p.id, refs, sameRoom, issues, allowOver: true });
+    }
+    if (r.needsEngine) { if (SG.run) SG.run.stop = true; delete SG.busy[p.id]; SG.status && (SG.status[r.needsEngine] = false); toast('Connect the image engine in Settings → Virtual Staging to start staging'); sgRenderBatch(); return; }
+    const o = r.output; (SG.outputs[p.id] = SG.outputs[p.id] || []).push(o); SG.view[p.id] = SG.outputs[p.id].length - 1;
+    // review copy (1024px JPEG) for Claude's check, and the reference for the next rooms
+    SG.busy[p.id] = 'Claude is reviewing it…'; sgRenderBatch();
+    const url = (await sgUrls([o.path]))(o.path);
+    const q = await sgJpeg(url, 1024, 0.85);
+    o.qc_path = o.path.replace(/^out\//, 'qc/').replace(/\.\w+$/, '.jpg');
+    await sgUpload(o.qc_path, q.blob);
+    await sb.from('staging_outputs').update({ qc_path: o.qc_path }).eq('id', o.id);
+    const v = await sgCall({ action: 'qc', outputId: o.id }); o.qc = v.qc;
+    if (!v.qc.pass && retry < 1 && live()) return sgStageOne(p, refs, sameRoom, v.qc.issues || [], retry + 1);
+  } catch (e) { p._error = e.message || String(e); toast(p._error); }
+  delete SG.busy[p.id]; if (live()) sgRenderBatch();
+}
+
+// ---- 3. results ----
+function sgRenderBatch(){
+  const box = $('#sgBatch'); if (!box || !SG.batch) { if (box) box.innerHTML = ''; return; }
+  const ps = SG.photos, approved = ps.filter(p => (SG.outputs[p.id] || []).some(o => o.approved));
+  const paths = ps.flatMap(p => [p.original_path, ...(SG.outputs[p.id] || []).map(o => o.qc_path || o.path)]);
+  sgUrls(paths).then(U => {
+    const preset = SG.presets.find(x => x.id === SG.batch.preset_id);
+    box.innerHTML = `<section class="sg-set"><div class="sg-set-head"><div><h2>${esc(SG.batch.title || 'Staging set')}</h2><small class="muted">${preset ? esc(preset.name) : 'No preset'}${SG.batch.notes ? ' · ' + esc(SG.batch.notes) : ''}${SG.run?.bid === SG.batch.id ? ' · staging…' : ''}</small></div>
+      <div class="sg-set-act">${!SG.run && ps.some(p => !(SG.outputs[p.id] || []).length) ? '<button class="btn small" type="button" id="sgResume">Stage the rest</button>' : ''}${approved.length ? `<button class="btn small primary" type="button" id="sgDlAll">${SG_ICON.dl} Download approved (${approved.length})</button>` : ''}</div></div>
+      <div class="sg-grid">${ps.map((p, i) => {
+        const outs = SG.outputs[p.id] || [], k = Math.min(SG.view[p.id] ?? outs.length - 1, outs.length - 1), o = outs[k], busy = SG.busy[p.id];
+        const after = o ? U(o.qc_path || o.path) : '', before = U(p.original_path) || p._thumb || '';
+        return `<article class="sg-card ${o?.approved ? 'ok' : ''}" data-p="${p.id}">
+          <div class="sg-img" data-hold="${p.id}">${after ? `<img class="sg-after" src="${after}" alt="Staged ${esc(p.room_label || '')}" />` : ''}<img class="sg-before ${after ? '' : 'show'}" src="${before}" alt="Original" />
+            ${after ? '<span class="sg-badge">Virtually Staged</span><span class="sg-hold muted">Hold to see before</span>' : ''}${busy ? `<div class="sg-busy"><span class="spin"></span>${esc(busy)}</div>` : ''}</div>
+          <div class="sg-meta"><b>${i + 1}. ${esc(p.room_label || p.room_guess || 'Room')}</b>${p.same_as ? `<small class="muted">same room as ${ps.findIndex(x => x.id === p.same_as) + 1}</small>` : ''}
+            ${outs.length > 1 ? `<span class="sg-ver"><button type="button" data-ver="${p.id}" data-d="-1" ${k <= 0 ? 'disabled' : ''}>‹</button>${k + 1}/${outs.length}<button type="button" data-ver="${p.id}" data-d="1" ${k >= outs.length - 1 ? 'disabled' : ''}>›</button></span>` : ''}</div>
+          ${o?.qc && !o.qc.pass ? `<p class="sg-qc">Review flagged: ${esc((o.qc.issues || []).join('; ') || 'issues')}</p>` : ''}
+          ${p._error && !o ? `<p class="sg-qc">${esc(p._error)}</p>` : ''}
+          ${o ? `<div class="sg-act">
+            <button type="button" class="icon-btn ${o.rating === 1 ? 'on' : ''}" title="Good result" data-rate="${o.id}" data-v="1">${SG_ICON.up}</button>
+            <button type="button" class="icon-btn ${o.rating === -1 ? 'on bad' : ''}" title="Bad result" data-rate="${o.id}" data-v="-1">${SG_ICON.down}</button>
+            <button type="button" class="icon-btn" title="Regenerate" data-redo="${p.id}" ${busy || SG.run ? 'disabled' : ''}>${SG_ICON.refresh}</button>
+            <button type="button" class="icon-btn" title="Download JPEG" data-dl="${o.id}">${SG_ICON.dl}</button>
+            <button type="button" class="btn small ${o.approved ? 'primary' : ''}" data-ok="${o.id}">${o.approved ? SG_ICON.check + ' Approved' : 'Approve'}</button></div>`
+          : (!busy ? `<div class="sg-act"><button type="button" class="btn small" data-redo="${p.id}" ${SG.run ? 'disabled' : ''}>Stage</button></div>` : '')}
+        </article>`; }).join('')}</div></section>`;
+    sgWire(box);
+  }).catch(fail);
+}
+const sgOut = id => Object.values(SG.outputs).flat().find(o => o.id === id);
+function sgWire(box){
+  box.querySelectorAll('[data-hold]').forEach(el => { const on = () => el.classList.add('peek'), off = () => el.classList.remove('peek');
+    el.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => el.addEventListener(e, off)); el.oncontextmenu = e => e.preventDefault(); });
+  box.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => { const id = b.dataset.ver; SG.view[id] = Math.max(0, Math.min((SG.outputs[id] || []).length - 1, (SG.view[id] ?? 0) + +b.dataset.d)); sgRenderBatch(); });
+  box.querySelectorAll('[data-rate]').forEach(b => b.onclick = async () => { const o = sgOut(b.dataset.rate), v = +b.dataset.v, nv = o.rating === v ? null : v;
+    const { error } = await sb.from('staging_outputs').update({ rating: nv }).eq('id', o.id); if (error) return fail(error); o.rating = nv; sgRenderBatch(); });
+  box.querySelectorAll('[data-redo]').forEach(b => b.onclick = () => sgRedo(b.dataset.redo));
+  box.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => sgApprove(sgOut(b.dataset.ok), b));
+  box.querySelectorAll('[data-dl]').forEach(b => b.onclick = () => sgDownload(sgOut(b.dataset.dl), b));
+  const all = $('#sgDlAll'); if (all) all.onclick = async () => { for (const p of SG.photos) { const o = (SG.outputs[p.id] || []).filter(x => x.approved).at(-1); if (o) { await sgDownload(o); await new Promise(r => setTimeout(r, 400)); } } };
+  const res = $('#sgResume'); if (res) res.onclick = () => sgRun();
+}
+async function sgRedo(pid){
+  if (SG.run) return;
+  const p = SG.photos.find(x => x.id === pid); if (!p) return;
+  const ps = SG.photos, heroes = ps.filter(x => !x.same_as);
+  const refOf = x => { const o = (SG.outputs[x.id] || []).filter(y => y.qc_path); return ((o.filter(y => y.approved).at(-1)) || o.filter(y => y.qc?.pass !== false).at(-1) || o.at(-1))?.qc_path || null; };
+  const same = p.same_as && ps.find(x => x.id === p.same_as), sr = same && refOf(same);
+  const style = heroes.find(h => h.id !== p.id && refOf(h)); const st = style && refOf(style);
+  SG.run = { bid: SG.batch.id, stop: false, allowOver: false };
+  try { await sgStageOne(p, sr ? [sr] : st ? [st] : [], !!sr); } finally { SG.run = null; sgRenderBatch(); }
+}
+// full-size JPEG of a render (engines can return PNG); cached as approved_path
+async function sgFinalJpeg(o){
+  if (o.approved_path) return o.approved_path;
+  if (/\.jpe?g$/i.test(o.path)) return o.path;
+  const url = (await sgUrls([o.path]))(o.path);
+  const j = await sgJpeg(url, 0, 0.92);
+  const path = o.path.replace(/^out\//, 'final/').replace(/\.\w+$/, '.jpg');
+  await sgUpload(path, j.blob);
+  return path;
+}
+async function sgApprove(o, btn){
+  if (!o) return;
+  btn && (btn.disabled = true);
+  try {
+    const approved = !o.approved, patch = { approved };
+    if (approved) patch.approved_path = await sgFinalJpeg(o);
+    const { error } = await sb.from('staging_outputs').update(patch).eq('id', o.id); if (error) throw error;
+    Object.assign(o, patch);
+    if (approved) toast('Approved · saved as a full-size JPEG');
+  } catch (e) { fail(e); }
+  sgRenderBatch();
+}
+async function sgDownload(o, btn){
+  if (!o) return;
+  btn && (btn.disabled = true);
+  try {
+    const path = await sgFinalJpeg(o), p = SG.photos.find(x => x.id === o.photo_id);
+    const base = (p?.file_name || 'photo').replace(/\.\w+$/, '').replace(/[^\w-]+/g, '-');
+    const { data, error } = await sb.storage.from('staging').createSignedUrl(path, 300, { download: `${base}-${(p?.room_label || 'Room').replace(/[^\w-]+/g, '-')}-Virtually-Staged.jpg` });
+    if (error) throw error;
+    const a = document.createElement('a'); a.href = data.signedUrl; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { fail(e); }
+  btn && (btn.disabled = false);
+}
+
+// ---- Settings → Virtual Staging ----
+async function sgSettings(body, card){
+  body.innerHTML = '<p class="muted">Loading…</p>';
+  let st, pv, pr;
+  try { [st, pv, pr] = await Promise.all([sgCall({ action: 'status' }), sb.from('staging_prompts').select('*').order('version', { ascending: false }), sb.from('staging_presets').select('*').order('sort')]); }
+  catch (e) { body.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+  SG.status = st; SG.presets = pr.data || [];
+  const versions = pv.data || [], live = versions[0];
+  const key = (ok, name, how) => `<div class="set-itg-row"><span class="set-itg-dot" data-ok="${ok ? 1 : 0}"></span><span class="set-itg-main"><b>${name}</b><small>${how}</small></span><span class="${ok ? 'set-ok' : 'set-off'}">${ok ? 'Connected' : 'Not set'}</span></div>`;
+  body.innerHTML = card('Image engine', `<form id="sgEng" class="grid2">
+      <div class="full"><label>Engine</label><select name="engine"><option value="google" ${st.engine !== 'openai' ? 'selected' : ''}>Google Nano Banana 2 (Gemini)</option><option value="openai" ${st.engine === 'openai' ? 'selected' : ''}>OpenAI GPT Image</option></select></div>
+      <div><label>Google model</label><input name="google_model" value="${esc(st.google_model)}" /></div>
+      <div><label>Google output size</label><select name="google_size">${['1K', '2K', '4K'].map(s => `<option ${st.google_size === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div><label>OpenAI model</label><input name="openai_model" value="${esc(st.openai_model)}" /></div>
+      <div><label>OpenAI quality</label><select name="openai_quality">${['low', 'medium', 'high'].map(s => `<option value="${s}" ${st.openai_quality === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}</select></div>
+      <div><label>Monthly cap ($)</label><input name="cap_usd" type="number" min="0" step="1" value="${esc(st.cap_usd)}" /></div>
+      <div><label>Spent this month</label><input value="${sgMoney(st.spent)}" disabled /></div>
+      <div class="full actions"><button class="btn primary" type="submit">Save</button></div></form>`,
+      `About ${sgMoney(sgPerPhoto(st))} per photo with these settings (render plus Claude's analysis, prompt and review). Google: $0.08 / $0.12 / $0.16 per image at 1K / 2K / 4K. OpenAI: about $0.20 per image at high quality, up to 1536px. Over the cap, HQ asks before staging more.`)
+    + card('Connections', `<div class="set-itg">${key(st.anthropic, 'Claude (Anthropic)', 'Reads each photo, writes the prompt, reviews the result · ANTHROPIC_API_KEY')}${key(st.google, 'Google Gemini', 'Renders with Nano Banana 2 · GEMINI_API_KEY')}${key(st.openai, 'OpenAI', 'Renders with GPT Image · OPENAI_API_KEY')}</div>`,
+      'Keys live in Supabase (Edge Functions → Secrets), never in HQ. Add GEMINI_API_KEY or OPENAI_API_KEY there; staging starts working right away.')
+    + card(`Standing Instructions <span class="muted">v${live?.version || 0}</span>`, `<form id="sgPr"><textarea name="body" rows="16" class="sg-ta">${esc(live?.body || '')}</textarea>
+      <div class="grid2"><div><label>What changed</label><input name="note" placeholder="e.g. tighter rules on window treatments" /></div><div class="actions" style="align-self:end"><button class="btn primary" type="submit">Save as v${(live?.version || 0) + 1}</button></div></div></form>
+      <div class="sg-vers">${versions.map((v, i) => `<div class="sg-vrow"><span><b>v${v.version}</b> ${esc(v.note || '')}<small class="muted"> · ${new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small></span>${i ? `<button class="btn small" type="button" data-restore="${v.id}">Restore</button>` : '<span class="muted">Live</span>'}</div>`).join('')}</div>`,
+      'The rules Claude follows when it writes every staging prompt. Each save is a new version, and every staged photo records the version that made it, so ratings show which version works best. Restoring saves an old version as the newest one.')
+    + card('Style presets', `<div id="sgPresets">${SG.presets.map(p => `<div class="sg-prow ${p.active ? '' : 'off'}"><span><b>${esc(p.name)}</b><small class="muted">${esc(p.description)}${p.active ? '' : ' · hidden'}</small></span><button class="btn small" type="button" data-pedit="${p.id}">Edit</button></div>`).join('')}</div>
+      <div class="actions"><button class="btn" type="button" data-pedit="">Add preset</button></div>`, 'Shown in the Style preset dropdown when you label a set. The style line is what Claude works into each prompt.');
+
+  $('#sgEng').onsubmit = async e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
+    try { const r = await sgCall({ action: 'settings', staging: f }); SG.status = { ...SG.status, ...r }; toast('Saved'); } catch (err) { fail(err); } };
+  const saveVer = async (text, note) => { const { error } = await sb.from('staging_prompts').insert({ version: (live?.version || 0) + 1, body: text, note: note || null, created_by: S.me.id }); if (error) return fail(error); toast(`Saved as v${(live?.version || 0) + 1}`); sgSettings(body, card); };
+  $('#sgPr').onsubmit = e => { e.preventDefault(); const f = new FormData(e.target), t = String(f.get('body') || '').trim(); if (!t) return toast('Instructions can’t be empty'); if (t === (live?.body || '').trim()) return toast('No changes to save'); saveVer(t, String(f.get('note') || '').trim()); };
+  body.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => { const v = versions.find(x => x.id === b.dataset.restore); if (v && confirm(`Make v${v.version} live again? It's saved as v${(live?.version || 0) + 1}.`)) saveVer(v.body, `Restored v${v.version}`); });
+  body.querySelectorAll('[data-pedit]').forEach(b => b.onclick = () => sgPresetEdit(SG.presets.find(p => p.id === b.dataset.pedit) || null, () => sgSettings(body, card)));
+}
+function sgPresetEdit(p, done){
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div><div class="modal"><h2>${p ? 'Edit preset' : 'New preset'}</h2>
+    <form id="sgPf"><label>Name</label><input name="name" required value="${esc(p?.name || '')}" />
+      <label>Description <span class="muted">(shown to the team)</span></label><input name="description" value="${esc(p?.description || '')}" />
+      <label>Style line <span class="muted">(what Claude works into the prompt)</span></label><textarea name="prompt" rows="5">${esc(p?.prompt || '')}</textarea>
+      <label class="check"><input type="checkbox" name="active" ${!p || p.active ? 'checked' : ''} /> Show in the preset dropdown</label>
+      <div class="actions"><button class="btn" type="button" id="sgPx">Cancel</button><button class="btn primary" type="submit">Save</button></div></form></div>`;
+  $('#ov').onclick = $('#sgPx').onclick = closeLayer;
+  $('#sgPf').onsubmit = async e => { e.preventDefault(); const f = new FormData(e.target);
+    const row = { name: String(f.get('name')).trim(), description: String(f.get('description') || '').trim(), prompt: String(f.get('prompt') || '').trim(), active: f.get('active') === 'on', updated_at: new Date().toISOString() };
+    const q = p ? sb.from('staging_presets').update(row).eq('id', p.id) : sb.from('staging_presets').insert({ ...row, sort: (SG.presets.at(-1)?.sort || 0) + 1 });
+    const { error } = await q; if (error) return fail(error); closeLayer(); toast('Preset saved'); done(); };
+}
 
 /* ===================== CLIENT CARE (#/care) =====================
    Who to call today. Roster: cc_clients (kept fresh nightly from Spiro + HQ orders by the care function). Each day's list
