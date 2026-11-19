@@ -546,6 +546,50 @@ table.list tr.row:hover td{background:var(--panel-2)}
 .panel h2 .count{color:var(--muted);font-weight:500}
 .panel h2 a{margin-left:auto;font-size:13px;font-weight:500;text-decoration:none}
 .span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-5{grid-column:span 5}.span-12{grid-column:span 12}
+/* Owner home: collapsible sections so the whole day fits on one phone screen */
+.hx-wrap{display:flex;flex-direction:column;gap:10px;max-width:900px}
+.page-head.hx-headbar{margin-bottom:12px;align-items:center}
+.page-head.hx-headbar h1{font-size:24px}
+.hx{background:var(--panel);border:1px solid var(--border);border-radius:12px;min-width:0}
+.hx-head{display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;user-select:none;min-height:46px}
+.hx-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:12px}
+.hx-chev{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .15s}
+.hx.open .hx-chev{transform:rotate(90deg)}
+.hx-title{font-weight:600;font-size:14.5px;white-space:nowrap}
+.hx-sum{font-size:12.5px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hx-sum a{color:inherit}
+.hx-sum b{color:var(--text);font-weight:600}
+.hx-acts{margin-left:auto;display:flex;gap:6px;align-items:center;flex:none}
+.hx-acts a.lnk{font-size:13px;font-weight:500;text-decoration:none}
+.hx-body{display:none;padding:0 14px 14px}
+.hx.open .hx-body{display:block}
+.hx-badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700}
+.hx-badge.zero{background:var(--panel-2);color:var(--muted)}
+.hx .tlist{margin-top:0}
+.hx-msg{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--border);cursor:pointer;min-width:0}
+.hx-msg:first-child{border-top:none}
+.hx-msg .t{flex:1;min-width:0;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hx-msg .w{font-size:12px;color:var(--muted);flex:none}
+.hx-seg{display:flex;gap:4px;margin-bottom:8px}
+.hx-seg button{border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}
+.hx-seg button.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+.hx-ord{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);min-width:0;cursor:pointer}
+.hx-ord:first-child{border-top:none}
+.hx-ord .ord-thumb{flex:none;width:44px;height:44px;border-radius:8px}
+.hx-ord-main{flex:1;min-width:0}
+.hx-ord-main b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hx-ord-main small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hx-st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;margin-top:2px}
+.hx-st i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.hx-st.up{color:var(--accent)} .hx-st.wait{color:#b45309} .hx-st.done{color:var(--s-delivered)}
+.hx-ic{flex:none;display:inline-grid;place-items:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--text);text-decoration:none}
+.hx-ic svg{width:17px;height:17px}
+.hx-ic:hover{border-color:var(--accent);color:var(--accent)}
+.hx-foot{display:flex;justify-content:flex-end;margin-top:8px;font-size:13px}
+.hx-foot a{text-decoration:none;font-weight:500}
+.hx #myDay,.hx .md-body{margin:0}
+.hx-modal .sugs{margin-top:4px}
+@media (max-width:760px){ .page-head.hx-headbar h1{font-size:21px} .page-head.hx-headbar h1::after{display:none} .page-head.hx-headbar p{font-size:12.5px} .hx-head{padding:10px 12px} .hx-body{padding:0 12px 12px} .hx-title{font-size:14px} }
 @media (max-width:960px){.span-6,.span-7,.span-5{grid-column:span 12}}
 .pipe{border-top:3px solid var(--border)}
 .pipe.photo{border-top-color:var(--photo)}
@@ -2630,6 +2674,7 @@ function widgetHTML(w, span){
   return '';
 }
 async function renderHome(){
+  if (isOwner()) return renderOwnerHome();
   const now = new Date();
   const layout = homeLayout(S.me.role);
   const ok = Object.fromEntries(HOME_WIDGETS.map(([k, , , allow]) => [k, allow()]));
@@ -2660,6 +2705,122 @@ async function renderHome(){
   bindOpeners($('#homeView'));
   $('#homeView').querySelectorAll('[data-new]').forEach(b => b.onclick = () => openNewProject(b.dataset.new));
   const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
+}
+/* ----- Owner home: four collapsible sections (Day, Tasks, Scanned messages, Recent orders) -----
+   Built to fit on one phone screen: each header shows a one-line summary, so a closed section still tells you what's in it.
+   Open/closed choices are remembered on this device. Team members keep the widget home set in Team → Roles. */
+const HX_KEY = 'hq.home.sections';
+const HX_DEFAULT = { day: true, tasks: true, inbox: false, orders: false };
+const hxState = () => { try { return { ...HX_DEFAULT, ...(JSON.parse(localStorage.getItem(HX_KEY)) || {}) }; } catch (e) { return { ...HX_DEFAULT }; } };
+const hxSave = st => { try { localStorage.setItem(HX_KEY, JSON.stringify(st)); } catch (e) {} };
+const HX_CHEV = '<svg class="hx-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+const HX_HOME = 5; // orders shown per tab
+function hxSection(key, id, title, sum, acts, body, open){
+  return `<section class="hx ${open ? 'open' : ''}" data-hx="${key}" ${id ? `id="${id}"` : ''}>
+    <div class="hx-head" role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}">${HX_CHEV}<span class="hx-title">${title}</span><span class="hx-sum">${sum}</span><span class="hx-acts">${acts}</span></div>
+    <div class="hx-body">${body}</div></section>`;
+}
+async function renderOwnerHome(){
+  const now = new Date(), st = hxState();
+  const calOk = can('calendar'), taskOk = can('tasks'), ordOk = viewAllowed('bookings');
+  $('#homeView').innerHTML = `
+    <div class="page-head hx-headbar"><div><h1>${greeting()}, ${esc(firstName(S.me.full_name))}</h1>
+      <p>${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</p></div>
+      ${taskOk ? `<div class="home-actions"><button class="btn primary small" id="homeNewTask">+ Task</button></div>` : ''}</div>
+    <div class="hx-wrap">
+      ${calOk ? hxSection('day', 'myDay', 'My Day at a Glance', '<span class="md-meta"></span>',
+          S.cal.status?.connected ? `<button class="btn small" id="mdAdd">+ Add</button>` : '',
+          '<div class="md-body"><div class="none">Loading your day…</div></div>', st.day) : ''}
+      ${taskOk ? hxSection('tasks', 'homeTasks', 'My Tasks', '<span class="count"></span> open',
+          '<a href="#/tasks" class="lnk">All</a>', '<div class="tlist"></div><div class="more"></div>', st.tasks) : ''}
+      ${hxSection('inbox', 'homeInbox', 'Scanned Messages', '<span class="hx-in-sum"></span>',
+          '<span class="hx-badge zero" id="hxInCount">0</span><button class="btn small" id="hxReview">Review</button>', '<div class="hx-in-list"></div>', st.inbox)}
+      ${ordOk ? hxSection('orders', 'homeOrders', 'Recent Orders', '<span class="hx-ord-sum"></span>',
+          '<a href="#/bookings" class="lnk">All orders</a>', '<div class="hx-ord-body"><div class="none">Loading orders…</div></div>', st.orders) : ''}
+    </div>`;
+  const root = $('#homeView');
+  root.querySelectorAll('.hx').forEach(sec => {
+    const head = sec.querySelector('.hx-head');
+    const toggle = () => { const open = !sec.classList.contains('open'); sec.classList.toggle('open', open); head.setAttribute('aria-expanded', open); const s2 = hxState(); s2[sec.dataset.hx] = open; hxSave(s2); };
+    head.onclick = e => { if (e.target.closest('a,button')) return; toggle(); };
+    head.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === head) { e.preventDefault(); toggle(); } };
+  });
+  if ($('#homeNewTask')) $('#homeNewTask').onclick = openQuickTask;
+  const mdA = $('#mdAdd'); if (mdA) mdA.onclick = () => openCalForm({ kind:'event' });
+  $('#hxReview').onclick = openSuggestionReview;
+  paintHomeTasks(); paintMyDay(); paintHomeInbox();
+  if (ordOk) {
+    if (!BK.loaded) { try { await loadBookingData(); } catch (e) { const b = $('#homeOrders .hx-ord-body'); if (b) b.innerHTML = `<div class="none">Couldn't load orders.</div>`; return; } }
+    if (S.view === 'home') paintHomeOrders();
+  }
+}
+// Scanned messages (Gmail + Quo task suggestions): short list on Home, full review in a dialog
+function paintHomeInbox(){
+  const box = $('#homeInbox'); if (!box) return;
+  const list = S.suggestions || [], n = list.length;
+  const badge = $('#hxInCount'); badge.textContent = n; badge.classList.toggle('zero', !n);
+  const last = (S.scans || []).find(x => x.status === 'done' || x.status === 'failed');
+  box.querySelector('.hx-in-sum').textContent = n ? `${n} to add or dismiss` : (last ? `All clear · checked ${ago(last.finished_at || last.requested_at)}` : 'All clear');
+  $('#hxReview').disabled = !n;
+  box.querySelector('.hx-in-list').innerHTML = n
+    ? list.slice(0, 5).map(g => `<div class="hx-msg" data-sug-open="${g.id}">${g.source === 'quo' ? '<span class="src quo">Quo</span>' : '<span class="src gmail">Gmail</span>'}<span class="t">${esc(g.title)}</span><span class="w">${esc(ago(g.received_at || g.created_at))}</span></div>`).join('')
+      + (n > 5 ? `<div class="hx-foot"><a href="#" data-sug-all>Review all ${n} →</a></div>` : '')
+    : `<div class="none">Nothing waiting from the last Gmail and Quo check.</div>`;
+  box.querySelectorAll('[data-sug-open]').forEach(el => el.onclick = () => openSuggestionReview(el.dataset.sugOpen));
+  const all = box.querySelector('[data-sug-all]'); if (all) all.onclick = e => { e.preventDefault(); openSuggestionReview(); };
+}
+function openSuggestionReview(firstId){
+  const paint = () => {
+    const list = [...(S.suggestions || [])];
+    if (typeof firstId === 'string') { const i = list.findIndex(g => g.id === firstId); if (i > 0) list.unshift(...list.splice(i, 1)); }
+    const m = $('#layer .hx-modal'); if (!m) return;
+    m.querySelector('.hx-mlist').innerHTML = list.length ? `<div class="sugs">${list.map(sugHTML).join('')}</div>` : `<div class="none" style="padding:18px 0">All caught up. Nothing left to review.</div>`;
+    m.querySelector('h2 .count').textContent = list.length || '';
+    m.querySelectorAll('[data-sug-add]').forEach(b => b.onclick = async () => {
+      const g = S.suggestions.find(x => x.id === b.dataset.sugAdd); if (!g) return;
+      b.disabled = true; if (await acceptSuggestion(g)) { paint(); paintHomeInbox(); } else b.disabled = false;
+    });
+    m.querySelectorAll('[data-sug-dismiss]').forEach(b => b.onclick = async () => {
+      b.disabled = true; if (await dismissSuggestion(b.dataset.sugDismiss)) { toast('Dismissed'); paint(); paintHomeInbox(); } else b.disabled = false;
+    });
+  };
+  document.body.style.overflow = 'hidden';
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+    <div class="modal wide hx-modal"><h2>Scanned Messages <span class="count muted"></span></h2>
+      <p class="muted" style="font-size:12.5px;margin:-4px 0 10px">From the latest Gmail and Quo check. Add the ones you need to act on; dismiss the rest.</p>
+      <div class="hx-mlist"></div>
+      <div class="actions"><a class="btn" href="#/tasks" id="hxGoTasks" style="text-decoration:none">Open Tasks</a><button class="btn primary" id="hxDone">Done</button></div></div>`;
+  $('#ov').onclick = closeLayer; $('#hxDone').onclick = closeLayer; $('#hxGoTasks').onclick = () => closeLayer();
+  paint();
+}
+// Recent orders: Pending (shot and waiting on delivery, then upcoming) or recently Delivered
+function paintHomeOrders(){
+  const box = $('#homeOrders'); if (!box) return;
+  const now = new Date().toISOString();
+  const all = BK.list.filter(b => !isBrand(b) && b.status !== 'cancelled');
+  const waiting = all.filter(b => !b.delivered_at && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now))).sort((a, b) => String(b.shoot_start || '').localeCompare(String(a.shoot_start || '')));
+  const upcoming = all.filter(b => !b.delivered_at && !waiting.includes(b)).sort((a, b) => String(a.shoot_start || '9').localeCompare(String(b.shoot_start || '9')));
+  const pending = [...waiting, ...upcoming];
+  const delivered = all.filter(b => b.delivered_at).sort((a, b) => String(b.delivered_at).localeCompare(String(a.delivered_at)));
+  let tab; try { tab = localStorage.getItem('hq.home.ordTab'); } catch (e) {}
+  if (tab !== 'pending' && tab !== 'delivered') tab = pending.length ? 'pending' : 'delivered';
+  box.querySelector('.hx-ord-sum').innerHTML = [waiting.length ? `<b>${waiting.length}</b> to deliver` : '', upcoming.length ? `<b>${upcoming.length}</b> upcoming` : ''].filter(Boolean).join(' · ') || 'Everything delivered';
+  const status = b => b.delivered_at ? `<span class="hx-st done"><i></i>Delivered ${esc(ordDate(b.delivered_at))}</span>`
+    : waiting.includes(b) ? `<span class="hx-st wait"><i></i>Shot ${esc(ordDate(b.shoot_start))} · not delivered</span>`
+    : `<span class="hx-st up"><i></i>${b.shoot_start ? 'Shoot ' + esc(ordDate(b.shoot_start)) + ' · ' + esc(fmtT(b.shoot_start)) : 'Not scheduled'}</span>`;
+  const row = b => { const t = ordThumb(b); return `<div class="hx-ord" data-ord="${b.id}" title="Open Order Overview">
+      <span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>
+      <div class="hx-ord-main"><b>${esc(ordTitle(b))}</b><small>${esc([bkClient(b), ordNo(b)].filter(Boolean).join(' · '))}</small>${status(b)}</div>
+      <a class="hx-ic" href="#/bookings/${b.id}/media" title="Media Library" aria-label="Media Library for ${esc(ordTitle(b))}">${ORD_ICON.media || hqi('image')}</a>
+      ${b.public_token ? `<a class="hx-ic" href="${PORTAL_URL}/d/${esc(b.public_token)}" target="_blank" rel="noopener" title="Client download page" aria-label="Download page for ${esc(ordTitle(b))}">${hqi('download')}</a>` : ''}
+    </div>`; };
+  const list = (tab === 'pending' ? pending : delivered).slice(0, HX_HOME);
+  box.querySelector('.hx-ord-body').innerHTML = `
+    <div class="hx-seg"><button data-ot="pending" class="${tab === 'pending' ? 'on' : ''}">Pending ${pending.length}</button><button data-ot="delivered" class="${tab === 'delivered' ? 'on' : ''}">Recently Delivered</button></div>
+    ${list.length ? list.map(row).join('') : `<div class="none">${tab === 'pending' ? 'Nothing pending. Every order is delivered.' : 'No delivered orders yet.'}</div>`}
+    <div class="hx-foot"><a href="#/bookings">See all orders →</a></div>`;
+  box.querySelectorAll('[data-ot]').forEach(b => b.onclick = () => { try { localStorage.setItem('hq.home.ordTab', b.dataset.ot); } catch (e) {} paintHomeOrders(); });
+  box.querySelectorAll('[data-ord]').forEach(el => el.onclick = e => { if (e.target.closest('a')) return; location.hash = `#/bookings/${el.dataset.ord}`; });
 }
 function bindOpeners(root){ root.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openProject(el.dataset.open)); }
 
@@ -4274,13 +4435,14 @@ function paintHomeTasks(){
   const t0 = today();
   const mine = myOpen().filter(t => !isParked(t)).sort(sortTasks);
   const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
-  const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, 10);
+  const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, box.closest('.hx') ? 6 : 10);
   box.querySelector('.count').textContent = mine.length;
   const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length;
   if (chip) { chip.textContent = `${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
   box.querySelector('.tlist').innerHTML = show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`;
   box.querySelector('.more').innerHTML = mine.length > show.length ? `<a href="#/tasks">See all ${mine.length} tasks →</a>` : '';
   bindTaskRows(box);
+  paintHomeInbox();
 }
 
 /* ----- Task details ----- */
