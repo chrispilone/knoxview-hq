@@ -5950,7 +5950,7 @@ function careBuild(today){
     .sort((a, b) => a.tier - b.tier).slice(0, Math.min(2, left)).forEach(c => { add(c, 'feedback', `Shot ${fmtDate(c.last_shoot)}: ask how it went`); left--; });
   // 5. care calls
   const t1 = CARE.clients.filter(c => wait(c) && c.tier === 1 && ccDue(c) <= 0).sort((a, b) => ccDue(a) - ccDue(b) || b.shoots_12m - a.shoots_12m);
-  const rest = CARE.clients.filter(c => wait(c) && c.tier > 1 && c.phone && ccDue(c) <= 0).sort((a, b) => ccDue(a) - ccDue(b) || a.tier - b.tier || b.shoots_12m - a.shoots_12m);
+  const rest = CARE.clients.filter(c => wait(c) && c.tier > 1 && c.phone && ccDue(c) <= 0).sort((a, b) => a.tier - b.tier || ccDue(a) - ccDue(b) || b.shoots_12m - a.shoots_12m); // Tier 2 before 3 before 4, most overdue first within a tier
   const reason = c => c.tier === 1 ? `Tier 1 monthly call · ${c.last_care_call_at ? `last care call ${ccDaysSince(c.last_care_call_at)} days ago` : 'no care call yet'}`
     : `Tier ${c.tier} · ${ccTouch(c) ? `${ccDaysSince(ccTouch(c))} days since you last connected` : 'no contact on record'}`;
   t1.slice(0, Math.min(t1n, left)).forEach(c => { add(c, 'care', reason(c)); left--; });
@@ -6000,7 +6000,7 @@ function careCard(it, i){
   const num = ccNum(c), tel = ccTel(num);
   const done = !!it.done;
   return `<article class="cc-card ${done ? 'done' : ''} s-${it.s}" data-i="${i}">
-    <header class="cc-h" data-cc-toggle="${i}"><div><b>${esc(ccWho(c))}</b><small>${esc(c.company || '')}</small></div>
+    <header class="cc-h" data-cc-toggle="${i}"><div><b>${esc(ccWho(c))}</b><small>${esc(/^unassigned$/i.test(c.company || '') ? '' : c.company || '')}</small></div>
       <span class="cc-tags"><span class="cc-sec">${esc(it.s === 'carry' ? CARE_SEC.carry : CARE_SEC[it.s] || '')}</span><span class="cc-tier t${c.tier}">Tier ${c.tier}</span>${done ? `<span class="cc-ok">${it.out === 'voicemail' ? 'Voicemail' : 'Done'}</span>` : ''}</span></header>
     <div class="cc-b">
       <p class="cc-r">${esc(it.r || '')}</p>
@@ -6144,7 +6144,7 @@ function careClients(){
   box.innerHTML = `<div class="spi-bar"><input type="search" id="ccQ" placeholder="Search clients" value="${esc(CARE.q)}"/>
       <select id="ccT"><option value="">All tiers</option>${[1, 2, 3, 4].map(t => `<option value="${t}" ${CARE.tierF === String(t) ? 'selected' : ''}>Tier ${t} (${CARE.clients.filter(c => c.tier === t).length})</option>`).join('')}</select></div>
     <div class="spi-tbl"><table><thead><tr><th>Client</th><th>Tier</th><th class="n">Shoots (12 mo)</th><th>Last shoot</th><th>Last call</th><th>Next</th></tr></thead><tbody>
-    ${list.slice(0, 400).map(c => { const lc = lastCall(c.id); return `<tr class="spi-cl" data-ccc="${c.id}"><td><b>${esc(c.name)}</b><br><small class="muted">${esc(c.company || '')}</small></td>
+    ${list.slice(0, 400).map(c => { const lc = lastCall(c.id); return `<tr class="spi-cl" data-ccc="${c.id}"><td><b>${esc(c.name)}</b><br><small class="muted">${esc(/^unassigned$/i.test(c.company || '') ? '' : c.company || '')}</small></td>
       <td>${c.tier}${c.tier_pinned ? ' (pinned)' : ''}</td><td class="n">${c.shoots_12m}</td><td>${c.last_shoot ? esc(fmtDate(c.last_shoot)) : '—'}</td>
       <td>${lc ? `${esc(fmtDate(lc.at))}${lc.outcome === 'voicemail' ? ' (VM)' : ''}` : '—'}</td><td>${esc(due(c))}</td></tr>
       ${CARE.open === c.id ? `<tr class="sub"><td colspan="6">${careClientDetail(c)}</td></tr>` : ''}`; }).join('') || '<tr><td colspan="6" class="muted">No clients match.</td></tr>'}</tbody></table></div>`;
