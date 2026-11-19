@@ -1498,6 +1498,25 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .bk-step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
 .bk-summary{position:sticky;top:12px}
 .bk-hint{font-size:12.5px;margin:6px 0 0}
+.cc-wrap{max-width:860px;margin:0 auto}.cc-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}.cc-top h1{margin:0}
+.cc-seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:3px;background:var(--panel)}.cc-seg button{border:0;background:none;padding:8px 16px;border-radius:999px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;min-height:40px}.cc-seg button.on{background:var(--accent);color:var(--on-accent)}
+.cc-hero{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin:0 0 14px}.cc-hero h2{margin:2px 0;font-size:26px}.cc-date{margin:0;text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:700;color:var(--muted)}
+.cc-plus{margin:2px 0;color:var(--accent-2);font-weight:600}.cc-small{font-size:12.5px}.cc-game{display:flex;align-items:center;gap:18px}.cc-ring{width:92px;height:92px;color:var(--text)}.cc-game b{display:block;font-size:24px}.cc-game small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.cc-sh{margin:18px 0 8px;font-size:15px}.cc-sh em{font-style:normal;font-size:12px;background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:4px}
+.cc-card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;margin:0 0 10px;overflow:hidden}
+.cc-card.s-first{border-left-color:var(--ok)}.cc-card.s-follow{border-left-color:#7a4fd1}.cc-card.s-feedback{border-left-color:var(--warn)}.cc-card.s-carry{border-left-color:var(--danger)}
+.cc-card.done{opacity:.72}.cc-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 14px;cursor:pointer}.cc-h b{font-size:17px;display:block}.cc-h small{color:var(--muted)}
+.cc-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.cc-tags span{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel-2);white-space:nowrap}.cc-tier.t1{background:var(--accent);color:var(--on-accent)}.cc-ok{background:var(--ok)!important;color:#fff}
+.cc-b{padding:0 14px 14px}.cc-card.min .cc-b{display:none}.cc-r{margin:0 0 4px;font-weight:600}.cc-stats{margin:0 0 6px;color:var(--muted);font-size:13px}.cc-last{margin:0 0 6px;font-style:italic;font-size:13.5px}
+.cc-pts{margin:6px 0 10px;padding-left:18px;font-size:14px;line-height:1.5}.cc-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.cc-acts .btn:not(.small){min-height:44px;padding:0 16px}
+.cc-note{display:flex;gap:8px;align-items:flex-end;margin:0 0 10px}.cc-note textarea{flex:1}
+.cc-q{margin:14px 0 0}.cc-q summary{cursor:pointer;font-weight:600}.cc-off{text-align:center;padding:40px 20px}.cc-off h2{font-size:28px;margin:6px 0}
+.cc-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}.cc-modal .panel{width:min(420px,100%)}.cc-quick{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.cc-det{padding:6px 2px}.cc-hist{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
+.cc-confetti{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}.cc-confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:ccfall 2.6s ease-in forwards}
+.cc-yay{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 20px;font-weight:700;font-size:18px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+@keyframes ccfall{to{transform:translateY(110vh) rotate(720deg)}}
+@media(max-width:640px){.cc-hero h2{font-size:22px}.cc-acts .btn{flex:1 1 auto}}
 .spi-sum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.spi-sum>div{border:1px solid var(--border);border-radius:9px;padding:8px 12px;min-width:120px}.spi-sum b{display:block;font-size:18px}.spi-sum small{color:var(--muted);font-size:12px}
 .spi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.spi-bar input,.spi-bar select{max-width:220px}
 .spi-tbl{border:1px solid var(--border);border-radius:9px;max-height:520px;overflow:auto}.spi-tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -1885,6 +1904,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
       <a href="#/home" data-view="home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">Home</span></a>
       <a href="#/tasks" data-view="tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="lbl">Tasks</span><span class="badge hidden" id="taskBadge"></span></a>
       <a href="#/calendar" data-view="calendar" title="Calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Calendar</span></a>
+      <a href="#/care" data-view="care" title="Client Care · who to call today" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span class="lbl">Client Care</span></a>
       <a href="#/bookings" data-view="bookings" title="Orders · shoots, listings, deliveries and payments" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5v2h6v-2M9 11l2 2 4-4M9 16.5h6"/></svg><span class="lbl">Orders</span></a>
       <a href="#/branding" data-view="branding" title="Branding · headshots, lifestyle shoots, brand videos and other non-listing media" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.5"/><path d="M5.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><path d="M17.5 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="lbl">Branding</span></a>
       <button type="button" class="nav-group" id="clientsTab" data-grp="clients" title="Clients" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.7-1.6 2-2.5 3.5-2.5s2.8.9 3.5 2.5M15 10h3M15 13.5h3"/></svg><span class="lbl">Clients</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
@@ -2007,6 +2027,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
     <div id="notificationsView" class="hidden"></div>
     <!-- Bookings (owner only for now) -->
     <div id="bookingsView" class="hidden"></div>
+    <div id="careView" class="hidden"></div>
     <div id="settingsView" class="hidden"></div>
     <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
@@ -2174,9 +2195,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'care' ? isSuperAdmin() : v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','care','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
@@ -2549,7 +2570,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','care','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2610,6 +2631,8 @@ function render(){
   $('#mailView').classList.toggle('hidden', S.view !== 'mail');
   if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
+  $('#careView').classList.toggle('hidden', S.view !== 'care');
+  if (S.view === 'care') renderCare();
   $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
   if (S.view === 'settings') renderSettings();
   $('#bookingsView').classList.toggle('hidden', !inOrders());
@@ -5867,6 +5890,331 @@ async function loadBookingData(force){
 }
 async function reloadBookings(){ const { data, error } = await sb.from('bookings').select('*').order('shoot_start', { ascending: true, nullsFirst: false }); if (error) return fail(error); BK.list = data || []; }
 
+/* ===================== CLIENT CARE (#/care) =====================
+   Who to call today. Roster: cc_clients (kept fresh nightly from Spiro + HQ orders by the care function). Each day's list
+   is built here the first time HQ opens Client Care that day and saved in cc_days, so it stays put all day:
+     rollover (yesterday's unfinished calls) → follow-ups due today (dates you set) → first-time follow-ups (first shoot
+     delivered, the workday after) → feedback calls (shot 3-10 days ago, once a month) → care calls (Tier 1 once a month
+     no matter how often they shoot; Tiers 2-4 once 30+ days pass since any touch and their cadence is up, most overdue first).
+   Calls are logged in cc_calls. Settings live in booking_settings.care. */
+const CARE = { set: null, clients: [], byId: new Map(), calls: [], days: [], day: null, tab: 'today', q: '', tierF: '', open: null, loaded: false, orders: new Map(), noteFor: null };
+const CARE_SEC = { carry: 'From yesterday', follow: 'Follow-up you set', first: 'First shoot', feedback: 'Feedback call', care: 'Care call' };
+const ccToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+const ccAddDays = (d, n) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const ccDow = d => new Date(d + 'T12:00:00Z').getUTCDay();
+const ccOff = d => (CARE.set?.daysOff || [0, 6]).includes(ccDow(d)) || (CARE.set?.holidays || []).includes(d);
+const ccDaysSince = iso => iso ? Math.floor((Date.now() - new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).getTime()) / 864e5) : null;
+const ccTouch = c => [c.last_order_at, c.last_call_at, c.last_text_at, c.last_email_at].filter(Boolean).sort().pop() || null;
+const ccTel = p => { const d = String(p || '').replace(/\D/g, ''); return d.length === 10 ? '+1' + d : d.length === 11 ? '+' + d : ''; };
+const ccNum = c => c.call_phone || c.phone || '';
+const ccWho = c => c.call_name ? `${c.call_name} (for ${c.name})` : c.name;
+async function careLoad(force){
+  if (CARE.loaded && !force) return;
+  const since = new Date(Date.now() - 400 * 864e5).toISOString();
+  const [s, cl, ca, dy] = await Promise.all([
+    sb.from('booking_settings').select('care').eq('id', 1).single(),
+    sb.from('cc_clients').select('*').eq('hidden', false).order('name').limit(5000),
+    sb.from('cc_calls').select('*').gte('at', since).order('at', { ascending: false }).limit(5000),
+    sb.from('cc_days').select('*').gte('day', ccAddDays(ccToday(), -120)).order('day', { ascending: false }),
+  ]);
+  for (const r of [s, cl, ca, dy]) if (r.error) throw r.error;
+  CARE.set = s.data.care || {}; CARE.clients = cl.data || []; CARE.byId = new Map(CARE.clients.map(c => [c.id, c]));
+  CARE.calls = ca.data || []; CARE.days = dy.data || []; CARE.loaded = true;
+}
+function ccDue(c){ // days until due (negative = overdue), for Tiers 2-4 by last touch, Tier 1 by last care call
+  const cad = (CARE.set.cadence || [30, 60, 90, 180])[c.tier - 1] || 180;
+  if (c.tier === 1) { const d = ccDaysSince(c.last_care_call_at); return d == null ? -999 : 30 - d; }
+  const t = ccDaysSince(ccTouch(c)); return t == null ? -999 : Math.max(cad, CARE.set.quiet || 30) - t;
+}
+function careBuild(today){
+  const S2 = CARE.set, per = S2.perDay || 6, t1n = S2.tier1PerDay ?? 2;
+  const items = [], taken = new Set();
+  const add = (c, s, r) => { if (taken.has(c.id)) return; taken.add(c.id); items.push({ c: c.id, s, r, done: null, out: null }); };
+  const callable = c => !c.hidden && !(c.push_until && c.push_until > today);
+  // 1. rollover: the last list's unfinished calls
+  const prev = CARE.days.find(d => d.day < today);
+  for (const it of prev?.items || []) { const c = CARE.byId.get(it.c); if (!it.done && c && callable(c) && !(c.followup_on && c.followup_on > today)) add(c, it.s === 'carry' ? it.s0 || 'care' : it.s, it.r); }
+  items.forEach(it => { it.s0 = it.s; it.s = 'carry'; });
+  // 2. follow-ups due (dates you set)
+  CARE.clients.filter(c => c.followup_on && c.followup_on <= today && !c.hidden).sort((a, b) => a.followup_on.localeCompare(b.followup_on))
+    .forEach(c => add(c, 'follow', `${c.followup_on < today ? 'Overdue: ' : ''}${c.followup_note || 'Follow-up you set'}${c.followup_on < today ? ` (was ${fmtDate(c.followup_on)})` : ''}`));
+  // 3. first-time clients: first shoot delivered before today, within the last 7 days, not called about it yet
+  const firstDone = new Set(CARE.calls.filter(x => x.kind === 'first').map(x => x.client_id));
+  CARE.clients.filter(c => callable(c) && c.first_delivered && c.first_delivered < today && c.first_delivered >= ccAddDays(today, -7) && c.shoots_all <= 2 && !firstDone.has(c.id))
+    .forEach(c => add(c, 'first', `First shoot delivered ${fmtDate(c.first_delivered)}`));
+  const wait = c => callable(c) && !(c.followup_on && c.followup_on > today) && !taken.has(c.id);
+  let left = Math.max(0, per - items.filter(i => i.s === 'carry').length);
+  // 4. feedback: shot 3-10 days ago, no feedback call in 30 days (at most 2 a day)
+  const fb30 = new Set(CARE.calls.filter(x => x.kind === 'feedback' && ccDaysSince(x.at) < 30).map(x => x.client_id));
+  CARE.clients.filter(c => wait(c) && c.last_shoot && c.last_shoot <= ccAddDays(today, -3) && c.last_shoot >= ccAddDays(today, -10) && !fb30.has(c.id) && c.shoots_all > 1)
+    .sort((a, b) => a.tier - b.tier).slice(0, Math.min(2, left)).forEach(c => { add(c, 'feedback', `Shot ${fmtDate(c.last_shoot)}: ask how it went`); left--; });
+  // 5. care calls
+  const t1 = CARE.clients.filter(c => wait(c) && c.tier === 1 && ccDue(c) <= 0).sort((a, b) => ccDue(a) - ccDue(b) || b.shoots_12m - a.shoots_12m);
+  const rest = CARE.clients.filter(c => wait(c) && c.tier > 1 && c.phone && ccDue(c) <= 0).sort((a, b) => ccDue(a) - ccDue(b) || a.tier - b.tier || b.shoots_12m - a.shoots_12m);
+  const reason = c => c.tier === 1 ? `Tier 1 monthly call · ${c.last_care_call_at ? `last care call ${ccDaysSince(c.last_care_call_at)} days ago` : 'no care call yet'}`
+    : `Tier ${c.tier} · ${ccTouch(c) ? `${ccDaysSince(ccTouch(c))} days since you last connected` : 'no contact on record'}`;
+  t1.slice(0, Math.min(t1n, left)).forEach(c => { add(c, 'care', reason(c)); left--; });
+  rest.filter(c => !taken.has(c.id)).slice(0, left).forEach(c => { add(c, 'care', reason(c)); left--; });
+  t1.filter(c => !taken.has(c.id)).slice(0, left).forEach(c => { add(c, 'care', reason(c)); left--; });
+  return items;
+}
+async function careEnsureDay(){
+  const today = ccToday();
+  if (ccOff(today)) { CARE.day = { day: today, off: true, items: [] }; return; }
+  let d = CARE.days.find(x => x.day === today);
+  if (!d) {
+    d = { day: today, items: careBuild(today) };
+    const { error } = await sb.from('cc_days').upsert(d); if (error) throw error;
+    CARE.days.unshift(d);
+  }
+  CARE.day = d;
+  const ids = [...new Set(d.items.map(i => CARE.byId.get(i.c)?.last_order_hq).filter(Boolean))].filter(id => !CARE.orders.has(id));
+  if (ids.length) { const { data } = await sb.from('bookings').select('id, number, list_price, listing_status, listed_on, listing_dom, site_slug').in('id', ids); (data || []).forEach(b => CARE.orders.set(b.id, b)); }
+}
+async function careSaveDay(){ const d = CARE.day; const all = d.items.length && d.items.every(i => i.done); d.finished_at = all ? (d.finished_at || new Date().toISOString()) : null;
+  const { error } = await sb.from('cc_days').update({ items: d.items, finished_at: d.finished_at }).eq('day', d.day); if (error) fail(error); }
+function careStreak(){
+  let n = 0, d = ccToday();
+  const row = x => CARE.days.find(r => r.day === x);
+  if (!row(d)?.finished_at) d = ccAddDays(d, -1);
+  for (let i = 0; i < 400; i++, d = ccAddDays(d, -1)) {
+    if (ccOff(d)) continue;
+    const r = row(d); if (!r || !r.finished_at) break; n++;
+  }
+  return n;
+}
+function careWeek(){ const today = ccToday(); let m = today; while (ccDow(m) !== 1) m = ccAddDays(m, -1);
+  return CARE.calls.filter(x => x.source === 'hq' && new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(x.at)) >= m).length; }
+function carePoints(c){
+  const p = [], o = c.last_order_hq ? CARE.orders.get(c.last_order_hq) : null;
+  if (c.last_shoot) p.push(`Last shoot: ${String(c.last_order_address || '').split(',')[0] || 'a listing'}${c.last_order_pkg ? ` (${c.last_order_pkg})` : ''}, ${fmtDate(c.last_shoot)}`);
+  if (o?.list_price) p.push(`${/^active$/i.test(o.listing_status || '') ? 'Listed' : 'Was listed'} at ${money(o.list_price)}${o.listed_on ? ` on ${fmtDate(o.listed_on)}` : ''}${o.listing_dom != null && /^active$/i.test(o.listing_status || '') ? `, ${o.listing_dom} days on market` : /^inactive$/i.test(o.listing_status || '') ? ', now off market (sold?)' : ''}`);
+  if (c.shoots_12m >= 3 && c.last_shoot) { const gap = Math.round(365 / c.shoots_12m), since = ccDaysSince(c.last_shoot); if (since > gap * 1.5) p.push(`Usually books about every ${gap} days; last shoot was ${since} days ago`); }
+  if (c.first_order && c.first_order >= ccAddDays(ccToday(), -30)) p.push(`First shoot: ${c.first_media || 'media'}${c.first_photographer ? `, shot by ${c.first_photographer}` : ''}`);
+  if (!p.length && c.shoots_all) p.push(`${c.shoots_all} shoot${c.shoots_all === 1 ? '' : 's'} with you in total, ${c.shoots_12m} in the last year`);
+  return p.slice(0, 3);
+}
+function careCard(it, i){
+  const c = CARE.byId.get(it.c); if (!c) return '';
+  const lastCall = CARE.calls.find(x => x.client_id === c.id);
+  const num = ccNum(c), tel = ccTel(num);
+  const done = !!it.done;
+  return `<article class="cc-card ${done ? 'done' : ''} s-${it.s}" data-i="${i}">
+    <header class="cc-h" data-cc-toggle="${i}"><div><b>${esc(ccWho(c))}</b><small>${esc(c.company || '')}</small></div>
+      <span class="cc-tags"><span class="cc-sec">${esc(it.s === 'carry' ? CARE_SEC.carry : CARE_SEC[it.s] || '')}</span><span class="cc-tier t${c.tier}">Tier ${c.tier}</span>${done ? `<span class="cc-ok">${it.out === 'voicemail' ? 'Voicemail' : 'Done'}</span>` : ''}</span></header>
+    <div class="cc-b">
+      <p class="cc-r">${esc(it.r || '')}</p>
+      <p class="cc-stats">${c.shoots_12m} shoot${c.shoots_12m === 1 ? '' : 's'} this year${c.last_shoot ? ` · last shoot ${esc(fmtDate(c.last_shoot))}` : ''} · ${lastCall ? `last call ${esc(fmtDate(lastCall.at))}` : 'no calls logged'}</p>
+      ${lastCall?.note ? `<p class="cc-last">“${esc(lastCall.note)}”</p>` : ''}
+      ${(() => { const pts = carePoints(c); return pts.length ? `<ul class="cc-pts">${pts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''; })()}
+      ${c.push_note ? `<p class="muted cc-small">Pushed before: ${esc(c.push_note)}</p>` : ''}
+      ${CARE.noteFor === i ? `<div class="cc-note"><textarea id="ccNote" rows="2" placeholder="Note (optional): what you talked about">${esc(lastCall?.note || '')}</textarea><button type="button" class="btn small primary" data-cc-act="savenote" data-i="${i}">Save note</button></div>` : ''}
+      <div class="cc-acts">
+        ${done ? `<button type="button" class="btn small" data-cc-act="note" data-i="${i}">${lastCall?.note ? 'Edit note' : 'Add note'}</button><button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button><button type="button" class="btn small" data-cc-act="undo" data-i="${i}">Undo</button>`
+        : `${num ? `<a class="btn primary cc-call" href="tel:${esc(tel)}" data-cc-act="dial" data-i="${i}">Call ${esc(num)}</a><button type="button" class="btn" data-cc-act="copy" data-i="${i}">Copy number</button>` : '<span class="muted">No phone on file</span>'}
+          <button type="button" class="btn primary" data-cc-act="done" data-i="${i}">Done</button>
+          <button type="button" class="btn" data-cc-act="vm" data-i="${i}">Left a voicemail</button>
+          <button type="button" class="btn small" data-cc-act="push" data-i="${i}">Push to later</button>
+          <button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button>`}
+      </div></div></article>`;
+}
+function careRing(done, total){
+  const pct = total ? done / total : 0, r = 34, C = 2 * Math.PI * r;
+  return `<svg class="cc-ring" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--border)" stroke-width="8"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="${pct >= 1 ? 'var(--ok)' : 'var(--accent)'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}" transform="rotate(-90 42 42)"/>
+    <text x="42" y="40" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">${done}/${total}</text><text x="42" y="56" text-anchor="middle" font-size="10" fill="var(--muted)">calls</text></svg>`;
+}
+async function renderCare(){
+  const root = $('#careView'); if (!root) return;
+  if (!CARE.loaded) root.innerHTML = '<div class="panel"><p class="muted">Loading Client Care…</p></div>';
+  try { await careLoad(); await careEnsureDay(); } catch (e) { root.innerHTML = `<div class="panel"><p class="muted">${esc(e.message)}</p></div>`; return; }
+  const tabs = [['today', 'Today'], ['clients', 'Clients'], ['settings', 'Settings']];
+  root.innerHTML = `<div class="cc-wrap"><div class="cc-top"><h1>Client Care</h1><div class="cc-seg">${tabs.map(([k, l]) => `<button type="button" class="${CARE.tab === k ? 'on' : ''}" data-cc-tab="${k}">${l}</button>`).join('')}</div></div><div id="ccBody"></div></div>`;
+  root.querySelectorAll('[data-cc-tab]').forEach(b => b.onclick = () => { CARE.tab = b.dataset.ccTab; renderCare(); });
+  if (CARE.tab === 'today') careToday(); else if (CARE.tab === 'clients') careClients(); else careSettings();
+}
+function careToday(){
+  const box = $('#ccBody'), d = CARE.day, today = ccToday();
+  const dateLbl = new Date(today + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  if (d.off) { box.innerHTML = `<div class="panel cc-off"><p class="cc-date">${esc(dateLbl)}</p><h2>Day off</h2><p class="muted">No calls today. Your ${careStreak()}-day streak is safe.</p></div>`; return; }
+  const items = d.items, done = items.filter(i => i.done).length;
+  const order = ['carry', 'follow', 'first', 'feedback', 'care'];
+  const counts = { first: items.filter(i => i.s === 'first').length, follow: items.filter(i => i.s === 'follow').length };
+  const care = items.length - counts.first - counts.follow;
+  const sync = CARE.set.lastSync;
+  box.innerHTML = `<div class="panel cc-hero"><div><p class="cc-date">${esc(dateLbl)}</p>
+      <h2>${care} care call${care === 1 ? '' : 's'} today</h2>
+      ${counts.first ? `<p class="cc-plus">+ ${counts.first} first-time follow-up${counts.first === 1 ? '' : 's'}</p>` : ''}${counts.follow ? `<p class="cc-plus">+ ${counts.follow} follow-up${counts.follow === 1 ? '' : 's'} you set</p>` : ''}
+      <p class="muted cc-small">Best after 10:30 AM, once sales meetings wrap.</p></div>
+      <div class="cc-game">${careRing(done, items.length)}<div><b>${careStreak()}</b><small>day streak</small></div><div><b>${careWeek()}</b><small>this week</small></div></div></div>
+    ${items.length ? order.map(s => { const list = items.map((it, i) => [it, i]).filter(([it]) => it.s === s); if (!list.length) return '';
+      return `<h3 class="cc-sh">${esc(s === 'care' ? 'Care calls' : s === 'first' ? 'First-time follow-ups' : s === 'follow' ? 'Follow-ups you set' : s === 'feedback' ? 'Feedback calls' : 'From yesterday')} <em>${list.length}</em></h3>${list.map(([it, i]) => careCard(it, i)).join('')}`; }).join('')
+      : '<div class="panel"><p class="muted" style="margin:0">Nobody is due today. Everyone has been contacted recently.</p></div>'}
+    <details class="cc-q"><summary>Questions to ask</summary><ul>${(CARE.set.questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul></details>
+    <p class="muted cc-small" style="margin-top:14px">Roster ${sync ? `last synced ${esc(fmtDateTime(sync.at))} from ${sync.spiroOrders} Spiro and ${sync.hqOrders} HQ orders` : 'not synced yet'}.</p>`;
+}
+async function careLog(i, outcome){
+  const it = CARE.day.items[i], c = CARE.byId.get(it.c); if (!c) return;
+  const kind = { follow: 'followup', first: 'first', feedback: 'feedback', care: 'care', carry: it.s0 === 'follow' ? 'followup' : it.s0 || 'care' }[it.s] || 'care';
+  const now = new Date().toISOString();
+  const { data, error } = await sb.from('cc_calls').insert({ client_id: c.id, at: now, kind, outcome, source: 'hq', by_member: S.me?.id || null }).select('*').single();
+  if (error) return fail(error);
+  CARE.calls.unshift(data);
+  const upd = { last_call_at: now, last_care_call_at: now };
+  if (it.s === 'follow' || it.s0 === 'follow') Object.assign(upd, { followup_on: null, followup_note: null });
+  Object.assign(c, upd); await sb.from('cc_clients').update(upd).eq('id', c.id);
+  it.done = now; it.out = outcome; it.call = data.id; await careSaveDay();
+  if (CARE.day.items.every(x => x.done)) careConfetti();
+  CARE.noteFor = i; careToday();
+}
+async function careUndo(i){
+  const it = CARE.day.items[i];
+  if (it.call) { await sb.from('cc_calls').delete().eq('id', it.call); CARE.calls = CARE.calls.filter(x => x.id !== it.call); }
+  const c = CARE.byId.get(it.c), prev = CARE.calls.find(x => x.client_id === c.id);
+  const upd = { last_call_at: prev?.at || null, last_care_call_at: CARE.calls.find(x => x.client_id === c.id && x.kind !== 'other')?.at || null };
+  Object.assign(c, upd); await sb.from('cc_clients').update(upd).eq('id', c.id);
+  it.done = null; it.out = null; it.call = null; CARE.noteFor = null; await careSaveDay(); careToday();
+}
+function ccPickDate(title, quick){
+  return new Promise(res => {
+    const wrap = document.createElement('div'); wrap.className = 'cc-modal';
+    wrap.innerHTML = `<div class="panel"><h3 style="margin:0 0 10px">${esc(title)}</h3><div class="cc-quick">${quick.map(([l, d]) => `<button type="button" class="btn small" data-d="${d}">${l}</button>`).join('')}</div>
+      <label>Date</label><input type="date" id="ccD" value="${quick[0][1]}" min="${ccAddDays(ccToday(), 1)}"/><label>${title.startsWith('Follow') ? 'What about?' : 'Why? (optional)'}</label><input id="ccN" maxlength="160" />
+      <div class="bk-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn primary" data-ok>Save</button></div></div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { wrap.querySelector('#ccD').value = b.dataset.d; });
+    const close = v => { wrap.remove(); res(v); };
+    wrap.querySelector('[data-x]').onclick = () => close(null); wrap.onclick = e => { if (e.target === wrap) close(null); };
+    wrap.querySelector('[data-ok]').onclick = () => close({ date: wrap.querySelector('#ccD').value, note: wrap.querySelector('#ccN').value.trim() });
+  });
+}
+const ccNextWork = d => { while (ccOff(d)) d = ccAddDays(d, 1); return d; };
+const ccQuick = () => { const t = ccToday(); return [['Tomorrow', ccNextWork(ccAddDays(t, 1))], ['1 week', ccNextWork(ccAddDays(t, 7))], ['2 weeks', ccNextWork(ccAddDays(t, 14))], ['1 month', ccNextWork(ccAddDays(t, 30))], ['3 months', ccNextWork(ccAddDays(t, 91))]]; };
+async function carePush(i){
+  const it = CARE.day.items[i], c = CARE.byId.get(it.c);
+  const v = await ccPickDate(`Push ${c.name} to later`, ccQuick()); if (!v?.date) return;
+  Object.assign(c, { push_until: v.date, push_note: v.note || null });
+  await sb.from('cc_clients').update({ push_until: v.date, push_note: v.note || null }).eq('id', c.id);
+  // take them off today and let someone else have the spot
+  CARE.day.items.splice(i, 1);
+  const extra = careBuild(ccToday()).filter(x => x.s === 'care' && !CARE.day.items.some(y => y.c === x.c));
+  const want = (CARE.set.perDay || 6) - CARE.day.items.filter(x => ['care', 'feedback', 'carry'].includes(x.s)).length;
+  CARE.day.items.push(...extra.slice(0, Math.max(0, want)));
+  await careSaveDay(); toast(`${c.name} pushed to ${fmtDate(v.date)}`); careToday();
+}
+async function careFollow(c){
+  const v = await ccPickDate(`Follow-up date for ${c.name}`, ccQuick()); if (!v?.date) return;
+  Object.assign(c, { followup_on: v.date, followup_note: v.note || null });
+  await sb.from('cc_clients').update({ followup_on: v.date, followup_note: v.note || null }).eq('id', c.id);
+  toast(`Follow-up set for ${fmtDate(v.date)}`); CARE.tab === 'today' ? careToday() : careClients();
+}
+function careConfetti(){
+  const box = document.createElement('div'); box.className = 'cc-confetti';
+  const cols = ['#1d3250', '#5b8fd1', '#1e8e5a', '#e0a84a', '#bccadc'];
+  box.innerHTML = Array.from({ length: 70 }, (_, k) => `<i style="left:${Math.random() * 100}%;background:${cols[k % cols.length]};animation-delay:${Math.random() * .5}s;transform:rotate(${Math.random() * 360}deg)"></i>`).join('')
+    + '<div class="cc-yay">All calls done. Nice work.</div>';
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3200);
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-cc-toggle]'); if (t && !e.target.closest('a,button')) { t.closest('.cc-card').classList.toggle('min'); return; }
+  const b = e.target.closest('[data-cc-act]'); if (!b) return;
+  const i = +b.dataset.i, it = CARE.day?.items[i], c = it && CARE.byId.get(it.c);
+  const a = b.dataset.ccAct;
+  if (a === 'dial') return; // the tel: link opens the phone app
+  if (a === 'copy') { try { await navigator.clipboard.writeText(ccNum(c)); toast(`Copied. Open Quo and paste to call ${c.call_name || c.name}.`); } catch (_) { prompt('Copy this number', ccNum(c)); } return; }
+  if (a === 'done') return careLog(i, 'talked');
+  if (a === 'vm') return careLog(i, 'voicemail');
+  if (a === 'undo') return careUndo(i);
+  if (a === 'push') return carePush(i);
+  if (a === 'fu') return careFollow(c);
+  if (a === 'note') { CARE.noteFor = i; careToday(); $('#ccNote')?.focus(); return; }
+  if (a === 'savenote') {
+    const note = $('#ccNote').value.trim() || null, id = it.call; if (!id) return;
+    await sb.from('cc_calls').update({ note }).eq('id', id); const call = CARE.calls.find(x => x.id === id); if (call) call.note = note;
+    await sb.from('cc_clients').update({ last_call_note: note }).eq('id', c.id); c.last_call_note = note;
+    CARE.noteFor = null; toast('Note saved'); careToday();
+  }
+});
+function careClients(){
+  const box = $('#ccBody'), q = CARE.q.trim().toLowerCase();
+  const list = CARE.clients.filter(c => (!CARE.tierF || String(c.tier) === CARE.tierF) && (!q || `${c.name} ${c.company || ''} ${c.phone || ''}`.toLowerCase().includes(q)))
+    .sort((a, b) => a.tier - b.tier || b.shoots_12m - a.shoots_12m || a.name.localeCompare(b.name));
+  const lastCall = id => CARE.calls.find(x => x.client_id === id);
+  const due = c => { const d = ccDue(c); return c.push_until && c.push_until > ccToday() ? `Pushed to ${fmtDate(c.push_until)}` : c.followup_on ? `Follow-up ${fmtDate(c.followup_on)}` : d <= 0 ? 'Due now' : `In ${d} days`; };
+  box.innerHTML = `<div class="spi-bar"><input type="search" id="ccQ" placeholder="Search clients" value="${esc(CARE.q)}"/>
+      <select id="ccT"><option value="">All tiers</option>${[1, 2, 3, 4].map(t => `<option value="${t}" ${CARE.tierF === String(t) ? 'selected' : ''}>Tier ${t} (${CARE.clients.filter(c => c.tier === t).length})</option>`).join('')}</select></div>
+    <div class="spi-tbl"><table><thead><tr><th>Client</th><th>Tier</th><th class="n">Shoots (12 mo)</th><th>Last shoot</th><th>Last call</th><th>Next</th></tr></thead><tbody>
+    ${list.slice(0, 400).map(c => { const lc = lastCall(c.id); return `<tr class="spi-cl" data-ccc="${c.id}"><td><b>${esc(c.name)}</b><br><small class="muted">${esc(c.company || '')}</small></td>
+      <td>${c.tier}${c.tier_pinned ? ' (pinned)' : ''}</td><td class="n">${c.shoots_12m}</td><td>${c.last_shoot ? esc(fmtDate(c.last_shoot)) : '—'}</td>
+      <td>${lc ? `${esc(fmtDate(lc.at))}${lc.outcome === 'voicemail' ? ' (VM)' : ''}` : '—'}</td><td>${esc(due(c))}</td></tr>
+      ${CARE.open === c.id ? `<tr class="sub"><td colspan="6">${careClientDetail(c)}</td></tr>` : ''}`; }).join('') || '<tr><td colspan="6" class="muted">No clients match.</td></tr>'}</tbody></table></div>`;
+  $('#ccQ').oninput = e => { CARE.q = e.target.value; clearTimeout(CARE.t); CARE.t = setTimeout(() => { careClients(); const el = $('#ccQ'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }, 250); };
+  $('#ccT').onchange = e => { CARE.tierF = e.target.value; careClients(); };
+  box.querySelectorAll('[data-ccc]').forEach(r => r.onclick = ev => { if (ev.target.closest('a,button,input,select,textarea,label')) return; CARE.open = CARE.open === r.dataset.ccc ? null : r.dataset.ccc; careClients(); });
+}
+function careClientDetail(c){
+  const calls = CARE.calls.filter(x => x.client_id === c.id).slice(0, 20);
+  return `<div class="cc-det"><div class="zs-form" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+      <div><label>Phone</label><input value="${esc(c.phone || '')}" disabled/></div>
+      <div><label>Call this person instead</label><input id="ccCN" value="${esc(c.call_name || '')}" placeholder="Name (team accounts)"/></div>
+      <div><label>Their number</label><input id="ccCP" value="${esc(c.call_phone || '')}" placeholder="865-555-0100"/></div>
+      <div><label>Tier</label><select id="ccTier">${[1, 2, 3, 4].map(t => `<option value="${t}" ${c.tier === t ? 'selected' : ''}>Tier ${t}</option>`).join('')}</select></div>
+      <label class="check full"><input type="checkbox" id="ccPin" ${c.tier_pinned ? 'checked' : ''}/> Always keep in Tier 1 (key relationship)</label>
+      <label class="check full"><input type="checkbox" id="ccHide"/> Hide from Client Care (not a client to call)</label></div>
+    <div class="bk-actions"><button type="button" class="btn small primary" data-ccsave="${c.id}">Save</button><button type="button" class="btn small" data-ccfu="${c.id}">Set follow-up date</button>
+      ${c.push_until || c.followup_on ? `<button type="button" class="btn small" data-ccclear="${c.id}">Clear push / follow-up</button>` : ''}
+      ${c.last_order_hq ? `<a class="btn small" href="#/bookings/${c.last_order_hq}">Last order</a>` : ''}${c.agent_id ? `<a class="btn small" href="#/agents/${c.agent_id}">Client profile</a>` : ''}</div>
+    <p class="muted cc-small">${c.shoots_all} shoot${c.shoots_all === 1 ? '' : 's'} in total · first ${c.first_order ? esc(fmtDate(c.first_order)) : '—'}${c.email ? ` · ${esc(c.email)}` : ''}</p>
+    ${calls.length ? `<ul class="cc-hist">${calls.map(x => `<li><b>${esc(fmtDate(x.at))}</b> · ${esc({ care: 'Care call', first: 'First-time follow-up', feedback: 'Feedback call', followup: 'Follow-up', other: 'Call' }[x.kind] || x.kind)}${x.outcome === 'voicemail' ? ' · voicemail' : ''}${x.note ? `<br>${esc(x.note)}` : ''}</li>`).join('')}</ul>` : '<p class="muted cc-small">No calls logged yet.</p>'}</div>`;
+}
+document.addEventListener('click', async e => {
+  const s = e.target.closest('[data-ccsave]'), f = e.target.closest('[data-ccfu]'), cl = e.target.closest('[data-ccclear]');
+  if (f) return careFollow(CARE.byId.get(f.dataset.ccfu));
+  if (cl) { const c = CARE.byId.get(cl.dataset.ccclear); const u = { push_until: null, push_note: null, followup_on: null, followup_note: null }; Object.assign(c, u); await sb.from('cc_clients').update(u).eq('id', c.id); toast('Cleared'); return careClients(); }
+  if (!s) return;
+  const c = CARE.byId.get(s.dataset.ccsave);
+  const u = { call_name: $('#ccCN').value.trim() || null, call_phone: $('#ccCP').value.trim() || null, tier: $('#ccPin').checked ? 1 : +$('#ccTier').value, tier_pinned: $('#ccPin').checked, hidden: $('#ccHide').checked };
+  const { error } = await sb.from('cc_clients').update(u).eq('id', c.id); if (error) return fail(error);
+  Object.assign(c, u); if (u.hidden) { CARE.clients = CARE.clients.filter(x => x.id !== c.id); CARE.byId.delete(c.id); }
+  toast('Saved'); careClients();
+});
+function careSettings(){
+  const box = $('#ccBody'), st = CARE.set, sync = st.lastSync;
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  box.innerHTML = `<div class="panel"><div class="zs-form" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+      <div><label>Calls per day</label><input type="number" id="ccsPer" min="1" max="20" value="${st.perDay ?? 6}"/></div>
+      <div><label>Tier 1 calls per day</label><input type="number" id="ccsT1" min="0" max="20" value="${st.tier1PerDay ?? 2}"/></div>
+      <div><label>Quiet days after any contact</label><input type="number" id="ccsQ" min="7" max="120" value="${st.quiet ?? 30}"/></div><div></div>
+      <div class="full"><label>Tiers: shoots in the last 12 months for Tier 1 / 2 / 3 (the rest are Tier 4)</label>
+        <div style="display:flex;gap:8px">${(st.tiers || [10, 4, 2]).map((v, k) => `<input type="number" class="ccsTier" min="1" value="${v}" style="max-width:90px" title="Tier ${k + 1}"/>`).join('')}</div></div>
+      <div class="full"><label>Call every … days, Tier 1 / 2 / 3 / 4</label>
+        <div style="display:flex;gap:8px">${(st.cadence || [30, 60, 90, 180]).map((v, k) => `<input type="number" class="ccsCad" min="7" value="${v}" style="max-width:90px" title="Tier ${k + 1}"/>`).join('')}</div></div>
+      <div class="full"><label>Days off (no list, streak is safe)</label><div style="display:flex;gap:12px;flex-wrap:wrap">${DOW.map((d, k) => `<label class="check"><input type="checkbox" class="ccsOff" value="${k}" ${(st.daysOff || [0, 6]).includes(k) ? 'checked' : ''}/> ${d}</label>`).join('')}</div></div>
+      <div class="full"><label>Holidays and one-off days off (one date per line, YYYY-MM-DD)</label><textarea id="ccsHol" rows="3">${esc((st.holidays || []).join('\n'))}</textarea></div>
+      <div class="full"><label>Questions to ask on a care call (one per line)</label><textarea id="ccsQs" rows="3">${esc((st.questions || []).join('\n'))}</textarea></div>
+    </div><div class="bk-actions"><button type="button" class="btn primary" id="ccsSave">Save</button></div>
+    <p class="muted cc-small">Changes apply from tomorrow's list (today's stays as it is). Tiers update on the next roster sync.</p></div>
+    <div class="panel" style="margin-top:12px"><h3 style="margin:0 0 6px">Roster</h3>
+      <p class="muted cc-small" style="margin:0 0 10px">${CARE.clients.length} clients (Tier 1: ${[1, 2, 3, 4].map(t => CARE.clients.filter(c => c.tier === t).length).join(' · Tier ')}). Synced nightly at 11:45 PM from Spiro and HQ orders${sync ? `; last ${esc(fmtDateTime(sync.at))}` : ''}.</p>
+      <div class="bk-actions"><button type="button" class="btn" id="ccsSync">Sync roster now</button><button type="button" class="btn" id="ccsRebuild">Rebuild today's list</button></div></div>`;
+  $('#ccsSave').onclick = async () => {
+    const nums = sel => [...box.querySelectorAll(sel)].map(x => +x.value);
+    const care = { ...st, perDay: +$('#ccsPer').value || 6, tier1PerDay: +$('#ccsT1').value || 0, quiet: +$('#ccsQ').value || 30, tiers: nums('.ccsTier'), cadence: nums('.ccsCad'),
+      daysOff: [...box.querySelectorAll('.ccsOff:checked')].map(x => +x.value), holidays: $('#ccsHol').value.split(/\s+/).filter(x => /^\d{4}-\d\d-\d\d$/.test(x)),
+      questions: $('#ccsQs').value.split('\n').map(x => x.trim()).filter(Boolean) };
+    const { error } = await sb.from('booking_settings').update({ care }).eq('id', 1); if (error) return fail(error);
+    CARE.set = care; toast('Saved');
+  };
+  $('#ccsSync').onclick = async ev => { const b = ev.target; b.disabled = true; b.textContent = 'Syncing…';
+    try { const { data, error } = await sb.functions.invoke('care', { body: { action: 'refresh' } }); if (error) throw new Error((await error.context.json().catch(() => ({}))).error || error.message);
+      toast(`Roster synced: ${data.clients} clients`); CARE.loaded = false; await careLoad(true); careSettings(); } catch (err) { fail(err); b.disabled = false; b.textContent = 'Sync roster now'; } };
+  $('#ccsRebuild').onclick = async () => {
+    if (!confirm("Rebuild today's call list? Calls already marked done stay done.")) return;
+    const keep = (CARE.day.items || []).filter(i => i.done);
+    const fresh = careBuild(ccToday()).filter(x => !keep.some(k => k.c === x.c));
+    CARE.day.items = [...keep, ...fresh]; await careSaveDay(); toast("Today's list rebuilt"); CARE.tab = 'today'; renderCare();
+  };
+}
 /* ----- Spiro Import (Settings): delivered Spiro orders by client, imported one at a time through the dropbox function
    (spiro_delivered lists them, spiro_pull imports / resyncs one; it answers more:true while photos are still being copied
    from Spiro, so the same order is called again). Runs while this tab is open; the queue is saved in this browser so it
