@@ -1505,20 +1505,45 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 .cc-hero{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin:0 0 14px}.cc-hero h2{margin:2px 0;font-size:26px}.cc-date{margin:0;text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:700;color:var(--muted)}
 .cc-plus{margin:2px 0;color:var(--accent-2);font-weight:600}.cc-small{font-size:12.5px}.cc-game{display:flex;align-items:center;gap:18px}.cc-ring{width:92px;height:92px;color:var(--text)}.cc-game b{display:block;font-size:24px}.cc-game small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 .cc-sh{margin:18px 0 8px;font-size:15px}.cc-sh em{font-style:normal;font-size:12px;background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:4px}
-.cc-card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;margin:0 0 10px;overflow:hidden}
+.cc-card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:14px;padding:12px 12px 12px 14px;margin:0 0 8px;cursor:pointer;min-height:68px;-webkit-tap-highlight-color:transparent}
+.cc-card:active{transform:scale(.99)}.cc-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cc-card.s-first{border-left-color:var(--ok)}.cc-card.s-follow{border-left-color:#7a4fd1}.cc-card.s-feedback{border-left-color:var(--warn)}.cc-card.s-carry{border-left-color:var(--danger)}
-.cc-card.done{opacity:.72}.cc-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 14px;cursor:pointer}.cc-h b{font-size:17px;display:block}.cc-h small{color:var(--muted)}
-.cc-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.cc-tags span{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel-2);white-space:nowrap}.cc-tier.t1{background:var(--accent);color:var(--on-accent)}.cc-ok{background:var(--ok)!important;color:#fff}
-.cc-b{padding:0 14px 14px}.cc-card.min .cc-b{display:none}.cc-r{margin:0 0 4px;font-weight:600}.cc-stats{margin:0 0 6px;color:var(--muted);font-size:13px}.cc-last{margin:0 0 6px;font-style:italic;font-size:13.5px}
-.cc-pts{margin:6px 0 10px;padding-left:18px;font-size:14px;line-height:1.5}.cc-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.cc-acts .btn:not(.small){min-height:44px;padding:0 16px}
-.cc-note{display:flex;gap:8px;align-items:flex-end;margin:0 0 10px}.cc-note textarea{flex:1}
+.cc-card.done{opacity:.6}.cc-card.done .cc-av{background:var(--ok);color:#fff}
+.cc-av{flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:var(--accent-soft);color:var(--accent-2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.cc-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.cc-nm{font-weight:700;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cc-why{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-dial{flex:0 0 48px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center}.cc-chev{font-size:24px;color:var(--muted);padding:0 6px}
+.cc-sec,.cc-tier,.cc-ok{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel-2);white-space:nowrap;display:inline-block}.cc-tier.t1{background:var(--accent);color:var(--on-accent)}.cc-ok{background:var(--ok);color:#fff}
+.cc-r{margin:0 0 12px;font-weight:600;font-size:15px}
+.cc-sheet{position:fixed;inset:0;z-index:9000;background:rgba(10,20,35,.45);display:none;align-items:center;justify-content:center;padding:20px}.cc-sheet.on{display:flex}
+.cc-sh-in{background:var(--panel);color:var(--text);width:min(620px,100%);max-height:min(88vh,900px);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.cc-sh-h{display:flex;gap:12px;align-items:flex-start;padding:16px 18px 10px;border-bottom:1px solid var(--border)}.cc-sh-h h2{margin:0 0 4px;font-size:21px;line-height:1.2}.cc-sh-h p{margin:0;color:var(--muted);font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cc-x{order:2;margin-left:auto;border:0;background:var(--panel-2);color:var(--text);width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer;flex:0 0 38px}
+.cc-sh-b{padding:14px 18px 18px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+.cc-callrow{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0 0 14px}.cc-callrow .btn{min-height:50px;font-size:16px;justify-content:center}
+.cc-stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 14px}.cc-stats4>div{background:var(--panel-2);border-radius:10px;padding:8px 6px;text-align:center}.cc-stats4 b{display:block;font-size:16px}.cc-stats4 small{color:var(--muted);font-size:11px}
+.cc-blk{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:0 0 12px}.cc-blk h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.cc-blk h5{margin:10px 0 4px;font-size:13px}
+.cc-blk p{margin:0;line-height:1.5}.cc-blk ul{margin:0;padding-left:18px;line-height:1.55;font-size:14.5px}.cc-blk summary{cursor:pointer;list-style:none}.cc-blk summary::-webkit-details-marker{display:none}
+.cc-guide{border-left:4px solid var(--accent)}.cc-open{font-size:15.5px;font-style:italic}.cc-link{border:0;background:none;color:var(--accent-2);padding:8px 0 0;font:inherit;font-size:13px;cursor:pointer;text-decoration:underline}
+.cc-blk textarea{width:100%;font-size:16px}.cc-row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.cc-more{margin:4px 0 0}
+.cc-sh-f{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--panel)}.cc-sh-f .btn{min-height:52px;font-size:16px;justify-content:center}
+body.cc-noscroll{overflow:hidden}
+@media(max-width:640px){
+  .cc-sheet{padding:0;align-items:flex-end}.cc-sh-in{width:100%;max-height:94vh;border-radius:18px 18px 0 0}
+  .cc-top h1{font-size:24px}.cc-seg{width:100%}.cc-seg button{flex:1}
+  .cc-hero{padding:14px}.cc-game{width:100%;justify-content:space-between}.cc-ring{width:76px;height:76px}
+  .cc-stats4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #ccBody .spi-tbl th:nth-child(3),#ccBody .spi-tbl td:nth-child(3),#ccBody .spi-tbl th:nth-child(4),#ccBody .spi-tbl td:nth-child(4){display:none}
+  #ccBody .zs-form{grid-template-columns:1fr!important}#ccBody .zs-form>div[style]{flex-wrap:wrap}
+  .cc-hr{flex-direction:column;align-items:stretch}.cc-hr .cc-acts{justify-content:flex-start}
+}
 .cc-q{margin:14px 0 0}.cc-q summary{cursor:pointer;font-weight:600}.cc-off{text-align:center;padding:40px 20px}.cc-off h2{font-size:28px;margin:6px 0}
 .cc-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}.cc-modal .panel{width:min(420px,100%)}.cc-quick{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
 .cc-det{padding:6px 2px}.cc-hist{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
 .cc-confetti{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}.cc-confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:ccfall 2.6s ease-in forwards}
 .cc-yay{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 20px;font-weight:700;font-size:18px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 @keyframes ccfall{to{transform:translateY(110vh) rotate(720deg)}}
-@media(max-width:640px){.cc-hero h2{font-size:22px}.cc-acts .btn{flex:1 1 auto}}
+@media(max-width:640px){.cc-hero h2{font-size:22px}}
 .spi-sum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}.spi-sum>div{border:1px solid var(--border);border-radius:9px;padding:8px 12px;min-width:120px}.spi-sum b{display:block;font-size:18px}.spi-sum small{color:var(--muted);font-size:12px}
 .spi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.spi-bar input,.spi-bar select{max-width:220px}
 .spi-tbl{border:1px solid var(--border);border-radius:9px;max-height:520px;overflow:auto}.spi-tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -2634,7 +2659,7 @@ function render(){
   if (S.view === 'mail') renderMail();
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#careView').classList.toggle('hidden', S.view !== 'care');
-  if (S.view === 'care') renderCare();
+  if (S.view === 'care') renderCare(); else if (typeof careSheetClose === 'function' && CARE.sheet != null) careSheetClose();
   $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
   if (S.view === 'settings') renderSettings();
   $('#bookingsView').classList.toggle('hidden', !inOrders());
@@ -5998,27 +6023,71 @@ function carePoints(c){
 }
 function careCard(it, i){
   const c = CARE.byId.get(it.c); if (!c) return '';
-  const lastCall = CARE.calls.find(x => x.client_id === c.id);
-  const num = ccNum(c), tel = ccTel(num);
-  const done = !!it.done;
-  return `<article class="cc-card ${done ? 'done' : ''} s-${it.s}" data-i="${i}">
-    <header class="cc-h" data-cc-toggle="${i}"><div><b>${esc(ccWho(c))}</b><small>${esc(/^unassigned$/i.test(c.company || '') ? '' : c.company || '')}</small></div>
-      <span class="cc-tags"><span class="cc-sec">${esc(it.s === 'carry' ? CARE_SEC.carry : CARE_SEC[it.s] || '')}</span><span class="cc-tier t${c.tier}">Tier ${c.tier}</span>${done ? `<span class="cc-ok">${it.out === 'voicemail' ? 'Voicemail' : 'Done'}</span>` : ''}</span></header>
-    <div class="cc-b">
+  const num = ccNum(c), tel = ccTel(num), done = !!it.done;
+  const co = /^unassigned$/i.test(c.company || '') ? '' : c.company || '';
+  const ini = (c.call_name || c.name).split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  return `<article class="cc-card ${done ? 'done' : ''} s-${it.s}" data-cc-open="${i}" tabindex="0" role="button" aria-label="Open ${esc(c.name)}">
+    <span class="cc-av">${done ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : esc(ini)}</span>
+    <span class="cc-main"><span class="cc-nm">${esc(ccWho(c))}</span>
+      <span class="cc-sub">${co ? esc(co) + ' · ' : ''}Tier ${c.tier}${done ? ` · ${it.out === 'voicemail' ? 'voicemail' : 'done'}` : ''}</span>
+      <span class="cc-why">${esc(it.r || '')}</span></span>
+    ${!done && tel ? `<a class="cc-dial" href="tel:${esc(tel)}" data-cc-act="dial" data-i="${i}" aria-label="Call ${esc(c.name)}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></a>` : '<span class="cc-chev">›</span>'}
+  </article>`;
+}
+// Full card in a sheet (bottom sheet on phones): everything about the call, the call guide, history and the actions
+function careSheetHTML(i){
+  const it = CARE.day.items[i], c = it && CARE.byId.get(it.c); if (!c) return '';
+  const num = ccNum(c), tel = ccTel(num), done = !!it.done;
+  const co = /^unassigned$/i.test(c.company || '') ? '' : c.company || '';
+  const calls = CARE.calls.filter(x => x.client_id === c.id), last = calls[0];
+  const g = it.brief, pts = carePoints(c);
+  const stat = (v, l) => `<div><b>${v}</b><small>${l}</small></div>`;
+  return `<div class="cc-sh-in" role="dialog" aria-modal="true" aria-label="${esc(c.name)}">
+    <header class="cc-sh-h"><button type="button" class="cc-x" data-cc-close aria-label="Close">✕</button>
+      <div><h2>${esc(ccWho(c))}</h2><p>${co ? esc(co) + ' · ' : ''}<span class="cc-tier t${c.tier}">Tier ${c.tier}</span> <span class="cc-sec">${esc(it.s === 'carry' ? CARE_SEC.carry : CARE_SEC[it.s] || '')}</span>${done ? ` <span class="cc-ok">${it.out === 'voicemail' ? 'Voicemail' : 'Done'}</span>` : ''}</p></div></header>
+    <div class="cc-sh-b">
       <p class="cc-r">${esc(it.r || '')}</p>
-      <p class="cc-stats">${c.shoots_12m} shoot${c.shoots_12m === 1 ? '' : 's'} this year${c.last_shoot ? ` · last shoot ${esc(fmtDate(c.last_shoot))}` : ''} · ${lastCall ? `last call ${esc(fmtDate(lastCall.at))}` : 'no calls logged'}</p>
-      ${lastCall?.note ? `<p class="cc-last">“${esc(lastCall.note)}”</p>` : ''}
-      ${(() => { const pts = carePoints(c); return pts.length ? `<ul class="cc-pts">${pts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''; })()}
-      ${c.push_note ? `<p class="muted cc-small">Pushed before: ${esc(c.push_note)}</p>` : ''}
-      ${CARE.noteFor === i ? `<div class="cc-note"><textarea id="ccNote" rows="2" placeholder="Note (optional): what you talked about">${esc(lastCall?.note || '')}</textarea><button type="button" class="btn small primary" data-cc-act="savenote" data-i="${i}">Save note</button></div>` : ''}
-      <div class="cc-acts">
-        ${done ? `<button type="button" class="btn small" data-cc-act="note" data-i="${i}">${lastCall?.note ? 'Edit note' : 'Add note'}</button><button type="button" class="btn small" data-cc-act="vmtext" data-i="${i}">Voicemail text</button><button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button><button type="button" class="btn small" data-cc-act="undo" data-i="${i}">Undo</button>`
-        : `${num ? `<a class="btn primary cc-call" href="tel:${esc(tel)}" data-cc-act="dial" data-i="${i}">Call ${esc(num)}</a><button type="button" class="btn" data-cc-act="copy" data-i="${i}">Copy number</button>` : '<span class="muted">No phone on file</span>'}
-          <button type="button" class="btn primary" data-cc-act="done" data-i="${i}">Done</button>
-          <button type="button" class="btn" data-cc-act="vm" data-i="${i}">Left a voicemail</button>
-          <button type="button" class="btn small" data-cc-act="push" data-i="${i}">Push to later</button>
-          <button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button>`}
-      </div></div></article>`;
+      ${num ? `<div class="cc-callrow"><a class="btn primary" href="tel:${esc(tel)}" data-cc-act="dial" data-i="${i}">Call ${esc(num)}</a><button type="button" class="btn" data-cc-act="copy" data-i="${i}">Copy for Quo</button></div>` : '<p class="muted">No phone number on file. Add one in the Clients tab.</p>'}
+      <div class="cc-stats4">${stat(c.shoots_12m, 'shoots this year')}${stat(c.last_shoot ? esc(fmtDate(c.last_shoot).replace(/, \d{4}$/, '')) : '—', 'last shoot')}${stat(last ? esc(fmtDate(last.at).replace(/, \d{4}$/, '')) : '—', 'last call')}${stat(c.first_order ? esc(new Date(c.first_order + 'T12:00:00').getFullYear()) : '—', 'client since')}</div>
+      ${last?.note ? `<div class="cc-blk"><h4>Last call · ${esc(fmtDate(last.at))}</h4><p>${esc(last.note)}</p></div>` : ''}
+      <div class="cc-blk cc-guide"><h4>Call guide</h4>
+        ${g ? `${g.opener ? `<p class="cc-open">“${esc(g.opener)}”</p>` : ''}
+          ${g.points?.length ? `<h5>Talking points</h5><ul>${g.points.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+          ${g.questions?.length ? `<h5>Ask</h5><ul>${g.questions.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+          ${g.close ? `<h5>Wrap up</h5><p>${esc(g.close)}</p>` : ''}
+          <button type="button" class="cc-link" data-cc-act="brief" data-i="${i}" data-force="1">Rewrite guide</button>`
+        : `${pts.length ? `<ul>${pts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}<p class="muted cc-small" id="ccBriefSt">Writing a call guide for ${esc(c.call_name || c.name)}…</p>`}
+      </div>
+      ${g && pts.length ? `<div class="cc-blk"><h4>From their history</h4><ul>${pts.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+      ${done ? `<div class="cc-blk"><h4>Note</h4><textarea id="ccNote" rows="3" placeholder="What did you talk about? (optional, Quo fills this in tonight)">${esc(CARE.calls.find(x => x.id === it.call)?.note || '')}</textarea>
+        <div class="cc-row2"><button type="button" class="btn small primary" data-cc-act="savenote" data-i="${i}">Save note</button><button type="button" class="btn small" data-cc-act="vmtext" data-i="${i}">Voicemail text</button><button type="button" class="btn small" data-cc-act="undo" data-i="${i}">Undo</button></div></div>` : ''}
+      ${calls.length > (last?.note ? 1 : 0) ? `<details class="cc-blk"><summary><h4 style="display:inline">Call history (${calls.length})</h4></summary><ul class="cc-hist">${calls.slice(0, 8).map(x => `<li><b>${esc(fmtDate(x.at))}</b>${x.outcome === 'voicemail' ? ' · voicemail' : ''}${x.note ? ` · ${esc(x.note)}` : ''}</li>`).join('')}</ul></details>` : ''}
+      <div class="cc-row2 cc-more"><button type="button" class="btn small" data-cc-act="fu" data-i="${i}">Follow-up date</button>${done ? '' : `<button type="button" class="btn small" data-cc-act="push" data-i="${i}">Push to later</button>`}
+        ${c.last_order_hq ? `<a class="btn small" href="#/bookings/${c.last_order_hq}">Last order</a>` : ''}</div>
+    </div>
+    ${done ? '' : `<footer class="cc-sh-f"><button type="button" class="btn" data-cc-act="vm" data-i="${i}">Left a voicemail</button><button type="button" class="btn primary" data-cc-act="done" data-i="${i}">Done</button></footer>`}
+  </div>`;
+}
+function careSheet(i){
+  CARE.sheet = i;
+  let el = $('#ccSheet');
+  if (!el) { el = document.createElement('div'); el.id = 'ccSheet'; el.className = 'cc-sheet'; document.body.appendChild(el);
+    el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-cc-close]')) careSheetClose(); }); }
+  el.innerHTML = careSheetHTML(i); el.classList.add('on'); document.body.classList.add('cc-noscroll');
+  const it = CARE.day.items[i]; if (it && !it.brief && !it.briefing) careBrief(i);
+}
+function careSheetClose(){ CARE.sheet = null; const el = $('#ccSheet'); if (el) { el.classList.remove('on'); el.innerHTML = ''; } document.body.classList.remove('cc-noscroll'); }
+function careRefresh(){ careToday(); if (CARE.sheet != null && CARE.day.items[CARE.sheet]) { const el = $('#ccSheet'); const y = el?.querySelector('.cc-sh-b')?.scrollTop; careSheet(CARE.sheet); const b = $('#ccSheet .cc-sh-b'); if (b && y) b.scrollTop = y; } else if (CARE.sheet != null) careSheetClose(); }
+async function careBrief(i, force){
+  const it = CARE.day.items[i], c = it && CARE.byId.get(it.c); if (!c) return;
+  if (it.brief && !force) return;
+  it.briefing = true;
+  try {
+    const { data, error } = await sb.functions.invoke('care', { body: { action: 'brief', clientId: c.id, section: it.s === 'carry' ? it.s0 || 'care' : it.s, reason: it.r } });
+    if (error) throw new Error((await error.context.json().catch(() => ({}))).error || error.message);
+    it.brief = data; delete it.briefing; await careSaveDay();
+    if (CARE.sheet === i) careRefresh();
+  } catch (e) { delete it.briefing; const st = $('#ccBriefSt'); if (st && CARE.sheet === i) st.textContent = 'Could not write a call guide right now: ' + e.message; }
 }
 function careRing(done, total){
   const pct = total ? done / total : 0, r = 34, C = 2 * Math.PI * r;
@@ -6028,6 +6097,7 @@ function careRing(done, total){
 }
 async function renderCare(){
   const root = $('#careView'); if (!root) return;
+  careSheetClose();
   if (!CARE.loaded) root.innerHTML = '<div class="panel"><p class="muted">Loading Client Care…</p></div>';
   try { await careLoad(); await careEnsureDay(); } catch (e) { root.innerHTML = `<div class="panel"><p class="muted">${esc(e.message)}</p></div>`; return; }
   const tabs = [['today', 'Today'], ['clients', 'Clients'], ['settings', 'Settings']];
@@ -6107,7 +6177,7 @@ document.addEventListener('click', async e => {
     const u = { followup_on: date, followup_note: c.suggest.about || null, suggest: null }; Object.assign(c, u);
     const { error } = await sb.from('cc_clients').update(u).eq('id', c.id); if (error) return fail(error); toast(`Follow-up set for ${fmtDate(date)}`);
   } else { c.suggest = null; await sb.from('cc_clients').update({ suggest: null }).eq('id', c.id); }
-  careToday();
+  careRefresh();
 });
 async function careLog(i, outcome){
   const it = CARE.day.items[i], c = CARE.byId.get(it.c); if (!c) return;
@@ -6121,7 +6191,7 @@ async function careLog(i, outcome){
   Object.assign(c, upd); await sb.from('cc_clients').update(upd).eq('id', c.id);
   it.done = now; it.out = outcome; it.call = data.id; await careSaveDay();
   if (CARE.day.items.every(x => x.done)) careConfetti();
-  CARE.noteFor = i; careToday();
+  careRefresh();
 }
 async function careUndo(i){
   const it = CARE.day.items[i];
@@ -6129,7 +6199,7 @@ async function careUndo(i){
   const c = CARE.byId.get(it.c), prev = CARE.calls.find(x => x.client_id === c.id);
   const upd = { last_call_at: prev?.at || null, last_care_call_at: CARE.calls.find(x => x.client_id === c.id && x.kind !== 'other')?.at || null };
   Object.assign(c, upd); await sb.from('cc_clients').update(upd).eq('id', c.id);
-  it.done = null; it.out = null; it.call = null; CARE.noteFor = null; await careSaveDay(); careToday();
+  it.done = null; it.out = null; it.call = null; await careSaveDay(); careRefresh();
 }
 function ccPickDate(title, quick){
   return new Promise(res => {
@@ -6152,7 +6222,7 @@ async function carePush(i){
   Object.assign(c, { push_until: v.date, push_note: v.note || null });
   await sb.from('cc_clients').update({ push_until: v.date, push_note: v.note || null }).eq('id', c.id);
   // take them off today and let someone else have the spot
-  CARE.day.items.splice(i, 1);
+  careSheetClose(); CARE.day.items.splice(i, 1);
   const extra = careBuild(ccToday()).filter(x => x.s === 'care' && !CARE.day.items.some(y => y.c === x.c));
   const want = (CARE.set.perDay || 6) - CARE.day.items.filter(x => ['care', 'feedback', 'carry'].includes(x.s)).length;
   CARE.day.items.push(...extra.slice(0, Math.max(0, want)));
@@ -6162,7 +6232,7 @@ async function careFollow(c){
   const v = await ccPickDate(`Follow-up date for ${c.name}`, ccQuick()); if (!v?.date) return;
   Object.assign(c, { followup_on: v.date, followup_note: v.note || null });
   await sb.from('cc_clients').update({ followup_on: v.date, followup_note: v.note || null }).eq('id', c.id);
-  toast(`Follow-up set for ${fmtDate(v.date)}`); CARE.tab === 'today' ? careToday() : careClients();
+  toast(`Follow-up set for ${fmtDate(v.date)}`); CARE.tab === 'today' ? careRefresh() : careClients();
 }
 function careConfetti(){
   const box = document.createElement('div'); box.className = 'cc-confetti';
@@ -6172,7 +6242,7 @@ function careConfetti(){
   document.body.appendChild(box); setTimeout(() => box.remove(), 3200);
 }
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-cc-toggle]'); if (t && !e.target.closest('a,button')) { t.closest('.cc-card').classList.toggle('min'); return; }
+  const o = e.target.closest('[data-cc-open]'); if (o && !e.target.closest('[data-cc-act]')) { careSheet(+o.dataset.ccOpen); return; }
   const b = e.target.closest('[data-cc-act]'); if (!b) return;
   const i = +b.dataset.i, it = CARE.day?.items[i], c = it && CARE.byId.get(it.c);
   const a = b.dataset.ccAct;
@@ -6184,14 +6254,15 @@ document.addEventListener('click', async e => {
   if (a === 'undo') return careUndo(i);
   if (a === 'push') return carePush(i);
   if (a === 'fu') return careFollow(c);
-  if (a === 'note') { CARE.noteFor = i; careToday(); $('#ccNote')?.focus(); return; }
+  if (a === 'brief') { it.brief = null; careRefresh(); return careBrief(i, true); }
   if (a === 'savenote') {
     const note = $('#ccNote').value.trim() || null, id = it.call; if (!id) return;
     await sb.from('cc_calls').update({ note }).eq('id', id); const call = CARE.calls.find(x => x.id === id); if (call) call.note = note;
     await sb.from('cc_clients').update({ last_call_note: note }).eq('id', c.id); c.last_call_note = note;
-    CARE.noteFor = null; toast('Note saved'); careToday();
+    toast('Note saved'); careRefresh();
   }
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && CARE.sheet != null) careSheetClose(); const o = e.target.closest?.('[data-cc-open]'); if (o && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); careSheet(+o.dataset.ccOpen); } });
 function careClients(){
   const box = $('#ccBody'), q = CARE.q.trim().toLowerCase();
   const list = CARE.clients.filter(c => (!CARE.tierF || String(c.tier) === CARE.tierF) && (!q || `${c.name} ${c.company || ''} ${c.phone || ''}`.toLowerCase().includes(q)))
