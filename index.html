@@ -1559,6 +1559,14 @@ body.cc-noscroll{overflow:hidden}
 .sg-before{opacity:0}.sg-before.show,.sg-img.peek .sg-before{opacity:1}
 .sg-badge{position:absolute;left:8px;bottom:8px;background:rgba(29,50,80,.82);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;letter-spacing:.02em}
 .sg-img.peek .sg-badge{display:none}.sg-hold{position:absolute;right:8px;bottom:8px;font-size:11px;background:rgba(255,255,255,.85);color:#1d3250;padding:3px 7px;border-radius:6px}
+.sg-img[data-hold]{cursor:zoom-in}
+.sg-view{position:fixed;inset:0;z-index:1000;background:rgba(14,22,36,.94);display:flex;flex-direction:column}
+.sg-view-top{display:flex;align-items:center;gap:8px;padding:10px 14px;color:#fff}.sg-view-top b{font-size:14px;font-weight:600;margin-right:auto}
+.sg-view-top .icon-btn{color:#fff}.sg-view-top .icon-btn svg{width:18px;height:18px}
+.sg-view-stage{position:relative;flex:1;min-height:0;margin:0 12px 12px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sg-view-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;-webkit-touch-callout:none}
+.sg-view-stage .sg-before{opacity:0}.sg-view-stage.peek .sg-before,.sg-view-stage .sg-before.show{opacity:1}
+.sg-view-tag{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(255,255,255,.88);color:#1d3250;font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;pointer-events:none}
 .sg-busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(244,242,238,.78);color:#1d3250;font-size:13px;font-weight:500;padding:12px;text-align:center}
 .sg-meta{display:flex;align-items:center;gap:8px;padding:10px 12px 0}.sg-meta small{font-size:12px}
 .sg-ver{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}.sg-ver button{border:1px solid var(--border);background:none;border-radius:6px;width:24px;height:24px;color:var(--text)}.sg-ver button:disabled{opacity:.35}
@@ -6217,8 +6225,7 @@ function sgRenderBatch(){
 }
 const sgOut = id => Object.values(SG.outputs).flat().find(o => o.id === id);
 function sgWire(box){
-  box.querySelectorAll('[data-hold]').forEach(el => { const on = () => el.classList.add('peek'), off = () => el.classList.remove('peek');
-    el.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => el.addEventListener(e, off)); el.oncontextmenu = e => e.preventDefault(); });
+  box.querySelectorAll('[data-hold]').forEach(el => sgHold(el, () => sgViewer(el.dataset.hold)));
   box.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => { const id = b.dataset.ver; SG.view[id] = Math.max(0, Math.min((SG.outputs[id] || []).length - 1, (SG.view[id] ?? 0) + +b.dataset.d)); sgRenderBatch(); });
   box.querySelectorAll('[data-rate]').forEach(b => b.onclick = async () => { const o = sgOut(b.dataset.rate), v = +b.dataset.v, nv = o.rating === v ? null : v;
     const { error } = await sb.from('staging_outputs').update({ rating: nv }).eq('id', o.id); if (error) return fail(error); o.rating = nv; sgRenderBatch(); });
@@ -6227,6 +6234,39 @@ function sgWire(box){
   box.querySelectorAll('[data-dl]').forEach(b => b.onclick = () => sgDownload(sgOut(b.dataset.dl), b));
   const all = $('#sgDlAll'); if (all) all.onclick = async () => { for (const p of SG.photos) { const o = (SG.outputs[p.id] || []).filter(x => x.approved).at(-1); if (o) { await sgDownload(o); await new Promise(r => setTimeout(r, 400)); } } };
   const res = $('#sgResume'); if (res) res.onclick = () => sgRun();
+}
+// Hold shows the original; a quick tap (no hold) runs onTap. Used by the cards and the full-size viewer.
+function sgHold(el, onTap){
+  let t = null, held = false, down = false;
+  el.addEventListener('pointerdown', e => { if (e.button > 0) return; down = true; held = false; clearTimeout(t); t = setTimeout(() => { held = true; el.classList.add('peek'); }, 180); });
+  const end = tap => () => { clearTimeout(t); el.classList.remove('peek'); if (tap && down && !held && onTap) onTap(); down = false; held = false; };
+  el.addEventListener('pointerup', end(true)); ['pointerleave', 'pointercancel'].forEach(e => el.addEventListener(e, end(false)));
+  el.oncontextmenu = e => e.preventDefault();
+}
+// Full-size viewer: tap a card's image to open; hold to see before; approve or download from here.
+async function sgViewer(pid){
+  const p = SG.photos.find(x => x.id === pid); if (!p) return;
+  const outs = SG.outputs[pid] || [], o = outs[Math.min(SG.view[pid] ?? outs.length - 1, outs.length - 1)];
+  const full = o && (o.approved_path || o.path); // full-resolution render, not the 1024px review copy
+  const U = await sgUrls([p.original_path, ...(full ? [full] : [])]).catch(() => null); if (!U) return;
+  const after = full ? U(full) : '', before = U(p.original_path) || p._thumb || '';
+  document.querySelector('.sg-view')?.remove();
+  const v = document.createElement('div'); v.className = 'sg-view'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', 'Full-size view');
+  const draw = () => { v.innerHTML = `<div class="sg-view-top"><b>${esc(p.room_label || p.room_guess || 'Room')}${o ? '' : ' · Original'}</b>
+      ${o ? `<button type="button" class="icon-btn" title="Download JPEG" data-vdl>${SG_ICON.dl}</button>
+      <button type="button" class="btn small ${o.approved ? 'primary' : ''}" data-vok>${o.approved ? SG_ICON.check + ' Approved' : 'Approve'}</button>` : ''}
+      <button type="button" class="icon-btn" title="Close" data-vx><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sg-view-stage">${after ? `<img src="${after}" alt="Staged ${esc(p.room_label || '')}" />` : ''}<img class="sg-before ${after ? '' : 'show'}" src="${before}" alt="Original" />
+      ${after ? '<span class="sg-view-tag">Hold to see before</span>' : ''}</div>`;
+    v.querySelector('[data-vx]').onclick = close;
+    const ok = v.querySelector('[data-vok]'); if (ok) ok.onclick = async () => { await sgApprove(o, ok); draw(); };
+    const dl = v.querySelector('[data-vdl]'); if (dl) dl.onclick = () => sgDownload(o, dl);
+    sgHold(v.querySelector('.sg-view-stage'));
+  };
+  const esc1 = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  function close(){ v.remove(); document.removeEventListener('keydown', esc1, true); document.body.style.overflow = ''; }
+  draw(); document.body.appendChild(v); document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', esc1, true);
 }
 async function sgRedo(pid){
   if (SG.run) return;
