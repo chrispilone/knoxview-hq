@@ -1683,6 +1683,11 @@ nav.tabs .nav-sub a{min-height:40px;padding:8px 12px;font-size:14.5px}nav.tabs .
 @media(max-width:640px){.op-svc{flex-wrap:wrap}.op-price{margin-left:26px}.op-cover.sm{width:110px}}
 
 .bk-check{color:var(--text);font-size:14px}
+.sz-h{margin:6px 0 8px;font-size:14px}
+.sz-tbl{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;overflow-x:auto}
+.sz-row{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(calc(var(--cols) - 1),minmax(86px,1fr)) 36px;gap:6px;align-items:center;min-width:calc(var(--cols) * 96px)}
+.sz-head span{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.sz-row input{min-width:0}
 .bk-agent-pick{display:flex;gap:8px;align-items:flex-start}.bk-agent-pick input{width:100%;min-width:0}
 .bk-ac{position:relative;flex:1;min-width:0}
 .bk-ac-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--border);border-radius:9px;box-shadow:0 10px 28px rgba(20,40,70,.14);max-height:320px;overflow:auto;padding:4px}
@@ -4067,15 +4072,12 @@ async function renderSettings(){
       + card('Upsells', `<div class="bk-svc-list">${(BK.upsells || []).slice().sort((a, b) => a.sort_order - b.sort_order).map(u => `
           <div class="bk-svc ${u.active ? '' : 'off'}"><span><b>${esc(u.title)}</b><small>Adds ${esc(bkSvc(u.service_id)?.name || '(missing service)')}${u.active ? ' · On' : ' · Off'}</small></span><button type="button" class="btn small" data-ups="${u.id}">Edit</button></div>`).join('') || '<p class="muted">None yet.</p>'}</div>
           <button type="button" class="btn" id="setUpAdd" style="margin-top:10px">+ Add an upsell</button>`, 'Suggestions shown on the Services step of the order form.')
-      + card('Home size & large property fee', `<form id="setSize">
-          <div class="grid3">
-            <div><label>Large property fee ($)</label><input type="number" min="0" name="large_fee" value="${set.large_fee ?? 75}" /></div>
-            <div><label>Large property over (sq ft)</label><input type="number" min="0" step="100" name="large_sqft" value="${set.large_sqft || 3500}" /></div>
-            <div><label>Extra time on site (min)</label><input type="number" min="0" step="5" name="large_minutes" value="${set.large_minutes ?? 20}" /></div>
-            <div style="grid-column:1/-1"><label>Fee name shown to clients</label><input name="large_label" value="${esc(set.large_label || 'Large Property')}" /></div>
-          </div>
-          <label style="margin-top:12px">Square footage choices <span class="muted">(one per line: label | max sq ft; leave the max blank for the top size)</span></label>
-          <textarea name="sqft" style="min-height:110px;font-family:ui-monospace,monospace;font-size:13px">${esc((set.sqft_options || []).map(o => `${o.label} | ${o.max ?? ''}`).join('\n'))}</textarea>
+      + card('Size pricing', `<form id="setSize">
+          <p class="muted" style="margin:0 0 10px">Smallest first. The package fee is added to any package as a "Home size" or "Land size" line. The photos-only fee is added to à la carte Photography when there's no package. A package's own large-property fee (on the package) replaces the first step up.</p>
+          <h4 class="sz-h">Home size (sq ft)</h4>
+          <div class="sz-tbl" id="szHome"></div><button type="button" class="btn small" data-szadd="home">+ Add a size</button>
+          <h4 class="sz-h" style="margin-top:18px">Land size (acres)</h4>
+          <div class="sz-tbl" id="szLand"></div><button type="button" class="btn small" data-szadd="land">+ Add a size</button>
           <div class="set-actions"><button class="btn primary">Save</button></div></form>`)
       + card('Custom order pages', `<p style="margin:0 0 10px">Special packages and pricing for specific agents or teams.</p><a class="btn" href="#/orderpages">Open Order Pages</a>`);
     body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openServiceEdit(bkSvc(b.dataset.edit)));
@@ -4083,11 +4085,34 @@ async function renderSettings(){
     $('#setSvcAdd').onclick = () => openServiceEdit(null);
     body.querySelectorAll('[data-ups]').forEach(b => b.onclick = () => openUpsellEdit(BK.upsells.find(u => u.id === b.dataset.ups)));
     $('#setUpAdd').onclick = () => openUpsellEdit(null);
-    $('#setSize').onsubmit = e => { e.preventDefault(); const f = e.target;
-      const tiers = f.sqft.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [label, max] = l.split('|').map(x => (x || '').trim()); return { label, max: max === '' || max == null ? null : Number(max.replace(/[^\d]/g, '')) }; });
-      if (!tiers.length || tiers.some(t => !t.label || (t.max !== null && !Number.isFinite(t.max)))) return toast('Check the square footage lines: "label | max"');
-      if (tiers.filter(t => t.max === null).length > 1) return toast('Only the top size can have no max');
-      save({ large_fee: +f.large_fee.value || 0, large_sqft: +f.large_sqft.value || 3500, large_minutes: +f.large_minutes.value || 0, large_label: f.large_label.value.trim() || 'Large Property', sqft_options: tiers }, 'Order form saved'); };
+    // Size tiers: one row each (label, up to, package fee, photos-only fee, extra minutes, photo counts shown)
+    const SZ = { home: (set.sqft_options || []).map(o => ({ ...o })), land: (set.acre_options || []).map(o => ({ ...o })) };
+    const szCols = k => k === 'home'
+      ? [['label', 'Label', 'text'], ['max', 'Up to (sq ft)', 'number'], ['fee', 'Package fee $', 'number'], ['photo_fee', 'Photos-only fee $', 'number'], ['minutes', 'Extra min', 'number'], ['photos', 'Photos shown', 'text'], ['alc_photos', 'À la carte photos', 'text']]
+      : [['label', 'Label', 'text'], ['max', 'Up to (acres)', 'number'], ['fee', 'Package fee $', 'number'], ['minutes', 'Extra min', 'number']];
+    const szPaint = k => { const el = $(k === 'home' ? '#szHome' : '#szLand'), cols = szCols(k);
+      el.style.setProperty('--cols', cols.length);
+      el.innerHTML = `<div class="sz-row sz-head">${cols.map(c => `<span>${c[1]}</span>`).join('')}<span></span></div>`
+        + SZ[k].map((o, i) => `<div class="sz-row">${cols.map(([f, l, t]) => `<input data-sz="${k}" data-i="${i}" data-f="${f}" type="${t}" ${t === 'number' ? 'min="0" step="any" inputmode="decimal"' : ''} aria-label="${l}" value="${esc(o[f] ?? '')}" placeholder="${f === 'max' ? (i === SZ[k].length - 1 ? 'no max' : '') : ''}" />`).join('')}
+          <button type="button" class="btn small ghost" data-szrm="${k}" data-i="${i}" aria-label="Remove" ${SZ[k].length < 2 ? 'disabled' : ''}>✕</button></div>`).join('');
+      el.querySelectorAll('[data-sz]').forEach(x => x.oninput = () => { SZ[k][+x.dataset.i][x.dataset.f] = x.type === 'number' ? (x.value === '' ? null : +x.value) : x.value; });
+      el.querySelectorAll('[data-szrm]').forEach(x => x.onclick = () => { SZ[k].splice(+x.dataset.i, 1); szPaint(k); });
+    };
+    szPaint('home'); szPaint('land');
+    body.querySelectorAll('[data-szadd]').forEach(b => b.onclick = () => { const k = b.dataset.szadd; SZ[k].push({ label: '', max: null, fee: 0, minutes: 0 }); szPaint(k); });
+    $('#setSize').onsubmit = e => { e.preventDefault();
+      const clean = (list, k) => list.map(o => { const r = { ...o, label: String(o.label || '').trim() };
+        ['max', 'fee', 'photo_fee', 'minutes'].forEach(f => { if (r[f] === '' || r[f] === undefined) r[f] = null; });
+        ['fee', 'photo_fee', 'minutes'].forEach(f => { if (r[f] == null) r[f] = 0; }); if (k === 'land') { delete r.photo_fee; delete r.photos; delete r.alc_photos; }
+        return r; });
+      const home = clean(SZ.home, 'home'), land = clean(SZ.land, 'land');
+      for (const [n, l] of [['home', home], ['land', land]]) {
+        if (!l.length || l.some(o => !o.label)) return toast(`Every ${n} size needs a label`);
+        if (l.slice(0, -1).some(o => o.max == null)) return toast(`Only the last ${n} size can have no max`);
+        if (l.some((o, i) => i && o.max != null && l[i - 1].max != null && o.max <= l[i - 1].max)) return toast(`List the ${n} sizes smallest first`);
+      }
+      const step = home.find(o => +o.fee > 0);
+      save({ sqft_options: home, acre_options: land, large_fee: step ? +step.fee : 0, large_sqft: step ? (home[home.indexOf(step) - 1]?.max ?? 0) + 1 : 0, large_minutes: step ? +step.minutes : 0 }, 'Size pricing saved'); };
   }
 
   if (sec === 'invoicing') {
@@ -7503,15 +7528,26 @@ function bkQuote(d){
     if (pkg) items.push({ service_id: pkg.id, name: pkg.name, kind: 'package', price: bkPrice(pkg, d) });
     adds.forEach(a => items.push({ service_id: a.id, name: a.name, kind: 'addon', price: bkPrice(a, d) }));
   }
-  const large = !d.custom && items.length > 0 && Number(d.sqft) > 0 && Number(d.sqft) > Number(set.large_sqft || 3500);
-  const fee = pkg && pkg.large_fee != null ? Number(pkg.large_fee) : Number(set.large_fee);
-  if (large && fee > 0) items.push({ name: 'Large property fee', kind: 'fee', price: fee });
+  // Size tiers (Settings → Order form → Size pricing): home sq ft, or acres for a land package
+  const land = pkg?.category === 'land', home = set.sqft_options || [];
+  const v = Number(land ? d.acres : d.sqft), tiers = land ? (set.acre_options || []) : home;
+  const t = !d.custom && items.length && v > 0 ? tiers.find(o => o.max == null || v <= +o.max) || null : null;
+  let sizeMin = 0;
+  if (t && pkg && +t.fee > 0) {
+    let fee = +t.fee; // a package's own large-property fee replaces the first step up
+    if (!land && pkg.large_fee != null) fee = Math.max(0, +pkg.large_fee + fee - +(home.find(o => +o.fee > 0)?.fee || fee));
+    if (fee > 0) { items.push({ name: `${land ? 'Land' : 'Home'} size: ${t.label}`, kind: 'fee', price: fee }); sizeMin = +(t.minutes || 0); }
+  } else if (t && !pkg && +t.photo_fee > 0) {
+    const ph = items.find(i => i.kind === 'addon' && /^photography$/i.test(i.name));
+    if (ph) { ph.price += +t.photo_fee; sizeMin = +(t.photo_minutes ?? 15); }
+  }
+  const large = !land && !!t && home.indexOf(t) > 0;
   const subtotal = items.reduce((t, i) => t + i.price, 0);
   const couponAmt = d.coupon ? cpOff(d.coupon, subtotal) : 0;
   const discount = Math.min(subtotal, Math.max(0, Number(d.discount) || 0) + couponAmt);
   const duration = d.custom ? (Number(d.customMin) || 60)
-    : ((pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + (large ? Number(set.large_minutes ?? 30) : 0)) || 60;
-  return { items, subtotal, discount, couponAmt, total: Math.round((subtotal - discount) * 100) / 100, duration, large, pkg, adds };
+    : ((pkg?.duration_min || 0) + adds.reduce((t, a) => t + (a.duration_min || 0), 0) + sizeMin) || 60;
+  return { items, subtotal, discount, couponAmt, total: Math.round((subtotal - discount) * 100) / 100, duration, large, pkg, adds, tier: t };
 }
 
 /* ----- Openings: working hours minus anything on your Google Calendar (all-day events block the whole day) ----- */
@@ -7708,7 +7744,8 @@ function renderOrderForm(){
               <input name="media_title" class="${d.mt_on ? '' : 'hidden'}" value="${esc(d.media_title || '')}" placeholder="e.g. Lot 12 · Smoky Ridge Estates" maxlength="120" style="margin-top:6px" /></div>
             <div><label>City</label><input name="city" value="${esc(d.city)}" placeholder="Knoxville" /></div>
             <div><label>Square feet</label><input name="sqft" type="number" min="0" inputmode="numeric" value="${esc(d.sqft)}" placeholder="2,400" /></div>
-            <div class="full"><p class="muted bk-hint" style="margin-top:0">Homes over ${Number(BK.settings?.large_sqft || 3500).toLocaleString()} sq ft add the ${money(BK.settings?.large_fee)} large property fee (includes extra photos).</p></div>
+            <div><label>Acres <span class="muted">(land)</span></label><input name="acres" type="number" min="0" step="any" inputmode="decimal" value="${esc(d.acres || '')}" placeholder="12" /></div>
+            <div class="full"><p class="muted bk-hint" style="margin-top:0">${esc((BK.settings?.sqft_options || []).filter(o => +o.fee > 0).map(o => `${o.label}: +${money(o.fee)}`).join(' · '))}${(BK.settings?.acre_options || []).some(o => +o.fee > 0) ? ' · Land ' + esc(BK.settings.acre_options.filter(o => +o.fee > 0).map(o => `${o.label}: +${money(o.fee)}`).join(' · ')) : ''}</p></div>
             <div><label>Occupied or vacant?</label><select name="occupancy">${opt([['Occupied','Occupied'],['Vacant','Vacant'],['Staged','Vacant, staged']], d.occupancy, '—')}</select></div>
             <div><label>How do we get in?</label><select name="entry">${opt([['Agent will meet','Agent will meet'],['Owner will be home','Owner will be home'],['Lockbox','Lockbox'],['Door code','Door code'],['Other','Other (see notes)']], d.entry, '—')}</select></div>
             <div class="full"><label>Access details</label><input name="access_notes" value="${esc(d.access_notes)}" placeholder="Lockbox / gate / door code, pets, parking…" /></div>
@@ -7735,11 +7772,11 @@ function renderOrderForm(){
   form.oninput = form.onchange = e => {
     const t = e.target;
     if (t.closest('#bkSummary') || t.closest('#bkPicker') || t.closest('#bkClientBox') || t.closest('#bkSvcBox') || t.closest('#bkNotify')) return;
-    if (['address','city','sqft','occupancy','entry','access_notes','notes','media_title'].includes(t.name)) d[t.name] = t.value;
+    if (['address','city','sqft','acres','occupancy','entry','access_notes','notes','media_title'].includes(t.name)) d[t.name] = t.value;
     if (t.name === 'mt_on') { d.mt_on = t.checked; const mi = form.querySelector('[name=media_title]'); mi.classList.toggle('hidden', !t.checked); if (t.checked) mi.focus(); }
     if (t.id === 'bkInvoice') { d.invoice = t.value; if (d.invoice !== 'yes') d.paid = false; $('#bkPaid').checked = d.paid; $('#bkPaidWrap').classList.toggle('hidden', d.invoice !== 'yes'); $('#bkInvHint').innerHTML = bkInvHint(d); }
     if (t.id === 'bkPaid') d.paid = t.checked;
-    if (t.name === 'sqft' && e.type === 'input') bkDurationChanged(); // only the summary changes; don't redraw the services under the user's finger
+    if ((t.name === 'sqft' || t.name === 'acres') && e.type === 'input') bkDurationChanged(); // only the summary changes; don't redraw the services under the user's finger
     bkPaintSummary();
   };
   form.onsubmit = e => { e.preventDefault(); bkSubmit(); };
@@ -8032,7 +8069,7 @@ async function bkSubmit(){
     }
     const start = d.pick.start, end = new Date(start.getTime() + q.duration * 60000);
     const row = { agent_id: agentId, client_name: d.newClient ? d.client.name.trim() : null, client_email: d.newClient ? d.client.email.trim() || null : null, client_phone: d.newClient ? d.client.phone.trim() || null : null,
-      address: d.address.trim(), media_title: d.mt_on && (d.media_title || '').trim() ? d.media_title.trim().slice(0, 120) : null, city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, large_property: q.large,
+      address: d.address.trim(), media_title: d.mt_on && (d.media_title || '').trim() ? d.media_title.trim().slice(0, 120) : null, city: d.city.trim() || null, sqft: d.sqft ? parseInt(d.sqft, 10) : null, sqft_label: q.tier?.label || null, large_property: q.large,
       occupancy: d.occupancy || null, entry: d.entry || null, access_notes: d.access_notes.trim() || null, notes: d.notes.trim() || null,
       items: q.items, subtotal: q.subtotal, discount: q.discount, total: q.total, coupon_id: d.coupon && q.couponAmt ? d.coupon.id : null, coupon_code: d.coupon && q.couponAmt ? d.coupon.code : null, coupon_discount: q.couponAmt || 0, invoice: d.invoice === 'yes', paid: d.invoice === 'yes' && d.paid, paid_at: d.invoice === 'yes' && d.paid ? new Date().toISOString() : null,
       order_page_id: [q.pkg, ...q.adds].some(x => x && bkPageItems(bkAgentPage(d)).some(i => i.svc.id === x.id)) ? bkAgentPage(d)?.id || null : null,
