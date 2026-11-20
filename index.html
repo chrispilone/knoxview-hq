@@ -115,6 +115,22 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0
 .om-lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:26px;cursor:pointer}
 .om-lb-nav.prev{left:8px}.om-lb-nav.next{right:8px}
 .om-lb-tip{font-size:12px;opacity:.6;text-align:center;padding:0 0 10px}
+/* Virtual Staging in the Media Library */
+.om-stg{position:relative;cursor:pointer;outline:2px dashed var(--accent);outline-offset:-2px;border-radius:8px}
+.om-stg img{opacity:.92}.om-stg.busy img{opacity:.45}
+.om-stg-tag{position:absolute;top:6px;left:6px;z-index:2;background:rgba(29,50,80,.88);color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px}
+.om-stg-spin{position:absolute;inset:0;display:grid;place-items:center;z-index:1}
+.oms-ask .oms-src{display:flex;align-items:center;gap:10px;margin:-6px 0 6px}.oms-ask .oms-src img{width:96px;height:64px;object-fit:cover;border-radius:6px;background:var(--panel-2)}
+.oms-ask .oms-src span{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oms-ask label{display:block;margin-top:10px}.oms-ask select,.oms-ask input,.oms-ask textarea{width:100%}.oms-ask .actions{align-items:center}
+.oms-pair{position:relative;display:grid;place-items:center;max-width:100%;max-height:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.oms-pair img{grid-area:1/1;max-width:100%;max-height:calc(100vh - 120px);object-fit:contain;border-radius:4px;background:#111;-webkit-touch-callout:none}
+.oms-before{opacity:0}.oms-before.show,.oms-pair.peek .oms-before{opacity:1}
+.oms-pair .sg-busy{border-radius:4px}
+.oms-lb .om-lb-top .oms-ok{background:#fff;color:#1d3250}.oms-lb .om-lb-top .btn svg{width:14px;height:14px;vertical-align:-2px}
+.oms-lb .om-lb-top .btn:disabled{opacity:.4}
+@media (max-width:640px){.oms-lb .om-lb-top{flex-wrap:wrap}.oms-lb .om-lb-name{flex-basis:100%;order:-1}}
+
 @media (max-width:640px){.om-lb-stage{padding:0 6px 12px}.om-lb-nav{display:none}.om-lb-tip{display:none}}
 .dv-plan .dv-pthumb{cursor:zoom-in}
 .om-roll .om-q{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-top:8px;cursor:pointer}
@@ -9104,6 +9120,7 @@ function omGallery(b){
   }).join('');
   omSelBar(b);
   omWireGrid(b, grid);
+  if (isSuperAdmin()) { if (b._stg === undefined) { b._stg = []; omsLoad(b).then(() => omsTiles(b)).catch(() => {}); } else omsTiles(b); }
 }
 function omPaintThumbs(b){
   document.querySelectorAll('#omGrid .om-tile').forEach(t => {
@@ -9238,6 +9255,212 @@ function omWireGrid(b, grid){
   grid.ondragleave = () => grid.classList.remove('dropping');
   grid.ondrop = e => { if (!e.dataTransfer?.files?.length) return; e.preventDefault(); grid.classList.remove('dropping'); omUploadPhotos(b, e.dataTransfer.files); };
 }
+/* ----- Virtual Staging from the Media Library -----
+   Enlarge a photo → Virtual Staging → pick style, room, comments → staged by the same pipeline as the Virtual Staging tab
+   (Claude writes the prompt, the image engine renders, Claude reviews and retries once). The staged photo waits as an
+   HQ-only tile at the end of the gallery (never on the client's download page) to Approve, Refresh or Deny. Approve adds it
+   right after its original as "<original>_Virtual_Staging.jpg" (an HQ upload, like photos uploaded here). Earlier approved
+   stagings of the same order are sent as references so rooms in one house match. */
+const OMS = { busy: {} };
+const omsBase = n => String(n || 'Photo').replace(/\.[^.]+$/, '');
+const omsName = n => `${omsBase(n)}_Virtual_Staging.jpg`;
+async function omsLoad(b){
+  b._stg = b._stg || [];
+  const { data: bt } = await sb.from('staging_batches').select('id').eq('booking_id', b.id);
+  const ids = (bt || []).map(x => x.id);
+  if (!ids.length) { b._stg = []; return; }
+  const { data } = await sb.from('staging_photos').select('*, staging_outputs(*)').in('batch_id', ids).order('created_at');
+  b._stg = (data || []).map(p => ({ ...p, outs: (p.staging_outputs || []).sort((a, z) => a.created_at.localeCompare(z.created_at)) }));
+  b._stg.forEach(p => delete p.staging_outputs);
+}
+const omsPending = b => (b._stg || []).filter(p => (p.outs.length || OMS.busy[p.id]) && !p.outs.some(o => o.approved));
+async function omsTiles(b){
+  const grid = $('#omGrid'); if (!grid || OMG.b !== b) return;
+  grid.querySelectorAll('.om-stg').forEach(t => t.remove());
+  const pend = omsPending(b); if (!pend.length) return;
+  let U = () => '';
+  try { U = await sgUrls(pend.flatMap(p => { const o = p.outs.at(-1); return [o ? (o.qc_path || o.path) : p.original_path]; })); } catch (_) {}
+  if (OMG.b !== b || !$('#omGrid')) return;
+  grid.insertAdjacentHTML('beforeend', pend.map(p => {
+    const o = p.outs.at(-1), busy = OMS.busy[p.id], src = U(o ? (o.qc_path || o.path) : p.original_path);
+    const flag = o?.qc && !o.qc.pass;
+    return `<div class="dbx-tile om-stg ${busy ? 'busy' : ''}" data-stg="${p.id}" title="Virtual Staging · only you see this until it's approved">
+      <span class="om-stg-tag">${busy ? 'Staging…' : o ? (flag ? 'Review flagged' : 'Ready to review') : 'Not staged'}</span>
+      ${src ? `<img src="${esc(src)}" alt="" draggable="false" loading="lazy" />` : '<div class="dbx-ph"></div>'}${busy ? '<span class="om-stg-spin"><span class="spin"></span></span>' : ''}
+      <small>${esc(omsName(p.file_name))}</small></div>`;
+  }).join(''));
+  grid.querySelectorAll('.om-stg').forEach(t => { t.onpointerdown = e => e.stopPropagation(); t.onclick = () => omsReview(b, t.dataset.stg); });
+}
+
+// 1. ask: style, room (Claude pre-fills), comments
+async function omsStart(b, f){
+  if (!f) return;
+  const st = SG.status || await sgCall({ action: 'status' }).catch(() => ({}));
+  SG.status = st;
+  if (!SG.presets.length) { const { data } = await sb.from('staging_presets').select('*').order('sort'); SG.presets = data || []; }
+  const presets = SG.presets.filter(p => p.active);
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div><div class="modal oms-ask"><h2>Virtual Staging</h2>
+    <div class="oms-src"><img id="omsImg" alt="" /><span class="muted">${esc(f.name)}</span></div>
+    <label>Style</label><select id="omsStyle">${presets.map((p, i) => `<option value="${p.id}" ${(b._stgPreset ? b._stgPreset === p.id : i === 0) ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+    <label>Room <small class="muted" id="omsGuess">Claude is looking at the photo…</small></label>
+    <select id="omsRoom"><option value="">Choose…</option>${SG_ROOMS.map(r => `<option>${r}</option>`).join('')}<option value="__other">Other…</option></select>
+    <input id="omsOther" class="hidden" placeholder="Type the room" />
+    <label>Comments <span class="muted">(optional)</span></label><textarea id="omsNotes" rows="2" placeholder="e.g. king bed facing the window, keep it light and airy"></textarea>
+    ${sgEngineReady(st) ? '' : `<p class="sg-note" style="margin:10px 0 0">The image engine isn't connected yet. <a href="#/settings/staging">Connect it</a> to stage.</p>`}
+    <div class="actions"><span class="muted sg-est">About ${sgMoney(sgPerPhoto(st))}</span><button class="btn" type="button" id="omsNo">Cancel</button><button class="btn primary" type="button" id="omsGo" disabled>Stage</button></div></div>`;
+  const l = omLink(b, f.name); if (l.view || l.thumb) $('#omsImg').src = l.thumb || l.view;
+  const room = $('#omsRoom'), other = $('#omsOther'), go = $('#omsGo');
+  const photo = { id: crypto.randomUUID(), batch_id: crypto.randomUUID(), ready: false, cancelled: false };
+  const pick = () => { other.classList.toggle('hidden', room.value !== '__other'); go.disabled = !(room.value && (room.value !== '__other' || other.value.trim())) || !photo.ready; };
+  room.onchange = () => { room.dataset.touched = '1'; pick(); if (room.value === '__other') other.focus(); };
+  other.oninput = pick;
+  $('#omsNo').onclick = async () => { closeLayer(); photo.cancelled = true; if (photo.ready) await sb.from('staging_batches').delete().eq('id', photo.batch_id); };
+  // upload the 2048px copy and let Claude guess the room while the form is open
+  (async () => {
+    try {
+      let src = l.view;
+      if (!src && f.src === 'upload') src = (await sb.storage.from('delivery').createSignedUrl(f.web_path || f.path, 600)).data?.signedUrl;
+      if (!src) { const g = await dbxCall('gallery', { bookingId: b.id }); omLinksSet(b, g.photos); src = omLink(b, f.name).view; }
+      if (!src) throw new Error('Couldn’t load this photo');
+      const j = await sgJpeg(src, 2048, 0.92);
+      const path = `in/${photo.batch_id}/01.jpg`;
+      await sgUpload(path, j.blob);
+      let e = (await sb.from('staging_batches').insert({ id: photo.batch_id, created_by: S.me.id, booking_id: b.id, title: `${b.address || 'Order'} · ${f.name}`, prompt_version: st.version || null })).error; if (e) throw e;
+      e = (await sb.from('staging_photos').insert({ id: photo.id, batch_id: photo.batch_id, file_name: f.name, original_path: path, width: j.w, height: j.h })).error; if (e) throw e;
+      photo.ready = true;
+      if (photo.cancelled) { await sb.from('staging_batches').delete().eq('id', photo.batch_id); return; }
+      pick();
+      const r = await sgCall({ action: 'analyze', photoId: photo.id });
+      if (!$('#omsRoom')) return;
+      $('#omsGuess').textContent = r.analysis?.stageable === false ? `Looks like a ${r.room_guess} that may not need staging` : 'Claude’s guess';
+      if (!room.dataset.touched && r.room_guess && r.room_guess !== 'Other') { room.value = r.room_guess; pick(); }
+    } catch (err) { if ($('#omsGuess')) { $('#omsGuess').textContent = err.message || 'Room detection failed, pick it yourself'; } pick(); }
+  })();
+  go.onclick = async () => {
+    const label = room.value === '__other' ? other.value.trim() : room.value, preset_id = $('#omsStyle').value || null, notes = $('#omsNotes').value.trim() || null;
+    closeLayer();
+    b._stgPreset = preset_id;
+    try {
+      await sb.from('staging_batches').update({ preset_id, notes }).eq('id', photo.batch_id);
+      await sb.from('staging_photos').update({ room_label: label }).eq('id', photo.id);
+    } catch (e) { return fail(e); }
+    const p = { id: photo.id, batch_id: photo.batch_id, file_name: f.name, room_label: label, original_path: `in/${photo.batch_id}/01.jpg`, outs: [] };
+    b._stg = [...(b._stg || []), p];
+    toast('Staging… it will appear at the end of the gallery');
+    omsRun(b, p);
+  };
+}
+
+// 2. stage (with this order's approved stagings as references), review, retry once if review fails
+async function omsRun(b, p, issues = [], retry = 0, allowOver = false){
+  OMS.busy[p.id] = true; omsTiles(b); omsPaintReview(b, p);
+  try {
+    const refs = (b._stg || []).filter(x => x.id !== p.id).map(x => x.outs.find(o => o.approved && o.qc_path)?.qc_path).filter(Boolean).slice(-2);
+    let r = await sgCall({ action: 'stage', photoId: p.id, refs, sameRoom: false, issues, allowOver });
+    if (r.needsOk) {
+      if (!confirm(`This month's staging budget is used (${sgMoney(r.spent)} of ${sgMoney(r.cap)}).\n\nStage this photo anyway?`)) throw new Error('Staging skipped: monthly budget reached');
+      return omsRun(b, p, issues, retry, true);
+    }
+    if (r.needsEngine) throw new Error('Connect the image engine in Settings → Virtual Staging to start staging');
+    const o = r.output; p.outs.push(o); p.view = p.outs.length - 1;
+    const url = (await sgUrls([o.path]))(o.path);
+    const q = await sgJpeg(url, 1024, 0.85);
+    o.qc_path = o.path.replace(/^out\//, 'qc/').replace(/\.\w+$/, '.jpg');
+    await sgUpload(o.qc_path, q.blob);
+    await sb.from('staging_outputs').update({ qc_path: o.qc_path }).eq('id', o.id);
+    const v = await sgCall({ action: 'qc', outputId: o.id }); o.qc = v.qc;
+    if (!v.qc.pass && retry < 1) return omsRun(b, p, v.qc.issues || [], retry + 1, allowOver);
+    toast(`${omsName(p.file_name)} is ready to review`);
+  } catch (e) { fail(e); }
+  delete OMS.busy[p.id]; omsTiles(b); omsPaintReview(b, p);
+}
+
+// 3. review: Approve / Refresh / Deny (hold the image to see the original)
+function omsReview(b, id){
+  const p = (b._stg || []).find(x => x.id === id); if (!p) return;
+  p.view = p.view ?? p.outs.length - 1;
+  document.querySelector('.om-lb')?.remove();
+  const el = document.createElement('div'); el.className = 'om-lb oms-lb'; el.dataset.stg = id; el.tabIndex = -1;
+  document.body.appendChild(el); document.body.style.overflow = 'hidden';
+  const close = () => { el.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', key, true); };
+  const key = e => { if (e.key === 'Escape') { e.preventDefault(); close(); } };
+  document.addEventListener('keydown', key, true);
+  el.onclick = async e => {
+    const a = e.target.closest('[data-a]')?.dataset.a;
+    if (a === 'x' || (!a && e.target === el)) return close();
+    const o = p.outs[p.view];
+    if (a === 'prev' || a === 'next') { p.view = Math.max(0, Math.min(p.outs.length - 1, p.view + (a === 'next' ? 1 : -1))); return omsPaintReview(b, p); }
+    if (a === 'redo') return omsRun(b, p);
+    if (a === 'deny') { if (!confirm('Deny this staging? The staged versions are deleted; the original photo stays.')) return; close(); return omsDeny(b, p); }
+    if (a === 'ok' && o) { close(); return omsApprove(b, p, o); }
+  };
+  omsPaintReview(b, p); el.focus();
+}
+async function omsPaintReview(b, p){
+  const el = document.querySelector(`.oms-lb[data-stg="${p.id}"]`); if (!el) return;
+  const k = Math.min(p.view ?? p.outs.length - 1, p.outs.length - 1), o = p.outs[k], busy = OMS.busy[p.id];
+  let U = () => '';
+  try { U = await sgUrls([p.original_path, ...(o ? [o.path] : [])]); } catch (_) {}
+  el.innerHTML = `<div class="om-lb-top"><span>${p.outs.length > 1 ? `<button type="button" class="btn small" data-a="prev" ${k <= 0 ? 'disabled' : ''}>‹</button> ${k + 1} / ${p.outs.length} <button type="button" class="btn small" data-a="next" ${k >= p.outs.length - 1 ? 'disabled' : ''}>›</button>` : ''}</span>
+      <span class="om-lb-name">${esc(omsName(p.file_name))} <span class="muted">· ${esc(p.room_label || '')} · only you see this</span></span>
+      <button type="button" class="btn small" data-a="redo" ${busy ? 'disabled' : ''} title="Stage it again">${SG_ICON.refresh} Refresh</button>
+      <button type="button" class="btn small" data-a="deny" ${busy ? 'disabled' : ''}>Deny</button>
+      <button type="button" class="btn small oms-ok" data-a="ok" ${busy || !o ? 'disabled' : ''}>${SG_ICON.check} Approve</button>
+      <button type="button" class="btn small" data-a="x" aria-label="Close">✕</button></div>
+    <div class="om-lb-stage"><div class="oms-pair">${o ? `<img class="oms-after" src="${esc(U(o.path))}" alt="Staged" />` : ''}<img class="oms-before ${o ? '' : 'show'}" src="${esc(U(p.original_path))}" alt="Original" />
+      ${busy ? '<div class="sg-busy"><span class="spin"></span>Claude is writing the prompt, staging and reviewing…</div>' : ''}</div></div>
+    <div class="om-lb-tip">${o?.qc && !o.qc.pass ? `Review flagged: ${esc((o.qc.issues || []).join('; '))} · ` : ''}Hold the photo to see the original · Esc to close</div>`;
+  const pair = el.querySelector('.oms-pair');
+  if (pair && o) { const on = () => pair.classList.add('peek'), off = () => pair.classList.remove('peek');
+    pair.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => pair.addEventListener(ev, off)); pair.oncontextmenu = ev => ev.preventDefault(); }
+}
+async function omsDeny(b, p){
+  try {
+    const paths = [p.original_path, ...p.outs.flatMap(o => [o.path, o.qc_path, o.approved_path])].filter(Boolean);
+    await sb.from('staging_outputs').update({ rating: -1 }).eq('photo_id', p.id); // counts as a thumbs-down before it goes
+    await sb.from('staging_batches').delete().eq('id', p.batch_id);
+    if (paths.length) await sb.storage.from('staging').remove(paths);
+  } catch (e) { return fail(e); }
+  b._stg = (b._stg || []).filter(x => x.id !== p.id);
+  omsTiles(b); toast('Staging denied');
+}
+// Approve: full-size JPEG → Media Library right after its original, as an HQ upload
+async function omsApprove(b, p, o){
+  toast('Adding it to the Media Library…');
+  const name = omsName(p.file_name), prevFirst = omFirstKey(b), obj = q => `${SUPABASE_URL}/storage/v1/object/delivery/${q}`;
+  try {
+    const finalPath = await sgFinalJpeg(o);
+    const url = (await sgUrls([finalPath]))(finalPath);
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], name, { type: 'image/jpeg' });
+    const base = `${b.id}/photos/${Date.now()}-${name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '-')}`;
+    const { error } = await sb.storage.from('delivery').upload(base, file, { contentType: 'image/jpeg', upsert: false }); if (error) throw error;
+    const item = { src: 'upload', name, path: base, url: obj(base), size: file.size, staged_from: p.file_name };
+    for (const [k, max] of [['preview', 1024], ['web', 2048]]) {
+      const small = await omResize(file, max); if (!small) break;
+      const sp = `${b.id}/photos/sizes/${base.split('/').pop().replace(/\.[^.]+$/, '')}-${k}.jpg`;
+      const up = await sb.storage.from('delivery').upload(sp, small, { contentType: 'image/jpeg', upsert: true });
+      if (!up.error) { item[k] = obj(sp); item[k + '_path'] = sp; }
+    }
+    const replaced = [];
+    await omMutate(b, d => {
+      const cur = (d.photo_files || []).filter(f => f && f.name);
+      const old = cur.findIndex(f => omLc(f.name) === omLc(name));
+      if (old >= 0) { if (cur[old].src === 'upload') replaced.push(cur[old]); cur.splice(old, 1); }
+      const at = cur.findIndex(f => f.name === p.file_name);
+      cur.splice(at >= 0 ? at + 1 : cur.length, 0, item);
+      return { photo_files: cur, photo_hidden: (d.photo_hidden || []).filter(n => omLc(n) !== omLc(name)) };
+    });
+    const gone = replaced.flatMap(omPaths); if (gone.length) await sb.storage.from('delivery').remove(gone);
+    await sb.from('staging_outputs').update({ approved: true, approved_path: finalPath, rating: o.rating ?? 1 }).eq('id', o.id);
+    Object.assign(o, { approved: true, approved_path: finalPath });
+    b._links?.photo?.delete(name);
+    await omUploadLinks(b, [item]);
+    toast(`${name} added next to ${p.file_name}`);
+  } catch (e) { fail(e); }
+  omGallery(b); omPaintCounts(b); omCoverCheck(b, prevFirst);
+}
+
 /* ----- viewer: click to enlarge, ← → to move, D to download the original, Esc to close ----- */
 function omViewer(items, i, opts = {}){
   if (!items.length) return;
@@ -9257,6 +9480,7 @@ function omViewer(items, i, opts = {}){
     const it = items[k], multi = items.length > 1;
     el.innerHTML = `<div class="om-lb-top"><span>${multi ? `${k + 1} / ${items.length}` : ''}</span><span class="om-lb-name" title="${esc(it.name)}">${esc(it.name)}${it.badge ? ` <span class="muted">· ${esc(it.badge)}</span>` : ''}</span>
         <button type="button" class="btn small" data-a="dl" title="Download the original (D)">${hqi('download')} Download</button>
+        ${opts.onStage && (it.view || it.thumb) ? `<button type="button" class="btn small" data-a="stg" title="Stage this room with furniture">Virtual Staging</button>` : ''}
         ${opts.onRemove ? `<button type="button" class="btn small" data-a="rm" title="Remove from the Media Library">Remove</button>` : ''}
         <button type="button" class="btn small" data-a="x" aria-label="Close" title="Close (Esc)">✕</button></div>
       <div class="om-lb-stage">${it.view || it.thumb ? `<img src="${esc(it.view || it.thumb)}" alt="${esc(it.name)}" />` : `<p>No preview for this file. Press D to download it.</p>`}
@@ -9272,6 +9496,7 @@ function omViewer(items, i, opts = {}){
     if (a === 'x' || (!a && (e.target === el || e.target.classList.contains('om-lb-stage')))) return close();
     if (a === 'prev') go(-1); else if (a === 'next') go(1); else if (a === 'dl') download();
     else if (a === 'rm') { const it = items[k]; close(); opts.onRemove(it); }
+    else if (a === 'stg') { const it = items[k]; close(); opts.onStage(it); }
   };
   let x0 = null; el.ontouchstart = e => { x0 = e.touches[0].clientX; };
   el.ontouchend = e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); };
@@ -9343,7 +9568,7 @@ async function omViewPhotos(b, i){
   if (list.some(f => f.src === 'upload' && !omLink(b, f.name).view)) await omUploadLinks(b, list.filter(f => f.src === 'upload'));
   omViewer(list.map(f => { const l = omLink(b, f.name); return { name: f.name, thumb: l.thumb, view: l.view, dl: l.dl, badge: f.src === 'upload' ? 'Uploaded in HQ' : 'Dropbox',
     getDl: f.src === 'upload' ? async () => (await sb.storage.from('delivery').createSignedUrl(f.path, 600, { download: f.name })).data?.signedUrl : null }; }), i,
-    { onRemove: it => omRemove(b, [it.name]) });
+    { onRemove: it => omRemove(b, [it.name]), onStage: isSuperAdmin() ? it => omsStart(b, omList(b).find(f => f.name === it.name)) : null });
 }
 // Smaller JPEG copies made in the browser: "preview" (1024px, thumbnails + watermarked previews) and "web" (2048px download)
 async function omResize(file, max){
