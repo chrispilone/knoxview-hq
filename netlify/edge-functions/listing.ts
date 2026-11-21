@@ -113,7 +113,7 @@ function renderCooper(d: any, o: { origin: string; base: string; preview?: strin
   const mapQ = encodeURIComponent(d.address.full);
   const lb = JSON.stringify({
     photos: photos.map(p => ({ s: img(p.u, 2048), m: img(p.u, 1280) })),
-    plans: (d.floorplans || []).filter((f: any) => !f.pdf).map((f: any) => ({ s: img(f.u, 2400), m: img(f.u, 1280), name: f.name })),
+    plans: (d.floorplans || []).filter((f: any) => !f.pdf).map((f: any) => ({ s: img(f.u, 2400), m: img(f.u, 1280) })),
   }).replace(/</g, '\\u003c');
   const shown = photos.slice(1, 9);
 
@@ -135,9 +135,9 @@ ${hero ? `<link rel="preload" as="image" imagesrcset="${esc(srcset(hero))}" imag
 <body class="tpl-cooper ${mls ? 'mls' : 'branded'}">
 ${d.preview ? '<div class="pv">Preview · only you can see this until the website is live</div>' : ''}
 <header class="top" id="top">
-  <div class="brand">${!mls && a?.logo ? `<img src="${esc(img(a.logo, 360))}" alt="${esc(a.brokerage || a.name || '')}">` : !mls && a ? `<span class="brand-t">${esc(a.team || a.brokerage || a.name)}</span>` : ''}</div>
+  <div class="brand">${!mls && a && !a.logo ? `<span class="brand-t">${esc(a.team || a.brokerage || a.name)}</span>` : ''}</div>
   <nav class="links">${nav.map(([k, l]) => `<a href="#${k}">${l}</a>`).join('')}</nav>
-  <div class="acts"><button class="ghost" data-share>${ic('share', 18)}<span>Share</span></button>${a ? `<a class="solid" href="#contact">Contact${a.name ? ' ' + esc(a.name.split(' ')[0]) : ''}</a>` : ''}</div>
+  <div class="acts"><button class="ghost" data-share>${ic('share', 18)}<span>Share</span></button>${a ? `<a class="solid" href="#contact">Contact${a.name ? ' ' + esc(a.name.split(' ')[0]) : ''}</a>` : ''}${!mls && a?.logo ? `<span class="logo"><img data-logo src="${esc(img(a.logo, 360))}" alt="${esc(a.brokerage || a.team || a.name || '')}"></span>` : ''}</div>
 </header>
 
 <section class="hero" aria-label="${esc(d.title)}">
@@ -189,8 +189,8 @@ ${d.tour ? `<section class="sec tour" id="tour"><div class="wrap">
 ${d.floorplans?.length ? `<section class="sec plans" id="plans"><div class="wrap">
   <div class="sec-h"><span class="kicker">Layout</span><h2>Floor Plans</h2></div>
   <div class="plangrid">${(() => { let k = 0; return d.floorplans.map((f: any) => f.pdf
-    ? `<a class="plan pdf" href="${esc(f.u)}" target="_blank" rel="noopener">${ic('plan', 34)}<span>${esc(f.name.replace(/\.[^.]+$/, ''))}</span><small>PDF</small></a>`
-    : `<button class="plan" data-plan="${k++}"><img loading="lazy" src="${esc(img(f.u, 1200))}" alt="${esc(f.name)}"><span>${esc(f.name.replace(/\.[^.]+$/, '').replace(new RegExp('^' + d.address.line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*-\\s*', 'i'), ''))}</span></button>`).join(''); })()}</div>
+    ? `<a class="plan pdf" href="${esc(f.u)}" target="_blank" rel="noopener">${ic('plan', 34)}<span>Floor Plan</span><small>PDF</small></a>`
+    : `<button class="plan" data-plan="${k++}"><img loading="lazy" src="${esc(img(f.u, 1200))}" alt="Floor plan ${k}"></button>`).join(''); })()}</div>
 </div></section>` : ''}
 
 <section class="sec location" id="location"><div class="wrap two">
@@ -253,7 +253,7 @@ function offPage(title: string, msg: string) {
 }
 
 const CSS = `
-:root{--ink:#14130f;--ink2:#1d1b16;--paper:#f6f3ec;--card:#fffdf8;--text:#1c1a15;--muted:#6f685b;--line:#e4ddcf;--gold:#b08d57;--gold2:#d8bd8a;--r:18px;--pad:clamp(20px,5vw,72px)}
+:root{--ink:#14130f;--ink2:#1d1b16;--paper:#f6f3ec;--card:#fffdf8;--text:#1c1a15;--muted:#6f685b;--line:#e4ddcf;--gold:#b08d57;--gold2:#d8bd8a;--on-gold:#14130f;--r:18px;--pad:clamp(20px,5vw,72px)}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:76px;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--text);font:16px/1.65 Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 img{display:block;max-width:100%}button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}a{color:inherit}
@@ -267,7 +267,8 @@ h2{font-size:clamp(32px,4.4vw,56px);line-height:1.04}
 .pv{position:fixed;z-index:60;left:50%;transform:translateX(-50%);top:10px;background:#ffd36b;color:#1c1a15;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 /* header over hero */
 .top{position:absolute;z-index:20;top:0;left:0;right:0;display:flex;align-items:center;gap:24px;padding:22px var(--pad);color:#fff}
-.brand{flex:1;min-width:0}.brand img{max-height:52px;max-width:220px;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(0,0,0,.35))}
+.brand{flex:1;min-width:0}
+.logo{display:inline-flex;align-items:center;height:56px;padding:8px 14px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.18)}.logo img{max-height:40px;max-width:180px;width:auto;object-fit:contain}
 .brand-t{font-family:Fraunces,serif;font-size:20px;letter-spacing:.02em}
 .links{display:flex;gap:26px;font-size:14px;letter-spacing:.04em}.links a{text-decoration:none;opacity:.88}.links a:hover{opacity:1}
 .acts{display:flex;gap:10px;flex:1;justify-content:flex-end}
@@ -339,7 +340,7 @@ h2{font-size:clamp(32px,4.4vw,56px);line-height:1.04}
 .map{border-radius:var(--r);overflow:hidden;aspect-ratio:4/3;background:#e7e1d4;border:1px solid var(--line)}.map iframe{width:100%;height:100%;border:0;filter:grayscale(.35) contrast(1.05)}
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 24px;border-radius:999px;font-weight:500;font-size:15px;text-decoration:none;transition:transform .2s,background .2s}
-.btn.line{border:1px solid currentColor}.btn.solid{background:var(--gold);color:#14130f}.btn.solid:hover{background:var(--gold2)}.btn.wide{width:100%}
+.btn.line{border:1px solid currentColor}.btn.solid{background:var(--gold);color:var(--on-gold)}.btn.solid:hover{filter:brightness(1.08)}.btn.wide{width:100%}
 .dark .btn.line{border-color:rgba(255,255,255,.35)}
 /* contact */
 .agent{display:flex;flex-direction:column;align-items:flex-start}.ag-photo{width:132px;height:132px;border-radius:50%;object-fit:cover;margin-bottom:28px;border:1px solid rgba(255,255,255,.2)}
@@ -375,7 +376,7 @@ h2{font-size:clamp(32px,4.4vw,56px);line-height:1.04}
 @media (max-width:1020px){.links{display:none}.two{grid-template-columns:1fr}.mosaic{grid-template-columns:repeat(2,1fr);grid-auto-rows:clamp(140px,30vw,260px)}}
 @media (max-width:760px){
   html{scroll-padding-top:64px}
-  .top{padding:16px 18px}.brand img{max-height:40px;max-width:150px}.ghost span{display:none}.ghost{width:42px;padding:0;justify-content:center}.acts .solid{display:none}
+  .top{padding:16px 18px}.logo{height:46px;padding:6px 10px}.logo img{max-height:34px;max-width:130px}.ghost span{display:none}.ghost{width:42px;padding:0;justify-content:center}.acts .solid{display:none}
   .hero{min-height:560px}.hero-in{padding:0 20px 34px}.hero h1{font-size:clamp(38px,11vw,56px)}
   .stats{display:grid;grid-template-columns:1fr 1fr;margin-top:20px}.stats li{padding:14px 10px 0 0;margin:0}.stats b{font-size:17px}
   .hero-cta{margin-top:22px}.pill{height:42px;padding:0 16px;font-size:13px}.scroll{display:none}
@@ -389,13 +390,30 @@ h2{font-size:clamp(32px,4.4vw,56px);line-height:1.04}
   .lb-stage{padding:56px 0}.lb-nav{display:none}.lb-stage img{border-radius:0}
   body.branded .dock{display:flex;position:fixed;z-index:40;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:rgba(20,19,15,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,.35);transform:translateY(140%);transition:transform .35s}
   body.branded .dock.on{transform:none}
-  .dock a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;border-radius:14px;color:#f3efe6;text-decoration:none;font-size:11px;letter-spacing:.06em}.dock a.hl{background:var(--gold);color:#14130f}
+  .dock a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;border-radius:14px;color:#f3efe6;text-decoration:none;font-size:11px;letter-spacing:.06em}.dock a.hl{background:var(--gold);color:var(--on-gold)}
   body.branded .foot{padding-bottom:110px}
 }
 `;
 
 const JS = `(function(){
 var L=window.__L,S=window.__S,$=function(s,r){return(r||document).querySelector(s)},$$=function(s,r){return[].slice.call((r||document).querySelectorAll(s))};
+/* brand color: the site's accent follows the agent's logo (its main color, skipping white/transparent), remembered per logo */
+(function(){var lg=$('[data-logo]');if(!lg)return;var key='kv_ac:'+lg.getAttribute('src');
+  function lum(c){return [c[0],c[1],c[2]].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)}).reduce(function(s,v,i){return s+v*[.2126,.7152,.0722][i]},0)}
+  function mix(c,t,a){return c.map(function(v,i){return Math.round(v+(t[i]-v)*a)})}
+  function hex(c){return '#'+c.map(function(v){return ('0'+v.toString(16)).slice(-2)}).join('')}
+  function apply(c){var r=document.documentElement.style,on=c.slice(),k=0;
+    while(lum(on)>.3&&k++<12)on=mix(on,[0,0,0],.12); /* readable as text on the light pages */
+    var lt=c.slice();k=0;while(lum(lt)<.32&&k++<12)lt=mix(lt,[255,255,255],.14); /* readable on the dark hero / contact */
+    r.setProperty('--gold',hex(on));r.setProperty('--gold2',hex(lt));r.setProperty('--on-gold',lum(on)>.4?'#14130f':'#ffffff');
+    var m=document.querySelector('meta[name=theme-color]');if(m)m.content=hex(on)}
+  try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c){apply(c);return}}catch(e){}
+  function read(){try{var w=64,h=Math.max(1,Math.round(w*lg.naturalHeight/lg.naturalWidth)),cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    var x=cv.getContext('2d');x.drawImage(lg,0,0,w,h);var p=x.getImageData(0,0,w,h).data,B={},best=null;
+    for(var i=0;i<p.length;i+=4){if(p[i+3]<200)continue;var r=p[i],g=p[i+1],b=p[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/510,s=mx===mn?0:(mx-mn)/(255-Math.abs(mx+mn-255));
+      if(l>.9)continue;var wt=s>.25&&l>.1&&l<.88?1+3*s:.15,k=(r>>4)+','+(g>>4)+','+(b>>4),o=B[k]||(B[k]={w:0,r:0,g:0,b:0,n:0});o.w+=wt;o.r+=r;o.g+=g;o.b+=b;o.n++;if(!best||o.w>best.w)best=o}
+    if(!best)return;var c=[Math.round(best.r/best.n),Math.round(best.g/best.n),Math.round(best.b/best.n)];apply(c);try{localStorage.setItem(key,JSON.stringify(c))}catch(e){}}catch(e){}}
+  if(lg.complete&&lg.naturalWidth)read();else lg.addEventListener('load',read)})();
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on')},2400)}
 /* stats: a view on every load, plus what people do (preview visits don't count) */
 var vid;try{vid=localStorage.getItem('kv_v')||(Math.random().toString(36).slice(2)+Date.now().toString(36));localStorage.setItem('kv_v',vid)}catch(e){vid=''}
@@ -426,7 +444,7 @@ $$('.vid').forEach(function(f){f.onclick=function(){if(f.querySelector('iframe')
 $$('.tourbox').forEach(function(t){t.onclick=function(){if(t.querySelector('iframe'))return;track('tour_open');var i=document.createElement('iframe');i.src=t.dataset.src;i.allow='fullscreen; xr-spatial-tracking; gyroscope; accelerometer';i.allowFullscreen=true;t.appendChild(i);var l=t.querySelector('.launch');if(l)l.remove()}});
 /* lightbox */
 var lb=$('#lb'),st=$('#lbs'),cnt=$('#lbn'),set=[],at=0,sx=0,sy=0;
-function show(){var it=set[at];st.innerHTML='<img alt="" src="'+(innerWidth<900?it.m:it.s)+'">';cnt.textContent=(at+1)+' / '+set.length+(it.name?'  ·  '+it.name.replace(/\\.[^.]+$/,''):'');
+function show(){var it=set[at];st.innerHTML='<img alt="" src="'+(innerWidth<900?it.m:it.s)+'">';cnt.textContent=(at+1)+' / '+set.length;
   [at+1,at-1].forEach(function(k){var n=set[(k+set.length)%set.length];if(n){var im=new Image();im.src=innerWidth<900?n.m:n.s}})}
 function open(list,i){set=list;at=i;lb.hidden=false;document.documentElement.style.overflow='hidden';show()}
 function close(){lb.hidden=true;st.innerHTML='';document.documentElement.style.overflow=''}
