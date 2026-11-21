@@ -684,6 +684,17 @@ table.list tr.row:hover td{background:var(--panel-2)}
 .pj-chk{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--border);border-radius:9px;margin:0 0 6px;font-weight:500;font-size:13.5px;text-transform:none;letter-spacing:0;color:var(--text);cursor:pointer}
 .pj-chk input{width:18px;height:18px;margin-top:1px;flex:none}.pj-chk.done span{color:var(--muted);text-decoration:line-through}
 .drawer.pj .task{background:var(--panel)}
+.pl-newfile{grid-column:1/-1;display:flex;align-items:center;gap:6px;border:1px dashed var(--border);border-radius:8px;padding:8px 10px;margin:6px 0 0;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);cursor:pointer;flex-basis:100%}.pl-newfile .hqi{width:15px;height:15px;flex:none}.pl-newfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-drop b{display:inline-flex;align-items:center;gap:6px}.pl-drop .hqi{width:16px;height:16px}
+.pl-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}.pl-files:empty{display:none}
+.pl-file{border:1px solid var(--border);border-radius:10px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
+.pl-thumb{border:0;padding:0;background:var(--panel-2);aspect-ratio:4/3;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pl-thumb img{width:100%;height:100%;object-fit:cover;display:block}.pl-thumb .ext{font-weight:700;font-size:13px;color:var(--muted)}
+.pl-fname{padding:6px 8px 0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl-fname small{display:block;font-weight:400;color:var(--muted)}
+.pl-facts{display:flex;justify-content:flex-end;gap:2px;padding:2px 4px 4px}.pl-facts .hqi{width:15px;height:15px}
+.pl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pl-chips:empty{display:none}
+.pl-chips span{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--sec-soft,var(--panel-2));color:var(--text)}
+@media (max-width:640px){.pl-files{grid-template-columns:repeat(2,1fr)}}
 .pj-revfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12.5px}
 .pj-rel{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .pj-relrow{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:10px;padding:4px 6px 4px 4px}
@@ -3104,6 +3115,7 @@ function openNewProject(media){
       <div class="extra-fields hidden">
         <input data-nums="${x.kind}" placeholder="Photo number(s), e.g. 001, 014" />
         <input data-details="${x.kind}" placeholder="${esc(x.detail || 'Details (optional)')}" />
+        ${x.kind === 'property_lines' ? `<label class="pl-newfile">${hqi('upload')} <span>Attach the property lines file (optional)</span><input type="file" data-plfile accept="${PL_ACCEPT}" multiple hidden /></label>` : ''}
       </div>
     </div>`).join('');
 
@@ -3165,6 +3177,7 @@ function openNewProject(media){
     </form>
   </div>`;
   $('#ov').onclick = closeLayer; $('#npCancel').onclick = closeLayer;
+  document.querySelectorAll('[data-plfile]').forEach(i => i.onchange = () => { i.previousElementSibling.textContent = i.files.length ? [...i.files].map(f => f.name).join(', ') : 'Attach the property lines file (optional)'; });
   document.querySelectorAll('[data-extra]').forEach(cb => cb.onchange = () => {
     const box = cb.closest('.extra');
     box.classList.toggle('on', cb.checked);
@@ -3212,8 +3225,14 @@ function openNewProject(media){
           photo_numbers: form.querySelector(`[data-nums="${x.kind}"]`).value.trim() || null,
           details: form.querySelector(`[data-details="${x.kind}"]`).value.trim() || null });
       });
-      const { error: tErr } = await sb.from('project_tasks').insert(tasks);
+      const { data: made, error: tErr } = await sb.from('project_tasks').insert(tasks).select('id, kind');
       if (tErr) fail(tErr);
+      const plIn = form.querySelector('[data-plfile]'), plT = (made || []).find(t => t.kind === 'property_lines');
+      if (plT && plIn?.files.length) {
+        toast('Uploading the property lines file…');
+        const files = await plUpload(data.id, [...plIn.files]);
+        if (files.length) { const { error: fErr } = await sb.from('project_tasks').update({ files }).eq('id', plT.id); if (fErr) fail(fErr); }
+      }
     }
     closeLayer(); await reloadProjects(); openProject(data.id); toast('Project created');
   };
@@ -3262,6 +3281,10 @@ async function openProject(id, keepScroll){
   const tasksDone = tl.filter(t => t.completed).length, openRevs = rl.filter(r => !r.resolved).length;
   const sop = pjSop(type?.sop), sopDone = new Set(Array.isArray(p.sop_done) ? p.sop_done : []), sopN = sop.steps.filter(s => sopDone.has(s)).length;
   const open = new Set(pjOpen()); if (openRevs) open.add('revs');
+  // Property Lines (photo projects): files + which photos get lines, kept on the Property Lines checklist item
+  const plTask = isVideo ? null : tl.find(t => t.kind === 'property_lines');
+  const plFiles = Array.isArray(plTask?.files) ? plTask.files : [], plN = plNums(plTask?.photo_numbers);
+  if (plTask) open.add('lines');
   const sec = (key, title, meta, body) => `<details class="ap-sec pj-sec" data-k="${key}" ${open.has(key) ? 'open' : ''}><summary><span class="ap-st">${title}</span>${meta ? `<span class="pj-meta">${meta}</span>` : ''}${OD_CHEV}</summary><div class="ap-body">${body}</div></details>`;
   const count = (n, of) => `<span class="pj-count ${of && n >= of ? 'done' : ''}">${of ? `${n}/${of}` : n}</span>`;
   const f = (name, extra = '') => `name="${name}" data-pf ${extra}`;
@@ -3315,6 +3338,18 @@ async function openProject(id, keepScroll){
         </div>
         ${agent && logosFor(agent.id).length ? `<label style="margin-top:12px">${esc(agent.full_name)} logos <span class="muted">· tap to download</span></label>
           <div class="logo-strip" id="dLogos">${logosFor(agent.id).map(l => `<a href="#" data-dl-logo="${l.id}" title="${esc(l.file_name)}">${isImageLogo(l) ? `<img data-logo-path="${esc(l.storage_path)}" alt="${esc(l.file_name)}" />` : `<span class="ext">.${esc(logoExt(l).toUpperCase())}</span>`}</a>`).join('')}</div>` : ''}`)}
+
+      ${isVideo ? '' : sec('lines', 'Property Lines', plTask ? esc([plFiles.length ? `${plFiles.length} file${plFiles.length === 1 ? '' : 's'}` : 'No file yet', plN.length ? `${plN.length} photo${plN.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ')) : 'Drop a boundary file', `
+        ${canEdit ? `<div class="dv-drop pl-drop" id="plDrop" tabindex="0" role="button" aria-label="Upload property line files">
+          <input type="file" id="plFile" accept="${PL_ACCEPT}" multiple hidden />
+          <b>${hqi('upload')} Drag the property lines file here</b> <span class="muted">or tap to choose · LandGlide screenshot, image or PDF · add as many as you need</span></div>` : ''}
+        <div class="pl-files" id="plFiles">${plFiles.map(f => plTile(f, canEdit)).join('')}</div>
+        <label>Photos that get property lines</label>
+        <input id="plNums" value="${esc(plTask?.photo_numbers || '')}" placeholder="Photo #s, e.g. 004, 012, 018" inputmode="numeric" ${canEdit ? '' : 'disabled'} />
+        <div class="pl-chips" id="plChips">${plN.map(n => `<span>Photo ${esc(n)}</span>`).join('')}</div>
+        <label>Notes for the editor</label>
+        <input id="plNotes" value="${esc(plTask?.details || '')}" placeholder="Line color, which lines to show, label the acreage…" ${canEdit ? '' : 'disabled'} />
+        <p class="muted bk-hint" style="margin:8px 0 0"><span id="plStat"></span>Saves on its own and shows on the Property Lines item in the checklist.</p>`)}
 
       ${sec('work', isVideo ? 'Tasks' : 'Editing Checklist', tl.length ? count(tasksDone, tl.length) : '', `
         <div id="taskList">${tl.map(taskHTML).join('') || `<p class="muted" style="margin:0 0 8px">${isVideo ? 'No tasks yet.' : 'No checklist items yet.'}</p>`}</div>
@@ -3426,11 +3461,72 @@ async function openProject(id, keepScroll){
     await reloadProjects(); reopen();
   };
   body.querySelectorAll('#taskList [data-del-task]').forEach(b => b.onclick = async () => {
-    if (!confirm('Remove this item?')) return;
+    const t = tl.find(x => x.id === b.dataset.delTask), nf = Array.isArray(t?.files) ? t.files.length : 0;
+    if (!confirm(nf ? `Remove this item and its ${nf} property line file${nf === 1 ? '' : 's'}?` : 'Remove this item?')) return;
     const { error } = await sb.from('project_tasks').delete().eq('id', b.dataset.delTask);
     if (error) return fail(error);
+    if (nf) sb.storage.from(PL_BUCKET).remove(t.files.map(f => f.path)).catch(() => {});
     await reloadProjects(); reopen();
   });
+
+  // Property Lines: drop files, note the photos; everything saves on its own to the Property Lines checklist item
+  if (!isVideo) {
+    const plSec = body.querySelector('.pj-sec[data-k=lines]');
+    const plSave = async patch => {   // creates the checklist item the first time
+      if (plTask) { const { error } = await sb.from('project_tasks').update(patch).eq('id', plTask.id); if (error) throw error; Object.assign(plTask, patch); return; }
+      const { error } = await sb.from('project_tasks').insert({ project_id: id, kind: 'property_lines', title: 'Property Lines', sort_order: tl.length, ...patch });
+      if (error) throw error;
+    };
+    const plDone = async msg => { if (dirty) await sb.from('projects').update(collect()).eq('id', id); toast(msg); await reloadProjects(); reopen(); };
+    // thumbnails
+    const imgs = [...body.querySelectorAll('[data-pl-img]')];
+    if (imgs.length) sb.storage.from(PL_BUCKET).createSignedUrls(imgs.map(i => i.dataset.plImg), 3600).then(({ data }) => (data || []).forEach((r, i) => { if (r.signedUrl) imgs[i].src = r.signedUrl; }));
+    body.querySelectorAll('[data-pl-open]').forEach(b => b.onclick = async () => { const w = window.open('', '_blank'); const u = await plSigned(b.dataset.plOpen); if (u && w) w.location = u; else if (w) w.close(); });
+    body.querySelectorAll('[data-pl-dl]').forEach(b => b.onclick = async () => { const f = plFiles.find(x => x.path === b.dataset.plDl); const u = await plSigned(f.path, f.name); if (u) location.href = u; });
+    body.querySelectorAll('[data-pl-rm]').forEach(b => b.onclick = async () => {
+      const f = plFiles.find(x => x.path === b.dataset.plRm); if (!f || !confirm(`Remove ${f.name}?`)) return;
+      try { await plSave({ files: plFiles.filter(x => x.path !== f.path) }); } catch (e) { return fail(e); }
+      sb.storage.from(PL_BUCKET).remove([f.path]).catch(() => {});
+      plDone('File removed');
+    });
+    // uploads: drop zone, tap to choose, or drag a file onto the closed section
+    const drop = $('#plDrop'), inp = $('#plFile');
+    const go = async list => {
+      if (!list?.length) return;
+      drop.classList.add('busy'); $('#plStat').textContent = `Uploading ${list.length} file${list.length === 1 ? '' : 's'}… `;
+      const added = await plUpload(id, list);
+      drop.classList.remove('busy'); $('#plStat').textContent = '';
+      if (!added.length) return;
+      const nums = $('#plNums').value.trim() || null, notes = $('#plNotes').value.trim() || null;
+      try { await plSave({ files: [...plFiles, ...added], photo_numbers: nums, details: notes }); } catch (e) { sb.storage.from(PL_BUCKET).remove(added.map(f => f.path)).catch(() => {}); return fail(e); }
+      plDone(`${added.length} file${added.length === 1 ? '' : 's'} added${nums ? '' : ' · now note which photos get lines'}`);
+      if (!nums) setTimeout(() => $('#plNums')?.focus(), 400);
+    };
+    if (drop) {
+      drop.onclick = () => inp.click();
+      drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+      inp.onchange = () => { const l = [...inp.files]; inp.value = ''; go(l); };
+      drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+      drop.ondragleave = () => drop.classList.remove('over');
+      drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); go([...e.dataTransfer.files]); };
+      plSec.addEventListener('dragover', e => { if (!plSec.open && [...(e.dataTransfer?.types || [])].includes('Files')) plSec.open = true; });
+    }
+    // which photos + notes: chips update as you type, save when you leave the field
+    const chips = () => { $('#plChips').innerHTML = plNums($('#plNums').value).map(n => `<span>Photo ${esc(n)}</span>`).join(''); };
+    $('#plNums').addEventListener('input', chips);
+    const saveField = (el, key) => el.addEventListener('change', async () => {
+      const v = el.value.trim() || null; if (v === ((plTask && plTask[key]) || null)) return;
+      if (!plTask && !v) return;
+      try { await plSave({ [key]: v }); } catch (e) { return fail(e); }
+      if (!plTask) return plDone('Property Lines added to the checklist');
+      $('#plStat').textContent = 'Saved. '; reloadProjects();
+      const tk = body.querySelector(`#taskList [data-id="${plTask.id}"]`)?.closest('.task');
+      if (tk) { const tmp = document.createElement('div'); tmp.innerHTML = taskHTML(plTask); tk.querySelector('.body').innerHTML = tmp.querySelector('.body').innerHTML; }
+      const m = plSec.querySelector('.pj-meta'), n = plNums(plTask.photo_numbers).length;
+      if (m) m.textContent = [plFiles.length ? `${plFiles.length} file${plFiles.length === 1 ? '' : 's'}` : 'No file yet', n ? `${n} photo${n === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+    });
+    saveField($('#plNums'), 'photo_numbers'); saveField($('#plNotes'), 'details');
+  }
 
   // SOP steps: tick saves right away
   body.querySelectorAll('[data-sop]').forEach(cb => cb.onchange = async () => {
@@ -3510,11 +3606,42 @@ function taskHTML(t){
       <div class="name">${esc(t.title || TASK_LABEL[t.kind])}</div>
       ${t.photo_numbers ? `<div class="sub">Photo #: ${esc(t.photo_numbers)}</div>` : ''}
       ${t.details ? `<div class="sub">${esc(t.details)}</div>` : ''}
+      ${t.files?.length ? `<div class="sub">${t.files.length} property line file${t.files.length === 1 ? '' : 's'} attached</div>` : ''}
       ${t.completed ? `<div class="sub">✓ ${esc(memberName(t.completed_by))} · ${esc(fmtDateTime(t.completed_at))}</div>` : ''}
     </div>
     <button class="btn small ghost" data-del-task="${t.id}" title="Remove">✕</button>
   </div>`;
 }
+/* ----- Property Lines files on a photo project -----
+   The boundary file(s) (LandGlide screenshot, image or PDF) live on the project's Property Lines checklist item
+   (project_tasks.files) in the private project-files bucket at <project_id>/property-lines/... */
+const PL_BUCKET = 'project-files';
+const PL_ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif,application/pdf';
+const plNums = s => String(s || '').split(/[,;\s]+/).map(x => x.trim()).filter(Boolean);
+async function plUpload(projectId, files){
+  const ok = [...files].filter(f => PL_ACCEPT.split(',').includes(f.type) || /\.(heic|heif)$/i.test(f.name));
+  if (ok.length < files.length) toast('Only images and PDFs can be added');
+  const out = [];
+  for (const f of ok) {
+    if (f.size > 50 * 1024 * 1024) { toast(`${f.name} is over 50 MB`); continue; }
+    const type = f.type || (/\.heif$/i.test(f.name) ? 'image/heif' : 'image/heic');
+    const path = `${projectId}/property-lines/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${f.name.replace(/[^\w.-]+/g, '-')}`;
+    const { error } = await sb.storage.from(PL_BUCKET).upload(path, f, { contentType: type, upsert: false });
+    if (error) { fail(error); continue; }
+    out.push({ path, name: f.name, type, size: f.size, by: S.me.id, at: new Date().toISOString() });
+  }
+  return out;
+}
+const plTile = (f, canEdit) => `<div class="pl-file" data-path="${esc(f.path)}">
+    <button type="button" class="pl-thumb" data-pl-open="${esc(f.path)}" title="Open ${esc(f.name)}">${/^image\/(jpeg|png|webp|gif)$/.test(f.type) ? `<img data-pl-img="${esc(f.path)}" alt="" />` : `<span class="ext">${esc((f.name.split('.').pop() || 'file').toUpperCase())}</span>`}</button>
+    <div class="pl-fname" title="${esc(f.name)}">${esc(f.name)}<small>${esc(memberName(f.by) || '')}${f.at ? ' · ' + esc(fmtShort(f.at)) : ''}</small></div>
+    <div class="pl-facts"><button type="button" class="btn small ghost" data-pl-dl="${esc(f.path)}" title="Download">${hqi('download')}</button>${canEdit ? `<button type="button" class="btn small ghost" data-pl-rm="${esc(f.path)}" title="Remove">✕</button>` : ''}</div>
+  </div>`;
+async function plSigned(path, download){
+  const { data, error } = await sb.storage.from(PL_BUCKET).createSignedUrl(path, 3600, download ? { download } : undefined);
+  if (error) { fail(error); return null; } return data.signedUrl;
+}
+
 function revHTML(r){
   return `<div class="rev ${r.resolved ? 'resolved' : ''}">
     <div class="h"><b>Round ${r.round}</b><span>${esc(memberName(r.requested_by))}</span><span>${esc(fmtDateTime(r.created_at))}</span>
