@@ -766,8 +766,8 @@ table.dir td.trunc{max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .dir-logo svg{width:16px;height:16px}
 .dir-logo.lg{width:40px;height:40px}
 .dir-acts{display:flex;gap:4px;justify-content:flex-end}
-.dir-acts button{width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:none;color:var(--sec);display:grid;place-items:center;cursor:pointer;padding:0}
-.dir-acts button:hover{background:var(--sec-soft);border-color:var(--border)}
+.dir-acts button,.dir-acts a{width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:none;color:var(--sec);display:grid;place-items:center;cursor:pointer;padding:0}
+.dir-acts button:hover,.dir-acts a:hover{background:var(--sec-soft);border-color:var(--border)}
 .dir-acts button:disabled{opacity:.4;cursor:default}
 .dir-acts svg{width:17px;height:17px}
 .dir-stack{display:flex;align-items:center}
@@ -1393,13 +1393,23 @@ tr.ord-x .ord-addr b,.ord-card.ord-x b{text-decoration:line-through}
 @media (max-width:760px){
   .ord-desk{display:none}
   .ord-cards{display:flex;flex-direction:column;gap:8px}
-  .ord-card{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;cursor:pointer}
-  .ord-card .ord-thumb{width:84px;height:64px}
-  .ord-cmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .ord-cmain b{font-weight:600;line-height:1.3}
-  .ord-cmain small{color:var(--muted);font-size:12.5px}
-  .ord-cfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
-  .ord-card .dir-acts{flex-direction:column;gap:2px}
+  .ord-card{display:flex;flex-direction:column;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px 8px 4px;cursor:pointer}
+  .oc-top{display:flex;gap:10px;align-items:flex-start}
+  .ord-card .ord-thumb{width:68px;height:52px}
+  .ord-cmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .ord-cmain b{font-weight:600;font-size:14px;line-height:1.25}
+  .ord-cmain b small{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .ord-cmain>small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ord-cfoot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:3px}
+  .ord-cfoot .status-pill{font-size:12px}
+  .ord-card .ord-ics{display:flex;gap:4px}
+  .ord-card .ord-ic{width:32px;height:32px}
+  .oc-acts{display:flex;border-top:1px solid var(--border);margin:0 -8px;padding:2px 4px 0}
+  .oc-acts>*{flex:1;min-width:0;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;color:var(--sec);font:inherit;font-size:10.5px;line-height:1.1;padding:2px 0;border-radius:8px;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent}
+  .oc-acts>*:active{background:var(--sec-soft)}
+  .oc-acts>*:disabled{opacity:.4}
+  .oc-acts svg{width:18px;height:18px}
+  .oc-acts span{white-space:nowrap}
   .ord-tabs{width:100%;overflow-x:auto}.ord-tabs button{white-space:nowrap}
   .ord-tools{margin-left:0;width:100%}.ord-tools .btn{flex:1}
   .modal.ord-ds{padding:16px}
@@ -7567,7 +7577,19 @@ function renderBookingList(){
   const shotIc = b => b.status === 'cancelled' ? '' : `<button type="button" class="ord-ic ${ordShotDone(b) ? 'shot' : 'unshot'}" data-shot="${b.id}" ${b.delivered_at ? 'disabled' : ''} title="${ordShotDone(b) ? 'Shoot completed' + (b.delivered_at ? '' : ' · click to undo') : 'Shoot not completed · click to mark complete'}" aria-label="${ordShotDone(b) ? 'Shoot completed' : 'Mark shoot complete'} for order ${ordNo(b)}">${hqi('camera')}</button>`;
   const icons = b => `${shotIc(b)}<span class="ord-ic ${b.delivered_at ? 'on' : ''}" title="${b.delivered_at ? 'Delivered ' + esc(fmtDateTime(b.delivered_at)) : 'Not delivered yet'}">${ORD_ICON.send}</span>
     <span class="ord-ic ${b.paid ? 'paid' : 'unpaid'}" title="${b.paid ? 'Paid' + (b.paid_at ? ' ' + esc(ordDate(b.paid_at, true)) : '') : 'Unpaid · ' + esc(money(b.total))}">${ORD_ICON.paid}</span>`;
-  const acts = b => `<div class="dir-acts"><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${ordNo(b)}">${DIR_ICON.edit}</button><button type="button" data-media="${b.id}" title="Media Library · ${esc(omSummary(b))}" aria-label="Media Library for order ${ordNo(b)}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${ordNo(b)}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${ordNo(b)}">${ORD_ICON.more}</button></div>`;
+  // Client download page for the order (same link the delivery email uses), plus copy-link
+  const dlUrl = b => b.public_token ? `${PORTAL_URL}/d/${b.public_token}` : `${PORTAL_URL}/#delivery/${b.id}`;
+  // Action order matches Spiro's listing card: Media Library (Spiro's "Property Website Editor"), Send delivery email,
+  // Manage (order overview), Download page + Copy link, then ⋮ for the rest
+  const acts = b => `<div class="dir-acts"><button type="button" data-media="${b.id}" title="Media Library · ${esc(omSummary(b))}" aria-label="Media Library for order ${ordNo(b)}">${ORD_ICON.media}</button><button type="button" data-send="${b.id}" title="Send delivery email" aria-label="Send delivery for order ${ordNo(b)}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}</button><button type="button" data-edit="${b.id}" title="Manage order" aria-label="Manage order ${ordNo(b)}">${DIR_ICON.edit}</button><a href="${esc(dlUrl(b))}" target="_blank" rel="noopener" title="Client download page" aria-label="Download page for order ${ordNo(b)}">${hqi('download')}</a><button type="button" data-copy="${b.id}" title="Copy download page link" aria-label="Copy download link for order ${ordNo(b)}">${hqi('link')}</button><button type="button" data-more="${b.id}" title="More" aria-label="More actions for order ${ordNo(b)}">${ORD_ICON.more}</button></div>`;
+  // Mobile card actions: icon over a short label, one row
+  const cActs = b => `<div class="oc-acts">
+    <button type="button" data-media="${b.id}">${ORD_ICON.media}<span>Media</span></button>
+    <button type="button" data-send="${b.id}" ${b.status === 'cancelled' ? 'disabled' : ''}>${ORD_ICON.mail}<span>Delivery</span></button>
+    <button type="button" data-edit="${b.id}">${DIR_ICON.edit}<span>Manage</span></button>
+    <a href="${esc(dlUrl(b))}" target="_blank" rel="noopener">${hqi('download')}<span>Download</span></a>
+    <button type="button" data-copy="${b.id}">${hqi('link')}<span>Copy link</span></button>
+    <button type="button" data-more="${b.id}" aria-label="More actions for order ${ordNo(b)}">${ORD_ICON.more}<span>More</span></button></div>`;
   const thumb = b => { const t = ordThumb(b); return `<span class="ord-thumb">${t ? `<img src="${esc(t)}" alt="" loading="lazy">` : ORD_ICON.house}</span>`; };
   const time = b => b.shoot_start ? fmtT(b.shoot_start) : '';
   $('#bookingsView').innerHTML = `
@@ -7595,19 +7617,20 @@ function renderBookingList(){
         <td><div class="ord-ics">${icons(b)}</div></td>
         <td>${acts(b)}</td></tr>`).join('')}</tbody></table></div>
       <div class="ord-cards">${page.map(b => `<div class="ord-card ${b.status === 'cancelled' ? 'ord-x' : ''}" data-id="${b.id}">
-        ${thumb(b)}
-        <div class="ord-cmain"><b>${esc(ordTitle(b))}</b><small>${esc(bkClient(b))}</small>
-          <small>${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'} · ${ordNo(b)}</small>
-          <div class="ord-cfoot">${ordPill(b)}<span class="ord-ics">${icons(b)}</span></div></div>
-        ${acts(b)}</div>`).join('')}</div>${pager}`
+        <div class="oc-top">${thumb(b)}
+          <div class="ord-cmain"><b>${esc(ordTitle(b))} <small>${esc([ordNo(b), bkPkgName(b)].filter(Boolean).join(' · '))}</small></b>
+            <small>${esc(bkClient(b))} · ${b.shoot_start ? esc(ordDate(b.shoot_start)) + ' · ' + esc(time(b)) : 'Not scheduled'}</small>
+            <div class="ord-cfoot">${ordPill(b)}<span class="ord-ics">${icons(b)}</span></div></div></div>
+        ${cActs(b)}</div>`).join('')}</div>${pager}`
       : `<div class="panel bk-empty"><p>${BK.list.length ? (q ? 'No orders match.' : 'Nothing here.') : 'No orders yet.'}</p>${BK.list.length ? '' : '<a class="btn primary" href="#/bookings/new">Place your first order</a>'}</div>`}`;
   const root = $('#bookingsView');
   $('#bkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; BK.tab = b.dataset.t; st.sort = ''; st.page = 0; renderBookingList(); };
   $('#bkSearch').oninput = e => { BK.q = e.target.value; st.page = 0; const pos = e.target.selectionStart; renderBookingList(); const i = $('#bkSearch'); i.focus(); i.setSelectionRange(pos, pos); };
-  root.querySelectorAll('tr[data-id], .ord-card[data-id]').forEach(el => el.onclick = e => { if (e.target.closest('button')) return; location.hash = `#/bookings/${el.dataset.id}`; });
+  root.querySelectorAll('tr[data-id], .ord-card[data-id]').forEach(el => el.onclick = e => { if (e.target.closest('button, a')) return; location.hash = `#/bookings/${el.dataset.id}`; });
   root.querySelectorAll('[data-edit]').forEach(x => x.onclick = () => { location.hash = `#/bookings/${x.dataset.edit}`; });
   root.querySelectorAll('[data-media]').forEach(x => x.onclick = () => { location.hash = `#/bookings/${x.dataset.media}/media`; });
   root.querySelectorAll('[data-send]').forEach(x => x.onclick = () => openDeliveryModal(x.dataset.send));
+  root.querySelectorAll('[data-copy]').forEach(x => x.onclick = e => { e.stopPropagation(); const u = dlUrl(BK.list.find(b => b.id === x.dataset.copy)); navigator.clipboard?.writeText(u).then(() => toast('Copied'), () => prompt('Download link', u)); });
   root.querySelectorAll('[data-shot]').forEach(x => x.onclick = async e => { e.stopPropagation(); const b = BK.list.find(o => o.id === x.dataset.shot); x.disabled = true; await ordSetShot(b, !ordShotDone(b)); renderBookingList(); });
   root.querySelectorAll('[data-more]').forEach(x => x.onclick = e => { e.stopPropagation(); ordMenu(x, BK.list.find(b => b.id === x.dataset.more)); });
   if (rows.length) wireDir(root, st, rows.length, renderBookingList);
