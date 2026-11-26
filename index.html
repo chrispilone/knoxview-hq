@@ -433,6 +433,25 @@ nav.tabs a.hidden{display:none}
 .side-foot .user-chip{padding:2px 14px 4px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .side-out{display:flex;align-items:center;gap:14px;border:none;background:none;min-height:44px;padding:10px 14px;border-radius:10px;color:var(--muted);font-weight:500;font-size:15px;text-align:left}
 .side-out:hover{background:var(--side-hover);color:var(--text)}
+.side-edit{font-size:13.5px;min-height:38px;padding:7px 14px}.side-edit svg{width:18px;height:18px}
+.ne-modal{width:min(520px,calc(100% - 24px))}
+.ne-list{max-height:min(58vh,560px);overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding:2px;overscroll-behavior:contain}
+.ne-item,.ne-fhead{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-weight:500;font-size:14.5px}
+.ne-item>svg:not(.x),.ne-fhead>svg{width:18px;height:18px;flex:none;color:var(--muted)}
+.ne-item small{margin-left:auto;color:var(--muted);font-weight:400;font-size:11.5px}.ne-item.ne-off .ne-l{color:var(--muted)}
+.ne-grip{display:grid;place-items:center;width:28px;height:28px;margin:-4px -2px -4px -4px;border-radius:6px;color:var(--muted);cursor:grab;touch-action:none;flex:none}.ne-grip svg{width:16px;height:16px}
+.ne-grip:hover{background:var(--panel-2);color:var(--text)}
+.ne-folder{display:flex;flex-direction:column;gap:5px;background:var(--panel-2);border-radius:11px;padding:5px}
+.ne-fhead{background:var(--accent-soft)}.ne-fname{flex:1;min-width:0;border:1px solid transparent;background:transparent;font:inherit;font-weight:600;padding:3px 6px;border-radius:6px}
+.ne-fname:hover,.ne-fname:focus{border-color:var(--border);background:var(--panel)}
+.ne-fdel{border:0;background:none;color:var(--muted);font-size:14px;width:28px;height:28px;border-radius:6px;cursor:pointer}.ne-fdel:hover{background:#fdecea;color:var(--danger)}
+.ne-kids{display:flex;flex-direction:column;gap:5px;padding-left:22px;min-height:8px}
+.ne-kids:empty{min-height:38px;border:1.5px dashed var(--border);border-radius:9px;margin-left:22px;padding:0}
+.ne-kids:empty::after{content:"Drag pages here";display:block;padding:9px 12px;color:var(--muted);font-size:12.5px}
+.ne-end{border:1.5px dashed var(--border);border-radius:9px;padding:8px 12px;color:var(--muted);font-size:12.5px;text-align:center}
+.ne-dragging{opacity:.55;outline:2px solid var(--accent);outline-offset:1px}
+body.ne-busy,body.ne-busy *{cursor:grabbing!important;user-select:none!important}
+.ne-new{display:flex;gap:8px;margin-top:12px}.ne-new input{flex:1;min-width:0}
 .side-out svg{width:21px;height:21px;flex:none}
 .side-scrim{display:none}
 .side-scrim.dragging{display:block;position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:39}
@@ -2063,6 +2082,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
       </div></div>
     </div>
     <div class="side-foot">
+      <button class="side-out side-edit" id="navEditBtn" title="Edit menu · reorder pages and make folders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span class="lbl">Edit menu</span></button>
       <button class="side-viewas lbl hidden" id="viewAsBtn">View as…</button>
       <span class="user-chip lbl" id="userChip"></span>
       <button class="side-out" id="signOut" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span class="lbl">Sign out</span></button>
@@ -2324,12 +2344,12 @@ const can = k => permFor(S.me, k);
 const BOOKINGS_ENABLED = true;
 const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' || v === 'tours' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelectorAll(`#tabs a[data-view=${v}]`).forEach(a => a.classList.toggle('hidden', !viewAllowed(v))));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents') && !viewAllowed('care'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
-  document.querySelectorAll('#projectsSub a[data-pv=photo], #projectsSub a[data-pv=video]').forEach(a => a.classList.toggle('hidden', !can(a.dataset.pv)));
-  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding') && !viewAllowed('tours')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects')); $('#projectsSub a[data-pv=all]')?.classList.toggle('hidden', !viewAllowed('projects'));
+  document.querySelectorAll('#tabs a[data-view=projects][data-pv=photo], #tabs a[data-view=projects][data-pv=video]').forEach(a => a.classList.toggle('hidden', !can(a.dataset.pv)));
+  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding') && !viewAllowed('tours')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects')); document.querySelector('#tabs a[data-view=projects][data-pv=all]:not(#projectsTop)')?.classList.toggle('hidden', !viewAllowed('projects')); navFolderVis();
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
   $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
   $('#newAgentBtn').classList.toggle('hidden', !can('manage_agents'));
@@ -2457,6 +2477,7 @@ async function boot(session){
   $('#userChip').textContent = `${S.me.full_name} · ${ROLE_LABEL[S.me.role]}`;
   paintPreviewChrome();
   await loadRoleAccess();
+  await loadNavLayout();
   applyAccess();
   show('app');
   await Promise.all([loadAll(), loadTasks(), loadCalStatus()]);
@@ -2715,21 +2736,177 @@ function route(){
   S.view = view;
   document.body.dataset.sec = ({ projects: ['photo','video'].includes(S.pview) ? S.pview : '', bookings: 'orders', branding: 'orders', orderpages: 'orders', agents: 'clients', companies: 'clients', hiring: 'hiring', calendar: 'calendar', finance: 'finance' })[view] || '';
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
-  if (NAV_GROUP[view]) navGroup(true, NAV_GROUP[view]);
-  document.querySelectorAll('#tabs .nav-group').forEach(t => t.classList.toggle('in', NAV_GROUP[view] === t.dataset.grp));
-  if (view === 'projects') document.querySelectorAll('#projectsSub a').forEach(a => a.classList.toggle('active', a.dataset.pv === S.pview));
+  const navG = navGroupOf(view); if (navG) navGroup(true, navG);
+  document.querySelectorAll('#tabs .nav-group').forEach(t => t.classList.toggle('in', navG === t.dataset.grp));
+  if (view === 'projects') document.querySelectorAll('#tabs a[data-view=projects]:not(#projectsTop)').forEach(a => a.classList.toggle('active', a.dataset.pv === S.pview));
   $('#projectsTop')?.classList.toggle('active', view === 'projects' && S.pview === 'all');
   document.querySelectorAll('header.top [data-top]').forEach(a => a.classList.toggle('on', a.dataset.top === view));
-  $('#companyTab')?.classList.toggle('hidden', !['finance','hiring','orderpages','team'].some(v => viewAllowed(v)));
-  $('#topTitle').textContent = view === 'projects' ? document.querySelector(`#projectsSub a[data-pv=${S.pview}] .lbl`)?.textContent || 'Projects' : document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || ({ chat: 'Chat', notifications: 'Notifications', mail: 'Mail' })[view] || '';
+  $('#companyTab')?.classList.toggle('hidden', !['finance','hiring','orderpages','team'].some(v => viewAllowed(v))); navFolderVis();
+  $('#topTitle').textContent = view === 'projects' ? document.querySelector(`#tabs a[data-view=projects][data-pv=${S.pview}]:not(#projectsTop) .lbl`)?.textContent || 'Projects' : document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || ({ chat: 'Chat', notifications: 'Notifications', mail: 'Mail' })[view] || '';
   document.body.classList.remove('menu-open');
   render();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', () => { if (S.me) route(); });
+/* ===================== MENU LAYOUT (per person, editable) =====================
+   The left menu is rebuilt from a layout: [{ t: 'item', k }, { t: 'folder', id, label, items: [k…] }].
+   Keys: the link's data-view (+ ':' + data-pv), 'projects-top' for the single Projects link.
+   Saved per signed-in person in nav_prefs (own row only). "Edit menu" at the bottom of the menu opens
+   the editor: drag to reorder (mouse or touch), drag into/out of folders, new/rename/delete folders, reset. */
+const NAV = { items: {}, def: null, icons: {}, layout: null };
+const FOLDER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>';
+const CHEV = '<svg class="chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const navKey = a => a.id === 'projectsTop' ? 'projects-top' : a.dataset.view + (a.dataset.pv ? ':' + a.dataset.pv : '');
+(function navCapture(){
+  const tabs = $('#tabs'); const lay = [];
+  for (const el of [...tabs.children]) {
+    if (el.matches('a[data-view]')) { NAV.items[navKey(el)] = el; lay.push({ t: 'item', k: navKey(el) }); }
+    else if (el.matches('button.nav-group')) {
+      const id = el.dataset.grp, sub = $(`#${id}Sub`);
+      NAV.icons[id] = el.querySelector('svg')?.outerHTML || FOLDER_ICON;
+      const items = [...sub.querySelectorAll('a[data-view]')].map(a => { NAV.items[navKey(a)] = a; return navKey(a); });
+      lay.push({ t: 'folder', id, label: el.querySelector('.lbl')?.textContent || 'Folder', items });
+    }
+  }
+  NAV.def = lay;
+})();
+const navLabel = k => NAV.items[k]?.querySelector('.lbl')?.textContent || k;
+function navNormalize(layout){
+  const seen = new Set(), out = [];
+  for (const e of Array.isArray(layout) ? layout : []) {
+    if (e?.t === 'item' && NAV.items[e.k] && !seen.has(e.k)) { seen.add(e.k); out.push({ t: 'item', k: e.k }); }
+    else if (e?.t === 'folder' && e.id) {
+      const items = (e.items || []).filter(k => NAV.items[k] && !seen.has(k)); items.forEach(k => seen.add(k));
+      out.push({ t: 'folder', id: String(e.id).replace(/[^\w-]/g, '') || 'f' + Date.now(), label: String(e.label || 'Folder').slice(0, 40), items });
+    }
+  }
+  // anything new since the layout was saved goes where it sits in the default menu
+  NAV.def.forEach((d, i) => (d.t === 'item' ? [d.k] : d.items).forEach(k => {
+    if (seen.has(k)) return; seen.add(k);
+    const f = d.t === 'folder' && out.find(x => x.t === 'folder' && x.id === d.id);
+    if (f) f.items.push(k); else out.splice(Math.min(i, out.length), 0, { t: 'item', k });
+  }));
+  return out;
+}
+function applyNavLayout(layout){
+  NAV.layout = navNormalize(layout || NAV.def);
+  const tabs = $('#tabs'); tabs.querySelectorAll('button.nav-group, .nav-sub').forEach(x => x.remove());
+  Object.values(NAV.items).forEach(a => a.remove());
+  for (const e of NAV.layout) {
+    if (e.t === 'item') { tabs.append(NAV.items[e.k]); continue; }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'nav-group'; b.id = `${e.id}Tab`; b.dataset.grp = e.id; b.title = e.label; b.setAttribute('aria-expanded', 'false');
+    b.innerHTML = `${NAV.icons[e.id] || FOLDER_ICON}<span class="lbl">${esc(e.label)}</span>${CHEV}`;
+    const sub = document.createElement('div'); sub.className = 'nav-sub'; sub.id = `${e.id}Sub`;
+    e.items.forEach(k => sub.append(NAV.items[k]));
+    tabs.append(b, sub);
+    b.onclick = () => navGroup(b.getAttribute('aria-expanded') !== 'true', e.id);
+    try { if (localStorage.getItem(`hq.${e.id}Open`)) navGroup(true, e.id); } catch (_) {}
+  }
+  navFolderVis();
+}
+function navFolderVis(){
+  document.querySelectorAll('#tabs button.nav-group').forEach(b => {
+    const sub = $(`#${b.dataset.grp}Sub`);
+    b.classList.toggle('hidden', !sub || ![...sub.querySelectorAll('a')].some(a => !a.classList.contains('hidden')));
+  });
+}
+// folder holding the link for the current page (none if that page's link sits at the top level)
+function navGroupOf(view){
+  const links = [...document.querySelectorAll(`#tabs a[data-view="${view}"]`)];
+  const a = view === 'projects' ? links.find(x => x.id !== 'projectsTop' && x.dataset.pv === S.pview) : links[0];
+  if (view === 'projects' && S.pview === 'all' && $('#projectsTop') && !$('#projectsTop').closest('.nav-sub')) return null;
+  return a?.closest('.nav-sub')?.id.replace(/Sub$/, '') || null;
+}
+async function loadNavLayout(){
+  try {
+    const { data } = await sb.from('nav_prefs').select('layout').eq('user_id', S.user.id).maybeSingle();
+    applyNavLayout(data?.layout || null);
+  } catch (e) { console.warn('menu layout', e); applyNavLayout(null); }
+}
+async function saveNavLayout(layout){
+  const r = layout ? await sb.from('nav_prefs').upsert({ user_id: S.user.id, layout, updated_at: new Date().toISOString() })
+                   : await sb.from('nav_prefs').delete().eq('user_id', S.user.id);
+  if (r.error) throw r.error;
+  applyNavLayout(layout); applyAccess(); if (S.me) route();
+}
+
+/* ----- Menu editor ----- */
+function openNavEditor(){
+  let draft = JSON.parse(JSON.stringify(NAV.layout || NAV.def));
+  document.body.style.overflow = 'hidden';
+  const row = k => { const a = NAV.items[k]; const off = a.classList.contains('hidden');
+    return `<div class="ne-item${off ? ' ne-off' : ''}" data-k="${esc(k)}"><span class="ne-grip" title="Drag to move">${GRIP}</span>${a.querySelector('svg')?.outerHTML || ''}<span class="ne-l">${esc(navLabel(k))}</span>${off ? '<small>not in your menu</small>' : ''}</div>`; };
+  const paint = () => {
+    $('#neList').innerHTML = draft.map(e => e.t === 'item' ? row(e.k)
+      : `<div class="ne-folder" data-f="${esc(e.id)}"><div class="ne-fhead"><span class="ne-grip" title="Drag to move the folder">${GRIP}</span>${NAV.icons[e.id] || FOLDER_ICON}
+          <input class="ne-fname" value="${esc(e.label)}" maxlength="40" aria-label="Folder name" /><button class="ne-fdel" title="Delete folder (its pages move out, nothing is removed)">✕</button></div>
+          <div class="ne-kids">${e.items.map(row).join('')}</div></div>`).join('') + '<div class="ne-end">Drop here to move to the bottom</div>';
+    $('#neList').querySelectorAll('.ne-fname').forEach(inp => inp.oninput = () => { const f = draft.find(x => x.id === inp.closest('.ne-folder').dataset.f); f.label = inp.value.trim() || 'Folder'; });
+    $('#neList').querySelectorAll('.ne-fdel').forEach(b => b.onclick = () => {
+      const id = b.closest('.ne-folder').dataset.f, i = draft.findIndex(x => x.id === id);
+      draft.splice(i, 1, ...draft[i].items.map(k => ({ t: 'item', k }))); paint();
+    });
+    $('#neList').querySelectorAll('.ne-grip').forEach(g => g.onpointerdown = e => neDrag(e, g.closest('.ne-item, .ne-folder')));
+  };
+  // read the order back out of the editor after a drag
+  const readBack = () => {
+    draft = [...$('#neList').children].filter(el => !el.classList.contains('ne-end')).map(el => el.classList.contains('ne-item')
+      ? { t: 'item', k: el.dataset.k }
+      : { ...draft.find(x => x.id === el.dataset.f), items: [...el.querySelectorAll('.ne-item')].map(x => x.dataset.k) });
+  };
+  function neDrag(ev, el){
+    ev.preventDefault();
+    const list = $('#neList'), isFolder = el.classList.contains('ne-folder');
+    el.classList.add('ne-dragging'); document.body.classList.add('ne-busy');
+    const move = e => {
+      const y = e.clientY, x = e.clientX;
+      // keep the list scrolling while dragging near its edges
+      const r = list.getBoundingClientRect(); if (y < r.top + 30) list.scrollTop -= 12; else if (y > r.bottom - 30) list.scrollTop += 12;
+      el.style.pointerEvents = 'none'; const over = document.elementFromPoint(x, y); el.style.pointerEvents = '';
+      if (!over || !list.contains(over) || el.contains(over)) return;
+      const end = over.closest('.ne-end');
+      if (end) { list.insertBefore(el, end); return; }
+      if (isFolder) { // folders only move at the top level
+        if (over === list) return; let top = over; while (top.parentElement && top.parentElement !== list) top = top.parentElement; if (top.parentElement !== list) return;
+        const b = top.getBoundingClientRect(); list.insertBefore(el, y < b.top + b.height / 2 ? top : top.nextSibling); return;
+      }
+      const head = over.closest('.ne-fhead');
+      if (head) { const f = head.parentElement, b = head.getBoundingClientRect();
+        if (y < b.top + b.height / 2) list.insertBefore(el, f); else f.querySelector('.ne-kids').prepend(el); return; }
+      const kids = over.closest('.ne-kids'), it = over.closest('.ne-item');
+      if (it) { const b = it.getBoundingClientRect(); it.parentElement.insertBefore(el, y < b.top + b.height / 2 ? it : it.nextSibling); return; }
+      if (kids && !kids.children.length) kids.append(el);
+    };
+    const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      el.classList.remove('ne-dragging'); document.body.classList.remove('ne-busy'); readBack(); paint(); };
+    document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  }
+  $('#layer').innerHTML = `<div class="overlay" id="ov"></div>
+  <div class="modal ne-modal"><h2>Edit menu</h2>
+    <p class="muted" style="margin:-8px 0 12px;font-size:13px">Drag the handles to reorder. Drop a page onto a folder to put it inside, or above a folder to take it out. Your layout is saved to your account, so it's the same on your phone and computer.</p>
+    <div class="ne-list" id="neList"></div>
+    <div class="ne-new"><input id="neNewName" placeholder="New folder name" maxlength="40" /><button class="btn" id="neNew">+ New folder</button></div>
+    <div class="actions"><button class="btn" id="neReset" style="margin-right:auto">Reset to default</button><button class="btn" id="neCancel">Cancel</button><button class="btn primary" id="neSave">Save</button></div></div>`;
+  paint();
+  $('#ov').onclick = closeLayer; $('#neCancel').onclick = closeLayer;
+  const addFolder = () => { const n = $('#neNewName').value.trim(); if (!n) { $('#neNewName').focus(); return toast('Type a name for the folder'); }
+    draft.push({ t: 'folder', id: 'f' + Date.now().toString(36), label: n, items: [] }); $('#neNewName').value = ''; paint();
+    const l = $('#neList'); l.scrollTop = l.scrollHeight; toast('Folder added at the bottom · drag pages into it'); };
+  $('#neNew').onclick = addFolder; $('#neNewName').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addFolder(); } };
+  $('#neReset').onclick = () => { draft = JSON.parse(JSON.stringify(NAV.def)); paint(); toast('Back to the default menu · press Save to keep it'); };
+  $('#neSave').onclick = async () => {
+    const btn = $('#neSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    const isDef = JSON.stringify(navNormalize(draft)) === JSON.stringify(navNormalize(NAV.def));
+    try { await saveNavLayout(isDef ? null : draft); closeLayer(); toast('Menu saved'); }
+    catch (e) { btn.disabled = false; btn.textContent = 'Save'; fail(e); }
+  };
+}
+const GRIP = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+$('#navEditBtn').onclick = () => { document.body.classList.remove('menu-open'); openNavEditor(); };
+
 function navGroup(open, g = 'clients'){ const t = $(`#${g}Tab`), s = $(`#${g}Sub`); if (!t) return; t.setAttribute('aria-expanded', open); s.classList.toggle('open', open); try { localStorage.setItem(`hq.${g}Open`, open ? '1' : ''); } catch (_) {} }
 document.querySelectorAll('#tabs .nav-group').forEach(t => { const g = t.dataset.grp; t.onclick = () => navGroup(t.getAttribute('aria-expanded') !== 'true', g); try { if (localStorage.getItem(`hq.${g}Open`)) navGroup(true, g); } catch (_) {} });
-const NAV_GROUP = { agents: 'clients', companies: 'clients', care: 'clients', projects: 'projects', staging: 'projects', branding: 'projects', tours: 'projects', finance: 'company', hiring: 'company', orderpages: 'company', team: 'company' };
 const goProjects = m => { location.hash = `#/projects/${m}`; };
 // Which projects a Projects page shows: all / photo / video / custom (project type named "Custom…")
 const inPView = p => S.pview === 'custom' ? /custom/i.test(typeName(p.project_type_id)) && can(p.media) : S.pview === 'photo' || S.pview === 'video' ? p.media === S.pview : can(p.media);
