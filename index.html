@@ -6430,7 +6430,7 @@ function openCalForm({ kind = 'event', start, ev } = {}){
    Tables: booking_services (packages + add-ons, editable), booking_settings (hours, buffer, large-property fee),
    bookings (one row per order). Placing an order can also put the shoot on your Google Calendar and create the
    Photo/Video projects. Built so a public version (book.knoxview.com) can reuse the same catalog and openings rules. */
-const BK = { services:[], settings:null, list:[], loaded:false, tab:'upcoming', q:'', draft:null, busy:null, busyAt:0 };
+const BK = { services:[], settings:null, list:[], loaded:false, tab:'all', q:'', draft:null, busy:null, busyAt:0 };
 const BK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const money = n => { const v = Number(n || 0); return '$' + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
 const bkSvc = id => BK.services.find(s => s.id === id);
@@ -7862,17 +7862,17 @@ async function ordSetShot(b, done){
 const ordPill = b => b.status !== 'cancelled' && b.delivered_at ? `<span class="status-pill"><span class="dot" style="background:var(--s-delivered)"></span>Delivered</span>` : bkPill(b.status);
 const ordDate = (d, yr) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: yr || new Date(d).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined }) : '';
 const ORD_TABS = [
+  ['all', 'All', () => true],
   ['upcoming', 'Upcoming', (b, now) => b.status !== 'cancelled' && b.status !== 'completed' && (!b.shoot_start || b.shoot_end >= now)],
   ['deliver', 'To deliver', (b, now) => b.status !== 'cancelled' && !b.delivered_at && (b.status === 'completed' || (b.shoot_end && b.shoot_end < now))],
   ['unpaid', 'Unpaid', b => b.status !== 'cancelled' && !b.paid && b.invoice !== false],
   ['delivered', 'Delivered', b => b.status !== 'cancelled' && !!b.delivered_at],
   ['cancelled', 'Cancelled', b => b.status === 'cancelled'],
-  ['all', 'All', () => true],
 ];
 BK.dir = BK.dir || { sort: '', dir: 1, page: 0, size: 50 };
 function renderBookingList(){
   const now = new Date().toISOString(), q = BK.q.toLowerCase().trim(), st = BK.dir;
-  if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'upcoming';
+  if (!ORD_TABS.find(t => t[0] === BK.tab)) BK.tab = 'all';
   const tabFn = ORD_TABS.find(t => t[0] === BK.tab)[2];
   const count = k => BK.list.filter(b => !isBrand(b) && ORD_TABS.find(t => t[0] === k)[2](b, now)).length;
   const rows = BK.list.filter(b => !isBrand(b) && tabFn(b, now)).filter(b => !q || [b.address, b.media_title, b.city, b.zip, bkClient(b), b.client_email, bkPkgName(b), b.order_no, '#' + b.number, String(b.number)].join(' ').toLowerCase().includes(q));
