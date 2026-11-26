@@ -531,6 +531,27 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(165px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
 .col{background:var(--panel-2);border-radius:var(--radius);border-top:3px solid var(--c,var(--border));padding:10px;min-height:200px;display:flex;flex-direction:column}
 .col.drag-over{outline:2px dashed var(--accent)}
+.met-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
+.met-month{display:flex;align-items:center;gap:6px}.met-month input{width:170px}
+.met-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.met-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.met-card h3{margin:0 0 2px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.met-i{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:10px;font-style:italic;font-family:Georgia,serif;cursor:help;margin-left:auto}
+.met-cell{background:var(--panel-2);border-radius:9px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 10px}
+.met-cell small{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.03em}.met-cell b{font-size:20px;text-align:right;font-variant-numeric:tabular-nums}
+.met-d{grid-column:1/-1;text-align:right;font-size:12px;color:var(--muted)}.met-d.up{color:#1e8e5a}.met-d.down{color:var(--danger)}
+.met-chart{margin-bottom:14px}.met-chead select{width:auto;min-width:0}.met-chead{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px}
+.met-legend{display:flex;gap:18px;font-size:12.5px;color:var(--muted);margin:2px 0 6px}.met-legend i,.met-tip i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.met-plot{position:relative}.met-plot svg{width:100%;height:300px;display:block}
+.met-ax{font-size:11px;fill:var(--muted)}
+.met-tip{position:absolute;top:8px;min-width:180px;background:var(--panel);border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow);padding:8px 10px;font-size:12.5px;pointer-events:none}
+.met-tip b{display:block;margin-bottom:4px}.met-tip div{display:flex;align-items:center;gap:2px;color:var(--muted)}.met-tip span{margin-left:auto;padding-left:12px;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.met-rhead{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:22px 0 12px}.met-rhead h2{margin:0;font-size:20px}
+.met-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:14px}
+.met-tbl h2{display:flex;align-items:center;gap:8px}.met-scroll{overflow-x:auto}
+.met-tbl table{width:100%;border-collapse:collapse;font-size:13.5px}.met-tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.met-tbl td{padding:7px 8px;border-bottom:1px solid var(--border);white-space:nowrap}.met-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:700px){.met-plot svg{height:220px}.met-cell b{font-size:18px}}
 .tour-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.tour-tools input[type=search]{width:190px}
 .tour-zbox{display:flex;gap:8px;margin:-4px 0 14px}.tour-zbox input{flex:1;max-width:560px}
 .tour-board{grid-auto-columns:minmax(230px,1fr)}
@@ -2066,6 +2087,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
       <button type="button" class="nav-group" id="companyTab" data-grp="company" title="My Company" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-5h6v5M4 20h16"/></svg><span class="lbl">My Company</span><svg class="chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="nav-sub" id="companySub">
         <a href="#/finance" data-view="finance" title="Finance" id="financeTab" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">Finance</span></a>
+        <a href="#/metrics" data-view="metrics" title="Metrics &amp; Reports · revenue, jobs and clients from HQ orders" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6M20 16v-9"/></svg><span class="lbl">Metrics &amp; Reports</span></a>
         <a href="#/hiring" data-view="hiring" title="Hiring" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.6 6.5-5.6 1.3 0 2.5.3 3.5 1"/><path d="M18 14v6M15 17h6"/></svg><span class="lbl">Hiring</span><span class="badge hidden" id="hiringBadge"></span></a>
         <a href="#/orderpages" data-view="orderpages" title="Order pages · custom order pages for agents" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13h8M8 16.5h5"/></svg><span class="lbl">Order Pages</span></a>
         <a href="#/team" data-view="team" title="Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg><span class="lbl">Team</span></a>
@@ -2175,6 +2197,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
     <div id="careView" class="hidden"></div>
     <div id="stagingView" class="hidden"></div>
     <div id="toursView" class="hidden"></div>
+    <div id="metricsView" class="hidden"></div>
     <div id="settingsView" class="hidden"></div>
     <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
@@ -2342,9 +2365,9 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' || v === 'tours' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' || v === 'tours' || v === 'metrics' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelectorAll(`#tabs a[data-view=${v}]`).forEach(a => a.classList.toggle('hidden', !viewAllowed(v))));
+  ['tasks','mail','calendar','care','staging','bookings','branding','tours','metrics','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelectorAll(`#tabs a[data-view=${v}]`).forEach(a => a.classList.toggle('hidden', !viewAllowed(v))));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents') && !viewAllowed('care'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
@@ -2719,7 +2742,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','care','staging','bookings','branding','tours','metrics','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2741,7 +2764,7 @@ function route(){
   if (view === 'projects') document.querySelectorAll('#tabs a[data-view=projects]:not(#projectsTop)').forEach(a => a.classList.toggle('active', a.dataset.pv === S.pview));
   $('#projectsTop')?.classList.toggle('active', view === 'projects' && S.pview === 'all');
   document.querySelectorAll('header.top [data-top]').forEach(a => a.classList.toggle('on', a.dataset.top === view));
-  $('#companyTab')?.classList.toggle('hidden', !['finance','hiring','orderpages','team'].some(v => viewAllowed(v))); navFolderVis();
+  $('#companyTab')?.classList.toggle('hidden', !['finance','metrics','hiring','orderpages','team'].some(v => viewAllowed(v))); navFolderVis();
   $('#topTitle').textContent = view === 'projects' ? document.querySelector(`#tabs a[data-view=projects][data-pv=${S.pview}]:not(#projectsTop) .lbl`)?.textContent || 'Projects' : document.querySelector(`#tabs a[data-view=${view}] .lbl`)?.textContent || ({ chat: 'Chat', notifications: 'Notifications', mail: 'Mail' })[view] || '';
   document.body.classList.remove('menu-open');
   render();
@@ -2939,6 +2962,8 @@ function render(){
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#careView').classList.toggle('hidden', S.view !== 'care');
   if (S.view === 'care') renderCare(); else if (typeof careSheetClose === 'function' && CARE.sheet != null) careSheetClose();
+  $('#metricsView').classList.toggle('hidden', S.view !== 'metrics');
+  if (S.view === 'metrics') renderMetrics();
   $('#toursView').classList.toggle('hidden', S.view !== 'tours');
   if (S.view === 'tours') renderTours();
   $('#stagingView').classList.toggle('hidden', S.view !== 'staging');
@@ -3076,6 +3101,179 @@ function renderTours(){
       if (to !== 'linked' && to !== 'archived' && t.booking.tour_url) return toast('This tour already has a link. Use Change link, or clear it in the Media Library');
       setStatus([t.id], to);
     };
+  });
+}
+
+/* ----- Metrics & Reports (My Company → Metrics & Reports, #/metrics). Super admins only.
+   Built from HQ orders (bookings), cancelled orders left out. Order date = shoot date (order date if no shoot).
+   Revenue = order totals by order date · Cash collected = paid orders by paid date · Jobs = orders.
+   New clients = agents whose first-ever HQ order falls in the period. ----- */
+const MET = { rows: null, month: null, chart: 'month', cmp: 'prev', metric: 'rev', kind: 'all', range: 'ytd', loading: false };
+const MET_C = { cur: '#2f6fb5', prev: '#c8701e' };
+const metMoney = (n, d = 0) => '$' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const metDay = b => new Date(b.shoot_start || b.created_at);
+async function metLoad(){
+  MET.loading = true;
+  const { data, error } = await sb.from('bookings').select('id, number, order_no, kind, status, agent_id, client_name, total, paid, paid_at, shoot_start, created_at, city, items, cancelled_at')
+    .order('created_at').limit(10000);
+  MET.loading = false;
+  if (error) throw error;
+  MET.rows = (data || []).filter(b => b.status !== 'cancelled' && !b.cancelled_at).map(b => ({ ...b, d: metDay(b), pd: b.paid_at ? new Date(b.paid_at) : null, amt: Number(b.total) || 0 }));
+  MET.first = {}; // first order date per client
+  MET.rows.forEach(b => { const k = b.agent_id || 'n:' + (b.client_name || '').toLowerCase(); if (!MET.first[k] || b.d < MET.first[k]) MET.first[k] = b.d; });
+  MET.loadedAt = new Date();
+}
+const metKey = b => b.agent_id || 'n:' + (b.client_name || '').toLowerCase();
+const metName = b => agentName(b.agent_id) || b.client_name || 'No client';
+function metStats(from, to){
+  const rows = MET.rows.filter(b => (MET.kind === 'all' || (MET.kind === 'branding') === (b.kind === 'branding')));
+  const inR = d => d && d >= from && d < to;
+  const jobs = rows.filter(b => inR(b.d)), cash = rows.filter(b => b.paid && inR(b.pd || b.d));
+  const rev = jobs.reduce((s, b) => s + b.amt, 0), clients = new Set(jobs.map(metKey));
+  const newC = [...clients].filter(k => inR(MET.first[k])).length;
+  return { jobs, rev, cash: cash.reduce((s, b) => s + b.amt, 0), n: jobs.length, aov: jobs.length ? rev / jobs.length : 0,
+    clients: clients.size, newC, rpc: clients.size ? rev / clients.size : 0, unpaid: jobs.filter(b => !b.paid).reduce((s, b) => s + b.amt, 0), unpaidN: jobs.filter(b => !b.paid).length };
+}
+function metRanges(){
+  const [y, m] = MET.month.split('-').map(Number), now = new Date();
+  const mStart = new Date(y, m - 1, 1), mEnd = new Date(y, m, 1);
+  const cur = now >= mStart && now < mEnd, end = cur ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) : mEnd;
+  const days = Math.round((end - mStart) / 864e5);
+  const pStart = new Date(y, m - 2, 1), pEnd = cur ? new Date(y, m - 2, Math.min(days, new Date(y, m - 1, 0).getDate()) + 1) : mStart;
+  return { y, m, cur, mtd: [mStart, end], prevMtd: [pStart, pEnd], ytd: [new Date(y, 0, 1), end], prevYtd: [new Date(y - 1, 0, 1), new Date(y - 1, end.getMonth(), end.getDate())] };
+}
+function metDelta(a, b, money){
+  if (!b && !a) return '<span class="met-d">no change</span>';
+  if (!b) return '<span class="met-d up">new</span>';
+  const p = Math.round((a - b) / Math.abs(b) * 100);
+  return `<span class="met-d ${p > 0 ? 'up' : p < 0 ? 'down' : ''}" title="Compared with ${money ? metMoney(b) : b}">${p > 0 ? '▲' : p < 0 ? '▼' : ''} ${Math.abs(p)}%</span>`;
+}
+function metChart(){
+  const R = metRanges(), key = MET.metric, val = (from, to) => { const s = metStats(from, to); return key === 'rev' ? s.rev : key === 'cash' ? s.cash : s.n; };
+  const mon = (yy, mm) => new Date(yy, mm, 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+  let cats = [], curName, prevName;
+  if (MET.chart === 'month') {
+    const py = MET.cmp === 'prev' ? (R.m === 1 ? R.y - 1 : R.y) : R.y - 1, pm = MET.cmp === 'prev' ? (R.m + 10) % 12 : R.m - 1;
+    const nd = new Date(R.y, R.m, 0).getDate(), pnd = new Date(py, pm + 1, 0).getDate();
+    curName = mon(R.y, R.m - 1); prevName = mon(py, pm);
+    for (let d = 1; d <= Math.max(nd, pnd); d++) cats.push({ l: String(d).padStart(2, '0'), t: d,
+      a: d <= nd && new Date(R.y, R.m - 1, d) <= new Date() ? val(new Date(R.y, R.m - 1, d), new Date(R.y, R.m - 1, d + 1)) : null,
+      b: d <= pnd ? val(new Date(py, pm, d), new Date(py, pm, d + 1)) : null });
+  } else {
+    curName = String(R.y); prevName = String(R.y - 1);
+    for (let i = 0; i < 12; i++) cats.push({ l: new Date(2000, i, 1).toLocaleDateString(undefined, { month: 'short' }), t: i,
+      a: new Date(R.y, i, 1) <= new Date() ? val(new Date(R.y, i, 1), new Date(R.y, i + 1, 1)) : null, b: val(new Date(R.y - 1, i, 1), new Date(R.y - 1, i + 1, 1)) });
+  }
+  const fmt = v => key === 'jobs' ? String(v) : metMoney(v);
+  const max = Math.max(1, ...cats.flatMap(c => [c.a || 0, c.b || 0]));
+  const step = (() => { const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map(x => x * p).find(x => x >= raw); })();
+  const top = Math.ceil(max / step) * step, W = 1000, H = 300, L = 58, Rr = 8, T = 12, B = 28, pw = W - L - Rr, ph = H - T - B, gw = pw / cats.length;
+  const bw = Math.max(2, Math.min(18, (gw - 6) / 2)), y = v => T + ph - v / top * ph;
+  const bar = (x, v, c) => { if (!v) return ''; const h = Math.max(1.5, v / top * ph), r = Math.min(4, bw / 2, h);
+    return `<path d="M${x},${T + ph} v${-(h - r)} q0,${-r} ${r},${-r} h${bw - 2 * r} q${r},0 ${r},${r} v${h - r} z" fill="${c}"/>`; };
+  let g = '';
+  for (let v = 0; v <= top + 1e-9; v += step) g += `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" class="met-ax">${key === 'jobs' ? v : v >= 1000 ? '$' + (v / 1000) + 'k' : '$' + v}</text>`;
+  const every = cats.length > 20 ? 2 : 1;
+  cats.forEach((c, i) => {
+    const x0 = L + i * gw + (gw - (bw * 2 + 2)) / 2;
+    g += bar(x0, c.b, MET_C.prev) + bar(x0 + bw + 2, c.a, MET_C.cur);
+    if (i % every === 0) g += `<text x="${L + i * gw + gw / 2}" y="${H - 8}" text-anchor="middle" class="met-ax">${c.l}</text>`;
+    g += `<rect class="met-hit" data-i="${i}" x="${L + i * gw}" y="${T}" width="${gw}" height="${ph}" fill="transparent"/>`;
+  });
+  MET.cats = cats; MET.fmt = fmt; MET.names = [curName, prevName];
+  return `<div class="met-legend"><span><i style="background:${MET_C.cur}"></i>${esc(curName)}</span><span><i style="background:${MET_C.prev}"></i>${esc(prevName)}</span></div>
+    <div class="met-plot"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(curName)} compared with ${esc(prevName)}">${g}</svg><div class="met-tip hidden" id="metTip"></div></div>`;
+}
+function metTable(title, cols, rows, file){
+  const id = 'mt' + Math.random().toString(36).slice(2, 7);
+  MET.csv = MET.csv || {}; MET.csv[id] = [cols.map(c => c[0]), ...rows.map(r => cols.map(c => r[c[1]]))];
+  return `<div class="panel met-tbl"><h2>${title}<span class="spacer" style="flex:1"></span><button class="btn small" data-csv="${id}" data-file="${esc(file)}">CSV</button></h2>
+    ${rows.length ? `<div class="met-scroll"><table><thead><tr>${cols.map(c => `<th class="${c[2] ? 'num' : ''}">${c[0]}</th>`).join('')}</tr></thead>
+    <tbody>${rows.slice(0, 15).map(r => `<tr>${cols.map(c => `<td class="${c[2] ? 'num' : ''}">${c[2] === '$' ? metMoney(r[c[1]]) : c[2] === '%' ? r[c[1]] + '%' : esc(String(r[c[1]] ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    ${rows.length > 15 ? `<p class="muted" style="margin:8px 0 0;font-size:12.5px">Top 15 of ${rows.length} · CSV has all</p>` : ''}` : '<p class="muted">Nothing in this range.</p>'}</div>`;
+}
+async function renderMetrics(){
+  const root = $('#metricsView'); if (!root) return;
+  if (!MET.month) { const n = new Date(); MET.month = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`; }
+  if (!MET.rows) {
+    root.innerHTML = '<div class="panel"><p class="muted">Loading metrics…</p></div>';
+    try { await metLoad(); } catch (e) { root.innerHTML = `<div class="panel"><p class="muted">${esc(e.message)}</p></div>`; return; }
+    if (S.view !== 'metrics') return;
+  }
+  MET.csv = {};
+  const R = metRanges(), mtd = metStats(...R.mtd), pm = metStats(...R.prevMtd), ytd = metStats(...R.ytd), py = metStats(...R.prevYtd);
+  const monthName = new Date(R.y, R.m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const card = (t, info, a, b, c, d, money, dec) => `<div class="met-card"><h3>${t}<span class="met-i" title="${esc(info)}">i</span></h3>
+    <div class="met-cell"><small>MTD</small><b>${money ? metMoney(a, dec) : a}</b>${metDelta(a, b, money)}</div>
+    <div class="met-cell"><small>YTD</small><b>${money ? metMoney(c, dec) : c}</b>${metDelta(c, d, money)}</div></div>`;
+  // reports range
+  const rr = MET.range === 'mtd' ? R.mtd : MET.range === 'ytd' ? R.ytd : [new Date(2000, 0, 1), new Date(2100, 0, 1)];
+  const rs = metStats(...rr);
+  const by = (arr, kf, nf) => { const m = new Map(); arr.forEach(b => { const k = kf(b); const o = m.get(k) || { name: nf(b), n: 0, rev: 0, last: null }; o.n++; o.rev += b.amt; if (!o.last || b.d > o.last) o.last = b.d; m.set(k, o); }); return [...m.values()]; };
+  const clients = by(rs.jobs, metKey, metName).map(o => ({ ...o, aov: o.n ? o.rev / o.n : 0, share: rs.rev ? Math.round(o.rev / rs.rev * 100) : 0, lastS: o.last ? o.last.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '' })).sort((a, b) => b.rev - a.rev);
+  const svc = new Map(); rs.jobs.forEach(b => (b.items || []).forEach(it => { const n = String(it.name || '').trim(); if (!n) return; const o = svc.get(n.toLowerCase()) || { name: n, kind: it.kind === 'package' ? 'Package' : it.kind === 'custom' ? 'Custom' : 'Add-on', n: 0, rev: 0 }; o.n += Number(it.qty) || 1; o.rev += Number(it.price) || 0; svc.set(n.toLowerCase(), o); }));
+  const services = [...svc.values()].sort((a, b) => b.rev - a.rev || b.n - a.n);
+  const cities = by(rs.jobs, b => (b.city || '').trim().toLowerCase() || '—', b => (b.city || '').trim() || 'No city').map(o => ({ ...o, share: rs.rev ? Math.round(o.rev / rs.rev * 100) : 0 })).sort((a, b) => b.rev - a.rev);
+  const months = []; { const s = new Date(R.y, R.m - 1, 1); for (let i = 0; i < 24; i++) { const d = new Date(s.getFullYear(), s.getMonth() - i, 1), e = new Date(d.getFullYear(), d.getMonth() + 1, 1), st = metStats(d, e); if (st.n || i < 12) months.push({ name: d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }), n: st.n, rev: st.rev, cash: st.cash, aov: st.aov, clients: st.clients, newC: st.newC }); } }
+  const total = MET.rows.length;
+  root.innerHTML = `<div class="page-head"><div><h1>Metrics &amp; Reports</h1><p>Data current as of ${MET.loadedAt.toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' })} · based on ${total} order${total === 1 ? '' : 's'} in HQ</p></div></div>
+    <div class="met-bar">
+      <div class="met-month"><button class="btn" id="metPrev" aria-label="Previous month">‹</button><input type="month" id="metMonth" value="${MET.month}" /><button class="btn" id="metNext" aria-label="Next month">›</button></div>
+      <div class="seg" id="metKind">${[['all', 'All orders'], ['listing', 'Listings'], ['branding', 'Branding']].map(([k, l]) => `<button data-k="${k}" class="${MET.kind === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+      <span class="spacer" style="flex:1"></span><button class="btn" id="metRefresh">Refresh</button>
+    </div>
+    <div class="met-cards">
+      ${card('Revenue', 'Order totals (incl. tax) by shoot date. MTD and YTD run through today. Arrows compare with the same stretch of last month / last year.', mtd.rev, pm.rev, ytd.rev, py.rev, true, 2)}
+      ${card('Cash Collected', 'Paid orders, by the date they were paid.', mtd.cash, pm.cash, ytd.cash, py.cash, true, 2)}
+      ${card('Number of Jobs', 'Orders by shoot date (cancelled orders left out).', mtd.n, pm.n, ytd.n, py.n, false)}
+      ${card('Average Order Value', 'Revenue ÷ number of jobs.', mtd.aov, pm.aov, ytd.aov, py.aov, true, 2)}
+    </div>
+    <div class="panel met-chart">
+      <div class="met-chead"><div class="seg" id="metMetric">${[['rev', 'Revenue'], ['cash', 'Cash Collected'], ['jobs', 'Jobs']].map(([k, l]) => `<button data-k="${k}" class="${MET.metric === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+        <div class="seg" id="metChartMode">${[['year', 'Year'], ['month', 'Month']].map(([k, l]) => `<button data-k="${k}" class="${MET.chart === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+        <span class="spacer" style="flex:1"></span>
+        ${MET.chart === 'month' ? `<select id="metCmp"><option value="prev" ${MET.cmp === 'prev' ? 'selected' : ''}>vs previous month</option><option value="ly" ${MET.cmp === 'ly' ? 'selected' : ''}>vs same month last year</option></select>` : '<span class="muted" style="font-size:13px">vs last year</span>'}
+      </div>
+      ${metChart()}
+    </div>
+    <div class="met-cards">
+      ${card('New Clients', 'Clients whose first order in HQ falls in the period.', mtd.newC, pm.newC, ytd.newC, py.newC, false)}
+      ${card('Unique Clients', 'Different clients who ordered in the period.', mtd.clients, pm.clients, ytd.clients, py.clients, false)}
+      ${card('Revenue per Client', 'Revenue ÷ unique clients.', mtd.rpc, pm.rpc, ytd.rpc, py.rpc, true, 2)}
+      <div class="met-card"><h3>Unpaid<span class="met-i" title="Orders in the period that are not marked paid.">i</span></h3>
+        <div class="met-cell"><small>MTD</small><b>${metMoney(mtd.unpaid, 2)}</b><span class="met-d">${mtd.unpaidN} order${mtd.unpaidN === 1 ? '' : 's'}</span></div>
+        <div class="met-cell"><small>YTD</small><b>${metMoney(ytd.unpaid, 2)}</b><span class="met-d">${ytd.unpaidN} order${ytd.unpaidN === 1 ? '' : 's'}</span></div></div>
+    </div>
+    <div class="met-rhead"><h2>Reports</h2><div class="seg" id="metRange">${[['mtd', monthName], ['ytd', `${R.y} year to date`], ['all', 'All time']].map(([k, l]) => `<button data-k="${k}" class="${MET.range === k ? 'active' : ''}">${esc(l)}</button>`).join('')}</div></div>
+    <div class="met-grid">
+      ${metTable('Top Clients', [['Client', 'name'], ['Orders', 'n', 1], ['Revenue', 'rev', '$'], ['Avg order', 'aov', '$'], ['Share', 'share', '%'], ['Last order', 'lastS']], clients, 'top-clients')}
+      ${metTable('Services Sold', [['Service', 'name'], ['Type', 'kind'], ['Sold', 'n', 1], ['Revenue', 'rev', '$']], services, 'services-sold')}
+      ${metTable('Revenue by City', [['City', 'name'], ['Orders', 'n', 1], ['Revenue', 'rev', '$'], ['Share', 'share', '%']], cities, 'revenue-by-city')}
+      ${metTable('Monthly Summary', [['Month', 'name'], ['Jobs', 'n', 1], ['Revenue', 'rev', '$'], ['Cash', 'cash', '$'], ['Avg order', 'aov', '$'], ['Clients', 'clients', 1], ['New', 'newC', 1]], months, 'monthly-summary')}
+    </div>`;
+  const re = () => renderMetrics();
+  const shift = n => { const [y, m] = MET.month.split('-').map(Number), d = new Date(y, m - 1 + n, 1); MET.month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; re(); };
+  $('#metPrev').onclick = () => shift(-1); $('#metNext').onclick = () => shift(1);
+  $('#metMonth').onchange = e => { if (e.target.value) { MET.month = e.target.value; re(); } };
+  $('#metRefresh').onclick = async () => { MET.rows = null; re(); };
+  const seg = (id, prop) => $(id).onclick = e => { const b = e.target.closest('button'); if (b) { MET[prop] = b.dataset.k; re(); } };
+  seg('#metKind', 'kind'); seg('#metMetric', 'metric'); seg('#metChartMode', 'chart'); seg('#metRange', 'range');
+  const cmp = $('#metCmp'); if (cmp) cmp.onchange = () => { MET.cmp = cmp.value; re(); };
+  const tip = $('#metTip'), plot = root.querySelector('.met-plot');
+  root.querySelectorAll('.met-hit').forEach(h => {
+    h.onmouseenter = h.onclick = () => {
+      const c = MET.cats[+h.dataset.i]; root.querySelectorAll('.met-hit').forEach(x => x.setAttribute('fill', 'transparent')); h.setAttribute('fill', 'rgba(29,50,80,.06)');
+      tip.innerHTML = `<b>${MET.chart === 'month' ? 'Day ' + c.t : c.l}</b><div><i style="background:${MET_C.cur}"></i>${esc(MET.names[0])}<span>${c.a == null ? '—' : MET.fmt(c.a)}</span></div><div><i style="background:${MET_C.prev}"></i>${esc(MET.names[1])}<span>${c.b == null ? '—' : MET.fmt(c.b)}</span></div>`;
+      tip.classList.remove('hidden');
+      const pr = plot.getBoundingClientRect(), hr = h.getBoundingClientRect();
+      let x = hr.left - pr.left + hr.width / 2 + 10; if (x + 190 > pr.width) x = hr.left - pr.left + hr.width / 2 - 200; tip.style.left = Math.max(0, x) + 'px';
+    };
+  });
+  plot.onmouseleave = () => { tip.classList.add('hidden'); root.querySelectorAll('.met-hit').forEach(x => x.setAttribute('fill', 'transparent')); };
+  root.querySelectorAll('[data-csv]').forEach(b => b.onclick = () => {
+    const rows = MET.csv[b.dataset.csv], q = v => { const s = typeof v === 'number' ? (Math.round(v * 100) / 100).toString() : String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const blob = new Blob([rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `knoxview-${b.dataset.file}-${MET.range === 'mtd' ? MET.month : MET.range === 'ytd' ? R.y + '-ytd' : 'all-time'}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
 }
 
