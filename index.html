@@ -512,6 +512,16 @@ main{padding:20px 20px 48px;max-width:1500px;margin:0 auto}
 .board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(165px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
 .col{background:var(--panel-2);border-radius:var(--radius);border-top:3px solid var(--c,var(--border));padding:10px;min-height:200px;display:flex;flex-direction:column}
 .col.drag-over{outline:2px dashed var(--accent)}
+.tour-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.tour-tools input[type=search]{width:190px}
+.tour-zbox{display:flex;gap:8px;margin:-4px 0 14px}.tour-zbox input{flex:1;max-width:560px}
+.tour-board{grid-auto-columns:minmax(230px,1fr)}
+.tour-card{border-left-color:#8aa4bf;cursor:default}.tour-card.compact{cursor:pointer}.tour-card.late{border-color:#f0b4ad;border-left-color:var(--danger);background:#fff6f5}
+.tour-card .tour-ord{color:var(--muted)}.tour-card .tour-ord:hover{color:var(--accent)}
+.tour-paste{display:flex;gap:6px;margin-top:9px}.tour-paste input{flex:1;min-width:0;font-size:13px;padding:6px 8px}
+.tour-link{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:9px;font-size:13px}
+.tour-card .lnkbtn,.tour-tools .lnkbtn{border:0;background:none;padding:0;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer}.tour-card .lnkbtn:hover,.tour-tools .lnkbtn:hover{color:var(--accent);text-decoration:underline}
+.tour-alert{display:block;margin:0 0 8px;padding:8px 11px;border-radius:9px;background:#fdecea;color:var(--danger);font-weight:600;font-size:13.5px;text-decoration:none}
+@media (max-width:700px){.tour-tools input[type=search]{width:100%}.tour-board{grid-auto-columns:minmax(260px,86vw)}}
 .col-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;margin:2px 4px 10px}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .col-head .count{margin-left:auto;color:var(--muted);font-weight:500}
@@ -2032,6 +2042,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
         <a href="#/projects/custom" data-view="projects" data-pv="custom" title="Custom projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5-5-2.8-5 2.8 1-5.5-4-4 5.5-1z"/></svg><span class="lbl">Custom projects</span></a>
         <a href="#/staging" data-view="staging" title="Virtual Staging · stage empty rooms" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v4H3z"/><path d="M5 17v2M19 17v2"/></svg><span class="lbl">Virtual Staging</span></a>
         <a href="#/branding" data-view="branding" title="Branding Projects · headshots, lifestyle shoots, brand videos and other non-listing media" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.5"/><path d="M5.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><path d="M17.5 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="lbl">Branding Projects</span></a>
+        <a href="#/tours" data-view="tours" title="3D Tours · Zillow 3D tour links for each order" class="hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="lbl">3D Tours</span></a>
       </div>
       <button type="button" class="nav-group" id="companyTab" data-grp="company" title="My Company" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-5h6v5M4 20h16"/></svg><span class="lbl">My Company</span><svg class="chev lbl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="nav-sub" id="companySub">
@@ -2143,6 +2154,7 @@ button.bk-pkg{text-align:left;background:var(--panel);font:inherit}
     <div id="bookingsView" class="hidden"></div>
     <div id="careView" class="hidden"></div>
     <div id="stagingView" class="hidden"></div>
+    <div id="toursView" class="hidden"></div>
     <div id="settingsView" class="hidden"></div>
     <div id="orderPagesView" class="hidden"></div>
     <div id="hiringView" class="hidden"></div>
@@ -2310,14 +2322,14 @@ const can = k => permFor(S.me, k);
 // Bookings = the booking portal control center (orders, packages & prices, upsells, hours, fees). Super admins only.
 // Brought back Nov 14 2026 (was hidden Nov 13). Set to false to hide the tab again.
 const BOOKINGS_ENABLED = true;
-const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
+const viewAllowed = v => v === 'care' || v === 'staging' ? isSuperAdmin() : v === 'branding' || v === 'tours' ? viewAllowed('bookings') : v === 'settings' ? isSuperAdmin() : v === 'companies' ? can('agents') : (v === 'bookings' || v === 'orderpages') && !BOOKINGS_ENABLED ? false : v === 'orderpages' ? isSuperAdmin() : ['tasks','mail','calendar','agents','chat','hiring'].includes(v) ? can(v) : v === 'projects' ? (can('photo') || can('video')) : v === 'bookings' ? isSuperAdmin() : v === 'finance' ? isOwner() : true;
 function applyAccess(){
-  ['tasks','mail','calendar','care','staging','bookings','branding','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
+  ['tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','projects','agents','companies','chat','finance','settings'].forEach(v => document.querySelector(`#tabs a[data-view=${v}]`)?.classList.toggle('hidden', !viewAllowed(v)));
   $('#clientsTab')?.classList.toggle('hidden', !viewAllowed('agents') && !viewAllowed('care'));
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
   document.querySelectorAll('#projectsSub a[data-pv=photo], #projectsSub a[data-pv=video]').forEach(a => a.classList.toggle('hidden', !can(a.dataset.pv)));
-  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects')); $('#projectsSub a[data-pv=all]')?.classList.toggle('hidden', !viewAllowed('projects'));
+  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding') && !viewAllowed('tours')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects')); $('#projectsSub a[data-pv=all]')?.classList.toggle('hidden', !viewAllowed('projects'));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
   $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
   $('#newAgentBtn').classList.toggle('hidden', !can('manage_agents'));
@@ -2664,6 +2676,7 @@ async function loadAll(){
   ]);
   for (const r of [p,t,a,m,l]) if (r.error) fail(r.error);
   S.projects = p.data || []; S.types = t.data || []; S.agents = a.data || []; S.team = m.data || []; S.logos = l.data || [];
+  loadTours().catch(e => console.warn('tours', e));
   loadCompanies().then(() => { S.companiesLoaded = true; if (S.view === 'agents') renderAgents(); }).catch(e => console.warn('companies', e));
   fillAssignee();
 }
@@ -2685,7 +2698,7 @@ async function reloadProjects(){
 function route(){
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'orders') parts[0] = 'bookings'; // #/orders is an alias of the Orders (bookings) view
-  let view = ['home','notifications','tasks','mail','calendar','care','staging','bookings','branding','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
+  let view = ['home','notifications','tasks','mail','calendar','care','staging','bookings','branding','tours','orderpages','hiring','finance','projects','agents','companies','chat','team','settings'].includes(parts[0]) ? parts[0] : 'home';
   if (!viewAllowed(view)) { view = 'home'; history.replaceState(null, '', '#/home'); }
   if (view === 'projects') {
     if ((parts[1] === 'photo' || parts[1] === 'video') && can(parts[1])) { S.media = S.pview = parts[1]; savePrefs(); }
@@ -2716,7 +2729,7 @@ function route(){
 window.addEventListener('hashchange', () => { if (S.me) route(); });
 function navGroup(open, g = 'clients'){ const t = $(`#${g}Tab`), s = $(`#${g}Sub`); if (!t) return; t.setAttribute('aria-expanded', open); s.classList.toggle('open', open); try { localStorage.setItem(`hq.${g}Open`, open ? '1' : ''); } catch (_) {} }
 document.querySelectorAll('#tabs .nav-group').forEach(t => { const g = t.dataset.grp; t.onclick = () => navGroup(t.getAttribute('aria-expanded') !== 'true', g); try { if (localStorage.getItem(`hq.${g}Open`)) navGroup(true, g); } catch (_) {} });
-const NAV_GROUP = { agents: 'clients', companies: 'clients', care: 'clients', projects: 'projects', staging: 'projects', branding: 'projects', finance: 'company', hiring: 'company', orderpages: 'company', team: 'company' };
+const NAV_GROUP = { agents: 'clients', companies: 'clients', care: 'clients', projects: 'projects', staging: 'projects', branding: 'projects', tours: 'projects', finance: 'company', hiring: 'company', orderpages: 'company', team: 'company' };
 const goProjects = m => { location.hash = `#/projects/${m}`; };
 // Which projects a Projects page shows: all / photo / video / custom (project type named "Custom…")
 const inPView = p => S.pview === 'custom' ? /custom/i.test(typeName(p.project_type_id)) && can(p.media) : S.pview === 'photo' || S.pview === 'video' ? p.media === S.pview : can(p.media);
@@ -2749,6 +2762,8 @@ function render(){
   $('#financeView').classList.toggle('hidden', S.view !== 'finance');
   $('#careView').classList.toggle('hidden', S.view !== 'care');
   if (S.view === 'care') renderCare(); else if (typeof careSheetClose === 'function' && CARE.sheet != null) careSheetClose();
+  $('#toursView').classList.toggle('hidden', S.view !== 'tours');
+  if (S.view === 'tours') renderTours();
   $('#stagingView').classList.toggle('hidden', S.view !== 'staging');
   if (S.view === 'staging') renderStaging();
   $('#settingsView').classList.toggle('hidden', S.view !== 'settings');
@@ -2768,6 +2783,123 @@ function render(){
   if (S.view === 'projects') renderProjects();
   if (S.view === 'agents') renderAgents();
   if (S.view === 'team') renderTeam();
+}
+
+/* ----- 3D Tours board (Projects → 3D Tours). One card per order with a Zillow 3D tour.
+   Table tours_3d, kept in step by a database trigger on bookings: a row is created when an order includes a
+   tour service (booking_services.tour), deleted if the order is cancelled or the tour removed, and moved to
+   "Link added" as soon as the order's tour_url is filled in (from this board or the Media Library).
+   Waiting on scan becomes Processing on Zillow on its own once the shoot time has passed; a tour still
+   processing 24 hours after the shoot is flagged (red card + a line in My Tasks on Home). ----- */
+const TOUR = { list: [], loaded: false, showArchived: false, sub: null };
+const TOUR_COLS = [['waiting', 'Waiting on scan', '#8aa4bf'], ['processing', 'Processing on Zillow', '#d99a2b'], ['linked', 'Link added', '#3c9a6e'], ['archived', 'Archived', '#9aa3ad']];
+const tourShoot = t => t.booking?.shoot_end || t.booking?.shoot_start || null;
+const tourEff = t => t.status === 'waiting' && t.booking?.shoot_start && new Date(t.booking.shoot_start) <= new Date() ? 'processing' : t.status;
+const tourLate = t => tourEff(t) === 'processing' && tourShoot(t) && Date.now() - new Date(tourShoot(t)).getTime() > 864e5;
+const tourLateCount = () => TOUR.list.filter(tourLate).length;
+async function loadTours(){
+  if (!isSuperAdmin()) return;
+  const [{ data, error }, st] = await Promise.all([sb.from('tours_3d')
+    .select('*, booking:bookings(id, number, order_no, address, unit, city, agent_id, shoot_start, shoot_end, tour_url, status)')
+    .order('created_at', { ascending: false }), sb.from('booking_settings').select('zillow3d_url').eq('id', 1).maybeSingle()]);
+  if (error) return console.warn('tours', error);
+  TOUR.zurl = st.data?.zillow3d_url || null;
+  TOUR.list = (data || []).filter(t => t.booking); TOUR.loaded = true;
+  if (!TOUR.sub) TOUR.sub = sb.channel('hq-tours').on('postgres_changes', { event: '*', schema: 'public', table: 'tours_3d' }, () => {
+    clearTimeout(TOUR.t); TOUR.t = setTimeout(async () => { await loadTours(); if (S.view === 'tours') renderTours(); if (S.view === 'home') try { paintHomeTasks(); } catch (_) {} }, 400);
+  }).subscribe();
+  if (S.view === 'home') try { paintHomeTasks(); } catch (_) {}
+}
+function tourCard(t){
+  const b = t.booking, eff = tourEff(t), late = tourLate(t);
+  const addr = [b.address, b.unit].filter(Boolean).join(' ');
+  if (eff === 'archived') return `<div class="card compact tour-card" data-tid="${t.id}" title="${esc(addr)}${b.tour_url ? ' · ' + esc(b.tour_url) : ''}"><span class="t">${esc(addr || 'Order ' + ordNo(b))}</span></div>`;
+  const when = b.shoot_start ? new Date(b.shoot_start).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'No shoot time';
+  return `<div class="card tour-card ${late ? 'late' : ''}" draggable="true" data-tid="${t.id}">
+    <div class="t">${esc(addr || 'Order ' + ordNo(b))}</div>
+    <div class="meta">${b.city ? `<span>${esc(b.city)}</span><span>·</span>` : ''}<a href="#/bookings/${b.id}" class="tour-ord">Order ${esc(ordNo(b))}</a></div>
+    <div class="meta" style="margin-top:6px"><span class="tag ${late ? 'overdue' : ''}">${late ? 'Needs link · shot ' : eff === 'waiting' ? 'Shoot ' : 'Shot '}${esc(when)}</span></div>
+    ${agentName(b.agent_id) ? `<div class="meta" style="margin-top:6px"><span>${esc(agentName(b.agent_id))}</span>${t.assigned_to ? `<span>·</span><span>${esc(memberName(t.assigned_to))}</span>` : ''}</div>` : ''}
+    ${eff === 'linked'
+      ? `<div class="tour-link"><a href="${esc(b.tour_url || '#')}" target="_blank" rel="noopener">Open tour ↗</a><button class="lnkbtn" data-tedit>Change link</button><button class="lnkbtn" data-tarch>Archive</button></div>
+         <div class="tour-paste hidden"><input type="url" placeholder="Paste the Zillow 3D link" value="${esc(b.tour_url || '')}" /><button class="btn small primary" data-tsave>Save</button></div>`
+      : `<div class="tour-paste"><input type="url" placeholder="Paste the Zillow 3D link" /><button class="btn small primary" data-tsave>Save</button></div>`}
+  </div>`;
+}
+function renderTours(){
+  const root = $('#toursView'); if (!root) return;
+  if (!TOUR.loaded) { root.innerHTML = '<div class="panel"><p class="muted">Loading 3D tours…</p></div>'; loadTours().then(() => { if (S.view === 'tours') renderTours(); }); return; }
+  const q = (TOUR.q || '').toLowerCase();
+  const list = TOUR.list.filter(t => !q || [t.booking.address, t.booking.city, ordNo(t.booking), agentName(t.booking.agent_id)].join(' ').toLowerCase().includes(q));
+  const z = TOUR.zurl;
+  const open = TOUR.list.filter(t => ['waiting', 'processing'].includes(tourEff(t))).length, late = tourLateCount();
+  const cols = TOUR_COLS.filter(([s]) => s !== 'archived' || TOUR.showArchived);
+  root.innerHTML = `<div class="page-head"><div><h1>3D Tours</h1><p>Every order with a Zillow 3D tour. Paste the link on a card and it goes straight to that order's Media Library and the client's download page.</p></div>
+      <span class="spacer" style="flex:1"></span>
+      <div class="tour-tools">
+        <input type="search" id="tourSearch" placeholder="Search tours…" value="${esc(TOUR.q || '')}" />
+        <label class="check"><input type="checkbox" id="tourArch" ${TOUR.showArchived ? 'checked' : ''} /> Show archived</label>
+        ${z ? `<a class="btn" href="${esc(z)}" target="_blank" rel="noopener">Zillow 3D Home ↗</a><button class="lnkbtn" id="tourZset" title="Change the Zillow 3D Home link">Edit</button>` : `<button class="btn" id="tourZset">Set Zillow 3D Home link</button>`}
+      </div></div>
+    <div class="tour-zbox hidden" id="tourZbox"><input type="url" id="tourZurl" placeholder="Your Zillow 3D Home page link (copy it from the address bar while signed in)" value="${esc(z || '')}" /><button class="btn small primary" id="tourZsave">Save</button></div>
+    <div class="stats"><div class="stat" style="--c:#d99a2b"><div class="n">${open}</div><div class="l">Need a link</div></div>
+      <div class="stat ${late ? 'alert' : ''}" style="--c:var(--danger)"><div class="n">${late}</div><div class="l">Over a day since the shoot</div></div>
+      <div class="stat" style="--c:#3c9a6e"><div class="n">${TOUR.list.filter(t => t.status === 'linked').length}</div><div class="l">Link added</div></div></div>
+    <div class="board tour-board">${cols.map(([s, l, c]) => {
+      const items = list.filter(t => tourEff(t) === s).sort((a, b) => s === 'linked' || s === 'archived'
+        ? String(b.linked_at || b.updated_at).localeCompare(String(a.linked_at || a.updated_at))
+        : String(a.booking.shoot_start || '9').localeCompare(String(b.booking.shoot_start || '9')));
+      return `<div class="col ${s === 'archived' ? 'compact-col' : ''}" data-tstatus="${s}" style="--c:${c}">
+        <div class="col-head"><span class="dot" style="background:${c}"></span>${l}<span class="count">${items.length}</span></div>
+        ${s === 'linked' && items.length ? `<div class="col-tools"><button data-tarchall>Archive all ${items.length}</button></div>` : ''}
+        <div class="cards">${items.map(tourCard).join('') || '<div class="empty-col">—</div>'}</div></div>`;
+    }).join('')}</div>
+    ${TOUR.list.length ? '' : '<p class="muted" style="margin-top:14px">No 3D tours yet. New orders with a Zillow 3D tour (Zillow 3D, Premium, Luxury, Mount LeConte packages or the Zillow 3D Tour add-on) show up here automatically.</p>'}`;
+  const s = $('#tourSearch'); s.oninput = () => { TOUR.q = s.value; const pos = s.selectionStart; renderTours(); const n = $('#tourSearch'); n.focus(); n.setSelectionRange(pos, pos); };
+  $('#tourArch').onchange = e => { TOUR.showArchived = e.target.checked; renderTours(); };
+  $('#tourZset').onclick = () => { $('#tourZbox').classList.toggle('hidden'); $('#tourZurl').focus(); };
+  $('#tourZsave').onclick = async () => {
+    const v = $('#tourZurl').value.trim(); if (v && !/^https?:\/\//i.test(v)) return toast('That doesn\'t look like a link');
+    const { error } = await sb.from('booking_settings').update({ zillow3d_url: v || null }).eq('id', 1); if (error) return fail(error);
+    TOUR.zurl = v || null; if (BK.settings) BK.settings.zillow3d_url = v || null; toast('Saved'); renderTours();
+  };
+  const byId = id => TOUR.list.find(t => t.id === id);
+  const setStatus = async (ids, status) => {
+    const patch = { status, updated_at: new Date().toISOString(), archived_at: status === 'archived' ? new Date().toISOString() : null };
+    ids.forEach(id => Object.assign(byId(id) || {}, patch)); renderTours();
+    const { error } = await sb.from('tours_3d').update(patch).in('id', ids); if (error) { fail(error); loadTours().then(renderTours); }
+  };
+  root.querySelectorAll('.tour-card').forEach(c => {
+    const t = byId(c.dataset.tid);
+    c.onclick = e => { if (e.target.closest('a,button,input')) return; if (tourEff(t) === 'archived') setStatus([t.id], t.booking.tour_url ? 'linked' : 'waiting'); };
+    c.ondragstart = e => e.dataTransfer.setData('text/plain', c.dataset.tid);
+    const inp = c.querySelector('.tour-paste input');
+    const save = async () => {
+      const url = inp.value.trim();
+      if (!/^https?:\/\/\S+$/i.test(url)) return toast('Paste the full tour link (starts with https://)');
+      const btn = c.querySelector('[data-tsave]'); btn.disabled = true; btn.textContent = 'Saving…';
+      const { error } = await sb.from('bookings').update({ tour_url: url, updated_at: new Date().toISOString() }).eq('id', t.booking.id);
+      if (error) { btn.disabled = false; btn.textContent = 'Save'; return fail(error); }
+      t.booking.tour_url = url; t.status = 'linked'; t.linked_at = new Date().toISOString();
+      const ob = (BK.list || []).find(x => x.id === t.booking.id); if (ob) ob.tour_url = url;
+      toast('Link added · it\'s on the Media Library and download page'); renderTours();
+    };
+    if (inp) { inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } }; c.querySelector('[data-tsave]').onclick = save; }
+    const ed = c.querySelector('[data-tedit]'); if (ed) ed.onclick = () => { c.querySelector('.tour-paste').classList.toggle('hidden'); inp.focus(); inp.select(); };
+    const ar = c.querySelector('[data-tarch]'); if (ar) ar.onclick = () => setStatus([t.id], 'archived');
+  });
+  const aa = root.querySelector('[data-tarchall]'); if (aa) aa.onclick = () => setStatus(list.filter(t => tourEff(t) === 'linked').map(t => t.id), 'archived');
+  root.querySelectorAll('.tour-board .col').forEach(col => {
+    col.ondragover = e => { e.preventDefault(); col.classList.add('drag-over'); };
+    col.ondragleave = () => col.classList.remove('drag-over');
+    col.ondrop = e => {
+      e.preventDefault(); col.classList.remove('drag-over');
+      const t = byId(e.dataTransfer.getData('text/plain')), to = col.dataset.tstatus; if (!t || tourEff(t) === to) return;
+      if (to === 'linked' && !t.booking.tour_url) return toast('Paste the tour link on the card to move it to Link added');
+      if (to !== 'linked' && to !== 'archived' && t.booking.tour_url) return toast('This tour already has a link. Use Change link, or clear it in the Media Library');
+      setStatus([t.id], to);
+    };
+  });
 }
 
 /* ----- Home ----- */
@@ -4734,9 +4866,9 @@ function paintHomeTasks(){
   const focus = mine.filter(t => (t.due_date && t.due_date <= t0) || t.priority === 'high');
   const show = [...focus, ...mine.filter(t => !focus.includes(t))].slice(0, box.closest('.hx') ? 6 : 10);
   box.querySelector('.count').textContent = mine.length;
-  const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length;
+  const chip = box.querySelector('.inbox-chip'), n = (S.suggestions || []).length, lateT = typeof tourLateCount === 'function' && isSuperAdmin() ? tourLateCount() : 0;
   if (chip) { chip.textContent = `${n} missed message${n === 1 ? '' : 's'} to review`; chip.classList.toggle('hidden', !n || !isOwner()); }
-  box.querySelector('.tlist').innerHTML = show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`;
+  box.querySelector('.tlist').innerHTML = (lateT ? `<a href="#/tours" class="tour-alert">${lateT} 3D tour${lateT === 1 ? '' : 's'} still need${lateT === 1 ? 's' : ''} a Zillow link →</a>` : '') + (show.map(taskRow).join('') || `<div class="none">No open tasks. Use “Create new task” to add one.</div>`);
   box.querySelector('.more').innerHTML = mine.length > show.length ? `<a href="#/tasks">See all ${mine.length} tasks →</a>` : '';
   bindTaskRows(box);
   paintHomeInbox();
@@ -10093,6 +10225,7 @@ function openServiceEdit(s, o = {}){
       <div class="full bk-covers" ${s.kind === 'package' ? '' : 'style="display:none"'}><label>Add-ons this package already includes <span class="muted">(clients can't add these on top)</span></label>
         <div class="bk-typepick">${BK.services.filter(x => x.kind === 'addon').sort((a, b) => a.sort_order - b.sort_order).map(x => `<label class="check"><input type="checkbox" name="cv" value="${x.id}" ${(s.covers || []).includes(x.id) ? 'checked' : ''} /> ${esc(x.name)}</label>`).join('')}</div></div>
       <div class="full"><label class="check"><input type="checkbox" name="twilight" ${s.twilight ? 'checked' : ''} /> Includes a virtual twilight (adds it to the photo checklist)</label></div>
+      <div class="full"><label class="check"><input type="checkbox" name="tour" ${s.tour ? 'checked' : ''} /> Includes a Zillow 3D tour (adds the order to the 3D Tours board)</label></div>
       <div class="full"><label class="check"><input type="checkbox" name="active" ${s.active ? 'checked' : ''} /> Active</label></div>
       <div class="full"><label class="check"><input type="checkbox" name="public" ${s.public !== false ? 'checked' : ''} /> On the default order page <span class="muted">(off = only on custom order pages it's added to, or added by you in HQ)</span></label></div>
     </div>
@@ -10106,7 +10239,7 @@ function openServiceEdit(s, o = {}){
     e.preventDefault();
     const f = e.target, row = { kind: f.kind.value, name: f.name.value.trim(), price: +f.price.value || 0, duration_min: +f.duration_min.value || 0, description: f.description.value.trim() || null,
       includes: f.includes.value.split('\n').map(x => x.trim()).filter(Boolean), photo_type: [...f.querySelectorAll('[name=pt]:checked')].map(x => x.value).join(', ') || null, video_type: [...f.querySelectorAll('[name=vt]:checked')].map(x => x.value).join(', ') || null,
-      video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, active: f.active.checked,
+      video_tier: f.video_tier.value || (f.querySelector('[name=vt]:checked') ? 'standard' : null), sort_order: +f.sort_order.value || 0, twilight: f.twilight.checked, tour: f.tour.checked, active: f.active.checked,
       public: f.public.checked, badge: f.badge.value.trim() || null, large_fee: f.kind.value === 'package' && f.large_fee.value !== '' ? +f.large_fee.value : null, covers: f.kind.value === 'package' ? [...f.querySelectorAll('[name=cv]:checked')].map(x => x.value) : [], updated_at: new Date().toISOString() };
     const r = isNew ? await sb.from('booking_services').insert(row).select().single() : await sb.from('booking_services').update(row).eq('id', s.id).select().single();
     if (r.error) return fail(r.error);
