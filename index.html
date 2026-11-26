@@ -2317,7 +2317,7 @@ function applyAccess(){
   $('#quickLinks').classList.toggle('hidden', !isOwner());
   document.querySelectorAll('#mediaSwitch button').forEach(b => b.classList.toggle('hidden', ['photo','video'].includes(b.dataset.m) && !can(b.dataset.m)));
   document.querySelectorAll('#projectsSub a[data-pv=photo], #projectsSub a[data-pv=video]').forEach(a => a.classList.toggle('hidden', !can(a.dataset.pv)));
-  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects'));
+  $('#projectsTab')?.classList.toggle('hidden', !viewAllowed('projects') && !viewAllowed('staging') && !viewAllowed('branding')); $('#projectsTop')?.classList.toggle('hidden', !viewAllowed('projects')); $('#projectsSub a[data-pv=all]')?.classList.toggle('hidden', !viewAllowed('projects'));
   if (!can(S.media)) S.media = S.media === 'photo' ? 'video' : 'photo';
   $('#newProjectBtn').classList.toggle('hidden', !can('create_projects'));
   $('#newAgentBtn').classList.toggle('hidden', !can('manage_agents'));
